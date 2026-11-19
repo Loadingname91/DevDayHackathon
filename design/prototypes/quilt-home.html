@@ -1,0 +1,924 @@
+<meta charset="utf-8">
+<title>Quilt Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#F4EEE1"><meta name="color-scheme" content="light">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: states across the top; the live Home phone on the left; on the right the content model (what Home is made of), the voice rules with real lines, and the theme. Phone = Workbench world, light only. */
+:root{
+  --bg:#EFEEEA; --panel:#FFFFFF; --ink:#1E1F23; --muted:#565A61; --line:#D7D6D0; --accent:#3557A6; --accent-ink:#FFFFFF; --soft:#E7ECF7;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif; --f-body:"Hanken Grotesk",ui-sans-serif,system-ui,sans-serif; --f-data:"DM Mono",ui-monospace,Menlo,monospace;
+  --muslin:#F4EEE1; --surface:#FFFDF8; --w-ink:#2A2119; --w-ink2:#665847; --stitch:#BFAE90; --denim:#3557A6; --denim-ink:#22396F; --thread:#E3A72F; --moss:#1F6B5E; --wash:#EEE6D6;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --ease-thread:cubic-bezier(.45,0,.15,1);
+  --t-fb:120ms; --t-state:220ms; --t-layout:350ms; --t-focal:600ms;
+  --t-state-out:140ms; --t-layout-out:220ms; --t-focal-out:360ms;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141518;--panel:#1C1E22;--ink:#ECEBE6;--muted:#A5A9B0;--line:#2F3238;--accent:#93ABEA;--accent-ink:#111318;--soft:#232A3A;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141518;--panel:#1C1E22;--ink:#ECEBE6;--muted:#A5A9B0;--line:#2F3238;--accent:#93ABEA;--accent-ink:#111318;--soft:#232A3A;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+html,body{overscroll-behavior:none}
+button,a,[role="button"]{touch-action:manipulation}
+input,textarea,select{font-size:16px}
+.pb,.qp,.tn,.chip,.try{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;cursor:pointer;color:inherit}
+.wrap{max-width:1220px;margin:0 auto;padding-block:32px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(36px,5.4vw,60px);letter-spacing:-.035em;line-height:.98;margin:0}
+.lede{margin:8px 0 0;color:var(--muted);max-width:72ch}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;color:var(--ink)}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:transparent;min-height:44px;padding:0 13px;border-radius:9px;font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.stage{display:grid;grid-template-columns:376px minmax(0,1fr);gap:34px;align-items:start}
+.side{display:flex;flex-direction:column;gap:22px;color:var(--ink);min-width:0}
+.side h2{font-family:var(--f-display);font-weight:800;font-size:26px;letter-spacing:-.02em;margin:0;line-height:1.1}
+.side p{margin:0;max-width:66ch}
+.model{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.model li{display:grid;grid-template-columns:30px minmax(0,1fr) 150px;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:14.5px;align-items:baseline}
+.model .n{font-family:var(--f-data);font-size:12px;color:var(--muted)}
+.model .src{font-family:var(--f-data);font-size:12px;color:var(--muted)}
+.model li.off{opacity:.45}
+.model b{font-weight:700}
+.voice{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.voice div{border-radius:12px;padding:12px 14px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.voice .yes{background:var(--soft)}
+.voice .no{border:1px dashed var(--line);color:var(--muted)}
+.voice .no s{text-decoration-thickness:1px}
+.voice small{font-family:var(--f-data);font-size:11.5px;color:var(--muted)}
+.rules{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14.5px}
+.swatches{display:flex;flex-wrap:wrap;gap:12px}
+.swatches div{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.swatches i{width:26px;height:26px;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);display:block}
+
+/* phone */
+.phone{width:360px;max-width:100%;height:780px;border-radius:40px;border:8px solid #111216;overflow:hidden;position:relative;background:var(--muslin);color:var(--w-ink);font-family:var(--f-body);box-shadow:0 20px 44px -22px rgba(0,0,0,.4);isolation:isolate}
+.screen{position:absolute;inset:0 0 92px 0;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent)}
+.screen::-webkit-scrollbar{display:none}
+.content{padding:40px 16px 32px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.ico{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.top{display:flex;align-items:center;justify-content:space-between;min-height:44px}
+.brand{display:flex;gap:8px;align-items:center;font-family:var(--f-display);font-weight:800;font-size:17px;letter-spacing:-.005em}
+.ib{width:44px;height:44px;border:0;background:transparent;display:grid;place-items:center;border-radius:12px;flex:none}
+.hello{margin:0;font-family:var(--f-display);font-weight:800;font-size:30px;letter-spacing:-.025em;line-height:1.02}
+.status{margin:4px 0 0;font-size:17px;line-height:1.35;color:var(--w-ink);max-width:28ch;text-wrap:balance}
+.status em{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums}
+.sect{display:flex;justify-content:space-between;align-items:baseline;font:600 13px/1.3 var(--f-body);letter-spacing:0;color:var(--w-ink2);margin-top:4px}
+.small{font-size:13px;color:var(--w-ink2)}
+.st{--d:7px;--sc:var(--stitch);position:relative;background-color:var(--surface);border-radius:16px;background-image:linear-gradient(90deg,var(--sc) 58%,transparent 0),linear-gradient(90deg,var(--sc) 58%,transparent 0),linear-gradient(0deg,var(--sc) 58%,transparent 0),linear-gradient(0deg,var(--sc) 58%,transparent 0);background-size:var(--d) 1.5px,var(--d) 1.5px,1.5px var(--d),1.5px var(--d);background-position:0 5px,0 calc(100% - 5px),5px 0,calc(100% - 5px) 0;background-repeat:repeat-x,repeat-x,repeat-y,repeat-y;transition:background-size var(--t-state) var(--ease)}
+.st.basted{--d:20px;--sc:var(--w-ink2);transition-duration:var(--t-state-out)}
+.card{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.line{font-size:14px;color:var(--w-ink)}
+.clair{margin:0;font:500 15px/1.4 var(--f-body);color:var(--denim-ink)}
+.b{min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--denim);color:#FFF;font-weight:600;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform var(--t-fb) var(--ease)}
+.b.ghost{background:transparent;color:var(--w-ink);box-shadow:inset 0 0 0 1.5px var(--stitch)}
+.b:active,.toast button:active{transform:scale(.97)}
+.b:disabled{cursor:default}
+.dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(42,33,25,.4);display:inline-block;flex:none}
+.app{display:inline-flex;gap:4px;align-items:center}
+.apps{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;min-height:48px}
+.btns .b{flex:1 1 auto}
+.tag{font:600 13px/1.3 var(--f-body);padding:2px 8px;background:var(--thread);color:#1F180D;border-radius:4px;white-space:nowrap;transform-origin:left center}
+.notch{position:absolute;top:7px;right:7px;width:10px;height:10px;border-radius:50%;background:var(--thread);box-shadow:0 0 0 2px rgba(255,253,248,.9);transform-origin:left center}
+.roll{display:inline-grid;overflow:hidden;vertical-align:bottom;font-variant-numeric:tabular-nums}
+.roll>span{grid-area:1/1}
+/* next up thread */
+.thread{position:relative;display:flex;flex-direction:column;padding-left:22px}
+.thread::before{content:"";position:absolute;left:6px;top:14px;bottom:14px;width:2px;background:linear-gradient(0deg,var(--w-ink2) 55%,transparent 0) 0 0/2px 8px repeat-y}
+.tn{position:relative;display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:center;min-height:52px;border:0;border-radius:8px;background:transparent;text-align:left;padding:4px 0;width:100%;transition:background-color var(--t-fb) var(--ease)}
+.tn:active{background-color:#F7F1E6}
+.tn::before{content:"";position:absolute;left:-21px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--k,#fff);box-shadow:0 0 0 2px var(--muslin),inset 0 0 0 1.5px rgba(42,33,25,.5)}
+.tn .when{font-family:var(--f-data);font-size:13px;color:var(--w-ink2)}
+.tn .what{display:flex;flex-direction:column;min-width:0}
+.tn .what b{font-weight:500;font-size:16px;color:var(--w-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tn .what span{font-size:13px;color:var(--w-ink2)}
+.tn.now .when{color:var(--w-ink);font-weight:500}
+/* quilt */
+.nowq{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:64px;border-radius:16px;overflow:hidden;box-shadow:inset 0 0 0 1.5px rgba(42,33,25,.12)}
+.qp{border:0;position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;padding:8px 12px;text-align:left;font-size:13px;font-weight:600;overflow:hidden;grid-column:span 2;color:var(--w-ink);transition:transform var(--t-fb) var(--ease)}
+.qp:active{transform:scale(.98)}
+.qp::after{content:"";position:absolute;inset:3px;border:1.5px dashed rgba(42,33,25,.28);border-radius:8px;pointer-events:none}
+.qp > *{position:relative}
+.qp .nm{display:flex;align-items:flex-start;gap:4px;max-width:100%}
+.qp .nm span{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.15;font-size:13px;hyphens:auto}
+.qp .face{font-family:var(--f-display);font-weight:800;letter-spacing:-.005em;line-height:1.1;font-size:15px;white-space:nowrap}
+.qp .face.big{font-size:24px;letter-spacing:-.015em}
+.qp .stale{font:500 13px/1.2 var(--f-body);color:var(--w-ink2)}
+.qp.faded::before{content:"";position:absolute;inset:0;background:rgba(244,238,225,.6)}
+.qp .tag{position:absolute;top:6px;right:6px}
+.quilt{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:58px;grid-auto-flow:dense;border-radius:16px;overflow:hidden}
+.quilt .qp.s1{grid-column:span 4;grid-row:span 2}.quilt .qp.s3{grid-column:span 3}
+/* pinned bar */
+.dock{position:absolute;left:0;right:0;bottom:0;z-index:15;padding:0 12px max(18px,env(safe-area-inset-bottom,0px))}
+.row{display:flex;height:62px;border-radius:16px;box-shadow:0 8px 22px -14px rgba(42,33,25,.55)}
+.pb{flex:1;min-width:0;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:600;position:relative;color:var(--w-ink);transition:box-shadow var(--t-fb) var(--ease)}
+.pb:active{box-shadow:inset 0 0 0 100px rgba(42,33,25,.07)}
+.row .pb:first-child{border-radius:16px 0 0 16px}
+.pb + .pb::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:1.5px;background:linear-gradient(0deg,rgba(42,33,25,.45) 58%,transparent 0) 0 0/1.5px 7px repeat-y}
+.pb span{font:600 13px/1.2 var(--f-body);letter-spacing:0;white-space:nowrap}
+.pb .notch{top:6px;right:6px}
+/* Clair button: faceless spool mark (not the character); never animates except press feedback + hold fill. touch-action:none so slide-up-to-cancel never scrolls. */
+.pb.clairb{flex:0 0 64px;background:var(--w-ink);color:#FBF6EC;border-radius:0 16px 16px 0;overflow:hidden;touch-action:none}
+.pb.clairb .ico{width:20px;height:20px}
+.pb.clairb:active{box-shadow:inset 0 0 0 100px rgba(251,246,236,.1)}
+.pb.clairb::before{display:none}
+.pb.clairb::after{content:"";position:absolute;inset:0;background:rgba(251,246,236,.22);clip-path:inset(0 100% 0 0);pointer-events:none}
+.pb.clairb.holding::after{clip-path:inset(0);transition:clip-path 330ms linear 120ms}
+/* Clair sheet: floats 12px above the pinned bar (bar z15 stays above the scrim), so the threads land on pins you can see.
+   N1 Rise from the button: grows out of the Clair cell (origin bottom right), translateY(16px) scale(.96) → none, 350 in / 220 out; RM opacity 120. */
+.scrim{position:absolute;inset:0;z-index:12;background:rgba(42,33,25,.32);opacity:0;visibility:hidden;touch-action:none;transition:opacity var(--t-layout-out) var(--ease),visibility 0s linear var(--t-layout-out)}
+.scrim.on{opacity:1;visibility:visible;transition:opacity var(--t-layout) var(--ease),visibility 0s}
+.sheet{--above:calc(74px + max(18px,env(safe-area-inset-bottom,0px)));position:absolute;left:12px;right:12px;bottom:var(--above);z-index:13;max-height:calc(100% - var(--above) - 36px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;background:var(--muslin);border-radius:22px;padding:0 16px 16px;box-shadow:0 -10px 30px -18px rgba(42,33,25,.6);transform-origin:100% 100%;opacity:0;visibility:hidden;transform:translateY(16px) scale(.96);transition:transform var(--t-layout-out) var(--ease),opacity var(--t-layout-out) var(--ease),visibility 0s linear var(--t-layout-out)}
+.sheet.on{opacity:1;visibility:visible;transform:none;transition:transform var(--t-layout) var(--ease),opacity var(--t-layout) var(--ease),visibility 0s}
+.sheet.on>*{visibility:visible} /* close→reopen inside the 220ms visibility delay can leave inherited hidden stuck on new children (Chromium) */
+.sheet::-webkit-scrollbar{display:none}
+.grab{display:block;width:36px;height:5px;border-radius:4px;background:var(--stitch);margin:8px auto 4px;position:relative}
+.grab::before{content:"";position:absolute;inset:-20px -60px}
+.sc{display:flex;flex-direction:column;gap:12px}
+.shd{display:flex;align-items:center;gap:12px;min-height:52px}
+.sh2{flex:1;min-width:0;margin:0;font:800 22px/1.15 var(--f-display);letter-spacing:-.015em;outline:none}
+.tell{min-height:48px;padding:0 2px 0 12px}
+.tell .ib{color:var(--denim)}
+.chips3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.chip{min-height:48px;border:0;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:15px;color:var(--w-ink);transition:transform var(--t-fb) var(--ease)}
+.chip:active,.srcchip:active{transform:scale(.97)}
+.tries{display:flex;flex-direction:column}
+.try{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:center;min-height:48px;padding:4px 8px;border:0;border-radius:8px;background:transparent;text-align:left;font-size:16px;line-height:1.3;color:var(--w-ink);transition:background-color var(--t-fb) var(--ease)}
+.try:active{background-color:#F7F1E6}
+.try .k{font:600 13px/1.3 var(--f-body);color:var(--w-ink2)}
+.said{margin:0;font-size:15px;color:var(--w-ink2)}
+.pr{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pr b{font-weight:600;font-size:16px}
+.num{font-family:var(--f-data);font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wave{display:block;width:100%;height:28px;overflow:visible;transition:opacity var(--t-fb) var(--ease)}
+.wave line{stroke:var(--denim-ink);stroke-width:2.4;stroke-linecap:round;transform-box:fill-box;transform-origin:center}
+.tx{margin:0;min-height:2.6em;font:700 20px/1.3 var(--f-display);letter-spacing:-.015em;color:var(--w-ink)}
+.hint{margin:0;min-height:44px;display:flex;align-items:center;justify-content:center;font:600 13px/1.3 var(--f-body);color:var(--w-ink2)}
+.sheet.cancel .wave{opacity:.3}
+.sheet.cancel .hint{color:var(--w-ink)}
+.ans p{margin:0;font-size:16px;line-height:1.45;color:var(--w-ink)}
+.srcs{display:flex;gap:8px;flex-wrap:wrap}
+.srcchip{min-height:44px;padding:0 12px;border:0;border-radius:12px;background:var(--wash);display:inline-flex;align-items:center;gap:8px;font:600 13px var(--f-body);color:var(--w-ink);transition:transform var(--t-fb) var(--ease)}
+.att{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch)}
+.att>span{display:flex;flex-direction:column;min-width:0}
+.att b{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thumb{width:44px;height:44px;border-radius:8px;background:var(--w-ink);position:relative;flex:none;overflow:hidden}
+.thumb i{position:absolute;left:50%;top:6px;bottom:6px;width:22px;margin-left:-11px;background:repeating-linear-gradient(180deg,transparent 0 3px,rgba(42,33,25,.25) 3px 3.5px) 2px 4px/18px calc(100% - 8px) no-repeat,#FBF6EC;border-radius:2px}
+.seam{display:block;width:100%;height:24px;overflow:visible}
+.seam .g{stroke:var(--stitch);stroke-width:1;stroke-dasharray:2 4}
+.seam .s{stroke:var(--w-ink);stroke-width:2.2;stroke-linecap:round;opacity:0;transition:opacity var(--t-fb) var(--ease)}
+.seam .s.on{opacity:1}
+.lst{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.lst li{display:flex;justify-content:space-between;gap:8px;min-height:36px;align-items:center;font-size:15px;border-bottom:1px dashed rgba(42,33,25,.18)}
+.lst li span{color:var(--w-ink2);font-size:13px;white-space:nowrap}
+.ci{margin:0;padding-left:18px;font-size:15px;display:flex;flex-direction:column;gap:2px}
+.vf{height:220px;border-radius:16px;background:var(--w-ink);position:relative;overflow:hidden}
+.vf::after{content:"";position:absolute;inset:16px;border:2px dashed rgba(251,246,236,.5);border-radius:12px}
+.vf i{position:absolute;left:50%;top:32px;bottom:32px;width:110px;margin-left:-55px;background:repeating-linear-gradient(180deg,transparent 0 14px,rgba(42,33,25,.25) 14px 16px) 12px 20px/86px calc(100% - 40px) no-repeat,#FBF6EC;border-radius:4px}
+.shut{display:flex;justify-content:center}
+.shutter{width:64px;height:64px;border-radius:50%;border:4px solid var(--w-ink);background:var(--surface);box-shadow:inset 0 0 0 3px var(--muslin);transition:transform var(--t-fb) var(--ease)}
+.shutter:active{transform:scale(.94)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.threads{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:16;contain:layout paint}
+.threads path{fill:none;stroke:#E3A72F;stroke-width:2.4;stroke-linecap:round}
+.toast{position:absolute;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:20;background:var(--w-ink);color:#FBF6EC;border-radius:12px;padding:8px 8px 8px 16px;display:flex;align-items:center;gap:12px;font-size:14px;opacity:0;transform:translateY(8px);transition:opacity var(--t-state-out) var(--ease),transform var(--t-state-out) var(--ease);pointer-events:none}
+.toast.on{opacity:1;transform:none;pointer-events:auto;transition-duration:var(--t-state)}
+.toast button{margin-left:auto;min-height:44px;padding:0 12px;border-radius:12px;border:1.5px solid rgba(251,246,236,.5);background:transparent;color:#FBF6EC;font-weight:600;font-size:14px;transition:transform var(--t-fb) var(--ease)}
+.find{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch)}
+.find input{flex:1;align-self:stretch;min-width:0;border:0;background:transparent;font:inherit;font-size:16px;color:var(--w-ink);outline:none}
+.find:focus-within{box-shadow:inset 0 0 0 2px var(--denim)}
+.from{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font:600 13px/1.3 var(--f-body);color:var(--w-ink2)}
+.delta{display:flex;align-items:center;gap:8px;font-size:14px;font-variant-numeric:tabular-nums}
+.delta s{color:var(--w-ink2)}
+.morebtn,.seeall{font:600 15px var(--f-body);color:var(--denim-ink);text-decoration:none;min-height:44px;display:inline-flex;align-items:center;justify-self:start;border:0;background:transparent;padding:0;text-align:left}
+/* spool (Clair) */
+.sp{overflow:visible;flex:none;transform-origin:50% 100%}
+.sp .eyes{transform-box:fill-box;transform-origin:center}
+.sp-hop{animation:hop 420ms 1}
+@keyframes hop{0%{transform:none;animation-timing-function:cubic-bezier(.2,.8,.3,1)}40%{transform:translateY(-5px);animation-timing-function:cubic-bezier(.6,0,.9,.5)}75%,100%{transform:none}}
+.sp-bob{animation:bob 560ms ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-2px)}}
+.sp-bob .eyes{animation:blink 4.3s infinite;animation-delay:-1.7s}
+@keyframes blink{0%,90%,94%,96%,100%{transform:scaleY(1)}92%,95%{transform:scaleY(.1)}}
+.sp-think .dots circle{animation:pulse 1.2s ease-in-out infinite}
+.sp-think .dots circle:nth-child(2){animation-delay:.2s}
+.sp-think .dots circle:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+@media (max-width:920px){.stage{grid-template-columns:minmax(0,1fr)}.phone{margin:0 auto}.voice{grid-template-columns:minmax(0,1fr)}.model li{grid-template-columns:30px minmax(0,1fr)}.model .src{grid-column:2}}
+@media (prefers-reduced-motion:reduce){.sp,.sp .body,.sp .eyes,.sp .dots circle{animation:none!important}.st,.st.basted,.toast,.toast.on{transition-duration:120ms}.toast{transform:none}.b:active,.qp:active,.toast button:active,.chip:active,.srcchip:active,.shutter:active{transform:none}
+  .sheet,.sheet.on{transform:none}
+  .sheet,.scrim{transition:opacity 120ms var(--ease),visibility 0s linear 120ms}
+  .sheet.on,.scrim.on{transition:opacity 120ms var(--ease),visibility 0s}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1.2-3.6 4-5 7-5s5.8 1.4 7 5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7h18v12H3zM3 10h18M16 15h2"/></symbol>
+  <symbol id="i-lift" viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.5h10.6L20 7H6.2M9 19.5h.01M17 19.5h.01"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M9 3v4M15 3v4"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 3l3 3-3 3M4 12V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3M20 12v3a3 3 0 0 1-3 3H4"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 5h12v15H7a2 2 0 0 1-2-2zM5 18a2 2 0 0 1 2-2h10"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v9H4zM10 20v-5h4v5"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 9h6M9 13h6M9 17h3"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-spool" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="3.5" rx="1.2"/><path d="M7.5 6.5v11M16.5 6.5v11"/><rect x="5" y="17.5" width="14" height="3.5" rx="1.2"/><path d="M7.5 15.5C5 16.5 3.5 18 2 20.5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="M20 11.5l-7.8 7.8a5 5 0 0 1-7.1-7.1l8.2-8.2a3.4 3.4 0 0 1 4.8 4.8l-8.1 8.1a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-chalk" viewBox="0 0 24 24"><path d="M12 4.5 L20.5 18.5 H3.5 Z" fill="rgba(53,87,166,.16)" stroke="#3557A6" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 15.5h8" stroke="#3557A6" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="1 3"/></symbol>
+</defs></svg>
+
+<main class="wrap">
+  <header>
+    <h1>Quilt Home</h1>
+    <p class="lede">Revised after an independent PM review from Sam's point of view. Home answers three questions in order: does anything need me, what's next, and how much is left. Then it lists every app. Nothing repeats, nothing is counted before Sam says OK, and Clair is one tap away: type, talk or add a photo.</p>
+  </header>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Home state">
+      <button type="button" data-s="demo" aria-pressed="true">Demo start · $412</button>
+      <button type="button" data-s="evening" aria-pressed="false">5:45 pm · typical</button>
+      <button type="button" data-s="morning" aria-pressed="false">8:10 am · busy day</button>
+      <button type="button" data-s="caught" aria-pressed="false">All caught up</button>
+      <button type="button" data-s="many" aria-pressed="false">30 apps</button>
+      <button type="button" data-s="day1" aria-pressed="false">Day one · no apps</button>
+      <button type="button" data-s="share" aria-pressed="false">Shared syllabus</button>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="phone" id="phone" lang="en" aria-label="Quilt Home">
+      <div class="screen" id="screen"><div class="content" id="home"></div></div>
+      <nav class="dock" id="dock" aria-label="Pinned apps and Clair"></nav>
+      <div class="scrim" id="scrim"></div>
+      <div class="sheet" id="sheet" role="dialog" aria-labelledby="shH" inert><span class="grab" aria-hidden="true"></span><div class="sc" id="sc"></div></div>
+      <div class="toast" id="toast" role="status" aria-live="polite"><span id="tt"></span><button type="button" id="tb" hidden></button></div>
+    </div>
+    <div class="side">
+      <section>
+        <h2>What Home is made of</h2>
+        <p class="small" style="color:var(--muted);margin:6px 0 10px">Built from signals every app emits, so it works for any mix of apps. A section with nothing to say disappears.</p>
+        <ol class="model" id="model"></ol>
+      </section>
+      <section style="display:flex;flex-direction:column;gap:10px">
+        <h2>What changed after the review</h2>
+        <ul class="rules">
+          <li><b>Cut "Right now".</b> It repeated the status line and Next up. Clair's time-of-day judgement now decides what the status line says.</li>
+          <li><b>Nothing counts before OK.</b> The receipt card shows "$412 → $376" and no app is marked changed until Sam adds it.</li>
+          <li><b>The Clair button</b> replaces the old camera and ask buttons: one place to type, talk or add a photo, and one thing can land in several apps. Tap opens the Clair sheet; hold to talk. Finding an app is the find box.</li>
+          <li><b>Clair asks first</b> in the evening: "3 things from today" waits in the queue like everything else.</li>
+          <li><b>Plain buttons:</b> "Add to 3 apps", "Review items", "Remind me to cancel". Stitching lives in the visuals.</li>
+          <li><b>One card style</b> for everything waiting (basted = waiting for OK), one at a time with "N more".</li>
+          <li><b>Your apps</b> has a find box and a number on every patch; forgotten apps say "not opened in 3 wk".</li>
+          <li>Money is in the status line in every state. The header clock is gone.</li>
+        </ul>
+      </section>
+      <section style="display:flex;flex-direction:column;gap:10px">
+        <h2>Voice</h2>
+        <div class="voice">
+          <div class="yes"><small>SAY</small>$412 left · pull day at 6 pm.</div><div class="no"><small>NOT</small><s>Hey Sam! You've got a busy evening ahead!</s></div>
+          <div class="yes"><small>SAY</small>Eating out is $15 over. Groceries is on track.</div><div class="no"><small>NOT</small><s>You overspent on eating out!</s></div>
+          <div class="yes"><small>SAY</small>Remind me to cancel</div><div class="no"><small>NOT</small><s>Stitch it in</s> (Quilt can't cancel Hulu for you)</div>
+          <div class="yes"><small>SAY</small>Nothing needs you right now.</div><div class="no"><small>NOT</small><s>No new notifications.</s></div>
+        </div>
+      </section>
+      <section style="display:flex;flex-direction:column;gap:10px">
+        <h2>Theme</h2>
+        <p>Chrome stays muslin and ink so the colour comes from Sam's own apps. Waiting for OK is always the loose basting stitch, Clair is denim, "just changed" is mustard, and nothing is red.</p>
+        <div class="swatches"><div><i style="background:#F4EEE1"></i>muslin · ground</div><div><i style="background:#2A2119"></i>ink · text, Clair button</div><div><i style="background:#3557A6"></i>denim · actions</div><div><i style="background:#E3A72F"></i>thread · just changed</div><div><i style="background:linear-gradient(90deg,#FBEBC4 25%,#DDEBD2 25% 50%,#D3ECE7 50% 75%,#F8DCC2 75%)"></i>patch dyes · the apps</div></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const EASE = 'cubic-bezier(.16,1,.3,1)', EASE_THREAD = 'cubic-bezier(.45,0,.15,1)';
+  const T = { fb: 120, state: 220, layout: 350, focal: 600, stateOut: 140, layoutOut: 220, focalOut: 360 };
+  let RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', e => RM = e.matches);
+  document.addEventListener('touchstart', () => {}, { passive: true });
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const NS = 'http://www.w3.org/2000/svg', NB = ' ';
+  const phone = $('#phone');
+  const icon = (id, s = 18) => `<svg class="ico" style="width:${s}px;height:${s}px" aria-hidden="true"><use href="#${id}"/></svg>`;
+  const DYES = ['#FBEBC4', '#DDEBD2', '#D3ECE7', '#F8DCC2', '#DCE4F3', '#EADCF0', '#E7EBC2', '#F3DCE0'];
+  const NAMED = { Budget: '#D3ECE7', Groceries: '#DDEBD2', Calendar: '#DCE4F3', 'To-dos': '#FBEBC4', Workout: '#F8DCC2', Classes: '#E7EBC2', Subscriptions: '#EADCF0', Meals: '#F3DCE0' };
+  const INK = 'rgba(42,33,25,';
+  const PR = ['', `repeating-linear-gradient(0deg,${INK}.08) 0 4px,transparent 4px 8px),repeating-linear-gradient(90deg,${INK}.08) 0 4px,transparent 4px 8px)`, `repeating-linear-gradient(135deg,${INK}.10) 0 1.5px,transparent 1.5px 7px)`, `radial-gradient(${INK}.16) 1.2px,transparent 1.7px) 0 0/8px 8px`];
+  const dyeColor = (n, i = 0) => NAMED[n] || DYES[i % 8];
+  const dye = (n, i = 0) => { const p = NAMED[n] ? '' : PR[Math.floor(i / 8) % 4]; return `background-color:${dyeColor(n, i)};${p ? 'background-image:' + p + ';' : ''}`; };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function spool(expr, size = 44, play = false) {
+    const W = '#FFFFFF', INKC = '#2A2119', sm = size <= 44;
+    const o = sm ? 2.6 : 1.6, fw = sm ? 2.6 : 1.8, er = sm ? 3.2 : 2.3; // outline, face stroke, eye radius
+    const eyes = (dx = 0, dy = 0) => `<g class="eyes"><circle cx="${23 + dx}" cy="${26 + dy}" r="${er}" fill="${W}"/><circle cx="${33 + dx}" cy="${26 + dy}" r="${er}" fill="${W}"/></g>`;
+    const P = (dd, fill = 'none') => `<path d="${dd}" fill="${fill}" stroke="${W}" stroke-width="${fw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const happyEyes = P('M20.5 27 q2.5 -3.5 5 0 M30.5 27 q2.5 -3.5 5 0');
+    let face = '', extra = '', tail = 'M14 38 C8 40 5 43 0 45', over = '', cls = '';
+    switch (expr) {
+      case 'hello': face = eyes() + P('M24 31 q4 3 8 0'); cls = play ? 'sp-hop' : ''; break;
+      case 'working': face = eyes(1.5, 1.5) + `<ellipse cx="29.5" cy="33" rx="1.8" ry="1.5" fill="${W}"/>`; cls = 'sp-bob'; break;
+      case 'thinking': face = eyes(1.5, -2) + P('M26 33 h5'); extra = `<g class="dots"><circle cx="50" cy="8" r="1.8" fill="${INKC}"/><circle cx="55" cy="2" r="2.2" fill="${INKC}"/><circle cx="61" cy="-5" r="2.6" fill="${INKC}"/></g>`; cls = 'sp-think'; break;
+      case 'waiting': face = eyes() + P('M20.5 21 q2.5 -2 5 0 M30.5 21 q2.5 -2 5 0') + P('M25 31.5 q3 2 6 0'); extra = `<path d="M41 9 L55 -5 L57 -7 L55 -3 Z" fill="#C9CCD1" stroke="${INKC}" stroke-width="1.2" stroke-linejoin="round"/>`; break;
+      case 'stitched': face = happyEyes + P('M23.5 30.5 q4.5 4.5 9 0'); cls = play ? 'sp-hop' : ''; if (sm) extra = `<path d="M46 2l3 3 6-7" fill="none" stroke="${INKC}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`; break;
+      case 'proud': face = happyEyes + `<circle cx="18.5" cy="31" r="2.1" fill="#F8DCC2"/><circle cx="37.5" cy="31" r="2.1" fill="#F8DCC2"/><path d="M23 30 q5 6.5 10 0 z" fill="${W}"/>`; cls = play ? 'sp-hop' : ''; if (sm) extra = `<path d="M50 -1v10M45 4h10" stroke="#E3A72F" stroke-width="2.4" stroke-linecap="round"/>`; break;
+      case 'oops': face = eyes(0, 1) + P('M20.5 22.5 L25.5 20.5 M30.5 20.5 L35.5 22.5') + P('M23.5 33.5 q1.5 -1.6 3 0 t3 0 t3 0'); tail = ''; over = `<path d="M14 40 l-4 1.5 l2 3 l-4.5 1 l2 3 l-5 1" fill="none" stroke="${INKC}" stroke-width="${o}" stroke-linecap="round" stroke-linejoin="round"/>`; cls = play ? 'sp-shake' : ''; break;
+      case 'sleepy': face = P('M20.5 26 q2.5 2 5 0 M30.5 26 q2.5 2 5 0') + P('M26 32.5 q2 1.2 4 0'); extra = `<path d="M47 1h5l-5 6h5M55 -7h4l-4 5h4" fill="none" stroke="${INKC}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`; cls = 'sp-breathe'; break;
+    }
+    return `<svg class="sp ${cls}" width="${size}" height="${Math.round(size * 70 / 68)}" viewBox="-6 -10 68 70" aria-hidden="true"><g class="body">
+      ${tail ? `<path d="${tail}" fill="none" stroke="${INKC}" stroke-width="${o}" stroke-linecap="round" stroke-linejoin="round"/>` : ''}
+      <rect x="10" y="6" width="36" height="8" rx="3" fill="#D9B98F" stroke="${INKC}" stroke-width="${o}"/>
+      <rect x="14" y="14" width="28" height="28" fill="#3557A6" stroke="${INKC}" stroke-width="${o}"/>
+      ${sm ? '' : '<path d="M14 18.5h28M14 38h28" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="1.4"/>'}
+      <rect x="10" y="42" width="36" height="8" rx="3" fill="#D9B98F" stroke="${INKC}" stroke-width="${o}"/>
+      ${over}${face}</g>${extra}</svg>`;
+  }
+  let lastFace = '';
+  const clair = (expr, size) => { const play = expr !== lastFace; lastFace = expr; return spool(expr, size, play); };
+  const logo = () => `<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="9" height="9" rx="2" fill="#E3A72F"/><rect x="12" y="1" width="9" height="9" rx="2" fill="#5B7DB1"/><rect x="1" y="12" width="9" height="9" rx="2" fill="#8DB580"/><rect x="12" y="12" width="9" height="9" rx="2" fill="#9C6BA8"/></svg>`;
+  const APPS = [
+    ['Budget', 'i-wallet', 0, '$412 left'], ['Groceries', 'i-cart', 0, '12 to buy'], ['Calendar', 'i-cal', 0, '3 today'], ['To-dos', 'i-check', 0, '3 today'], ['Workout', 'i-lift', 1, `Pull day 6${NB}pm`], ['Subscriptions', 'i-repeat', 2, '$38 a month'],
+    ['Classes', 'i-book', 1, '2 due'], ['Runs', 'i-lift', 4, '12 mi wk'], ['Meals', 'i-cart', 2, '4 planned'], ['Chores', 'i-home', 6, '2 left'], ['Savings jar', 'i-wallet', 9, '$140'], ['Journal', 'i-note', 3, '6 entries'], ['Assignments', 'i-book', 0, '4 open'], ['Sleep', 'i-note', 17, '7.1 h'],
+    ['Rent split', 'i-wallet', 12, '$0 owed'], ['Reading list', 'i-book', 22, '3 books'], ['Plants', 'i-home', 25, '2 to water'], ['Textbooks', 'i-wallet', 30, '$214'], ['Internship apps', 'i-book', 5, '6 sent'], ['Water', 'i-note', 19, '5 cups'], ['Movies', 'i-note', 8, '9 seen'], ['Laundry', 'i-home', 16, 'Sat'], ['Recipes', 'i-note', 11, '14 saved'], ['Side gig', 'i-wallet', 2, '$85 wk'],
+    ['Climbing', 'i-lift', 15, '3 sends'], ['Exams', 'i-book', 7, 'Wed 9 Dec'], ['Packing list', 'i-home', 40, '0 / 18'], ['Birthdays', 'i-note', 21, 'Maya Sat'], ['Coffee count', 'i-wallet', 1, '$16 Oct'], ['CS 3500', 'i-book', 1, 'Mon']
+  ].map(([n, ic, days, face], i) => ({ n, ic, days, face, i }));
+  const by = n => APPS.find(a => a.n === n);
+  const PINS = ['Budget', 'Groceries', 'Calendar', 'To-dos'];
+  const TARGETS = ['Budget', 'Groceries', 'Calendar'];
+  let state = 'evening', left = 412, items = 12, expanded = false, query = '', queue = [], changed = new Set(), busy = false, runId = 0, held = false;
+
+  const app = n => `<span class="app"><i class="dot" data-app="${n}" style="background:${dyeColor(n)}"></i>${n}</span>`;
+  const ITEMS = {
+    receipt: () => `<section class="st basted card" data-f="receipt" aria-label="Corner Market receipt, waiting for your OK">
+        <span class="from">${icon('i-cam', 14)}From your receipt photo · 5:41${NB}pm</span>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-size:16px">Corner Market</b><span style="font-family:var(--f-data);font-size:14px">$35.83</span></div>
+        <span class="line">8 items. Adding updates 3 apps:</span>
+        <span class="apps">${app('Budget')}${app('Groceries')}${app('Calendar')}</span>
+        <span class="delta">Budget <s>${fmt(left)}</s> → <b>${fmt(left - 36)}</b> left</span>
+        <div class="btns"><button type="button" class="b" data-act="add">Add to 3 apps</button><button type="button" class="b ghost" data-act="review">Review items</button></div></section>`,
+    hulu: () => `<section class="st basted card" data-f="hulu" aria-label="Clair suggestion about Hulu, waiting for your OK">
+        <span class="from">${icon('i-chalk', 14)}Clair · Subscriptions</span>
+        <p class="clair">Hulu hasn't been opened in 45 days. Cancelling it would keep <b>$120 a year</b>.</p>
+        <div class="btns"><button type="button" class="b" data-act="hulu">Remind me to cancel</button><button type="button" class="b ghost" data-act="keep">Keep Hulu</button></div></section>`,
+    scan: () => `<section class="st basted card" data-f="scan" aria-label="Clair noticed a pattern">
+        <span class="from">${icon('i-chalk', 14)}Clair noticed · Budget × Groceries</span>
+        <p class="clair">Weeks you scan grocery receipts, you spend <b>$41 less</b> eating out.</p>
+        <div class="btns"><button type="button" class="b" data-act="rule">Remind me to scan</button><button type="button" class="b ghost" data-act="dismiss">Not useful</button></div></section>`,
+    checkin: () => `<section class="st basted card" data-f="checkin" aria-label="Clair's evening check-in, waiting for your OK">
+        <span class="from">${icon('i-chalk', 14)}Clair · end of day</span>
+        <b style="font-size:16px">3 things from today</b>
+        <ul class="ci"><li>Pull day at 6${NB}pm. Log it after?</li><li>Return library books · due today</li><li>Spotify renews Sun 22 Nov · $11.99</li></ul>
+        <div class="btns"><button type="button" class="b" data-act="checkin">Review</button><button type="button" class="b ghost" data-act="later">Not now</button></div></section>`,
+    meals: () => `<section class="st basted card" data-f="meals" aria-label="Clair drafted meals, waiting for your OK">
+        <span class="from">${icon('i-chalk', 14)}Clair · Meals</span>
+        <p class="clair">4 dinners from what's in your pantry, using the chicken before Tuesday.</p>
+        <div class="btns"><button type="button" class="b" data-act="meals">Add to Meals</button><button type="button" class="b ghost" data-act="review">Look first</button></div></section>`
+  };
+  const fmt = n => `$${n}`, cash = () => `<em class="roll" id="money"><span>${fmt(left)}</span></em>`;
+  const S = {
+    evening: { hello: 'Evening, Sam.', queue: ['receipt', 'checkin', 'hulu', 'scan'], count: 14,
+      status: () => `${cash()} left this month. Pull day at <em>6${NB}pm</em>.`,
+      next: [[`6${NB}pm`, 'Pull day', 'Workout · 5 exercises', 'Workout'], [`9${NB}pm`, 'Return library books', 'To-dos · due today', 'To-dos'], ['Sun', 'Spotify renews', 'Subscriptions · $11.99', 'Subscriptions']] },
+    morning: { hello: 'Morning, Sam.', queue: ['meals'], count: 14,
+      status: () => `${cash()} left this month. MATH 2270 quiz at <em>9:40${NB}am</em>.`,
+      next: [[`9:40${NB}am`, 'MATH 2270 quiz', 'Classes · JWB 335', 'Classes'], [`3${NB}pm`, 'DevDay demo', 'Calendar · Lassonde Studios', 'Calendar'], [`6${NB}pm`, 'Pull day', 'Workout · 5 exercises', 'Workout']] },
+    caught: { hello: 'Afternoon, Sam.', queue: [], count: 14,
+      status: () => `${cash()} left this month. DevDay demo at <em>3${NB}pm</em>.`,
+      next: [[`3${NB}pm`, 'DevDay demo', 'Calendar · Lassonde Studios', 'Calendar'], [`6${NB}pm`, 'Pull day', 'Workout · 5 exercises', 'Workout'], ['Sun', 'Spotify renews', 'Subscriptions · $11.99', 'Subscriptions']] }
+  };
+  S.many = { ...S.evening, count: 30 };
+  S.demo = { ...S.evening, queue: ['checkin', 'hulu', 'scan'] }; // live demo: no receipt yet; Clair › Photo › shutter queues it
+
+  const toast = (m, btn, fn) => { $('#tt').textContent = m; const b = $('#tb'); b.hidden = !btn; b.textContent = btn || ''; b.onclick = () => { $('#toast').classList.remove('on'); fn && fn(); }; $('#toast').classList.add('on'); clearTimeout(toast.k); toast.k = setTimeout(() => $('#toast').classList.remove('on'), 3200); };
+
+  function appsGrid(n) {
+    const q = query.trim().toLowerCase();
+    const list = APPS.slice(0, n).sort((a, b) => a.days - b.days || a.i - b.i).filter(a => !q || a.n.toLowerCase().includes(q));
+    if (!list.length) return `<p class="small" style="grid-column:1/-1;margin:8px 0">No app called "${esc(query)}". <button type="button" class="seeall" data-act="newapp">Build it with Clair</button></p>`;
+    return list.map((a, k) => {
+      const big = !q && k === 0, mid = !q && (k === 1 || k === 2);
+      const stale = a.days >= 14 ? `<span class="stale">not opened in ${Math.round(a.days / 7)} wk</span>` : `<span class="face roll${big ? ' big' : ''}"><span>${a.face}</span></span>`;
+      const mark = changed.has(a.n) ? (big ? '<span class="tag">Just changed</span>' : '<span class="notch" aria-hidden="true"></span>') : '';
+      return `<button type="button" class="qp ${big ? 's1' : mid ? 's3' : ''}${a.days >= 14 ? ' faded' : ''}" style="${dye(a.n, a.i)}" data-open="${a.n}" aria-label="${a.n}, ${a.days >= 14 ? 'not opened in ' + Math.round(a.days / 7) + ' weeks' : a.face}${changed.has(a.n) ? ', just changed' : ''}">${mark}<span class="nm">${icon(a.ic, 16)}<span>${a.n}</span></span>${stale}</button>`;
+    }).join('');
+  }
+  function dock(day1) {
+    $('#dock').innerHTML = `<div class="row" role="group" aria-label="Pinned apps">${day1
+      ? `<span class="pb" style="background:var(--surface);color:var(--w-ink2);border-radius:16px 0 0 16px;font-weight:500"><span style="font-size:13px;white-space:normal;text-align:center;padding:0 12px">Your most-used apps get pinned here</span></span>`
+      : PINS.map(n => `<button type="button" class="pb" data-open="${n}" style="${dye(n)}">${changed.has(n) ? '<span class="notch" aria-hidden="true"></span>' : ''}${icon(by(n).ic)}<span>${n}</span></button>`).join('')}
+      <button type="button" class="pb clairb" data-act="clair" aria-label="Clair: type, talk or add a photo. Hold to talk">${icon('i-spool', 20)}<span>Clair</span></button></div>`;
+    bindHold($('#dock .clairb'));
+  }
+  /* Hold 450ms = talk: the sheet opens in Talk mode while held; release sends, slide up 60px+ cancels.
+     Tap = the sheet (the click handler swallows the click that follows a hold). */
+  function bindHold(btn) {
+    let t = 0, pid = null, x0 = 0, y0 = 0;
+    const clear = () => { clearTimeout(t); btn.classList.remove('holding'); };
+    btn.addEventListener('pointerdown', e => {
+      if (e.button || busy) return;
+      held = false; pid = e.pointerId; x0 = e.clientX; y0 = e.clientY;
+      try { btn.setPointerCapture(pid); } catch (_) {}
+      btn.classList.add('holding');
+      t = setTimeout(() => { held = true; btn.classList.remove('holding'); navigator.vibrate?.(10); startTalk(true); }, 450);
+    });
+    btn.addEventListener('pointermove', e => {
+      if (e.pointerId !== pid) return;
+      if (!held) { if (Math.hypot(e.clientX - x0, e.clientY - y0) > 12) clear(); return; }
+      talkCancel(y0 - e.clientY >= 60);
+    });
+    btn.addEventListener('pointerup', e => { if (e.pointerId !== pid) return; pid = null; clear(); if (held) talkRelease(false); });
+    btn.addEventListener('pointercancel', e => { if (e.pointerId !== pid) return; pid = null; clear(); if (held) { held = false; talkRelease(true); } });
+    btn.addEventListener('contextmenu', e => e.preventDefault());
+  }
+  function okqHTML() {
+    if (queue.length) {
+      lastFace = '';
+      return `<div class="sect" data-f="ok-sect"><span>Needs your OK · ${queue.length}</span></div>
+        ${(expanded ? queue : queue.slice(0, 1)).map(k => ITEMS[k]()).join('')}
+        ${queue.length > 1 ? `<button type="button" class="morebtn" data-act="more" data-f="more">${expanded ? 'Show one at a time' : `${queue.length - 1} more waiting`}</button>` : ''}`;
+    }
+    return `<section class="st card" data-f="caught" style="flex-direction:row;align-items:center;gap:12px">${clair('stitched', 44)}<span style="display:flex;flex-direction:column"><b>Nothing needs you right now</b><span class="small">${state === 'caught' ? 'You added a receipt and set a reminder to cancel Hulu today.' : 'All caught up.'}</span></span></section>`;
+  }
+  function render() {
+    const h = $('#home');
+    if (state === 'day1') {
+      h.innerHTML = `
+        <div class="top"><span class="brand">${logo()}quilt</span><button type="button" class="ib" aria-label="Profile and settings" style="background:${DYES[3]};border-radius:50%">${icon('i-user')}</button></div>
+        <section style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding-top:8px">${clair('hello', 96)}<h2 class="hello">Hi, Sam. Let's build your first app.</h2><p class="status" style="font-size:16px">Say what you want to keep track of, or start from one of these. Tell Clair anything: type, talk or add a photo.</p></section>
+        <button type="button" class="find" data-act="clair" style="width:100%;border:0;font:inherit;font-size:16px;color:var(--w-ink2);text-align:left">Track my subscriptions and…<span style="margin-left:auto;width:40px;min-height:36px;padding:0" class="b" aria-hidden="true">${icon('i-send')}</span></button>
+        <div class="sect"><span>Or start from one of these</span></div>
+        <div class="nowq" style="grid-auto-rows:84px">${[['Subscriptions', 'i-repeat', 'the money you forget'], ['Groceries', 'i-cart', 'from a receipt photo'], ['Classes', 'i-book', 'every due date'], ['Workout', 'i-lift', 'sets, reps, PRs']].map(([n, ic, why]) => `<button type="button" class="qp" style="${dye(n)};grid-column:span 3" data-open="${n}"><span class="nm">${icon(ic, 16)}<span>${n}</span></span><span class="small" style="font-weight:500">${why}</span></button>`).join('')}</div>`;
+      dock(true); return;
+    }
+    const s = S[state];
+    h.innerHTML = `
+      <div class="top"><span class="brand">${logo()}quilt</span><button type="button" class="ib" aria-label="Profile and settings" style="background:${DYES[3]};border-radius:50%">${icon('i-user')}</button></div>
+      <header><h2 class="hello">${s.hello}</h2><p class="status">${s.status()}</p></header>
+      <div id="okq" style="display:contents">${okqHTML()}</div>
+      <div class="sect" data-f="n-sect"><span>Next up</span><span>From every app</span></div>
+      <div class="thread" role="list" data-f="thread">${s.next.map(([when, what, sub, a], k) => `<button type="button" role="listitem" class="tn${k === 0 ? ' now' : ''}" style="--k:${dyeColor(a)}" data-open="${a}"><span class="when">${when}</span><span class="what"><b>${what}</b><span>${sub}</span></span></button>`).join('')}</div>
+      <button type="button" class="seeall" data-open="Calendar" data-f="seeall">See the week in Calendar ›</button>
+      <div class="sect" data-f="a-sect"><span>Your apps · ${s.count}</span><span>Most used first</span></div>
+      <label class="find" data-f="find">${icon('i-search', 16)}<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Find an app</span><input id="findApp" type="search" enterkeyhint="search" placeholder="Find an app" value="${esc(query)}" autocomplete="off"></label>
+      <div class="quilt" id="quilt" data-f="quilt">${appsGrid(s.count)}</div>`;
+    dock(false);
+    $('#findApp').addEventListener('input', e => { query = e.target.value; $('#quilt').innerHTML = appsGrid(s.count); });
+  }
+
+  /* Queue changes never re-render Home: the leaving card exits, the region swaps, everything below FLIPs (translate only), new cards enter. */
+  async function syncQueue(prep) {
+    const home = $('#home'), okq = $('#okq'), tpl = document.createElement('template');
+    tpl.innerHTML = okqHTML();
+    const keep = new Set($$('[data-f]', tpl.content).map(e => e.dataset.f));
+    const leaving = $$('section[data-f]', okq).filter(e => !keep.has(e.dataset.f));
+    await Promise.all(leaving.map(e => e.animate(RM ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-8px)' }], { duration: RM ? T.fb : T.stateOut, easing: EASE, fill: 'forwards' }).finished));
+    const first = new Map($$('[data-f]', home).map(e => [e.dataset.f, e.getBoundingClientRect().top]));
+    okq.replaceChildren(tpl.content);
+    prep && prep(okq);
+    let n = 0; const anims = [];
+    $$('[data-f]', home).forEach(e => {
+      const k = e.dataset.f, top = e.getBoundingClientRect().top;
+      if (first.has(k)) { const dy = first.get(k) - top; if (Math.abs(dy) > .5 && !RM) anims.push(e.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: T.layout, easing: EASE })); }
+      else anims.push(e.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: RM ? T.fb : T.state, delay: RM ? 0 : Math.min(n++, 2) * 40, easing: EASE, fill: 'backwards' }));
+    });
+    model();
+    await Promise.all(anims.map(a => a.finished));
+  }
+
+  /* Number roll: up for increases, down for decreases. */
+  function roll(el, text, down) {
+    if (!el) return;
+    const old = el.lastElementChild;
+    [...el.children].slice(0, -1).forEach(c => c.remove());
+    if (RM || !old) { el.innerHTML = `<span>${esc(text)}</span>`; return; }
+    const nu = document.createElement('span'); nu.textContent = text; el.append(nu);
+    const d = down ? 100 : -100;
+    old.animate([{ transform: 'none', opacity: 1 }, { transform: `translateY(${d}%)`, opacity: 0 }], { duration: T.state, easing: EASE, fill: 'forwards' }).finished.then(() => old.remove());
+    nu.animate([{ transform: `translateY(${-d}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: T.state, easing: EASE });
+  }
+  const marked = n => [$(`#dock .pb[data-open="${n}"]`), $(`#quilt .qp[data-open="${n}"]`)].filter(Boolean);
+  function mark(n) {
+    marked(n).forEach(el => {
+      if (el.querySelector('.tag,.notch')) return;
+      const big = el.classList.contains('s1'), m = document.createElement('span');
+      m.className = big ? 'tag' : 'notch'; if (big) m.textContent = 'Just changed'; else m.setAttribute('aria-hidden', 'true');
+      el.prepend(m);
+      m.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'scale(.95)' }, { opacity: 1, transform: 'none' }], { duration: RM ? T.fb : T.state, easing: EASE });
+    });
+  }
+  function unmark(n) { marked(n).forEach(el => $$('.tag,.notch', el).forEach(m => m.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.stateOut, easing: EASE, fill: 'forwards' }).finished.then(() => m.remove()))); }
+  // Faces and money roll; data changes first, the roll shows it. Spending rolls Budget down.
+  function face(n, v, down) { by(n).face = v; const q = $(`#quilt .qp[data-open="${n}"]`); q?.setAttribute('aria-label', q.getAttribute('aria-label').replace(/^([^,]+), [^,]+/, `$1, ${v}`)); roll($(`#quilt .qp[data-open="${n}"] .face`), v, down); }
+  function money(down) { face('Budget', `${fmt(left)} left`, down); roll($('#money'), fmt(left), down); }
+
+  /* Signature thread pull: one thread per app, from the card's dye dot to the pinned-bar pin. */
+  function pt(el, top) {
+    const p = phone.getBoundingClientRect(), r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2 - p.left - phone.clientLeft, y: (top ? r.top : r.top + r.height / 2) - p.top - phone.clientTop };
+  }
+  function threads(card, names) {
+    $('#phone > .threads')?.remove();
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'threads'); svg.setAttribute('aria-hidden', 'true'); phone.append(svg);
+    const paths = names.map(n => {
+      const a = pt($(`.dot[data-app="${n}"]`, card)), b = pt($(`#dock .pb[data-open="${n}"] .ico`), true), dy = Math.max(40, (b.y - a.y) * .55);
+      const p = document.createElementNS(NS, 'path');
+      p.setAttribute('d', `M${a.x} ${a.y} C${a.x} ${a.y + dy} ${b.x} ${b.y - dy} ${b.x} ${b.y}`); svg.append(p);
+      const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+      return [p, L];
+    });
+    return [svg, paths];
+  }
+  /* Threads from each source dye dot to its pin; apps with no pin (or no dot) land after the threads. land(n) = mark + roll. */
+  async function pull(src, names, id, land) {
+    const pinned = RM ? [] : names.filter(n => $(`.dot[data-app="${n}"]`, src) && $(`#dock .pb[data-open="${n}"]`));
+    if (!pinned.length) { names.forEach(land); return; }
+    const [svg, paths] = threads(src, pinned);
+    await Promise.all(paths.map(async ([p, L], i) => {
+      await sleep(i * 120); if (id !== runId) return;
+      p.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: T.focal, easing: EASE_THREAD, fill: 'forwards' });
+      await sleep(T.focal * .7); if (id !== runId) return;
+      land(pinned[i]);
+    }));
+    if (id !== runId) return;
+    names.filter(n => !pinned.includes(n)).forEach(land);
+    await sleep(400); if (id !== runId) return;
+    svg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.layoutOut, easing: EASE, fill: 'forwards' }).finished.then(() => svg.remove());
+  }
+  async function addReceipt(btn) {
+    if (busy) return; busy = true; const id = ++runId, before = queue.slice();
+    const card = btn.closest('section');
+    $$('button', card).forEach(b => b.disabled = true);
+    card.classList.remove('basted');
+    await sleep(T.state); if (id !== runId) return;
+    await pull(card, TARGETS, id, n => {
+      mark(n); changed.add(n);
+      if (n === 'Groceries') { items -= 8; face('Groceries', `${items} to buy`, false); }
+      if (n === 'Calendar') face('Calendar', '4 today', false);
+      if (n === 'Budget') { left -= 36; money(true); }
+    }); if (id !== runId) return;
+    queue = queue.filter(k => k !== 'receipt');
+    await syncQueue(); if (id !== runId) return;
+    busy = false;
+    toast('Added 8 items to Groceries, Budget and Calendar.', 'Undo', () => undoReceipt(before));
+  }
+  async function undoReceipt(before) {
+    if (busy) return; busy = true; const id = ++runId;
+    left += 36; items += 8; queue = before;
+    await syncQueue(okq => $('[data-f="receipt"]', okq).classList.remove('basted')); if (id !== runId) return;
+    const card = $('#okq [data-f="receipt"]');
+    TARGETS.forEach(n => { unmark(n); changed.delete(n); });
+    money(false); face('Groceries', `${items} to buy`, true); face('Calendar', '3 today', true);
+    if (!RM) {
+      const [svg, paths] = threads(card, TARGETS);
+      await Promise.all(paths.map(([p, L]) => p.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: L }], { duration: T.focalOut, easing: EASE, fill: 'forwards' }).finished));
+      svg.remove(); if (id !== runId) return;
+    }
+    card.classList.add('basted');
+    busy = false;
+  }
+
+  /* ---------------- Clair sheet: start · talk · capture result · ask answer · photo · share ---------------- */
+  const sheet = $('#sheet'), scrim = $('#scrim'), sc = $('#sc'), coarse = matchMedia('(pointer: coarse)');
+  let stopDrag = () => {}, sheetRun = 0, swapId = 0, sheetH1 = 0, sheetFace = '', sheetOpts = {}, sheetReturn = null, talk = null;
+  const isOpen = () => sheet.classList.contains('on');
+  const dots = apps => apps.map(n => `<i class="dot" data-app="${n}" style="background:${dyeColor(n)}"></i>`).join('');
+  const head = (expr, title) => { const play = expr !== sheetFace; sheetFace = expr;
+    return `<div class="shd">${spool(expr, 44, play)}<h2 class="sh2" id="shH" tabindex="-1">${title}</h2><button type="button" class="ib" data-act="close" aria-label="Close">${icon('i-x')}</button></div>`; };
+  const att = from => `<div class="att">${icon('i-file', 20)}<span><b>Syllabus · ECON 1010.pdf</b><span class="small">4 pages${from ? ' · ' + from : ''}</span></span></div>`;
+  // one of each kind, by time of day
+  const SUGG = {
+    evening: [['Add', `Spent $12 on lunch, gym tomorrow 6${NB}pm`, 'capture'], ['Ask', 'Can I afford $60 concert tickets?', 'ask'], ['Build', 'Track my plants', 'build']],
+    morning: [['Add', 'Spent $5 on coffee', 'coffee'], ['Ask', 'Can I afford $60 concert tickets?', 'ask'], ['Build', 'Track my sleep', 'build']]
+  };
+  const TALK = `Spent $12 on lunch, gym tomorrow 6${NB}pm`;
+  const RES = {
+    capture: { h: 'Goes in 3 apps', spend: 12, toast: 'Added to Budget, Calendar and Workout.',
+      cards: [{ apps: ['Budget'], what: 'Eating out', val: '$12', sub: 'Lunch · today' }, { apps: ['Calendar', 'Workout'], what: 'Gym', val: `Sat 21 Nov, 6${NB}pm` }] },
+    coffee: { h: 'Goes in Budget', spend: 5, toast: 'Added $5 coffee to Budget.',
+      cards: [{ apps: ['Budget'], what: 'Eating out', val: '$5', sub: 'Coffee · today' }] },
+    checkin: { h: '3 things from today', done: 'checkin', cta: 'Update 3 apps', toast: 'Updated Workout, To-dos and Subscriptions.',
+      cards: [{ apps: ['Workout'], what: 'Pull day', val: `6${NB}pm`, sub: `Was at 6${NB}pm. Log it?` }, { apps: ['To-dos'], what: 'Return library books', val: 'Done', sub: 'Due today' }, { apps: ['Subscriptions'], what: 'Spotify renews', val: '$11.99', sub: 'Sun 22 Nov · remind me Sat' }] },
+    ask: { apps: ['Budget'], toast: 'Planned $60 for concert tickets in Budget.' },
+    share: { apps: ['Classes', 'Calendar'], faces: { Classes: '3 due' }, toast: 'Added 6 due dates and 2 exams to Classes and Calendar.' }
+  };
+  const pcard = c => `<section class="st basted card"><span class="from">${dots(c.apps)}${c.apps.join(' + ')}</span><div class="pr"><b>${c.what}</b><span class="${c.val[0] === '$' ? 'num' : ''}">${c.val}</span></div>${c.sub ? `<span class="small">${c.sub}</span>` : ''}</section>`;
+  const wave = () => `<svg class="wave" id="wave" viewBox="0 0 312 28" aria-hidden="true">${Array.from({ length: 19 }, (_, i) => `<line x1="${12 + i * 16 - 4.5}" y1="14" x2="${12 + i * 16 + 4.5}" y2="14"/>`).join('')}</svg>`;
+  function view(st, o) {
+    if (st === 'start') return head('hello', 'Tell Clair anything') + `
+      <form class="find tell" id="tell"><label class="sr" for="tellIn">Tell Clair anything</label><input id="tellIn" type="text" enterkeyhint="send" autocomplete="off" placeholder="Spent $12 on lunch, gym tomorrow 6 pm…" value="${esc(o.text || '')}"><button type="submit" class="ib" aria-label="Send">${icon('i-send')}</button></form>
+      <div class="chips3"><button type="button" class="chip" data-act="talk">${icon('i-mic')}Talk</button><button type="button" class="chip" data-act="photo">${icon('i-cam')}Photo</button><button type="button" class="chip" data-act="file">${icon('i-clip')}File</button></div>
+      <div class="sect"><span>Try</span></div>
+      <div class="tries">${SUGG[state === 'morning' ? 'morning' : 'evening'].map(([k, t, r]) => `<button type="button" class="try" data-try="${r}" data-text="${esc(t)}"><span class="k">${k}</span><span>${t}</span></button>`).join('')}</div>
+      <button type="button" class="morebtn" data-act="chat">Open chat ›</button>`;
+    if (st === 'talk') return head('waiting', 'Listening') + wave() + `<p class="tx" id="tx" aria-live="polite"></p>` + (o.hold
+      ? `<p class="hint" id="hint">Release to send · slide up to cancel</p>`
+      : `<div class="btns"><button type="button" class="b" data-act="send">Send</button><button type="button" class="b ghost" data-act="close">Cancel</button></div>`);
+    if (st === 'think') return head(o.face || 'thinking', o.h) + (o.said ? `<p class="said">“${esc(o.said)}”</p>` : '') + (o.att ? att(o.att) : '')
+      + (o.photo ? `<div class="att"><span class="thumb" aria-hidden="true"><i></i></span><span><b>Receipt photo</b><span class="small">just now</span></span></div>` : '')
+      + (o.seam ? `<svg class="seam" viewBox="0 0 280 24" preserveAspectRatio="none" aria-hidden="true"><line class="g" x1="4" y1="12" x2="276" y2="12"/>${Array.from({ length: 8 }, (_, i) => `<line class="s" x1="${10 + i * 34}" y1="12" x2="${30 + i * 34}" y2="12"/>`).join('')}</svg><p class="small" style="margin:0" id="pg" aria-live="polite">Reading page 1 of 4</p>` : '');
+    if (st === 'result') { const r = RES[o.key], apps = [...new Set(r.cards.flatMap(c => c.apps))];
+      return head('waiting', r.h) + (o.said ? `<p class="said">“${esc(o.said)}”</p>` : '') + r.cards.map(pcard).join('')
+        + `<div class="btns"><button type="button" class="b" data-act="commit" data-res="${o.key}">${r.cta || (apps.length === 1 ? 'Add to ' + apps[0] : `Add to ${apps.length} apps`)}</button><button type="button" class="b ghost" data-act="edit">Edit</button></div>`; }
+    if (st === 'answer') { const after = left - 60;
+      return head('hello', esc(o.q)) + `<section class="st card ans"><p>${after >= 0 ? 'Yes' : 'Not this month'}. ${fmt(left)} left until 1 Dec; after $60 you'd have ${fmt(after)}, about ${fmt(Math.round(after / 11))} a day.</p>
+        <div class="srcs">${['Budget', 'Calendar'].map(n => `<button type="button" class="srcchip" data-open="${n}">${dots([n])}${n}</button>`).join('')}</div></section>
+        <div class="btns"><button type="button" class="b" data-act="commit" data-res="ask">Add to Budget as planned</button></div>
+        <button type="button" class="morebtn" data-act="again">Ask something else</button>`; }
+    if (st === 'camera') return head('hello', 'Add a photo') + `<div class="vf" role="img" aria-label="Camera, pointed at a receipt"><i></i></div>
+      <p class="small" style="margin:0;text-align:center">A receipt, a syllabus, a bill or a whiteboard.</p>
+      <div class="shut"><button type="button" class="shutter" data-act="shutter" aria-label="Take photo"></button></div>`;
+    if (st === 'share') return head('waiting', 'Found 6 due dates and 2 exams') + att(o.from) + `<p class="clair">Add to Classes and Calendar?</p>
+      <section class="st basted card"><span class="from">${dots(RES.share.apps)}Classes + Calendar</span>
+        <ul class="lst"><li>Problem set 1<span>Fri 27 Nov</span></li><li>Midterm 1 · exam<span>Wed 9 Dec</span></li><li>Essay draft<span>Mon 14 Dec</span></li></ul>
+        <span class="small">3 more due dates and 1 more exam</span></section>
+      <div class="btns"><button type="button" class="b" data-act="commit" data-res="share">Add to 2 apps</button></div>`;
+  }
+  function focusSheet(st) {
+    const f = st === 'start' && !coarse.matches ? $('#tellIn') : $('#shH'); // touch: heading, never the field (no keyboard pop)
+    f && f.focus({ preventScroll: true });
+  }
+  async function goSheet(st, o = {}) {
+    const id = ++swapId, html = view(st, o); sheetOpts = { st, ...o }; let base = 0;
+    if (!isOpen()) {
+      stopDrag(); $('#toast').classList.remove('on'); // a dismiss spring still settling must not close the reopened sheet
+      sc.getAnimations().forEach(a => a.cancel()); // a swap abandoned by a close can leave its fade-out filled
+      sc.innerHTML = html; sheet.scrollTop = 0;
+      sheetReturn = $('#dock .clairb');
+      sheet.inert = false; $('#screen').inert = true; scrim.style.opacity = ''; scrim.classList.add('on'); sheet.classList.add('on');
+    } else {
+      const h0 = sheet.offsetHeight;
+      if (!RM) await sc.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.fb, easing: EASE, fill: 'forwards' }).finished;
+      if (id !== swapId) return;
+      sc.innerHTML = html; sc.getAnimations().forEach(a => a.cancel()); sheet.scrollTop = 0;
+      const h1 = sheetH1 = sheet.offsetHeight, grow = Math.abs(h1 - h0) > 1;
+      if (grow) base = T.state - T.fb;
+      if (!RM) {
+        if (grow) sheet.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: T.state, easing: EASE });
+        sc.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.fb, delay: grow ? T.state - T.fb : 0, easing: EASE, fill: 'backwards' });
+      }
+    }
+    // N3 Proposals arrive: each destination card lands on its own, 40ms apart (cap 3); the buttons stay put. RM: opacity 120, no stagger.
+    if (st === 'result') $$('.st.card', sc).forEach((c, i) => c.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }],
+      { duration: RM ? T.fb : T.state, delay: RM ? 0 : base + Math.min(i, 2) * 40, easing: EASE, fill: 'backwards' }));
+    const f = $('#tell'); if (f) f.addEventListener('submit', e => { e.preventDefault(); const v = $('#tellIn').value.trim(); v ? route(v) : $('#tellIn').focus(); });
+    focusSheet(st);
+  }
+  function closeSheet() {
+    if (!isOpen()) return;
+    sheetRun++; swapId++; stopTalk(); sheetFace = '';
+    sheet.classList.remove('on', 'cancel'); sheet.inert = true; $('#screen').inert = false; scrim.classList.remove('on');
+    sheetReturn && sheetReturn.isConnected && sheetReturn.focus({ preventScroll: true });
+  }
+  function route(t, kind) {
+    kind = kind || (/\?\s*$|^(can|how|what|when|should|do|is|am|will)\b/i.test(t) ? 'ask' : /^(track|build|make)\b/i.test(t) ? 'build' : 'capture');
+    if (kind === 'build') { closeSheet(); return toast(`Opens New app with "${t}"`); }
+    if (kind === 'ask') return think({ h: 'Checking Budget and Calendar…', said: t }, 800, () => goSheet('answer', { q: t }));
+    think({ h: 'Reading that…', said: t }, 900, () => goSheet('result', { key: kind === 'coffee' ? 'coffee' : 'capture', said: t }));
+  }
+  async function think(o, ms, then) { const k = ++sheetRun; await goSheet('think', o); await sleep(ms); if (k === sheetRun) then(); }
+
+  /* Talk: simulated transcript; the waveform IS a running stitch whose stitch lengths follow the voice level. RM: static line. */
+  async function startTalk(hold) {
+    stopTalk(); sheetRun++;
+    const t = talk = { hold, n: 0, level: 0, cancel: false }, words = TALK.split(' ');
+    await goSheet('talk', { hold }); if (talk !== t) return;
+    t.iv = setInterval(() => { if (t.n < words.length) { t.n++; const tx = $('#tx'); if (tx) tx.textContent = words.slice(0, t.n).join(' '); t.level = 1; } }, 260);
+    if (RM) return;
+    const lines = $$('#wave line');
+    const loop = now => {
+      t.level = Math.max(0, t.level - .02);
+      lines.forEach((l, i) => { const v = Math.min(1, .08 + t.level * (.55 + .45 * Math.sin(now / 110 + i * 1.3))), c = 12 + i * 16, h = 1.5 + v * 5.5; l.setAttribute('x1', c - h); l.setAttribute('x2', c + h); });
+      t.raf = requestAnimationFrame(loop);
+    };
+    t.raf = requestAnimationFrame(loop);
+  }
+  function stopTalk() { if (!talk) return; clearInterval(talk.iv); cancelAnimationFrame(talk.raf); talk = null; }
+  function talkCancel(on) {
+    if (!talk || talk.cancel === on) return;
+    talk.cancel = on; sheet.classList.toggle('cancel', on); navigator.vibrate?.(8);
+    const h = $('#hint'); if (h) h.textContent = on ? 'Release to cancel' : 'Release to send · slide up to cancel';
+  }
+  async function talkRelease(cancel) {
+    const t = talk; if (!t) return;
+    stopTalk(); sheet.classList.remove('cancel');
+    if (cancel || t.cancel) return closeSheet();
+    // N2 Stitches settle: every stitch eases to its rest length (±4.5) and the hint says "Sending", then the swap. RM: hint only.
+    const k = sheetRun, h = $('#hint'); if (h) h.textContent = 'Sending';
+    if (!RM) $$('#wave line').forEach(l => l.animate([{ transform: 'none' }, { transform: `scaleX(${9 / (l.x2.baseVal.value - l.x1.baseVal.value)})` }], { duration: T.fb, easing: EASE, fill: 'forwards' }));
+    await sleep(T.fb); if (k !== sheetRun) return;
+    route(TALK, 'capture');
+  }
+
+  /* Confirm = the signature thread pull from the proposal cards to the pins, then the sheet closes and Home shows the tags. */
+  async function commitRes(key) {
+    if (busy) return; busy = true; const id = ++runId, r = RES[key], before = queue.slice();
+    const apps = r.apps || [...new Set(r.cards.flatMap(c => c.apps))];
+    const prev = Object.fromEntries(Object.keys(r.faces || {}).map(n => [n, by(n).face]));
+    $$('button', sc).forEach(b => b.disabled = true);
+    $$('.st.basted', sc).forEach(c => c.classList.remove('basted'));
+    await sleep(T.state); if (id !== runId) return;
+    await pull(sc, apps, id, n => {
+      mark(n); changed.add(n);
+      if (n === 'Budget' && r.spend) { left -= r.spend; money(true); }
+      if (r.faces?.[n]) face(n, r.faces[n], false);
+    }); if (id !== runId) return;
+    await sleep(RM ? 0 : 200); if (id !== runId) return;
+    closeSheet();
+    if (r.done) { queue = queue.filter(k => k !== r.done); await syncQueue(); if (id !== runId) return; }
+    busy = false;
+    toast(r.toast, 'Undo', async () => {
+      if (busy) return; busy = true; const id2 = ++runId;
+      apps.forEach(n => { unmark(n); changed.delete(n); });
+      if (r.spend && apps.includes('Budget')) { left += r.spend; money(false); }
+      for (const [n, v] of Object.entries(prev)) face(n, v, true);
+      if (r.done) { queue = before; await syncQueue(); }
+      if (id2 === runId) busy = false;
+    });
+  }
+  // Photo → the existing receipt flow: the receipt card waits in Needs your OK.
+  async function shutter() {
+    const k = ++sheetRun, vf = $('.vf', sc);
+    // N4 Photo drop-in: a copy of the viewfinder shrinks (uniform scale + side crop) into the attachment thumb while the rest crossfades. RM: thumb fades in 120.
+    let clone = null;
+    if (vf && !RM) { const p = phone.getBoundingClientRect(), r0 = vf.getBoundingClientRect(); clone = vf.cloneNode(true); clone.setAttribute('aria-hidden', 'true'); clone.removeAttribute('role');
+      Object.assign(clone.style, { position: 'absolute', margin: 0, zIndex: 50, pointerEvents: 'none', left: r0.left - p.left - phone.clientLeft + 'px', top: r0.top - p.top - phone.clientTop + 'px', width: r0.width + 'px', height: r0.height + 'px' }); phone.append(clone); }
+    await goSheet('think', { face: 'working', h: 'Reading the receipt…', photo: true });
+    const th = $('.thumb', sc);
+    if (k !== sheetRun || !th) clone?.remove();
+    else if (!clone) th.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.fb, easing: EASE });
+    else {
+      const r0 = clone.getBoundingClientRect(), rt = th.getBoundingClientRect(), shift = sheet.getBoundingClientRect().height - sheetH1; // sheet is bottom-anchored: its top settles by the height change
+      const s1 = rt.height / r0.height, crop = (r0.width - rt.width / s1) / 2;
+      const dx = rt.left + rt.width / 2 - (r0.left + r0.width / 2), dy = rt.top + shift + rt.height / 2 - (r0.top + r0.height / 2);
+      th.style.opacity = 0;
+      clone.animate([{ transform: 'none', clipPath: 'inset(0 round 16px)' }, { transform: `translate(${dx}px,${dy}px) scale(${s1})`, clipPath: `inset(0 ${crop}px round ${8 / s1}px)` }], { duration: T.layout, easing: EASE, fill: 'forwards' })
+        .finished.catch(() => {}).then(() => { th.style.opacity = ''; clone.remove(); });
+    }
+    await sleep(1200); if (k !== sheetRun) return;
+    closeSheet();
+    if (state === 'day1') return toast('Receipt read. Clair can build Groceries and Budget from it.');
+    if (busy) return; busy = true; const id = ++runId;
+    queue = ['receipt', ...queue.filter(x => x !== 'receipt')]; expanded = false;
+    $('#screen').scrollTo({ top: 0, behavior: RM ? 'auto' : 'smooth' });
+    await syncQueue(); if (id === runId) busy = false;
+  }
+  // N5 Reading seam: two stitches per page (4 pages = 8), one spool dip per page, page count in text. RM: stitches appear, text counts, no dip.
+  async function readSyllabus(from) {
+    const k = ++sheetRun;
+    await goSheet('think', { face: 'working', h: 'Reading the syllabus…', att: from, seam: true });
+    for (let pg = 0; pg < 4; pg++) {
+      await sleep(350); if (k !== sheetRun) return;
+      const ss = $$('.seam .s', sc); ss[pg * 2]?.classList.add('on'); await sleep(60); if (k !== sheetRun) return; ss[pg * 2 + 1]?.classList.add('on');
+      if (!RM) $('.shd .sp', sc)?.animate([{ transform: 'none' }, { transform: 'translateY(2px)' }, { transform: 'none' }], { duration: T.state, easing: 'ease-in-out' });
+      const pl = $('#pg'); if (pl) pl.textContent = `Reading page ${Math.min(4, pg + 2)} of 4`;
+    }
+    await sleep(300); if (k === sheetRun) goSheet('share', { from });
+  }
+
+  /* Drag to dismiss: grab bar / top 48px, or the body when scrolled to the top and moving down. 1:1, upward rubberband,
+     scrim follows; release = critically damped spring carrying finger speed. Touch via touch events (claim before scroll). */
+  function spring(from, to, v0, response, onUpdate, onDone) {
+    if (RM) { onUpdate(to, 0); onDone && onDone(); return () => {}; }
+    const w = 2 * Math.PI / response, x0 = from - to, t0 = performance.now(); let id;
+    const step = n => { const t = (n - t0) / 1000, e = Math.exp(-w * t), x = (x0 + (v0 + w * x0) * t) * e, v = (v0 - w * (v0 + w * x0) * t) * e;
+      if (Math.abs(x) < .5 && Math.abs(v) < 5) { onUpdate(to, 0); onDone && onDone(); } else { onUpdate(to + x, v); id = requestAnimationFrame(step); } };
+    id = requestAnimationFrame(step); return () => cancelAnimationFrame(id);
+  }
+  const project = (v, d = .995) => (v / 1000) * d / (1 - d);
+  const rubberband = (o, d, c = .55) => (o * d * c) / (d + c * Math.abs(o));
+  (() => {
+    let y0 = 0, x0 = 0, y = 0, mode = 'idle', inTop = false, h = 0, stop = null, a = [];
+    const track = v => { a.push([v, performance.now()]); if (a.length > 3) a.shift(); };
+    const vel = () => { if (a.length < 2) return 0; const [p0, t0] = a[0], [p1, t1] = a[a.length - 1]; return performance.now() - t1 > 80 || t1 <= t0 ? 0 : (p1 - p0) / (t1 - t0) * 1000; };
+    stopDrag = () => { if (!stop) return; stop(); stop = null; sheet.style.transition = 'none'; scrim.style.transition = 'none'; sheet.style.transform = ''; scrim.style.opacity = ''; sheet.offsetHeight; sheet.style.transition = ''; scrim.style.transition = ''; };
+    const set = v => { y = v; sheet.style.transform = `translateY(${v}px)`; scrim.style.opacity = String(Math.max(0, Math.min(1, 1 - v / h))); };
+    const begin = (cx, cy, target) => {
+      if (!isOpen() || busy || talk?.hold || target.closest('input')) return false;
+      stop && stop(); stop = null;
+      const r = sheet.getBoundingClientRect(); h = r.height;
+      const live = new DOMMatrix(getComputedStyle(sheet).transform).m42;
+      inTop = !!target.closest('.grab') || cy - r.top < 48;
+      x0 = cx; y0 = cy - (live || 0); mode = live ? 'drag' : 'pending'; a = []; track(cy);
+      if (live) { sheet.style.transition = 'none'; scrim.style.transition = 'none'; }
+      return true;
+    };
+    const move = (cx, cy) => {
+      if (mode === 'idle') return false;
+      const dy = cy - y0, dx = cx - x0;
+      if (mode === 'pending') {
+        if (Math.abs(dy) < 6 && Math.abs(dx) < 6) return false;
+        if (Math.abs(dx) > Math.abs(dy) || !(inTop || (dy > 0 && sheet.scrollTop <= 0))) { mode = 'idle'; return false; }
+        mode = 'drag'; sheet.style.transition = 'none'; scrim.style.transition = 'none';
+      }
+      track(cy); set(dy >= 0 ? dy : -rubberband(-dy, h));
+      return true;
+    };
+    const end = cancel => {
+      if (mode !== 'drag') { mode = 'idle'; return; }
+      mode = 'idle'; const v = cancel ? 0 : vel(), close = !cancel && y + project(v) > .35 * h;
+      const done = () => { stop = null; sheet.style.transition = 'none'; scrim.style.transition = 'none'; sheet.style.transform = ''; scrim.style.opacity = '';
+        sheet.offsetHeight; sheet.style.transition = ''; scrim.style.transition = ''; };
+      if (close) { // closed now (fades over T.layoutOut while the spring carries it down), so a tap mid-settle reopens cleanly
+        const to = h + parseFloat(getComputedStyle(sheet).bottom);
+        sheet.style.transition = `opacity ${T.layoutOut}ms ${EASE}, visibility 0s linear ${T.layoutOut}ms`; scrim.style.transition = ''; scrim.style.opacity = '';
+        closeSheet();
+        stop = spring(y, to, v, .35, x => { y = x; sheet.style.transform = `translateY(${x}px)`; }, done);
+      } else stop = spring(y, 0, v, .35, set, done);
+      const f = e => { e.stopPropagation(); e.preventDefault(); }; // eat the click the release would send
+      document.addEventListener('click', f, true); setTimeout(() => document.removeEventListener('click', f, true), 0);
+    };
+    sheet.addEventListener('touchstart', e => { if (e.touches.length === 1) begin(e.touches[0].clientX, e.touches[0].clientY, e.target); }, { passive: true });
+    sheet.addEventListener('touchmove', e => { if (move(e.touches[0].clientX, e.touches[0].clientY) && e.cancelable) e.preventDefault(); }, { passive: false });
+    sheet.addEventListener('touchend', () => end(false));
+    sheet.addEventListener('touchcancel', () => end(true));
+    sheet.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'mouse' || e.button || !begin(e.clientX, e.clientY, e.target)) return;
+      const mv = ev => { if (move(ev.clientX, ev.clientY)) ev.preventDefault(); };
+      const up = ev => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); end(ev.type === 'pointercancel'); };
+      addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+    });
+    scrim.addEventListener('pointerdown', e => { if (e.target === scrim && !busy) closeSheet(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !busy) closeSheet(); });
+  })();
+  async function done(key, msg) {
+    if (busy) return; busy = true; const id = ++runId, before = queue.slice();
+    queue = queue.filter(k => k !== key);
+    await syncQueue(); if (id !== runId) return;
+    busy = false;
+    toast(msg, 'Undo', async () => { if (busy) return; busy = true; const id2 = ++runId; queue = before; await syncQueue(); if (id2 === runId) busy = false; });
+  }
+  const DONE = {
+    hulu: ['hulu', 'Reminder set: cancel Hulu before it renews on Wed 2 Dec.'],
+    keep: ['hulu', 'Keeping Hulu. Clair won’t ask again for 30 days.'],
+    rule: ['scan', 'Clair will remind you to scan after grocery runs.'],
+    dismiss: ['scan', 'Hidden. Clair will show fewer insights like this.'],
+    meals: ['meals', '4 dinners added to Meals.'],
+    later: ['checkin', 'Clair will check in again tomorrow evening.']
+  };
+  phone.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]');
+    if (b) {
+      const a = b.dataset.act;
+      if (a === 'add') addReceipt(b);
+      else if (DONE[a]) done(...DONE[a]);
+      else if (a === 'more') { if (!busy) { busy = true; expanded = !expanded; syncQueue().then(() => busy = false); } }
+      else if (a === 'clair') { if (b.classList.contains('clairb') && held) { held = false; return; } if (busy) return; isOpen() ? closeSheet() : goSheet('start'); }
+      else if (a === 'checkin') { if (!busy) goSheet('result', { key: 'checkin' }); }
+      else if (a === 'close') closeSheet();
+      else if (a === 'talk') startTalk(false);
+      else if (a === 'send') talkRelease(false);
+      else if (a === 'photo') { sheetRun++; goSheet('camera'); }
+      else if (a === 'shutter') shutter();
+      else if (a === 'file') readSyllabus('from Files');
+      else if (a === 'again') { sheetRun++; goSheet('start'); }
+      else if (a === 'edit') { sheetRun++; sheetOpts.said ? goSheet('start', { text: sheetOpts.said }) : toast('Opens each item to change it before adding.'); }
+      else if (a === 'commit') commitRes(b.dataset.res);
+      else if (a === 'chat') { closeSheet(); toast('Opens the chat with Clair.'); }
+      else if (a === 'review') toast('Opens the items to review before adding.');
+      else if (a === 'newapp') toast(`Opens New app with "${query}"`);
+      return;
+    }
+    const tr = e.target.closest('[data-try]');
+    if (tr) return route(tr.dataset.text, tr.dataset.try);
+    const o = e.target.closest('[data-open]');
+    if (!o) return;
+    const n = o.dataset.open;
+    if (changed.delete(n)) $$(`[data-open="${n}"]`, phone).forEach(el => $$('.tag,.notch', el).forEach(m => m.remove()));
+    toast(`Opens ${n}`);
+  });
+  const MODEL = [
+    ['Greeting + status line', 'Money left and the next thing, always; Clair picks what matters most for the time of day', 'top signals', 'always'],
+    ['Needs your OK', 'Receipts, Clair suggestions, the evening check-in and insights in one basted card style, one at a time, "N more"', 'pending items', 'only if something waits'],
+    ['Next up', 'A thread of the next 3 dated things from every app, each dot in its app’s colour', 'dated rows', 'if anything is dated'],
+    ['Your apps', 'Find box, most used first, a number on every patch, "not opened in 3 wk" when forgotten', 'every app’s face', 'always'],
+    ['Pinned bar', '4 fixed apps + the Clair button (tap: type, talk or add a photo; hold to talk)', 'pins', 'always']
+  ];
+  function model() {
+    const off = i => state === 'day1' || (i === 1 && !queue.length);
+    $('#model').innerHTML = MODEL.map(([t, d, src, when], i) => `<li class="${off(i) ? 'off' : ''}"><span class="n">${i + 1}</span><span><b>${t}</b> · ${d}</span><span class="src">${src} · ${when}</span></li>`).join('')
+      + (state === 'day1' ? `<li><span class="n">*</span><span><b>Day one replaces it</b> · hello spool, one sentence field, 4 starter apps; the Clair button is already in the bar.</span><span class="src">no apps yet</span></li>` : state === 'caught' ? `<li><span class="n">*</span><span><b>Caught up replaces Needs your OK</b> · stated as a win.</span><span class="src">no pending items</span></li>` : '');
+  }
+  function start(s) {
+    closeSheet(); runId++; busy = false; $('#phone > .threads')?.remove();
+    state = s; expanded = false; query = ''; lastFace = '';
+    left = state === 'caught' ? 376 : 412; items = state === 'caught' ? 4 : 12; changed = new Set();
+    by('Budget').face = `${fmt(left)} left`; by('Groceries').face = `${items} to buy`; by('Classes').face = '2 due';
+    queue = S[state] ? S[state].queue.slice() : [];
+    $('#toast').classList.remove('on'); $('#screen').scrollTop = 0; render(); model();
+  }
+  $$('[data-s]').forEach(b => b.addEventListener('click', () => { $$('[data-s]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); const s = b.dataset.s; start(s === 'share' ? 'evening' : s); if (s === 'share') readSyllabus('shared from Files'); }));
+  start('demo');
+})();
+</script>

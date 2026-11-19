@@ -1,0 +1,13 @@
+const [,, pw, base, out] = process.argv; const { chromium } = require(pw);
+(async () => { const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+ const errs = []; p.on('pageerror', e => errs.push(e.message));
+ await p.goto(base + 'Groceries.dc.html', { waitUntil: 'networkidle' }); await p.waitForTimeout(1200);
+ await p.screenshot({ path: out + '/g1.png' });
+ const chips = async () => p.$$eval('button.chip', bs => bs.map(b => b.textContent.trim() + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')));
+ console.log('chips', await chips());
+ await p.getByRole('button', { name: /Taco night/ }).tap(); await p.waitForTimeout(400);
+ await p.getByRole('button', { name: /Avocados/ }).tap(); await p.waitForTimeout(300);
+ await p.screenshot({ path: out + '/g2.png' }); console.log('chips', await chips());
+ await p.getByRole('button', { name: /New list/ }).tap(); await p.waitForTimeout(400);
+ await p.screenshot({ path: out + '/g3.png' }); console.log('chips', await chips());
+ console.log('errors', errs); await b.close(); })();

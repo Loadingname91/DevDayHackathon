@@ -7,22 +7,22 @@ status: draft
 
 # Onboarding journey: Sam, first open to second device
 
-Nov 19, 2026 · Quilt founding team (drafted with Claude) · Requirements: FR-O1 to FR-O5 and FR-X1 in `docs/prd.md` · Story: US-9 in `docs/prd-stories.md` · Server side: `docs/backend.md` §8 (auth and accounts) · Clair side: `docs/clair-agent.md`
+Nov 19, 2026 · Quilt founding team (drafted with Claude) · Requirements: FR-O1 to FR-O5 and FR-X1 in `spec/prd.md` · Story: US-9 in `spec/prd-stories.md` · Server side: `spec/backend.md` §8 (auth and accounts) · Clair side: `spec/clair-agent.md`
 
 ## Executive summary
 
-This map covers Sam's first day with Quilt, from opening the Android app or the web link to the same quilt showing on a laptop. Sam has no account, no data and no patience for setup, so Quilt signs Sam in as a guest without asking, makes starter apps from templates in one tap, and puts the first capture one tap away. The moment that decides whether Sam stays is the **first stitched moment**: Sam confirms a first basted card and watches threads land on several pins. Everything before it should be as short as possible; everything after it (check-in, "Keep your quilt", second device) is only asked for once Sam has seen value. The biggest risks are a guest losing their quilt before keeping it, and a first capture that fails or has nothing to capture.
+This map covers Sam's first day with Quilt, from opening the Android app or the web link to the same quilt showing on a laptop. Sam arrives with no account and no data and won't sit through setup, so Quilt signs Sam in as a guest without asking, makes starter apps from templates in one tap, and puts the first capture one tap away. Whether Sam stays depends on the first stitched moment, when Sam confirms a first basted card and watches threads land on several pins. Everything before it should be as short as possible. Quilt asks for everything after it (check-in, "Keep your quilt", second device) only once Sam has seen value. The biggest risks are a guest losing their quilt before keeping it, and a first capture that fails or has nothing to capture.
 
-Every emotion and severity below is a **hypothesis** (no interviews or survey data yet). Metrics have no baselines; targets marked *proposed* are founder proposals.
+Every emotion and severity below is a hypothesis, since there are no interviews or survey data yet. Metrics have no baselines, and targets marked *proposed* are founder proposals.
 
 ## Persona
 
-Sam, the forgetting-tax student (`docs/persona-sam-student.md`, PU-001, Proto). A U of U undergrad who installs and drops apps in minutes, logs in 10 to 60 second gaps, won't hand over a bank login, and goes back to the Notes app if capture fails twice. Sam's adoption filter: "Is it free to start? Does it want my bank login? Does it work on my phone right now? Will I have to set it up?" Persona rules that shape this journey: never require setup before the first useful screen; ready apps over a blank canvas; no jargon ("workspace", "account" only where unavoidable).
+Sam, the forgetting-tax student (`docs/research/persona-sam-student.md`, PU-001, Proto). A U of U undergrad who installs and drops apps in minutes, logs in 10 to 60 second gaps, won't hand over a bank login, and goes back to the Notes app if capture fails twice. Sam's adoption filter: "Is it free to start? Does it want my bank login? Does it work on my phone right now? Will I have to set it up?" Three persona rules shape this journey: never require setup before the first useful screen, offer ready apps instead of a blank canvas, and avoid jargon (use "workspace" and "account" only where unavoidable).
 
 ## Scope
 
 - **Journey type:** linear, day 0 to day 1, with one return visit.
-- **Included:** first open (Android APK or web link) → guest sign-in → Welcome → "What slips?" → starter apps → first prompt → first basted card → first stitched moment → day-1 evening check-in → "Keep your quilt" → second device by join code. Permissions, empty, error and no-network states. Clair's copy at each step. Metrics per stage.
+- **Included:** first open (Android APK or web link) → guest sign-in → Welcome → "What slips?" → starter apps → first prompt → first basted card → first stitched moment → day-1 evening check-in → "Keep your quilt" → second device by join code. Also permissions, empty, error and no-network states, Clair's copy at each step, and metrics per stage.
 - **Excluded:** acquisition (how Sam hears about Quilt), building a new app from a sentence (US-6), billing and credits top-up, sharing, account deletion, merging two quilts.
 
 ## Stages
@@ -48,7 +48,7 @@ Copy rules (FR-C11, `.impeccable/surfaces/app.md`): plain verbs on buttons, no e
 | 1.2 Guest sign-in | Supabase anonymous sign-in runs in the background; the server creates an empty workspace in Sam's time zone. Sam sees nothing of this. No permission prompts at launch. | (invisible) |
 | 1.3 Welcome | Spool hello. | Clair: **"Hi. I'm Clair. I keep track of the stuff that slips."** Small links at the bottom: **"I have a quilt · Sign in"** (email and password; Live for the demo account) · "Enter a code from your phone" |
 
-Board: **Welcome** ("Day one") on the master canvas. It needs three copy updates before it matches this map: it greets "Hi, Sam" (a guest has no name yet), it says "Snap" and "Snap/Ask" (replaced by the Clair button), and it shows 4 starter tiles where this map puts the "What slips?" chips first.
+The Welcome board ("Day one") on the master canvas needs three copy updates before it matches this map. It greets "Hi, Sam", but a guest has no name yet. It says "Snap" and "Snap/Ask", which the Clair button replaced. And it shows 4 starter tiles where this map puts the "What slips?" chips first.
 
 ### 2. Picks
 
@@ -68,7 +68,7 @@ Board: **Welcome** ("Day one") on the master canvas. It needs three copy updates
 | To-dos | To-dos |
 | (always) | Calendar |
 
-Starter apps are empty. Budget's face reads "Set a monthly amount" until Sam types one in the patch; this is optional and never blocks a capture.
+Starter apps are empty. Budget's face reads "Set a monthly amount" until Sam types one in the patch. Setting it is optional and never blocks a capture.
 
 ### 3. Captures
 
@@ -77,13 +77,13 @@ Starter apps are empty. Budget's face reads "Set a monthly amount" until Sam typ
 | 3.1 First prompt | Home, day one. The status line has no data to report, so it carries the prompt. Needs your OK and Next up are hidden (empty). | Status line: **"Nothing logged yet. Add a receipt or tell Clair something."** A one-time chalk hint points at the Clair button. |
 | 3.2 Clair sheet | Tap the Clair button. | Clair: "Tell Clair anything." Chips: Photo · File. Text field (not focused). Hold the button to talk. |
 | 3.3 First photo | Tap Photo. **Camera permission asked now**, not before. | OS camera prompt. Denied: see Errors. |
-| 3.3b First hold-to-talk | Hold the Clair button 450 ms. **Mic permission asked now.** On-device speech recognition shows a live transcript; release sends. The speech recognition plugin is a **spike (T1)**; if it fails, a hidden scripted-transcript toggle is the fallback (`clair-agent.md` §4). | Sheet: "Listening" with the stitch waveform and the live transcript |
-| 3.4 Clair works | One agent loop for any input (`docs/clair-agent.md`). | Status line: "Reading your receipt…"; past 6 s: "Still reading the items…" |
+| 3.3b First hold-to-talk | Hold the Clair button 450 ms. **Mic permission asked now.** On-device speech recognition shows a live transcript; release sends. The speech recognition plugin is a **spike (T1)**; if it fails, a hidden scripted-transcript toggle is the fallback (`spec/clair-agent.md` §4). | Sheet: "Listening" with the stitch waveform and the live transcript |
+| 3.4 Clair works | One agent loop for any input (`spec/clair-agent.md`). | Status line: "Reading your receipt…"; past 6 s: "Still reading the items…" |
 | 3.5 Understanding line | Clair says what it thinks the input is before proposing. | "Corner Market receipt · 8 items · $35.83" (or "I see your fridge: 14 items") |
 | 3.6 First basted card | One proposal card with dotted chalk edge. The count follows the apps Sam has. | "Adding updates 2 apps" (Groceries, Calendar; 3 if Budget exists) · **Add to 2 apps** · Review items |
 | 3.7 If Clair speaks | Only when Sam talked first: one line of 15 words or fewer through the phone's text-to-speech. Card stays on screen. Mute toggle in the sheet header. | Spoken: "Eight items from Corner Market. Add to two apps?" |
 
-If the first input fits no app ("log my run" with no Workout app), Clair offers to build one: "No app tracks runs yet. Make a Runs app?" It never files to an unrelated app.
+If the first input fits no app ("log my run" with no Workout app), Clair offers to build one: "No app tracks runs yet. Make a Runs app?" Clair never files the input to an unrelated app.
 
 ### 4. Sees it stitch (the moment of truth)
 
@@ -110,7 +110,7 @@ If the first input fits no app ("log my run" with no Workout app), Clair offers 
 | 6.2 Link | Links Google (`linkIdentity`) or an email (`updateUser`) to the same guest account; no data moves. An email has to be confirmed from the inbox first. | Google: "Kept. Your quilt is saved to sam@…" · Email, until confirmed: **"Check your email to finish keeping your quilt."** (then "Kept. Your quilt is saved to sam@…") |
 | 6.3 Not now | Card goes away; asked once more after 3 more confirms, then only from Settings. | (none) |
 | 6.4 Add a device | Phone: Settings → Add a device shows a 6-digit join code. Off until the quilt is kept and the email confirmed: a guest is sent to 6.1 first, an unconfirmed email sees "Check your email to finish keeping your quilt." | "Open Quilt on your laptop and enter **482 913**. The code works once and expires in 5 minutes." |
-| 6.5 Laptop joins | The website's Welcome has "Enter a code from your phone". Six boxes. | Success: "Joined. Same quilt as your phone." The laptop's own empty guest workspace (made on its first open) is orphaned on the server and purged later (`docs/backend.md` §8, §12). |
+| 6.5 Laptop joins | The website's Welcome has "Enter a code from your phone". Six boxes. | Success: "Joined. Same quilt as your phone." The laptop's own empty guest workspace (made on its first open) is orphaned on the server and purged later (`spec/backend.md` §8, §12). |
 
 ## Permissions, just in time
 
@@ -177,7 +177,7 @@ If the first input fits no app ("log my run" with no Workout app), Clair offers 
 
 ## Metrics per stage (Beta)
 
-**Beta, not built for DevDay.** These events will go to a `product_events` table later; nothing below is logged on Nov 20. No baselines. Rates get targets after 2 weeks of beta data; time targets are *proposed*.
+These metrics are Beta and not built for DevDay. The events will go to a `product_events` table later, and nothing below is logged on Nov 20. There are no baselines. Rates get targets after 2 weeks of beta data, and time targets are *proposed*.
 
 | Stage | Metric | Event(s) | Target |
 |---|---|---|---|
@@ -197,7 +197,7 @@ If the first input fits no app ("log my run" with no Workout app), Clair offers 
 
 ## DevDay (Nov 20) versus later
 
-On stage the phone runs the seeded demo account (it has a confirmed email and a password; the phone signs in with "I have a quilt · Sign in"), and the laptop joins it with a join code, or signs in the same way if the code fails (FR-X1). The guest onboarding path is not part of the demo; it is Live+ and is shown in Q&A only if it runs on a fresh install.
+On stage the phone runs the seeded demo account (it has a confirmed email and a password; the phone signs in with "I have a quilt · Sign in"), and the laptop joins it with a join code, or signs in the same way if the code fails (FR-X1). The guest onboarding path is Live+ and stays out of the demo. It is shown in Q&A only if it runs on a fresh install.
 
 | Step | Nov 20 | Later |
 |---|---|---|
@@ -244,9 +244,9 @@ flowchart TD
 ## Research gaps
 
 - Every emotion and severity above is a hypothesis. The planned U of U survey should ask: would you give an email before trying an app; do you have paper receipts on a normal day; which of the six "slips" apply.
-- Unknown how many guests never keep their quilt, or how long to keep unused guest workspaces on the server. For now they are kept (`docs/backend.md` §12); a retention rule is still open.
-- Unknown whether the first stitched moment lands for a user with only 2 apps (Groceries and Calendar) as well as it does with 3 on stage.
-- No data on day-1 return or reminder opt-in; the 8 pm default is a guess.
+- We don't know how many guests never keep their quilt, or how long to keep unused guest workspaces on the server. For now the server keeps them (`spec/backend.md` §12), and the retention rule is still open.
+- We don't know whether the first stitched moment lands as well for a user with only 2 apps (Groceries and Calendar) as it does with 3 on stage.
+- There is no data on day-1 return or reminder opt-in, so the 8 pm default is a guess.
 
 ## Design boards
 

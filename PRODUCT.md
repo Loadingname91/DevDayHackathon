@@ -2,7 +2,7 @@
 
 <!-- impeccable:product-schema 1 -->
 
-> Written from `docs/Quilt full product, MVP and DevDay pitch.md` (Nov 15, 2026); confirmed by the owner Nov 18, 2026.
+> Written from `docs/pitch.md` (Nov 15, 2026); confirmed by the owner Nov 18, 2026.
 
 ## Platform
 
@@ -10,7 +10,7 @@ adaptive (one React app: Android via Capacitor first, the same build as a websit
 
 ## Stack
 
-React + Vite (TypeScript) wrapped with Capacitor for Android and served as a website; FastAPI (Python) on Vercel; Supabase (Postgres blocks table, anonymous auth, Realtime, Storage); Clair runs on the Anthropic Python SDK tool runner with Claude (vision, tools). See docs/backend.md and docs/clair-agent.md.
+React + Vite (TypeScript) wrapped with Capacitor for Android and served as a website; FastAPI (Python) on Vercel; Supabase (Postgres blocks table, anonymous auth, Realtime, Storage); Clair runs on the Anthropic Python SDK tool runner with Claude (vision, tools). See spec/backend.md and spec/clair-agent.md.
 
 ## Users
 
@@ -49,7 +49,7 @@ Used on a phone in the moment of logging (checkout line, gym floor, between clas
 
 ## Evidence on Hand
 
-- Pitch doc (above), 17-screen Claude canvas mock, 6-screen Stitch prototype, persona `docs/persona-sam-student.md`, segment ranking `docs/persona-angle-prioritization.md`.
+- Pitch doc (above), the design canvas (`design/canvas/`, live at https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P), persona `docs/research/persona-sam-student.md`.
 - No survey answers or waitlist numbers yet; pitch placeholders [N], [X], [Y], [D] must not be invented.
 
 ## Product Principles

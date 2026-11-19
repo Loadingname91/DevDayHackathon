@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#F4EEE1"><meta name="color-scheme" content="light">
+<title>Log a set</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&amp;family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap">
+<style>
+:root{--ease:cubic-bezier(.16,1,.3,1);--ease-thread:cubic-bezier(.45,0,.15,1);--t-fb:120ms;--t-state:220ms;--t-layout:350ms;--t-focal:600ms;--t-state-out:140ms;--t-layout-out:220ms;--t-focal-out:360ms}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+html,body{overscroll-behavior:none}
+body{margin:0}
+a{color:#2A2119;text-decoration:none}
+@media (hover:hover) and (pointer:fine){a:hover{color:#665847}a.lk:hover{color:#3557A6}}
+button{font:inherit;cursor:pointer;color:inherit}
+button,a,[role="button"]{touch-action:manipulation}
+input,textarea,select{font-size:16px}
+.pb,.qp,.chip,.grip,.swrow{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.chips{overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding-inline:16px}
+.chips>*{scroll-snap-align:start}
+.btn,.chip,.qp{transition:transform var(--t-fb) var(--ease)}
+.btn:active,.chip:active{transform:scale(.97)}
+.qp:active{transform:scale(.98)}
+.pb{transition:box-shadow var(--t-fb) var(--ease)}
+.pb:active{box-shadow:inset 0 0 0 100px rgba(42,33,25,.07)!important}
+.rw{transition:background-color var(--t-fb) var(--ease)}
+.rw:active{background-color:#F7F1E6!important}
+.scr{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent)}
+.lk{font:600 15px 'Hanken Grotesk',system-ui,sans-serif;color:#22396F;text-decoration:none;min-height:44px;min-width:44px;justify-content:center;display:inline-flex;align-items:center;gap:4px}
+.num{font-variant-numeric:tabular-nums}
+.st{background-color:#FFFDF8;border-radius:16px;background-image:linear-gradient(90deg,#BFAE90 58%,transparent 0),linear-gradient(90deg,#BFAE90 58%,transparent 0),linear-gradient(0deg,#BFAE90 58%,transparent 0),linear-gradient(0deg,#BFAE90 58%,transparent 0);background-size:7px 1.5px,7px 1.5px,1.5px 7px,1.5px 7px;background-position:0 5px,0 calc(100% - 5px),5px 0,calc(100% - 5px) 0;background-repeat:repeat-x,repeat-x,repeat-y,repeat-y;transition:background-size var(--t-state) var(--ease)}
+.st.basted{background-image:linear-gradient(90deg,#665847 62%,transparent 0),linear-gradient(90deg,#665847 62%,transparent 0),linear-gradient(0deg,#665847 62%,transparent 0),linear-gradient(0deg,#665847 62%,transparent 0);background-size:20px 1.5px,20px 1.5px,1.5px 20px,1.5px 20px;transition-duration:var(--t-state-out)}
+.chalk{position:relative;background:rgba(53,87,166,0.06);border-radius:16px;outline:2px dotted rgba(53,87,166,0.7);outline-offset:-3px}
+@media (prefers-reduced-motion:reduce){.btn,.chip,.qp,.pb,.rw,.st{transition:none}.btn:active,.chip:active,.qp:active{transform:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F4EEE1; color: #2A2119; font-family: 'Hanken Grotesk', system-ui, sans-serif;">
+  <div class="scr" style="position: absolute; inset: 0 0 110px 0; overflow-y: auto; padding: 44px 16px 24px; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 16px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px;"><a href="Workout.dc.html" aria-label="Back to Workout" style="width: 44px; height: 44px; margin-left: -12px; display: grid; place-items: center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A2119" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.005em;">Pull day <span class="num">· 18:42</span></h1><a class="lk" href="Workout.dc.html" style="padding: 0 4px;">Finish</a></div>
+    <div style="display: flex; justify-content: space-between; font-size: 13px; color: #665847;"><span>Exercise 2 of 5</span><span style="font-family: 'DM Mono', monospace;">27%</span></div>
+    <div style="height: 6px; border-radius: 4px; background: #EEE6D6; overflow: hidden;"><div style="width: 27%; height: 100%; background: #1F6B5E;"></div></div>
+    <section class="st" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;"><b style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.015em;">Lat pulldown</b><span style="font-size: 13px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: #F8DCC2; font-variant-numeric: tabular-nums;">Rest 0:47</span></div>
+      <span style="font-size: 13px; color: #665847; font-variant-numeric: tabular-nums;">3 × 10 · best 120&nbsp;lb × 10</span>
+      <span style="display: flex; gap: 8px; align-items: center; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F6B5E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>Set 1 · 12 reps × 110&nbsp;lb</span>
+      <span style="font-size: 13px; color: #665847;">Set 2</span>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <sc-for list="{{ steppers }}" as="s" hint-placeholder-count="2">
+          <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 13px; color: #665847;">{{ s.label }}</span><div style="display: flex; align-items: center; justify-content: space-between; border-radius: 12px; box-shadow: inset 0 0 0 1.5px #BFAE90; padding: 2px;"><button type="button" onClick="{{ s.down }}" aria-label="Less {{ s.label }}" class="btn" style="width: 44px; height: 44px; border: 0; border-radius: 8px; background: #F3ECDD; font-size: 18px;">−</button><b style="font-family: 'DM Mono', monospace; font-size: 18px; font-variant-numeric: tabular-nums;">{{ s.v }}</b><button class="btn" type="button" onClick="{{ s.up }}" aria-label="More {{ s.label }}" style="width: 44px; height: 44px; border: 0; border-radius: 8px; background: #F3ECDD; font-size: 18px;">+</button></div></div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ pr }}" hint-placeholder-val="{{ false }}"><div style="display: flex; gap: 12px; align-items: center; font-size: 15px;"><svg class="sp" width="30" height="31" viewBox="-6 -10 68 70" aria-hidden="true" style="flex: none; overflow: visible;"><path d="M14 38 C8 40 5 43 0 45" fill="none" stroke="#2A2119" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path><rect x="10" y="6" width="36" height="8" rx="3" fill="#D9B98F" stroke="#2A2119" stroke-width="2.6"></rect><rect x="14" y="14" width="28" height="28" fill="#3557A6" stroke="#2A2119" stroke-width="2.6"></rect><rect x="10" y="42" width="36" height="8" rx="3" fill="#D9B98F" stroke="#2A2119" stroke-width="2.6"></rect><path d="M20.5 27 q2.5 -3.5 5 0 M30.5 27 q2.5 -3.5 5 0" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="18.5" cy="31" r="2.1" fill="#F8DCC2"></circle><circle cx="37.5" cy="31" r="2.1" fill="#F8DCC2"></circle><path d="M23 30 q5 6.5 10 0 z" fill="#FFFFFF"></path><path d="M50 -1v10M45 4h10" stroke="#E3A72F" stroke-width="2.4" stroke-linecap="round"></path></svg><span><b>New best</b> on lat pulldown. Logged when you finish the set.</span></div></sc-if>
+    </section>
+    <div style="display: flex; justify-content: space-between; gap: 8px; font-family: 'Hanken Grotesk', system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0; color: #665847;"><span>Up next</span></div>
+    <section class="st" style="padding: 4px 16px;"><div style="display: flex; align-items: center; gap: 12px; min-height: 56px;"><span style="flex: 1; display: flex; flex-direction: column; min-width: 0;"><span style="font-size: 16px; font-weight: 500; color: #2A2119;">Seated cable row</span><span style="font-size: 13px; color: #665847;">3 × 12 · 100&nbsp;lb</span></span></div><div style="display: flex; align-items: center; gap: 12px; min-height: 56px; background-image: linear-gradient(90deg, #BFAE90 58%, transparent 0); background-size: 8px 1px; background-repeat: repeat-x;"><span style="flex: 1; display: flex; flex-direction: column; min-width: 0;"><span style="font-size: 16px; font-weight: 500; color: #2A2119;">Face pulls</span><span style="font-size: 13px; color: #665847;">3 × 15 · 40&nbsp;lb</span></span></div></section>
+  </div>
+  <div style="position: absolute; left: 16px; right: 16px; bottom: 30px; display: grid; grid-template-columns: 1fr 2fr; gap: 8px;"><button class="btn" type="button" style="min-height: 48px; padding: 0 20px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 16px; border: 0; background: transparent; box-shadow: inset 0 0 0 1.5px #BFAE90; color: #2A2119;">Skip</button><button class="btn" type="button" style="min-height: 48px; padding: 0 20px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 16px; border: 0; background: #3557A6; color: #FFFFFF;">Log set 2</button></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { reps: 10, wt: 120 }; }
+  renderVals() {
+    var self = this, st = this.state;
+    return { pr: st.wt > 120 || (st.wt === 120 && st.reps > 10),
+      steppers: [
+        { label: 'reps', v: st.reps, down: function () { self.setState({ reps: Math.max(1, st.reps - 1) }); }, up: function () { self.setState({ reps: st.reps + 1 }); } },
+        { label: 'weight, lb', v: st.wt, down: function () { self.setState({ wt: Math.max(5, st.wt - 5) }); }, up: function () { self.setState({ wt: st.wt + 5 }); } }
+      ] };
+  }
+}
+</script>
+</body>
+</html>

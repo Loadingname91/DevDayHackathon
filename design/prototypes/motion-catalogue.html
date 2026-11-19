@@ -1,0 +1,1102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4EEE1"><meta name="color-scheme" content="light">
+<title>Quilt motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=DM+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a catalogue. Sticky index + reduced-motion switch on top; one section per group; each animation is a card with its name, tokens and a live stage. Light Workbench world only. */
+:root{
+  --muslin:#F4EEE1; --surface:#FFFDF8; --ink:#2A2119; --ink2:#665847; --stitch:#BFAE90; --denim:#3557A6; --denim-ink:#22396F; --thread:#E3A72F; --moss:#1F6B5E; --wash:#EEE6D6; --edge:#E4D9C4;
+  --fd:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif; --fb:"Hanken Grotesk",ui-sans-serif,system-ui,sans-serif; --fm:"DM Mono",ui-monospace,Menlo,monospace;
+  --ease:cubic-bezier(.16,1,.3,1); --ease-thread:cubic-bezier(.45,0,.15,1);
+  --t-fb:120ms; --t-state:220ms; --t-layout:350ms; --t-focal:600ms; --t-state-out:140ms; --t-layout-out:220ms; --t-focal-out:360ms;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;scroll-padding-top:120px}
+body{margin:0;background:var(--muslin);color:var(--ink);font:16px/1.5 var(--fb);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--denim);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px)) 64px max(16px,env(safe-area-inset-right,0px))}
+header.top{padding:40px 0 16px}
+h1{margin:0;font:800 clamp(40px,7vw,64px)/.95 var(--fd);letter-spacing:-.035em}
+.lede{margin:12px 0 0;max-width:68ch;color:var(--ink)}
+.lede2{margin:8px 0 0;max-width:68ch;color:var(--ink2);font-size:15px}
+.tally{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:8px;font:13px/1.4 var(--fm);color:var(--ink2)}
+.tally span{padding:4px 8px;border-radius:8px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge)}
+nav.idx{position:sticky;top:0;z-index:100;background:var(--muslin);border-bottom:1.5px dashed var(--stitch);margin:0 -16px;padding:8px 16px;display:flex;gap:8px;align-items:center}
+.idx .links{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;overscroll-behavior-x:contain;padding-right:28px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.idx .links::-webkit-scrollbar{display:none}
+.idx a{flex:none;min-height:44px;display:inline-flex;align-items:center;padding:0 12px;border-radius:12px;color:var(--ink);text-decoration:none;font:600 14px var(--fb);white-space:nowrap}
+.idx a:active{background:rgba(42,33,25,.07)}
+@media (hover:hover) and (pointer:fine){.idx a:hover{background:rgba(42,33,25,.06)}}
+.rmt{flex:none;min-height:44px;padding:0 12px;border:0;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);font:600 14px var(--fb);display:inline-flex;align-items:center;gap:8px}
+.rmt i{width:30px;height:18px;border-radius:9px;background:var(--stitch);position:relative;flex:none;transition:background-color var(--t-state) var(--ease)}
+.rmt i::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform var(--t-state) var(--ease)}
+.rmt[aria-pressed="true"] i{background:var(--denim)}
+.rmt[aria-pressed="true"] i::after{transform:translateX(12px)}
+section.grp{padding-top:32px}
+section.grp>h2{margin:0;font:800 32px/1.05 var(--fd);letter-spacing:-.025em}
+section.grp>p{margin:8px 0 16px;color:var(--ink2);font-size:15px;max-width:72ch}
+h3.subh{margin:24px 0 12px;font:800 20px var(--fd);letter-spacing:-.015em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px}
+.card{background:var(--surface);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0;box-shadow:inset 0 0 0 1px var(--edge)}
+.card .hd{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.card h4{margin:0;font:800 20px/1.15 var(--fd);letter-spacing:-.015em}
+.badge{flex:none;font:500 13px/1 var(--fm);padding:4px 8px;border-radius:4px;margin-top:2px}
+.badge.built{background:#E3EEE9;color:#1F6B5E}.badge.spec{background:var(--wash);color:var(--ink2)}.badge.new{background:var(--thread);color:#1F180D}
+.qn{margin:0;font:600 15px var(--fb);color:var(--denim-ink)}
+.when{margin:0;font-size:15px;line-height:1.4}
+.tok{margin:0;font:13px/1.45 var(--fm);color:var(--ink2)}
+.src{margin:0;font:13px/1.4 var(--fm);color:var(--ink2)}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.ctl button{min-height:44px;padding:0 16px;border-radius:12px;border:0;background:var(--ink);color:#FBF6EC;font:600 15px var(--fb);transition:transform var(--t-fb) var(--ease)}
+.ctl button.dm{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--stitch)}
+.ctl button:active{transform:scale(.97)}
+.ctl .hint{align-self:center;font-size:13px;color:var(--ink2)}
+
+/* ---------- stage ---------- */
+.stage{position:relative;width:100%;max-width:320px;height:200px;margin:8px auto 0;background:var(--muslin);border-radius:12px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--edge);font-size:15px;color:var(--ink);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;isolation:isolate}
+.stage.tall{height:300px}.stage.ph{height:380px}
+.in{position:absolute;inset:0;padding:12px;display:flex;flex-direction:column;gap:8px}
+.center{align-items:center;justify-content:center}
+.cap{margin:0;font-size:13px;color:var(--ink2);text-align:center}
+.ico{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.small{font-size:13px;color:var(--ink2)}
+.sect{font:600 13px/1.4 var(--fb);color:var(--ink2);display:flex;justify-content:space-between}
+.st{--d:7px;--sc:var(--stitch);position:relative;background-color:var(--surface);border-radius:14px;
+  background-image:linear-gradient(90deg,var(--sc) 58%,transparent 0),linear-gradient(90deg,var(--sc) 58%,transparent 0),linear-gradient(0deg,var(--sc) 58%,transparent 0),linear-gradient(0deg,var(--sc) 58%,transparent 0);
+  background-size:var(--d) 1.5px,var(--d) 1.5px,1.5px var(--d),1.5px var(--d);background-position:0 5px,0 calc(100% - 5px),5px 0,calc(100% - 5px) 0;background-repeat:repeat-x,repeat-x,repeat-y,repeat-y;
+  transition:background-size var(--t-state) var(--ease)}
+.st.basted{--d:20px;--sc:var(--ink2);transition-duration:var(--t-state-out)}
+.st.frayed{--sc:transparent;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 5 L2 1 L4 5 L6 1 L8 5' fill='none' stroke='%23665847' stroke-width='1.2'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 1 L2 5 L4 1 L6 5 L8 1' fill='none' stroke='%23665847' stroke-width='1.2'/%3E%3C/svg%3E");background-size:8px 6px,8px 6px;background-position:0 0,0 100%;background-repeat:repeat-x,repeat-x}
+.cd{padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.b{min-height:44px;padding:0 16px;border-radius:12px;border:0;background:var(--denim);color:#fff;font:600 15px var(--fb);display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform var(--t-fb) var(--ease)}
+.b.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--stitch)}
+.b:disabled{opacity:.55}
+.chip{min-height:44px;padding:0 12px;border-radius:12px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);display:inline-flex;align-items:center;justify-content:center;gap:6px;font:600 14px var(--fb);color:var(--ink);transition:transform var(--t-fb) var(--ease)}
+.b:active,.b.act,.chip:active,.chip.act{transform:scale(.97)}
+.patch{min-height:64px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:600 13px var(--fb);transition:transform var(--t-fb) var(--ease);border:0}
+.patch:active,.patch.act{transform:scale(.98)}
+.tag{font:600 13px/1.3 var(--fb);padding:2px 8px;background:var(--thread);color:#1F180D;border-radius:4px;white-space:nowrap;transform-origin:left center}
+.notch{position:absolute;top:5px;right:6px;width:10px;height:10px;border-radius:50%;background:var(--thread);box-shadow:0 0 0 2px rgba(255,253,248,.9)}
+.dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(42,33,25,.4);display:inline-block;flex:none}
+.odo{display:inline-grid;overflow:hidden;vertical-align:bottom;font-variant-numeric:tabular-nums}
+.odo>span{grid-area:1/1}
+.num{font:15px var(--fm);font-variant-numeric:tabular-nums;white-space:nowrap}
+.threads{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:40;contain:layout paint}
+.threads path{fill:none;stroke:#E3A72F;stroke-width:2.4;stroke-linecap:round}
+.finger{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:rgba(42,33,25,.18);box-shadow:0 0 0 2px rgba(42,33,25,.4);pointer-events:none;z-index:80;opacity:0;transition:opacity 120ms var(--ease),background-color 120ms var(--ease)}
+.finger.on{opacity:1}.finger.down{background:rgba(42,33,25,.34)}
+.toast{position:absolute;left:8px;right:8px;bottom:70px;z-index:30;background:var(--ink);color:#FBF6EC;border-radius:12px;padding:4px 4px 4px 12px;display:flex;align-items:center;gap:8px;font-size:13px;line-height:1.3;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity var(--t-state-out) var(--ease),transform var(--t-state-out) var(--ease)}
+.toast.low{bottom:8px}
+.toast.on{opacity:1;transform:none;pointer-events:auto;transition-duration:var(--t-state)}
+.toast button{margin-left:auto;flex:none;min-height:44px;padding:0 12px;border-radius:10px;border:1.5px solid rgba(251,246,236,.5);background:transparent;color:#FBF6EC;font:600 13px var(--fb)}
+.toast button[hidden]{display:none}
+
+/* pinned bar + Clair button */
+.bar{position:absolute;left:8px;right:8px;bottom:8px;height:54px;z-index:15;display:flex;border-radius:14px;box-shadow:0 8px 22px -14px rgba(42,33,25,.55)}
+.pb{flex:1;min-width:0;border:0;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink);position:relative;font:600 12px/1.2 var(--fb);transition:box-shadow var(--t-fb) var(--ease)}
+.pb span{white-space:nowrap}
+.pb:first-child{border-radius:14px 0 0 14px}
+.pb+.pb::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:1.5px;background:linear-gradient(0deg,rgba(42,33,25,.45) 58%,transparent 0) 0 0/1.5px 7px repeat-y}
+.pb:active,.pb.act{box-shadow:inset 0 0 0 100px rgba(42,33,25,.07)}
+.clairb{flex:0 0 56px;background:var(--ink);color:#FBF6EC;border-radius:0 14px 14px 0;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+.clairb::before{display:none}
+.clairb::after{content:"";position:absolute;inset:0;background:rgba(251,246,236,.22);clip-path:inset(0 100% 0 0);pointer-events:none}
+.clairb.holding::after{clip-path:inset(0);transition:clip-path 330ms linear 120ms}
+.clairb:active,.clairb.act{box-shadow:inset 0 0 0 100px rgba(251,246,236,.1)}
+.holdbtn{width:180px;height:64px;border:0;border-radius:16px;background:var(--ink);color:#FBF6EC;font:600 15px var(--fb);position:relative;overflow:hidden;touch-action:none}
+.holdbtn::after{content:"";position:absolute;inset:0;background:rgba(251,246,236,.22);clip-path:inset(0 100% 0 0);pointer-events:none}
+.holdbtn.holding::after{clip-path:inset(0);transition:clip-path 330ms linear 120ms}
+.holdbtn.fired{box-shadow:inset 0 0 0 3px var(--thread)}
+
+/* Just used fold (QF bindFold) + bar hides for the keyboard */
+.jbar{touch-action:none}
+.grabln{position:absolute;left:50%;top:-30px;width:56px;height:44px;margin-left:-28px;border:0;padding:0;background:transparent}
+.grabln::before{content:"";position:absolute;left:12px;right:12px;bottom:21px;height:4px;border-radius:2px;background:var(--ink2);opacity:.6}
+.jscrim{position:absolute;inset:0;z-index:13;background:rgba(42,33,25,.32);opacity:0;visibility:hidden;touch-action:none}
+.jscrim.on{visibility:visible}
+.jfold{position:absolute;inset:0;z-index:14;background:var(--muslin);border-radius:18px 18px 0 0;box-shadow:0 -10px 30px -18px rgba(42,33,25,.6);visibility:hidden;transform:translateY(100%);overflow:hidden;touch-action:none;padding:2px 12px 0;display:flex;flex-direction:column;gap:6px}
+.jfold.on{visibility:visible}
+.jhd{display:flex;justify-content:space-between;align-items:center;font:600 13px var(--fb);color:var(--ink2)}
+.jlk{color:var(--denim-ink)}
+.jgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.jfp{min-height:34px;min-width:0;border-radius:8px;display:flex;align-items:center;padding:0 8px;font:600 12px var(--fb);color:var(--ink);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.jall{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.kbcard .bar{transition:opacity var(--t-fb) var(--ease),visibility 0s}
+.kbcard .bar.off{opacity:0;visibility:hidden;transition:opacity var(--t-fb) var(--ease),visibility 0s linear var(--t-fb)}
+.kbd{position:absolute;left:0;right:0;bottom:0;height:46%;z-index:16;background:#D9D3C7;display:grid;place-items:center;font:500 13px var(--fb);color:var(--ink2);transform:translateY(100%);transition:transform 250ms var(--ease)}
+.kbd.on{transform:none}
+
+/* Clair mini phone */
+.scr{position:absolute;inset:0 0 70px;padding:12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.hi{font:800 22px/1.1 var(--fd);letter-spacing:-.015em}
+.stl{margin:0;font-size:14px}
+.scrim{position:absolute;inset:0;z-index:12;background:rgba(42,33,25,.32);opacity:0;visibility:hidden;touch-action:none;transition:opacity var(--t-layout-out) var(--ease),visibility 0s linear var(--t-layout-out)}
+.scrim.on{opacity:1;visibility:visible;transition:opacity var(--t-layout) var(--ease),visibility 0s}
+.ph .sheet{position:absolute;left:8px;right:8px;bottom:70px;z-index:13;max-height:calc(100% - 82px);overflow:hidden;background:var(--muslin);border-radius:18px;padding:0 12px 12px;box-shadow:0 -10px 30px -18px rgba(42,33,25,.6),0 0 0 1px var(--edge);transform-origin:100% 100%;opacity:0;visibility:hidden;transform:translateY(48px);transition:transform var(--t-layout-out) var(--ease),opacity var(--t-layout-out) var(--ease),visibility 0s linear var(--t-layout-out);touch-action:none}
+.ph .sheet.on{opacity:1;visibility:visible;transform:none;transition:transform var(--t-layout) var(--ease),opacity var(--t-layout) var(--ease),visibility 0s}
+.ph .sheet.n1{transform:translateY(16px) scale(.96)}
+.ph .sheet.n1.on{transform:none}
+.bsheet{position:absolute;left:0;right:0;bottom:0;z-index:13;background:var(--muslin);border-radius:22px 22px 0 0;padding:0 16px 16px;box-shadow:0 -10px 30px -18px rgba(42,33,25,.6);visibility:hidden;transform:translateY(105%);transition:transform var(--t-layout-out) var(--ease),visibility 0s linear var(--t-layout-out);touch-action:none;display:flex;flex-direction:column;gap:8px}
+.bsheet.on{transform:none;visibility:visible;transition:transform var(--t-layout) var(--ease),visibility 0s}
+.grab{width:36px;height:5px;border-radius:4px;background:var(--stitch);margin:8px auto 4px;position:relative}
+.grab::before{content:"";position:absolute;inset:-20px -60px}
+.sc{display:flex;flex-direction:column;gap:8px}
+.shd{display:flex;align-items:center;gap:10px;min-height:48px}
+.sh2{font:800 18px/1.15 var(--fd);letter-spacing:-.015em}
+.fld{min-height:44px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);display:flex;align-items:center;padding:0 12px;font-size:14px;color:var(--ink2)}
+.chips3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.try{display:grid;grid-template-columns:40px minmax(0,1fr);gap:6px;align-items:center;min-height:44px;font-size:14px;border-radius:8px;transition:background-color var(--t-fb) var(--ease)}
+.try:active{background-color:#F7F1E6}
+.try .k{font:600 13px var(--fb);color:var(--ink2)}
+.said{margin:0;font-size:14px;color:var(--ink2)}
+.pr{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pr b{font-weight:600}
+.from{display:flex;gap:4px;align-items:center;font:600 13px var(--fb);color:var(--ink2)}
+.btns{display:grid;grid-template-columns:1.6fr 1fr;gap:8px}
+.wave{display:flex;gap:2px;height:24px;align-items:center;transition:opacity var(--t-fb) var(--ease)}
+.wave i{flex:1;height:2.4px;border-radius:2px;background:var(--denim-ink);transform:scaleX(.64)}
+.tx{margin:0;min-height:2.6em;font:800 18px/1.3 var(--fd);letter-spacing:-.015em}
+.hint{margin:0;min-height:44px;display:flex;align-items:center;justify-content:center;font:600 13px var(--fb);color:var(--ink2)}
+.sheet.cancel .wave{opacity:.3}.sheet.cancel .hint{color:var(--ink)}
+.ans p{margin:0;font-size:15px;line-height:1.4}
+.srcs{display:flex;gap:6px;flex-wrap:wrap}
+.srcchip{min-height:44px;padding:0 10px;border-radius:12px;background:var(--wash);display:inline-flex;align-items:center;gap:6px;font:600 13px var(--fb)}
+.vf{height:120px;border-radius:12px;background:var(--ink);position:relative;overflow:hidden}
+.vf::after,.thumb::after{content:"";position:absolute;left:50%;top:14%;bottom:14%;width:24%;margin-left:-12%;background:repeating-linear-gradient(180deg,transparent 0 8px,rgba(42,33,25,.25) 8px 9.5px) 10% 12%/80% 76% no-repeat,#FBF6EC;border-radius:3px}
+.shut{display:flex;justify-content:center}
+.shutter{width:56px;height:56px;border-radius:50%;border:4px solid var(--ink);background:var(--surface);box-shadow:inset 0 0 0 3px var(--muslin);transition:transform var(--t-fb) var(--ease)}
+.shutter:active,.shutter.act{transform:scale(.94)}
+.att{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);font-size:14px}
+.att b{font-weight:600}
+.thumb{width:44px;height:44px;border-radius:8px;background:var(--ink);position:relative;flex:none;overflow:hidden}
+.thumb::after{width:44%;margin-left:-22%}
+.lst{list-style:none;margin:0;padding:0;font-size:14px}
+.lst li{display:flex;justify-content:space-between;min-height:30px;align-items:center;border-bottom:1px dashed rgba(42,33,25,.18)}
+.lst li span{font-size:13px;color:var(--ink2)}
+.seam{height:24px;width:100%;overflow:visible}
+.seam .g{stroke:var(--stitch);stroke-width:1;stroke-dasharray:2 4}
+.seam .s{stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;opacity:0;transition:opacity var(--t-fb) var(--ease)}
+.seam .s.on{opacity:1}
+
+/* rows, toggles */
+.rowi{display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 12px;font-size:15px}
+.rowi .t{flex:1;min-width:0;display:flex;flex-direction:column}
+.rowi .t span:last-child{font-size:13px;color:var(--ink2)}
+.swrow{position:relative;overflow:hidden;touch-action:pan-y}
+.swrow+.swrow{box-shadow:0 -1px 0 var(--wash)}
+.swrow .act{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font:600 13px var(--fb);transition:background-color var(--t-fb) var(--ease)}
+.swrow .act .l{color:var(--moss);display:flex;gap:6px;align-items:center}.swrow .act .r{color:var(--ink);display:flex;gap:6px;align-items:center}
+.swrow .act .l,.swrow .act .r{transition:opacity var(--t-fb) var(--ease),color var(--t-fb) var(--ease)}
+.swrow.dir-r .act .r,.swrow.dir-l .act .l{opacity:0}
+.swrow.armed.dir-r .act{background-color:var(--moss)}.swrow.armed.dir-r .act .l{color:#fff}
+.swrow.armed.dir-l .act{background-color:var(--ink)}.swrow.armed.dir-l .act .r{color:#FBF6EC}
+.swrow .fg{position:relative;background-color:var(--surface);transition:background-color var(--t-fb) var(--ease)}
+.swrow .fg:active{background-color:#F7F1E6}
+.swrow.sel .fg{background-color:#E6ECF7}
+.ck{width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink2);display:grid;place-items:center;flex:none;transition:background-color var(--t-fb) var(--ease)}
+.ck.on{background-color:var(--moss);box-shadow:none;color:#fff}
+.toggle{width:52px;height:44px;border:0;padding:0;background:transparent;position:relative;flex:none}
+.toggle::before{content:"";position:absolute;left:0;right:0;top:6px;height:32px;border-radius:16px;background:var(--stitch);transition:background-color var(--t-state) var(--ease)}
+.toggle::after{content:"";position:absolute;left:3px;top:9px;width:26px;height:26px;border-radius:50%;background:#fff;transition:transform var(--t-state) var(--ease)}
+.toggle[aria-checked="true"]::before{background:var(--denim)}
+.toggle[aria-checked="true"]::after{transform:translateX(20px)}
+.patchi{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;flex:none;position:relative}
+
+/* build */
+.chalk{position:relative;padding:10px 12px;border-radius:14px;background:rgba(53,87,166,.06);color:var(--denim-ink);font:500 14px/1.4 var(--fb)}
+.ol{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.ol rect{fill:none;stroke:var(--denim);stroke-opacity:.7;stroke-width:2;stroke-dasharray:1 6;stroke-linecap:round}
+.piece{position:relative;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;opacity:0}
+.piece.on{opacity:1}
+.piece .kind{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2)}
+.piece .kind svg{width:16px;height:16px;flex:none}
+.piece .body{opacity:0;font-size:14px}
+.piece.filled .body{opacity:1}
+.piece .why{display:none;margin:0;font-size:13px}
+.piece.frayed .why{display:block}.piece.frayed .body{display:none}
+.clairl{display:flex;gap:8px;align-items:center;font:500 14px var(--fb);color:var(--denim-ink);min-height:32px}
+.ptitle{position:relative;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:14px;overflow:hidden;isolation:isolate}
+.ptitle .dye{position:absolute;inset:0;z-index:-1;background:#EADCF0;clip-path:circle(0% at 24px 50%)}
+.ptitle b{font:800 20px var(--fd);letter-spacing:-.015em}
+.ptitle.chalked b{color:var(--denim-ink);text-decoration:underline dotted 2px;text-underline-offset:5px}
+.qlabel{white-space:nowrap;font:13px var(--fm);padding:2px 8px;background:#fff;border:1px solid var(--stitch);border-radius:3px;transform:rotate(-1.5deg);opacity:0}
+.grip{width:44px;height:44px;margin:-6px -4px -6px -8px;border:0;background:transparent;display:grid;place-items:center;color:var(--ink2);touch-action:none;cursor:grab;flex:none}
+.arr .apiece{transition:scale var(--t-fb) var(--ease),box-shadow var(--t-fb) var(--ease)}
+.arr.sorting .apiece:not(.dragging){transition:translate var(--t-state) var(--ease)}
+.arr .apiece.dragging{z-index:5;scale:1.02;box-shadow:0 14px 28px -14px rgba(42,33,25,.55)}
+.apiece{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 4px 0 12px;font-size:15px}
+.apiece .ib{width:44px;height:44px;border:0;background:transparent;display:grid;place-items:center;color:var(--ink2);border-radius:12px}
+.pager{display:flex;align-items:center;justify-content:space-between;padding:2px;border-radius:14px}
+.pager .ib{width:44px;height:44px;border:0;background:transparent;display:grid;place-items:center}
+.dots{display:flex;gap:4px;justify-content:center}.dots i{width:7px;height:7px;border-radius:50%;background:var(--stitch)}.dots i.on{background:var(--ink)}
+.minip{min-height:30px;padding:4px 10px;font-size:13px;display:flex;align-items:center;gap:6px}
+.dock{position:absolute;left:8px;right:8px;bottom:8px;height:54px;border-radius:14px;background:var(--surface);display:flex;align-items:center;gap:5px;padding:0 0 0 8px;z-index:6;box-shadow:0 8px 22px -14px rgba(42,33,25,.5)}
+.dock .di{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;flex:none;position:relative}
+.dock .di .tag{position:absolute;right:-8px;top:-10px;padding:0 6px}
+.dock .clairb{margin-left:auto;align-self:stretch;flex:0 0 56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:600 12px var(--fb);border:0;position:relative}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pt{border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:600 13px var(--fb);min-height:56px}
+.pt.c{min-height:40px;flex-direction:row;font-size:13px}
+.ph-line{display:inline-block;height:12px;background:linear-gradient(90deg,var(--ink2) 60%,transparent 0) 0 50%/14px 1.5px repeat-x;opacity:.7}
+.big{font:800 30px/1.1 var(--fd);letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.pin{position:relative;border:0;text-align:left;padding:8px;border-radius:12px;display:flex;flex-direction:column;gap:2px;min-height:76px;font-size:13px}
+.pin .pd{position:absolute;top:6px;right:6px;width:11px;height:11px;border-radius:50%;border:1.5px solid rgba(42,33,25,.45);background:var(--surface);transition:background-color var(--t-state-out) var(--ease),border-color var(--t-state-out) var(--ease)}
+.pin .pd.fed{background:var(--thread);border-color:var(--ink);transition-duration:var(--t-state)}
+.pin .odo{font:800 15px/1.25 var(--fd);letter-spacing:-.005em}
+.pin .tag{position:absolute;left:4px;bottom:-10px}
+.selv{display:inline-flex;gap:4px}
+.trk{position:relative;height:44px;border-bottom:1.5px dashed var(--stitch)}
+.trk .lbl{font:13px var(--fm);color:var(--ink2)}
+.trk .dm{position:absolute;left:0;bottom:6px;width:20px;height:20px;border-radius:50%}
+.durs{display:grid;grid-template-columns:96px 1fr;gap:6px 8px;align-items:center;font:13px var(--fm);color:var(--ink2)}
+.durs i{display:block;height:10px;border-radius:4px;background:var(--denim);transform-origin:left center;transform:scaleX(0)}
+.track2{position:relative;height:64px;margin:0 8px;border-radius:32px;background:var(--wash)}
+.track2 .slot{position:absolute;top:8px;width:48px;height:48px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--stitch)}
+.puck{position:absolute;left:8px;top:8px;width:48px;height:48px;border-radius:50%;background:var(--denim);touch-action:none;cursor:grab}
+.rb{position:absolute;left:24px;right:24px;top:24px;height:84px;border-radius:16px;touch-action:none;display:grid;place-items:center;font-size:14px}
+
+/* spool (canonical, workbench-motion.html): motion on the OUTER svg */
+.sp{overflow:visible;flex:none;transform-origin:50% 100%}
+.sp .body{transform-box:fill-box;transform-origin:50% 100%}
+.sp .eyes{transform-box:fill-box;transform-origin:center}
+.sp-hop{animation:hop 420ms 1}
+@keyframes hop{0%{transform:none;animation-timing-function:cubic-bezier(.2,.8,.3,1)}40%{transform:translateY(-5px);animation-timing-function:cubic-bezier(.6,0,.9,.5)}75%,100%{transform:none}}
+.sp-shake{animation:shake 360ms ease-in-out 1}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-3px) rotate(-3deg)}45%{transform:translateX(3px) rotate(2deg)}70%{transform:translateX(-1.5px)}}
+.sp-bob{animation:bob 560ms ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-2px)}}
+.sp-bob .eyes{animation:blink 4.3s infinite;animation-delay:-1.7s}
+@keyframes blink{0%,90%,94%,96%,100%{transform:scaleY(1)}92%,95%{transform:scaleY(.1)}}
+.sp-breathe .body{animation:breathe 2.6s ease-in-out infinite}
+.sp-think .dots circle{animation:pulse 1.2s ease-in-out infinite}
+.sp-think .dots circle:nth-child(2){animation-delay:.2s}.sp-think .dots circle:nth-child(3){animation-delay:.4s}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+.nobob.sp-bob{animation:none}
+.rock{animation:rock 900ms ease-in-out infinite alternate;transform-origin:50% 80%}
+@keyframes rock{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
+.needle .dip{transform-box:fill-box;transform-origin:20% 50%;animation:dip 520ms ease-in-out infinite}
+.needle.rest .dip{animation:none;transform:rotate(-8deg)}
+@keyframes dip{0%,100%{transform:translateY(-1px) rotate(-26deg)}50%{transform:translateY(5px) rotate(-12deg)}}
+.lead{position:absolute;left:0;top:0;transition:transform var(--t-layout) var(--ease)}
+.lead .sp-bob{animation:none}
+.exp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 6px;text-align:center;font-size:13px;padding:8px}
+.exp div{display:flex;flex-direction:column;align-items:center;gap:2px}
+
+/* reduced motion (toggle and system setting) */
+.rm .sp,.rm .sp .body,.rm .sp .eyes,.rm .sp .dots circle,.rm .rock,.rm .needle .dip{animation:none!important}
+.rm .st,.rm .st.basted{transition-duration:120ms}
+.rm .b:active,.rm .b.act,.rm .chip:active,.rm .chip.act,.rm .patch:active,.rm .patch.act,.rm .shutter:active,.rm .shutter.act,.rm .ctl button:active{transform:none}
+.rm .toast,.rm .toast.on{transform:none;transition:opacity 120ms var(--ease)}
+.rm .scrim,.rm .ph .sheet,.rm .bsheet{transform:none;transition:opacity 120ms var(--ease),visibility 0s linear 120ms}
+.rm .bsheet{opacity:0}.rm .bsheet.on{opacity:1}
+.rm .scrim.on,.rm .ph .sheet.on,.rm .bsheet.on{transition:opacity 120ms var(--ease),visibility 0s}
+.rm .clairb.holding::after,.rm .holdbtn.holding::after{transition:none}
+.rm .lead{transition:none}
+.rm .kbd{transition:none}
+.rm .arr .apiece.dragging{scale:1}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7h18v12H3zM3 10h18M16 15h2"/></symbol>
+  <symbol id="i-lift" viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.5h10.6L20 7H6.2M9 19.5h.01M17 19.5h.01"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M9 3v4M15 3v4"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 3l3 3-3 3M4 12V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3M20 12v3a3 3 0 0 1-3 3H4"/></symbol>
+  <symbol id="i-spool" viewBox="0 0 24 24"><rect x="4" y="2.5" width="16" height="3.5" rx="1.2"/><rect x="4" y="18" width="16" height="3.5" rx="1.2"/><path d="M7 6v12M17 6v12M17 13.5c2.6.4 3.6 2.4 4 4.8"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="M20 11.5l-7.6 7.6a5 5 0 0 1-7.1-7.1l8.1-8.1a3.3 3.3 0 0 1 4.7 4.7l-8.1 8.1a1.7 1.7 0 0 1-2.4-2.4L15 6.9"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/></symbol>
+  <symbol id="i-rip" viewBox="0 0 24 24"><path d="M4 20l9-9M13 11l3-7 4 4-7 3M7 14l3 3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z M5 17a3 3 0 0 1 3-3h10"/></symbol>
+  <symbol id="i-chalk" viewBox="0 0 24 24"><path d="M12 4.5 L20.5 18.5 H3.5 Z" fill="rgba(53,87,166,.16)" stroke="#3557A6" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 15.5h8" stroke="#3557A6" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="1 3"/></symbol>
+  <symbol id="q-sqsq" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="none" stroke="#2A2119" stroke-width="1.3"/><path d="M10 2L18 10L10 18L2 10Z" fill="#D3ECE7" stroke="#2A2119" stroke-width="1.3"/></symbol>
+  <symbol id="q-geese" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="none" stroke="#2A2119" stroke-width="1.3"/><path d="M2 18L6 10L10 18ZM10 18L14 10L18 18ZM2 10L6 2L10 10ZM10 10L14 2L18 10Z" fill="#F8DCC2" stroke="#2A2119" stroke-width="1.1"/></symbol>
+  <symbol id="q-cabin" viewBox="0 0 20 20"><path d="M2 2h16v16H2z M5 5h10v10H5z M8 8h4v4H8z" fill="none" stroke="#2A2119" stroke-width="1.3"/><rect x="8" y="8" width="4" height="4" fill="#E3A72F"/></symbol>
+  <symbol id="q-rail" viewBox="0 0 20 20"><path d="M2 2h16v16H2z M2 7.3h16 M2 12.6h16 M7.3 2v5.3 M12.6 7.3v5.3 M7.3 12.6V18" fill="none" stroke="#2A2119" stroke-width="1.3"/></symbol>
+  <symbol id="q-churn" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="none" stroke="#2A2119" stroke-width="1.3"/><path d="M2 2h6L2 8zM18 2h-6l6 6zM2 18h6l-6-6zM18 18h-6l6-6z" fill="#DCE4F3" stroke="#2A2119" stroke-width="1.1"/><rect x="8" y="8" width="4" height="4" fill="none" stroke="#2A2119" stroke-width="1.1"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Quilt motion</h1>
+    <p class="lede">Every animation Quilt defines, each under its industry term with Quilt's name beneath. Cards play once as they scroll into view. Replay runs them again. Drag the gesture cards with a mouse or a finger, or press Play demo to watch a ghost finger do it.</p>
+    <p class="lede2">Built: running in a prototype. Spec: specified but only a still so far. New: proposed in this pass. One focal motion (the thread pull). Everything else is feedback or continuity.</p>
+    <div class="tally" id="tally"></div>
+  </header>
+  <nav class="idx" aria-label="Groups"><div class="links" id="links"></div><button type="button" class="rmt" id="rmt" aria-pressed="false"><i aria-hidden="true"></i>Reduced motion</button></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const EASE = 'cubic-bezier(.16,1,.3,1)', EASE_THREAD = 'cubic-bezier(.45,0,.15,1)';
+const T = { fb: 120, state: 220, layout: 350, focal: 600, stateOut: 140, layoutOut: 220, focalOut: 360 };
+let RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const fin = a => a.finished.catch(() => {});
+const vib = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+const icon = (id, s = 18) => `<svg class="ico" style="width:${s}px;height:${s}px" aria-hidden="true"><use href="#${id}"/></svg>`;
+const NB = ' ';
+const DYE = { Budget: '#D3ECE7', Groceries: '#DDEBD2', Calendar: '#DCE4F3', 'To-dos': '#FBEBC4', Workout: '#F8DCC2', Classes: '#E7EBC2', Subscriptions: '#EADCF0', Meals: '#F3DCE0' };
+const PINS = [['Budget', 'i-wallet'], ['Groceries', 'i-cart'], ['Calendar', 'i-cal'], ['To-dos', 'i-check']];
+document.addEventListener('touchstart', () => {}, { passive: true });
+
+/* ---- gesture physics (fixspec A): critically damped spring, projection, rubber band ---- */
+function spring(from, to, v0, response, onUpdate, onDone) {
+  if (RM) { onUpdate(to, 0); onDone && onDone(); return () => {}; }
+  const w = 2 * Math.PI / response, x0 = from - to, t0 = performance.now(); let id;
+  const step = n => { const t = (n - t0) / 1000, e = Math.exp(-w * t), x = (x0 + (v0 + w * x0) * t) * e, v = (v0 - w * (v0 + w * x0) * t) * e;
+    if (Math.abs(x) < .5 && Math.abs(v) < 5) { onUpdate(to, 0); onDone && onDone(); } else { onUpdate(to + x, v); id = requestAnimationFrame(step); } };
+  id = requestAnimationFrame(step); return () => cancelAnimationFrame(id);
+}
+const project = (v, d = .995) => (v / 1000) * d / (1 - d);
+const rubberband = (o, d, c = .55) => (o * d * c) / (d + c * Math.abs(o));
+const tracker = () => { let a = []; return { add(x) { a.push([x, performance.now()]); if (a.length > 3) a.shift(); }, v() { if (a.length < 2) return 0; const [x0, t0] = a[0], [x1, t1] = a[a.length - 1]; if (performance.now() - t1 > 80) return 0; return t1 > t0 ? (x1 - x0) / (t1 - t0) * 1000 : 0; }, reset() { a = []; } }; };
+/* one pointer stream per gesture: pointerdown on el, move/up on window (works for mouse, touch and the ghost finger) */
+function drag(el, h) {
+  el.addEventListener('pointerdown', e => {
+    if (e.button) return; if (h.start(e.clientX, e.clientY, e) === false) return;
+    const id = e.pointerId;
+    const mv = ev => { if (ev.pointerId === id) h.move(ev.clientX, ev.clientY, ev); };
+    const up = ev => { if (ev.pointerId !== id) return; removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); h.end(ev.type === 'pointercancel', ev); };
+    addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  });
+}
+
+/* ---- spool(expr, size, play): canonical drawing from workbench-motion.html ---- */
+function spool(expr, size = 44, play = false, extraCls = '') {
+  const W = '#FFFFFF', INKC = '#2A2119', sm = size <= 44;
+  const o = sm ? 2.6 : 1.6, fw = sm ? 2.6 : 1.8, er = sm ? 3.2 : 2.3;
+  const eyes = (dx = 0, dy = 0) => `<g class="eyes"><circle cx="${23 + dx}" cy="${26 + dy}" r="${er}" fill="${W}"/><circle cx="${33 + dx}" cy="${26 + dy}" r="${er}" fill="${W}"/></g>`;
+  const P = (dd, fill = 'none') => `<path d="${dd}" fill="${fill}" stroke="${W}" stroke-width="${fw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const happyEyes = P('M20.5 27 q2.5 -3.5 5 0 M30.5 27 q2.5 -3.5 5 0');
+  let face = '', extra = '', tail = 'M14 38 C8 40 5 43 0 45', over = '', cls = '';
+  switch (expr) {
+    case 'hello': face = eyes() + P('M24 31 q4 3 8 0'); cls = play ? 'sp-hop' : ''; break;
+    case 'working': face = eyes(1.5, 1.5) + `<ellipse cx="29.5" cy="33" rx="1.8" ry="1.5" fill="${W}"/>`; cls = 'sp-bob'; break;
+    case 'thinking': face = eyes(1.5, -2) + P('M26 33 h5'); extra = `<g class="dots"><circle cx="50" cy="8" r="1.8" fill="${INKC}"/><circle cx="55" cy="2" r="2.2" fill="${INKC}"/><circle cx="61" cy="-5" r="2.6" fill="${INKC}"/></g>`; cls = 'sp-think'; break;
+    case 'waiting': face = eyes() + P('M20.5 21 q2.5 -2 5 0 M30.5 21 q2.5 -2 5 0') + P('M25 31.5 q3 2 6 0'); extra = `<path d="M41 9 L55 -5 L57 -7 L55 -3 Z" fill="#C9CCD1" stroke="${INKC}" stroke-width="1.2" stroke-linejoin="round"/>`; break;
+    case 'stitched': face = happyEyes + P('M23.5 30.5 q4.5 4.5 9 0'); cls = play ? 'sp-hop' : ''; if (sm) extra = `<path d="M46 2l3 3 6-7" fill="none" stroke="${INKC}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`; break;
+    case 'proud': face = happyEyes + `<circle cx="18.5" cy="31" r="2.1" fill="#F8DCC2"/><circle cx="37.5" cy="31" r="2.1" fill="#F8DCC2"/><path d="M23 30 q5 6.5 10 0 z" fill="${W}"/>`; cls = play ? 'sp-hop' : ''; if (sm) extra = `<path d="M50 -1v10M45 4h10" stroke="#E3A72F" stroke-width="2.4" stroke-linecap="round"/>`; break;
+    case 'oops': face = eyes(0, 1) + P('M20.5 22.5 L25.5 20.5 M30.5 20.5 L35.5 22.5') + P('M23.5 33.5 q1.5 -1.6 3 0 t3 0 t3 0'); tail = ''; over = `<path d="M14 40 l-4 1.5 l2 3 l-4.5 1 l2 3 l-5 1" fill="none" stroke="${INKC}" stroke-width="${o}" stroke-linecap="round" stroke-linejoin="round"/>`; cls = play ? 'sp-shake' : ''; break;
+    case 'sleepy': face = P('M20.5 26 q2.5 2 5 0 M30.5 26 q2.5 2 5 0') + P('M26 32.5 q2 1.2 4 0'); extra = `<path d="M47 1h5l-5 6h5M55 -7h4l-4 5h4" fill="none" stroke="${INKC}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`; cls = 'sp-breathe'; break;
+  }
+  return `<svg class="sp ${cls} ${extraCls}" width="${size}" height="${Math.round(size * 70 / 68)}" viewBox="-6 -10 68 70" aria-hidden="true"><g class="body">${tail ? `<path d="${tail}" fill="none" stroke="${INKC}" stroke-width="${o}" stroke-linecap="round" stroke-linejoin="round"/>` : ''}<rect x="10" y="6" width="36" height="8" rx="3" fill="#D9B98F" stroke="${INKC}" stroke-width="${o}"/><rect x="14" y="14" width="28" height="28" fill="#3557A6" stroke="${INKC}" stroke-width="${o}"/>${sm ? '' : '<path d="M14 18.5h28M14 38h28" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="1.4"/>'}<rect x="10" y="42" width="36" height="8" rx="3" fill="#D9B98F" stroke="${INKC}" stroke-width="${o}"/>${over}${face}</g>${extra}</svg>`;
+}
+const NEEDLE = `<svg class="needle" width="88" height="60" viewBox="-22 -15 44 30" aria-hidden="true"><g class="dip"><path d="M-16 0 L14 -1.7 L19 0 L14 1.7 Z" fill="#9BA0A8" stroke="#2A2119" stroke-width="1"/><ellipse cx="-11.5" cy="0" rx="2.6" ry=".9" fill="#FFFDF8"/><path d="M-12 0 C-17 -7 -22 3 -21 8" fill="none" stroke="#2A2119" stroke-width="1.6" stroke-linecap="round"/></g></svg>`;
+const OL = `<svg class="ol" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="13"/></svg>`;
+
+/* ---- shared motion pieces, ported from the prototypes ---- */
+function pt(stage, el, top) { const s = stage.getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left + r.width / 2 - s.left - stage.clientLeft, y: (top ? r.top : r.top + r.height / 2) - s.top - stage.clientTop }; }
+function threadPath(svg, a, b) {
+  const dy = Math.max(40, (b.y - a.y) * .55), p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', `M${a.x} ${a.y} C${a.x} ${a.y + dy} ${b.x} ${b.y - dy} ${b.x} ${b.y}`); svg.appendChild(p);
+  const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; return [p, L];
+}
+function threadLayer(stage) { stage.querySelectorAll('svg.threads').forEach(s => s.remove()); const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'threads'); svg.setAttribute('aria-hidden', 'true'); stage.appendChild(svg); return svg; }
+/* signature thread pull: draw on the thread curve, stagger 120, land at 70%, fade 220 after last landing + 400 */
+async function threadPull(c, pairs, land) {
+  if (RM || !pairs.length) { pairs.forEach((p, i) => land(p.to, i)); await sleep(T.fb); return c.alive(); }
+  const svg = threadLayer(c.el);
+  await Promise.all(pairs.map(async (p, i) => {
+    const [path, L] = threadPath(svg, pt(c.el, p.from), pt(c.el, p.to, p.top));
+    await sleep(i * 120); if (!c.alive()) return;
+    path.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: T.focal, easing: EASE_THREAD, fill: 'forwards' });
+    await sleep(T.focal * .7); if (c.alive()) land(p.to, i);
+  }));
+  await sleep(400); if (!c.alive()) return false;
+  await fin(svg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.layoutOut, easing: EASE, fill: 'forwards' })); svg.remove();
+  return c.alive();
+}
+async function threadRetract(c, pairs) {
+  if (RM) return;
+  const svg = threadLayer(c.el);
+  await Promise.all(pairs.map(p => { const [path, L] = threadPath(svg, pt(c.el, p.from), pt(c.el, p.to, p.top)); path.style.strokeDashoffset = 0; return fin(path.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: L }], { duration: T.focalOut, easing: EASE, fill: 'forwards' })); }));
+  svg.remove();
+}
+/* number roll: up for more, down for less */
+function roll(el, text, down) {
+  const old = el.lastElementChild; [...el.children].slice(0, -1).forEach(x => x.remove());
+  if (RM || !old) { el.innerHTML = `<span>${text}</span>`; return; }
+  const nu = document.createElement('span'); nu.textContent = text; el.append(nu); const d = down ? 100 : -100;
+  fin(old.animate([{ transform: 'none', opacity: 1 }, { transform: `translateY(${d}%)`, opacity: 0 }], { duration: T.state, easing: EASE, fill: 'forwards' })).then(() => old.remove());
+  nu.animate([{ transform: `translateY(${-d}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: T.state, easing: EASE });
+}
+const popIn = el => el.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'scale(.95)' }, { opacity: 1, transform: 'none' }], { duration: RM ? T.fb : T.state, easing: EASE });
+function notch(host) { if ($('.notch', host)) return; const n = document.createElement('span'); n.className = 'notch'; host.appendChild(n); popIn(n); }
+function addTag(host, label, cls = '') { if ($('.tag', host)) return; const t = document.createElement('span'); t.className = 'tag ' + cls; t.textContent = label; host.appendChild(t); popIn(t); return t; }
+function dropMark(m) { if (!m) return; fin(m.animate([{ opacity: 1 }, { opacity: 0 }], { duration: RM ? T.fb : T.stateOut, easing: EASE, fill: 'forwards' })).then(() => m.remove()); }
+const enterUp = (el, d = 8, delay = 0) => el.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: `translateY(${d}px)` }, { opacity: 1, transform: 'none' }], { duration: RM ? T.fb : T.state, delay: RM ? 0 : delay, easing: EASE, fill: 'backwards' });
+const exitUp = els => Promise.all(els.map(e => fin(e.animate(RM ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-8px)' }], { duration: RM ? T.fb : T.stateOut, easing: EASE, fill: 'forwards' }))));
+/* queue FLIP (quilt-home syncQueue): kept items slide (translate only), new ones enter with a 40ms stagger, max 2 */
+async function flipKeys(root, mutate) {
+  const first = new Map($$('[data-f]', root).map(e => [e.dataset.f, e.getBoundingClientRect().top]));
+  mutate(); let n = 0; const an = [];
+  $$('[data-f]', root).forEach(e => {
+    const k = e.dataset.f, top = e.getBoundingClientRect().top;
+    if (first.has(k)) { const dy = first.get(k) - top; if (Math.abs(dy) > .5 && !RM) an.push(e.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: T.layout, easing: EASE })); }
+    else an.push(enterUp(e, 8, Math.min(n++, 2) * 40));
+  });
+  await Promise.all(an.map(fin));
+}
+function toast(c, text, btn, fn, low) {
+  let t = $('.toast', c.el);
+  if (!t) { t = document.createElement('div'); t.className = 'toast' + (low ? ' low' : ''); t.setAttribute('role', 'status'); t.innerHTML = '<span></span><button type="button"></button>'; c.el.appendChild(t); t.offsetHeight; }
+  t.firstChild.textContent = text; const b = t.lastChild; b.hidden = !btn; b.textContent = btn || ''; b.onclick = () => { t.classList.remove('on'); fn && fn(); };
+  t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 4000); return t;
+}
+const barHTML = (clair = true) => `<div class="bar">${PINS.map(([n, ic]) => `<button type="button" class="pb" data-pin="${n}" style="background:${DYE[n]}">${icon(ic)}<span>${n}</span></button>`).join('')}${clair ? `<button type="button" class="pb clairb" aria-label="Clair: tap to type, hold to talk">${icon('i-spool', 20)}<span>Clair</span></button>` : ''}</div>`;
+
+/* ---- ghost finger: dispatches real pointer events at stage coordinates ---- */
+async function ghost(c, target, steps) {
+  const st = c.el, f = document.createElement('i'); f.className = 'finger'; f.setAttribute('aria-hidden', 'true'); st.appendChild(f);
+  let x = 0, y = 0;
+  const put = () => { f.style.transform = `translate(${x}px,${y}px)`; };
+  const ev = type => { const r = st.getBoundingClientRect(); target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 77, pointerType: 'touch', isPrimary: true, clientX: r.left + st.clientLeft + x, clientY: r.top + st.clientTop + y, button: type === 'pointermove' ? -1 : 0, buttons: type === 'pointerup' ? 0 : 1 })); };
+  for (const s of steps) {
+    if (!c.alive()) break;
+    if (s[0] === 'down') { x = s[1]; y = s[2]; put(); f.offsetHeight; f.classList.add('on', 'down'); ev('pointerdown'); }
+    else if (s[0] === 'at') { x = s[1]; y = s[2]; put(); }
+    else if (s[0] === 'hold') await sleep(s[1]);
+    else if (s[0] === 'move') {
+      const x0 = x, y0 = y, dx = s[1] - x0, dy = s[2] - y0, dur = s[3], lin = s[4] === 'lin', t0 = performance.now();
+      await new Promise(res => { const step = n => { if (!c.alive()) return res(); const k = Math.min(1, (n - t0) / dur), e = lin ? k : (k < .5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2); x = x0 + dx * e; y = y0 + dy * e; put(); ev('pointermove'); k < 1 ? requestAnimationFrame(step) : res(); }; requestAnimationFrame(step); });
+    } else if (s[0] === 'up') { ev('pointerup'); f.classList.remove('down'); await sleep(140); f.classList.remove('on'); }
+  }
+  await sleep(160); f.remove();
+}
+/* a tap with a visible finger: press state, pointer events, then click */
+async function tap(c, el, opts = {}) {
+  if (!el || !c.alive()) return;
+  const p = pt(c.el, el);
+  const f = document.createElement('i'); f.className = 'finger'; f.style.transform = `translate(${p.x}px,${p.y}px)`; c.el.appendChild(f); f.offsetHeight; f.classList.add('on', 'down');
+  const r = c.el.getBoundingClientRect(), init = { bubbles: true, pointerId: 78, pointerType: 'touch', isPrimary: true, clientX: r.left + c.el.clientLeft + p.x, clientY: r.top + c.el.clientTop + p.y };
+  el.classList.add('act'); el.dispatchEvent(new PointerEvent('pointerdown', { ...init, button: 0, buttons: 1 }));
+  await sleep(opts.hold || 140);
+  el.classList.remove('act'); el.dispatchEvent(new PointerEvent('pointerup', { ...init, button: 0, buttons: 0 }));
+  if (opts.click !== false && c.alive()) el.click();
+  f.classList.remove('down'); await sleep(140); f.classList.remove('on'); await sleep(140); f.remove();
+}
+
+/* ======================================================================
+   Clair mini phone: pinned bar + Clair sheet (quilt-home.html behaviour)
+   ====================================================================== */
+const TALK = `Spent $12 on lunch, gym tomorrow 6${NB}pm`;
+const pcard = (apps, what, val) => `<section class="st basted cd pc"><span class="from">${apps.map(a => `<i class="dot" data-app="${a}" style="background:${DYE[a]}"></i>`).join('')}${apps.join(' + ')}</span><div class="pr"><b>${what}</b><span class="num">${val}</span></div></section>`;
+const attRow = (photo) => photo ? `<div class="att"><span class="thumb"></span><span><b>Receipt photo</b><br><span class="small">just now</span></span></div>` : `<div class="att">${icon('i-file', 20)}<span><b>Syllabus · ECON 1010.pdf</b><br><span class="small">4 pages · shared from Files</span></span></div>`;
+const VIEWS = {
+  start: P => P.head('hello', 'Tell Clair anything') + `<div class="fld">Spent $12 on lunch, gym 6${NB}pm…</div><div class="chips3"><button type="button" class="chip" data-a="talk">${icon('i-mic')}Talk</button><button type="button" class="chip" data-a="photo">${icon('i-cam')}Photo</button><button type="button" class="chip" data-a="file">${icon('i-clip')}File</button></div><div class="sect">Try</div><div class="try" data-a="capture"><span class="k">Add</span>Spent $12 on lunch</div><div class="try" data-a="ask"><span class="k">Ask</span>Can I afford $60 tickets?</div>`,
+  talk: (P, v) => P.head('waiting', 'Listening') + `<div class="wave">${'<i></i>'.repeat(17)}</div>${v.noText ? '' : '<p class="tx" aria-live="polite"></p>'}<p class="hint">${v.hold ? 'Release to send · slide up to cancel' : 'Listening'}</p>`,
+  think: (P, v) => P.head(v.face || 'thinking', v.h || 'Reading that…') + (v.said ? `<p class="said">“${v.said}”</p>` : '') + (v.att || '') + (v.seam ? `<svg class="seam" viewBox="0 0 280 24" preserveAspectRatio="none" aria-hidden="true"><line class="g" x1="4" y1="12" x2="276" y2="12"/>${Array.from({ length: 8 }, (_, i) => `<line class="s" x1="${10 + i * 34}" y1="12" x2="${30 + i * 34}" y2="12"/>`).join('')}</svg><p class="small" style="margin:0" id="pg">Reading page 1 of 4</p>` : ''),
+  result: P => P.head('waiting', 'Goes in 3 apps') + pcard(['Budget'], 'Eating out', '$12') + pcard(['Calendar', 'Workout'], 'Gym', `Sat 21 Nov, 6${NB}pm`) + `<div class="btns"><button type="button" class="b" data-a="add">Add to 3 apps</button><button type="button" class="b ghost">Edit</button></div>`,
+  answer: P => P.head('stitched', 'Can I afford $60 tickets?') + `<section class="st cd ans"><p>Yes. $376 left until 1 Dec; after $60 you'd have $316, about $26 a day.</p><div class="srcs"><span class="srcchip"><i class="dot" style="background:${DYE.Budget}"></i>Budget</span><span class="srcchip"><i class="dot" style="background:${DYE.Calendar}"></i>Calendar</span></div></section>`,
+  camera: P => P.head('hello', 'Add a photo') + `<div class="vf" role="img" aria-label="Camera, pointed at a receipt"></div><div class="shut"><button type="button" class="shutter" data-a="shutter" aria-label="Take photo"></button></div>`,
+  fork: P => P.head('thinking', 'Log these or just answer?') + `<div class="att"><span class="thumb"></span><span><b>Fridge photo</b><br><span class="small">What can I make tonight?</span></span></div><div class="chips3" style="grid-template-columns:1fr 1fr"><button type="button" class="chip" data-a="log">Log items</button><button type="button" class="chip" data-a="just">Just answer</button></div>`,
+  fanswer: P => P.head('hello', 'What can I make tonight?') + `<section class="st cd ans"><p>Spinach and egg pasta. You have 4 of 5 things; missing parmesan ($4.29).</p><div class="srcs"><span class="srcchip">Your photo</span><span class="srcchip"><i class="dot" style="background:${DYE.Groceries}"></i>Groceries</span></div></section>`,
+  share: P => P.head('waiting', 'Found 6 due dates and 2 exams') + attRow(false) + `<section class="st basted cd"><span class="from"><i class="dot" style="background:${DYE.Classes}"></i><i class="dot" style="background:${DYE.Calendar}"></i>Classes + Calendar</span><ul class="lst"><li>Problem set 1<span>Fri 27 Nov</span></li><li>Midterm 1 · exam<span>Wed 9 Dec</span></li></ul><span class="small">4 more due dates and 1 more exam</span></section>`
+};
+function clairPhone(c, o = {}) {
+  const el = c.el; el.classList.add('ph');
+  el.innerHTML = `<div class="scr"><b class="hi">Evening, Sam.</b><p class="stl"><b class="odo" id="money"><span>$412</span></b> left this month · Pull day 6${NB}pm</p><div class="sect">Needs your OK · 1</div><section class="st basted cd"><b>Corner Market</b><span class="small">8 items · Groceries, Budget, Calendar</span></section></div><div class="scrim"></div><div class="sheet${o.n1 ? ' n1' : ''}" role="dialog" aria-label="Clair"><div class="grab" aria-hidden="true"></div><div class="sc"></div></div>${barHTML()}`;
+  const P = { c, el, sheet: $('.sheet', el), sc: $('.sc', el), scrim: $('.scrim', el), btn: $('.clairb', el), face: '', swapId: 0, open: false, talk: null, busy: false, opts: o };
+  P.head = (e, t) => { const play = e !== P.face; P.face = e; return `<div class="shd">${spool(e, 44, play)}<b class="sh2">${t}</b></div>`; };
+  P.show = async (st, v = {}, instant) => {
+    const id = ++P.swapId, html = VIEWS[st](P, v);
+    if (!P.open) {
+      P.sc.innerHTML = html; P.open = true;
+      if (instant) { P.sheet.style.transition = P.scrim.style.transition = 'none'; }
+      P.sheet.classList.add('on'); P.scrim.classList.add('on');
+      if (instant) { P.sheet.offsetHeight; P.sheet.style.transition = P.scrim.style.transition = ''; }
+    } else {
+      const h0 = P.sheet.offsetHeight;
+      if (!RM) await fin(P.sc.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.fb, easing: EASE, fill: 'forwards' }));
+      if (id !== P.swapId || !c.alive()) return false;
+      P.sc.innerHTML = html; P.sc.getAnimations().forEach(a => a.cancel());
+      const h1 = P.h1 = P.sheet.offsetHeight, grow = Math.abs(h1 - h0) > 1;
+      if (!RM) { if (grow) P.sheet.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: T.state, easing: EASE }); P.sc.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.fb, delay: grow ? T.state - T.fb : 0, easing: EASE, fill: 'backwards' }); }
+    }
+    if (st === 'result' && o.stagger) $$('.pc', P.sc).forEach((p, i) => enterUp(p, 8, i * 40));
+    return id === P.swapId && c.alive();
+  };
+  P.close = () => { if (!P.open) return; P.open = false; P.face = ''; stopTalk(P); P.swapId++; P.sheet.classList.remove('on', 'cancel'); P.scrim.classList.remove('on'); };
+  P.scrim.addEventListener('pointerdown', e => { if (e.target === P.scrim && !P.busy) P.close(); });
+  P.sc.addEventListener('click', e => {
+    const a = e.target.closest('[data-a]'); if (!a || P.busy) return; const k = a.dataset.a;
+    if (k === 'add') confirmPull(P); else if (k === 'capture') route(P, 'capture'); else if (k === 'ask') route(P, 'ask');
+    else if (k === 'talk') startTalk(P, false); else if (k === 'photo') P.show('camera'); else if (k === 'shutter') shutterFlow(P);
+    else if (k === 'file') shareFlow(P);
+  });
+  bindClair(P);
+  return P;
+}
+function bindClair(P) {
+  const b = P.btn; let held = false, t = 0, x0 = 0, y0 = 0, moved = false;
+  const clear = () => { clearTimeout(t); b.classList.remove('holding'); };
+  drag(b, {
+    start(x, y) { if (P.busy) return false; held = false; moved = false; x0 = x; y0 = y; b.classList.add('holding'); t = setTimeout(() => { held = true; b.classList.remove('holding'); vib(10); startTalk(P, true); }, 450); },
+    move(x, y) { if (!held) { if (Math.hypot(x - x0, y - y0) > 12) { moved = true; clear(); } return; } talkCancel(P, y0 - y >= 60); },
+    end(cancel) { clear(); if (held) { held = false; talkRelease(P, cancel || (P.talk && P.talk.cancel)); } else if (!cancel && !moved) { P.open ? P.close() : P.show('start'); } }
+  });
+  b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); P.open ? P.close() : P.show('start'); } });
+  b.addEventListener('contextmenu', e => e.preventDefault());
+}
+async function startTalk(P, hold, v = {}) {
+  stopTalk(P); const t = P.talk = { hold, n: 0, level: 0, cancel: false }, words = TALK.split(' ');
+  if (!(await P.show('talk', { hold, noText: v.noText }, v.instant)) || P.talk !== t) return;
+  const tx = $('.tx', P.el), sp = $$('.wave i', P.el);
+  t.iv = setInterval(() => { if (t.n < words.length) { t.n++; if (tx) tx.textContent = words.slice(0, t.n).join(' '); t.level = 1; } }, 260);
+  if (RM || v.still) return;
+  const loop = now => {
+    if (!P.c.alive() || P.talk !== t) return;
+    t.level = Math.max(0, t.level - .035);
+    sp.forEach((s, i) => { const lv = Math.min(1, .08 + t.level * (.55 + .45 * Math.sin(now / 110 + i * 1.3))); s.style.transform = `scaleX(${((3 + lv * 11) / 14).toFixed(3)})`; });
+    if (t.n >= words.length && t.level === 0) return; t.raf = requestAnimationFrame(loop);
+  };
+  t.raf = requestAnimationFrame(loop);
+}
+function stopTalk(P) { const t = P.talk; if (!t) return; clearInterval(t.iv); cancelAnimationFrame(t.raf); P.talk = null; }
+function talkCancel(P, on) { const t = P.talk; if (!t || t.cancel === on) return; t.cancel = on; P.sheet.classList.toggle('cancel', on); vib(8); const h = $('.hint', P.el); if (h) h.textContent = on ? 'Release to cancel' : 'Release to send · slide up to cancel'; }
+async function talkRelease(P, cancel) {
+  if (!P.talk) return; stopTalk(P); P.sheet.classList.remove('cancel');
+  if (cancel) return P.close();
+  if (P.opts.settle) {   /* N2: stitches settle to rest length, hint confirms, then the swap */
+    const h = $('.hint', P.el); if (h) h.textContent = 'Sending';
+    if (!RM) $$('.wave i', P.el).forEach(s => s.animate([{ transform: getComputedStyle(s).transform }, { transform: 'scaleX(.64)' }], { duration: T.fb, easing: EASE, fill: 'forwards' }));
+    await sleep(T.fb + 40); if (!P.c.alive()) return;
+  }
+  route(P, 'capture', TALK);
+}
+async function route(P, kind, said) {
+  if (kind === 'ask') { if (!(await P.show('think', { h: 'Checking Budget and Calendar…', said: 'Can I afford $60 tickets?' }))) return; await sleep(RM ? T.fb : 800); if (P.c.alive() && P.open) P.show('answer'); return; }
+  if (!(await P.show('think', { said: said || 'Spent $12 on lunch' }))) return; await sleep(RM ? T.fb : 900); if (P.c.alive() && P.open) P.show('result');
+}
+async function confirmPull(P) {
+  if (P.busy) return; P.busy = true; const c = P.c;
+  $$('button', P.sc).forEach(b => b.disabled = true);
+  $$('.pc', P.sc).forEach(p => p.classList.remove('basted'));
+  await sleep(RM ? T.fb : T.state); if (!c.alive()) return;
+  const pairs = [];
+  $$('.pc .dot', P.sc).forEach(d => { const pin = $(`.pb[data-pin="${d.dataset.app}"]`, P.el); if (pin) pairs.push({ from: d, to: $('.ico', pin), top: true }); });
+  const ok = await threadPull(c, pairs, to => { const pb = to.closest('.pb'); notch(pb); if (pb.dataset.pin === 'Budget') roll($('#money', P.el), '$400', true); });
+  if (!ok) return; await sleep(RM ? 0 : 200); if (!c.alive()) return;
+  P.busy = false; P.close(); toast(c, 'Added to Budget, Calendar and Workout.', 'Undo', () => { $$('.notch', P.el).forEach(dropMark); roll($('#money', P.el), '$412', false); });
+}
+async function shutterFlow(P) {
+  const c = P.c, vf = $('.vf', P.el), s0 = vf && vf.getBoundingClientRect();
+  if (!P.opts.dropin || RM || !vf) { await P.show('think', { face: 'working', h: 'Reading the receipt…', att: attRow(true) }); return; }
+  /* N4 shared element: the viewfinder shrinks into the attachment thumb (uniform scale + crop) */
+  const sr = c.el.getBoundingClientRect(), clone = vf.cloneNode(true);
+  Object.assign(clone.style, { position: 'absolute', left: (s0.left - sr.left - c.el.clientLeft) + 'px', top: (s0.top - sr.top - c.el.clientTop) + 'px', width: s0.width + 'px', height: s0.height + 'px', zIndex: 50, margin: 0 });
+  c.el.appendChild(clone);
+  if (!(await P.show('think', { face: 'working', h: 'Reading the receipt…', att: attRow(true) }))) return;
+  const th = $('.thumb', P.el); th.style.opacity = 0; const rr = th.getBoundingClientRect(), hc = P.sheet.getBoundingClientRect().height, r1 = { left: rr.left, width: rr.width, height: rr.height, top: rr.top + (hc - (P.h1 || hc)) };
+  const s = r1.height / s0.height, cropX = (s0.width - r1.width / s) / 2;
+  const dx = (r1.left + r1.width / 2) - (s0.left + s0.width / 2), dy = (r1.top + r1.height / 2) - (s0.top + s0.height / 2);
+  await fin(clone.animate([{ transform: 'none', clipPath: `inset(0 0 0 0 round 12px)` }, { transform: `translate(${dx}px,${dy}px) scale(${s})`, clipPath: `inset(0 ${cropX}px 0 ${cropX}px round ${8 / s}px)` }], { duration: T.layout, easing: EASE, fill: 'forwards' }));
+  th.style.opacity = 1; clone.remove();
+}
+async function shareFlow(P) {
+  const c = P.c;
+  if (!(await P.show('think', { face: 'working', h: 'Reading the syllabus…', att: attRow(false), seam: !!P.opts.seam }))) return;
+  if (P.opts.seam) {   /* N5: two stitches per page, one spool dip per page */
+    for (let pg = 0; pg < 4; pg++) {
+      await sleep(350); if (!c.alive()) return;
+      const ss = $$('.seam .s', P.el); ss[pg * 2] && ss[pg * 2].classList.add('on'); await sleep(60); ss[pg * 2 + 1] && ss[pg * 2 + 1].classList.add('on');
+      const sp = $('.shd .sp', P.el); if (sp && !RM) sp.animate([{ transform: 'none' }, { transform: 'translateY(2px)' }, { transform: 'none' }], { duration: T.state, easing: 'ease-in-out' });
+      const pgl = $('#pg', P.el); if (pgl) pgl.textContent = `Reading page ${Math.min(4, pg + 2)} of 4`;
+    }
+    await sleep(300);
+  } else await sleep(1400);
+  if (c.alive() && P.open) P.show('share');
+}
+
+/* ======================================================================
+   Card registry
+   ====================================================================== */
+const GROUPS = [
+  ['found', 'Foundations', 'Tokens, press, hold, springs and the reduced-motion rule. Everything else is built from these.'],
+  ['clair', 'Clair', 'The Clair button in the pinned bar and the sheet it opens: tap, hold to talk, listening, send, thinking, proposals, confirm, answers, photo, share, dismiss. Then the spool mascot.'],
+  ['build', 'Building an app', 'Describe, chalk outline, basted pieces, the layout preview pager, arrange, connect, and the sew finale.'],
+  ['stitch', 'Stitching', 'Basted to stitched, the thread pull, the odometer, tags and the seam-ripper undo.'],
+  ['lists', 'Lists and sheets', 'Swipe rows, sheets, pull to search, toasts and the FLIP layouts.'],
+  ['home', 'Home', 'The Needs-your-OK queue and the Home thread pull.']
+];
+const CARDS = [];
+const add = (g, o) => CARDS.push({ g, ...o });
+
+/* ---------------- FOUNDATIONS ---------------- */
+add('found', { term: 'Cubic-bezier (ease-out)', q: 'Quilt ease · thread curve', when: 'Every transition uses the ease. The thread curve is reserved for drawing threads.', tok: '.16,1,.3,1 (350) vs .45,0,.15,1 (600) · RM: 120 fade', src: 'QF:15 · WM:17-18', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in" style="justify-content:center;gap:20px">${[['Quilt ease · 350 ms', '#3557A6'], ['Thread curve · 600 ms', '#E3A72F']].map(([l, col]) => `<div class="trk"><span class="lbl">${l}</span><i class="dm" style="background:${col}"></i></div>`).join('')}</div>`;
+    return { play() { const w = $('.trk', c.el).clientWidth - 20; $$('.dm', c.el).forEach((d, i) => d.animate(RM ? [{ opacity: 0, transform: `translateX(${w}px)` }, { opacity: 1, transform: `translateX(${w}px)` }] : [{ transform: 'none' }, { transform: `translateX(${w}px)` }], { duration: RM ? T.fb : i ? T.focal : T.layout, easing: i ? EASE_THREAD : EASE, fill: 'forwards' })); } }; } });
+add('found', { term: 'Duration', q: 'Four beats, faster exits', when: 'Feedback, state, layout, focal. Exits run at 0.5 to 0.7 of the entrance.', tok: '120 · 220 · 350 · 600; out 140 · 220 · 360 · RM: all 120', src: 'fixspec A', st: 'built',
+  mk(c) { const R = [['feedback', 120, 120], ['state', 220, 140], ['layout', 350, 220], ['focal', 600, 360]];
+    c.el.innerHTML = `<div class="in" style="justify-content:center"><div class="durs">${R.map(([n, a]) => `<span>${n} ${a}</span><i></i>`).join('')}</div></div>`;
+    return { async play() { const bars = $$('.durs i', c.el); bars.forEach((b, k) => b.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: RM ? T.fb : R[k][1], easing: EASE, fill: 'forwards' })); if (!(await c.sleep(1300))) return; bars.forEach((b, k) => b.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: RM ? T.fb : R[k][2], easing: EASE, fill: 'forwards' })); if (!(await c.sleep(700))) return; bars.forEach((b, k) => b.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: RM ? T.fb : R[k][1], easing: EASE, fill: 'forwards' })); } }; } });
+add('found', { term: 'Press / Tap feedback', q: 'Press', when: 'Every button, chip and patch while a finger is on it.', tok: 'scale .97 (patches .98) · 120 · ease · RM: none', src: 'QF:87 · WM:103/108 · QH:80/105', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in center" style="gap:12px"><button type="button" class="b">Add to 3 apps</button><div style="display:flex;gap:8px"><button type="button" class="chip">${icon('i-mic')}Talk</button><button type="button" class="patch" style="background:${DYE.Groceries};width:96px">${icon('i-cart')}Groceries</button></div><p class="cap">Press and hold any of them</p></div>`;
+    return { async play() { for (const el of [$('.b', c.el), $('.chip', c.el), $('.patch', c.el)]) { await tap(c, el, { click: false, hold: 260 }); } } }; } });
+add('found', { term: 'Press feedback (no scale)', q: 'Cell press · row tint', when: 'Pinned-bar cells darken instead of shrinking. Full-width rows get a tint.', tok: 'inset darken .07 / bg #F7F1E6 · 120 · ease', src: 'QF:129/168 · QH:121/152', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in" style="padding:12px 0"><div class="swrow" style="background:var(--surface)"><div class="fg rowi" tabindex="0"><span class="t"><span>Oat milk</span><span>1 carton</span></span></div></div></div>${barHTML()}`;
+    return { async play() { await tap(c, $('.pb[data-pin="Groceries"]', c.el), { click: false, hold: 260 }); await tap(c, $('.clairb', c.el), { click: false, hold: 200 }); const fg = $('.fg', c.el); fg.style.backgroundColor = '#F7F1E6'; await tap(c, fg, { click: false, hold: 260 }); fg.style.backgroundColor = ''; } }; } });
+add('found', { term: 'Hold to confirm', q: 'Hold fill', when: 'Holding the Clair button or a row. Quick taps never show the fill.', tok: '450 hold: 120 delay + 330 linear clip-path; vibrate 10 · RM: fill shows at once', src: 'QF:135 · QH:132/417', st: 'built', gesture: true,
+  mk(c) { c.el.innerHTML = `<div class="in center"><button type="button" class="holdbtn">Hold me</button><p class="cap" id="hs">Tap: nothing. Hold 450 ms: fires.</p></div>`;
+    const b = $('.holdbtn', c.el), s = $('#hs', c.el); let t = 0;
+    drag(b, { start() { b.classList.remove('fired'); b.classList.add('holding'); t = setTimeout(() => { b.classList.remove('holding'); b.classList.add('fired'); vib(10); s.textContent = 'Fired at 450 ms'; }, 450); }, move() {}, end() { clearTimeout(t); b.classList.remove('holding'); if (!b.classList.contains('fired')) s.textContent = 'Quick tap: no fill shown'; } });
+    b.addEventListener('contextmenu', e => e.preventDefault());
+    const demo = async () => { const p = pt(c.el, b); await ghost(c, b, [['down', p.x, p.y], ['hold', 100], ['up']]); if (!(await c.sleep(500))) return; await ghost(c, b, [['down', p.x, p.y], ['hold', 900], ['up']]); };
+    return { play: demo, demo }; } });
+add('found', { term: 'Spring + Momentum', q: 'Release spring', when: 'Every gesture release. Critically damped, so it never overshoots, and it keeps the finger’s speed.', tok: 'response .3 s · commit by position + projected velocity · RM: jumps', src: 'QF:341 · QH:745', st: 'built', gesture: true,
+  mk(c) { c.el.innerHTML = `<div class="in" style="justify-content:center"><div class="track2"><i class="slot" style="left:8px"></i><i class="slot" style="right:8px"></i><i class="puck"></i></div><p class="cap">Fling the puck. Release past half (with speed) to switch.</p></div>`;
+    const tr2 = $('.track2', c.el), pk = $('.puck', c.el), tk = tracker(); let x = 0, x0 = 0, stop = null, W = 0;
+    const set = v => { x = v; pk.style.transform = `translateX(${v}px)`; };
+    drag(pk, { start(cx) { stop && stop(); W = tr2.clientWidth - 64; x0 = cx - x; tk.reset(); tk.add(cx); }, move(cx) { tk.add(cx); const v = cx - x0; set(v < 0 ? -rubberband(-v, W) : v > W ? W + rubberband(v - W, W) : v); }, end(cancel) { const v = cancel ? 0 : tk.v(), to = x + project(v) > W / 2 ? W : 0; stop = spring(x, to, v, .3, set, () => stop = null); } });
+    const demo = async () => { const p = pt(c.el, pk); await ghost(c, pk, [['down', p.x, p.y], ['move', p.x + 70, p.y, 110, 'lin'], ['up']]); if (!(await c.sleep(900))) return; const q = pt(c.el, pk); await ghost(c, pk, [['down', q.x, q.y], ['move', q.x - 60, q.y, 110, 'lin'], ['up']]); };
+    return { play: demo, demo }; } });
+add('found', { term: 'Rubber-banding', q: 'Overpull', when: 'Dragging past a boundary resists, then springs back on release.', tok: 'rubberband(o, d, .55) · spring .35 back · RM: no movement', src: 'QF:353', st: 'built', gesture: true,
+  mk(c) { c.el.innerHTML = `<div class="in"><div class="rb st">Drag me down or up</div></div>`;
+    const el = $('.rb', c.el); let y0 = 0, y = 0, stop = null;
+    const set = v => { y = v; el.style.transform = `translateY(${v}px)`; };
+    drag(el, { start(cx, cy) { stop && stop(); y0 = cy - y; }, move(cx, cy) { const d = cy - y0; set(Math.sign(d) * rubberband(Math.abs(d), 180)); }, end() { stop = spring(y, 0, 0, .35, set, () => stop = null); } });
+    const demo = async () => { const p = pt(c.el, el); await ghost(c, el, [['down', p.x, p.y], ['move', p.x, p.y + 150, 600], ['hold', 200], ['up']]); };
+    return { play: demo, demo }; } });
+add('found', { term: 'Reduced motion', q: 'Fallback rule', when: 'With reduced motion on: nothing moves, only 120 ms fades. Springs jump; threads and rolls are off; the spool keeps its face. Use the switch at the top to see every card this way.', tok: 'left: full (220, translate 8) · right: reduced (120, opacity)', src: 'QF:251 · WM:239 · QH:207', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in" style="flex-direction:row;padding:0"><div style="flex:1;position:relative;border-right:1.5px dashed var(--stitch)"><p class="cap" style="padding-top:12px">Full</p><div class="toast low t1" style="transition:none"><span>Added.</span></div></div><div style="flex:1;position:relative"><p class="cap" style="padding-top:12px">Reduced</p><div class="toast low t2" style="transition:none"><span>Added.</span></div></div></div>`;
+    return { async play() { const a = $('.t1', c.el), b = $('.t2', c.el); a.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE, fill: 'forwards' }); b.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.fb, easing: EASE, fill: 'forwards' }); } }; } });
+
+/* ---------------- CLAIR ---------------- */
+add('clair', { term: 'Press feedback', q: 'Clair button press', when: 'Tapping Clair in the pinned bar. The faceless spool mark itself never moves.', tok: 'inset paper .1 · 120 · ease · RM: same', src: 'QH:129 · QF:136', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in center"><p class="cap">The ink cell darkens under the finger. Nothing else moves.</p></div>${barHTML()}`; return { play: () => tap(c, $('.clairb', c.el), { click: false, hold: 300 }) }; } });
+add('clair', { term: 'Hold to confirm', q: 'Hold to talk', when: 'Hold Clair for 450 ms: the fill sweeps, the phone buzzes, the sheet opens listening. Release to send.', tok: 'fill 120 delay + 330 linear · sheet 350 · RM: fill at once, opacity sheet', src: 'QH:417 · QF:405', st: 'built', size: 'ph', gesture: true,
+  mk(c) { const P = clairPhone(c); const demo = async () => { const p = pt(c.el, P.btn); await ghost(c, P.btn, [['down', p.x, p.y], ['hold', 2300], ['up']]); }; return { play: demo, demo }; } });
+add('clair', { term: 'Drag (threshold)', q: 'Slide up to cancel', when: 'While holding, slide up 60 px or more: the stitches dim, the hint flips, and releasing cancels.', tok: 'opacity .3 · 120 · vibrate 8 · RM: same (colour/text only)', src: 'QH:692/162 · QF:414', st: 'built', size: 'ph', gesture: true,
+  mk(c) { const P = clairPhone(c); const demo = async () => { const p = pt(c.el, P.btn); await ghost(c, P.btn, [['down', p.x, p.y], ['hold', 1300], ['move', p.x, p.y - 90, 300], ['hold', 700], ['up']]); }; return { play: demo, demo }; } });
+add('clair', { term: 'Slide in + Fade (sheet)', q: 'Clair sheet rise', when: 'Tap Clair. The sheet rises 48 px and fades in above the bar; tap again or tap the scrim to close.', tok: 'in 350 / out 220 · ease · scrim same · RM: opacity 120', src: 'QH:134-137 · QF:196 (105%)', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c); return { async play() { await tap(c, P.btn, { click: false }); if (!(await c.sleep(1500))) return; await tap(c, P.btn, { click: false }); } }; } });
+add('clair', { term: 'Origin-aware animation', q: 'Rise from the button', when: 'The sheet grows out of the Clair cell (bottom right), and both prototypes use the same rule.', tok: 'translateY(16) scale(.96) → none · origin 100% 100% · 350 / 220 · RM: opacity 120', src: 'QH:137 · QF:196', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c, { n1: true }); return { async play() { await tap(c, P.btn, { click: false }); if (!(await c.sleep(1500))) return; await tap(c, P.btn, { click: false }); } }; } });
+add('clair', { term: 'Fade out', q: 'Dismiss', when: 'Tap the scrim, press Esc or tap Clair again. A dismiss runs faster than the rise.', tok: 'sheet + scrim out 220 · ease · RM: 120', src: 'QH:662 · QF:459', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c); P.show('start', {}, true); return { async play() { if (!P.open) P.show('start', {}, true); if (!(await c.sleep(700))) return; await tap(c, P.scrim, { click: false }); } }; } });
+add('clair', { term: 'Crossfade + Layout animation', q: 'State swap', when: 'Every step inside the sheet (and chained sheets in apps): the old content fades, the height eases, the new content fades in.', tok: 'fade 120 → height 220 → fade 120 · RM: instant swap', src: 'QH:640 · QF:445', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c); P.show('start', {}, true); return { async play() { if (!(await c.sleep(600))) return; await P.show('think', { said: 'Spent $12 on lunch' }); if (!(await c.sleep(1000))) return; P.show('result'); } }; } });
+add('clair', { term: 'Swipe to dismiss + Rubber-banding', q: 'Pull the sheet down', when: 'Drag from the grab bar, the top 48 px, or the body when it is at the top. Dragging up rubber-bands.', tok: 'spring .35 · close if y + projected > 35% of height · RM: closes with a fade', src: 'QH:745-807 · QF:466', st: 'built', size: 'ph', gesture: true,
+  mk(c) { const P = clairPhone(c); P.show('start', {}, true); bindSheetDrag(c, P.sheet, P.scrim, () => P.close());
+    const demo = async () => { if (!P.open) { P.show('start', {}, true); await c.sleep(300); } const g = $('.grab', P.el), p = pt(c.el, g); await ghost(c, g, [['down', p.x, p.y], ['move', p.x, p.y - 40, 260], ['move', p.x, p.y + 10, 200], ['hold', 150], ['move', p.x, p.y + 150, 140, 'lin'], ['up']]); };
+    return { play: demo, demo }; } });
+add('clair', { term: 'Waveform (level meter)', q: 'Stitch waveform', when: 'While Clair listens. The waveform is a running stitch: each stitch’s length follows the voice level.', tok: 'rAF, level decays .035/frame · board: scaleX .4–1, 760 alternate · RM: static line + "Listening"', src: 'QH:677 · QF:1391 · ClairTalk.dc:46', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c); return { play: () => startTalk(P, false, { instant: true, noText: true }) }; } });
+add('clair', { term: 'Typewriter (word by word)', q: 'Live transcript', when: 'Words appear as they are heard, with no fade, so they can be read right away.', tok: '260 ms per word (QH), 220 (QF) · no animation · RM: same', src: 'QH:681 · QF:1388', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c); return { play: () => startTalk(P, true, { instant: true, still: true }) }; } });
+add('clair', { term: 'Interpolation', q: 'Stitches settle', when: 'On release, every stitch eases to its rest length and the hint says "Sending", so the release is felt before the swap.', tok: '120 · ease · then swap · RM: hint only', src: 'QH:710 · QF:1555', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c, { settle: true }); return { async play() { await startTalk(P, true, { instant: true }); if (!(await c.sleep(1500))) return; talkRelease(P, false); } }; } });
+add('clair', { term: 'Pulse', q: 'Clair thinking', when: 'After a send or a question. Thought stitches pulse for a 700–900 ms beat.', tok: 'dots opacity .25↔1 · 1.2 s ease-in-out, .2 s stagger · RM: face only', src: 'QH:674 · QF:1403', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c); P.show('start', {}, true); return { async play() { if (!(await c.sleep(500))) return; P.show('think', { said: TALK }); } }; } });
+add('clair', { term: 'Stagger', q: 'Proposals arrive', when: 'Each destination card lands separately, 40 ms apart, so "goes in 3 apps" reads as separate pieces.', tok: 'opacity + translateY 8 · 220 · 40 ms stagger, cap 3 · RM: opacity 120', src: 'QH:669 · QF:1575', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c, { stagger: true }); P.show('think', { said: TALK }, true); return { async play() { if (!(await c.sleep(700))) return; P.show('result'); } }; } });
+add('clair', { term: 'Line drawing (orchestrated)', q: 'Capture confirm', when: '"Add to 3 apps": the cards tighten from basted to stitched, threads pull to the pins, notches land, the money rolls, the sheet closes, the toast offers Undo.', tok: '220 + thread 600 (stagger 120, land 70%) + 400 + fade 220 · RM: no threads, notches fade', src: 'QH:705 · QF:1416', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c); P.show('result', {}, true); return { async play() { if (!(await c.sleep(600))) return; await tap(c, $('[data-a="add"]', P.el)); } }; } });
+add('clair', { term: 'Scale in', q: 'Pin notch', when: 'A thread lands on a pinned app. The mustard notch stays until you open that app.', tok: 'scale .95→1 + opacity · 220 · Undo: fade 140 · RM: opacity 120', src: 'QH:503 · QF:1347', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in center"><p class="cap">Notches land on Budget, Calendar and To-dos</p></div>${barHTML()}`;
+    return { async play() { for (const n of ['Budget', 'Calendar', 'To-dos']) { notch($(`.pb[data-pin="${n}"]`, c.el)); if (!(await c.sleep(120))) return; } if (!(await c.sleep(1400))) return; $$('.notch', c.el).forEach(dropMark); } }; } });
+add('clair', { term: 'Crossfade', q: 'Answer arrives', when: 'A question resolves. The answer card swaps in and the spool hops once as it turns "stitched".', tok: 'state swap 120/220/120 + hop 420 · RM: swap, face only', src: 'QH:622 · QF:1433', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c); P.show('think', { h: 'Checking Budget and Calendar…', said: 'Can I afford $60 tickets?' }, true); return { async play() { if (!(await c.sleep(800))) return; P.show('answer'); } }; } });
+add('clair', { term: 'Press feedback', q: 'Shutter', when: 'Taking a photo from the Clair sheet.', tok: 'scale .94 · 120 · ease · RM: none', src: 'QH:179', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c); P.show('camera', {}, true); return { play: () => tap(c, $('.shutter', P.el), { click: false, hold: 300 }) }; } });
+add('clair', { term: 'Shared element transition', q: 'Photo drop-in', when: 'The viewfinder shrinks into the attachment thumbnail, so you can see where the photo went.', tok: 'uniform scale + crop · 350 · ease · RM: crossfade 120', src: 'QH:748', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c, { dropin: true }); P.show('camera', {}, true); return { async play() { if (!(await c.sleep(500))) return; await tap(c, $('.shutter', P.el)); } }; } });
+add('clair', { term: 'Crossfade', q: 'Log or answer fork', when: 'A photo plus a question: choose "Log items" or "Just answer". The other chip fades out, then the state swaps.', tok: 'chip fade 140 → state swap · RM: swap', src: 'ClairPhoto.dc:58 (still)', st: 'spec', size: 'ph',
+  mk(c) { const P = clairPhone(c); P.show('fork', {}, true);
+    return { async play() { if (!(await c.sleep(700))) return; const just = $('[data-a="just"]', P.el); await tap(c, just, { click: false }); const other = $('[data-a="log"]', P.el); await fin(other.animate([{ opacity: 1 }, { opacity: 0 }], { duration: RM ? T.fb : T.stateOut, easing: EASE, fill: 'forwards' })); if (c.alive()) P.show('fanswer'); } }; } });
+add('clair', { term: 'Stepped animation (determinate progress)', q: 'Reading seam', when: 'While a shared file is read, two stitches per page appear and the spool dips once per page, so the wait shows progress. Then the basted preview.', tok: 'stitch 120 each · dip 220 · RM: stitches appear, text counts', src: 'QH:775', st: 'built', size: 'ph',
+  mk(c) { const P = clairPhone(c, { seam: true }); return { async play() { shareFlow(P); } }; } });
+add('clair', { term: 'Translate', q: 'Seam lead', when: 'Reading a receipt photo: the spool walks along the seam; each row read sews two stitches.', tok: 'lead 350 · stitch 120 · dip 220 per row · RM: jumps per row', src: 'WM:179/827', st: 'built', size: 'tall',
+  mk(c) { const ROWS = [['Chicken thighs', '$8.49'], ['Greek yogurt ×2', '$6.98'], ['Spinach', '$3.29'], ['Eggs, dozen', '$4.19']];
+    c.el.innerHTML = `<div class="in"><div class="chalk" style="display:flex;flex-direction:column;gap:6px">${OL}<div style="position:relative;height:44px"><svg class="seam" viewBox="0 0 280 24" preserveAspectRatio="none" style="position:absolute;left:0;top:20px" aria-hidden="true"><line class="g" x1="4" y1="12" x2="276" y2="12"/>${Array.from({ length: 8 }, (_, i) => `<line class="s" x1="${8 + i * 33}" y1="12" x2="${30 + i * 33}" y2="12"/>`).join('')}</svg><div class="lead" id="lead">${spool('working', 44)}</div></div><p class="small" style="margin:0;color:var(--denim-ink)" id="ws">Looking at your photo…</p><div id="wr" style="display:flex;flex-direction:column;gap:2px;font-size:13px;color:var(--ink)"></div></div></div>`;
+    const lead = $('#lead', c.el), seam = $('.seam', c.el);
+    const setLead = k => { $$('.seam .s', c.el).forEach((s, i) => s.classList.toggle('on', i < k * 2)); const w = seam.getBoundingClientRect().width, kx = w / 280; const x = k === 0 ? 6 : 8 + (k * 2 - 1) * 33 + 22; lead.style.transform = `translate(${Math.max(-4, Math.min(x * kx - 2, w - 40))}px,-2px)`; };
+    setLead(0);
+    return { async play() { if (!(await c.sleep(700))) return; for (let i = 0; i < 4; i++) { $('#ws', c.el).textContent = `Reading items… ${i + 1} of 4`; if (!(await c.sleep(480))) return; const r = document.createElement('div'); r.style.display = 'flex'; r.style.justifyContent = 'space-between'; r.innerHTML = `<span>${ROWS[i][0]}</span><span class="num" style="font-size:13px">${ROWS[i][1]}</span>`; $('#wr', c.el).appendChild(r); enterUp(r, 4); setLead(i + 1); const sp = $('.sp', lead); if (sp && !RM) sp.animate([{ transform: 'none' }, { transform: 'translateY(2px)' }, { transform: 'none' }], { duration: T.state, easing: 'ease-in-out' }); } $('#ws', c.el).textContent = '4 of 4 read. Check them, then stitch.'; lead.innerHTML = spool('waiting', 44); } }; } });
+
+/* mascot */
+const EXPR = [['hello', 'Hello'], ['working', 'Working'], ['thinking', 'Thinking'], ['waiting', 'Waiting'], ['stitched', 'Stitched'], ['proud', 'Proud'], ['oops', 'Oops'], ['sleepy', 'Sleepy']];
+const solo = (expr, label, extra = '') => c => { const draw = play => { c.el.innerHTML = `<div class="in center">${spool(expr, 96, play, extra)}<p class="cap">${label}</p></div>`; }; draw(false); return { play: () => draw(true) }; };
+add('clair', { sub: 'Mascot expressions', term: 'Keyframes (expression set)', q: 'Clair’s eight faces', when: 'One spool per screen, at 30, 44 or 96 px. Replay re-enters each face, so the one-shots play once.', tok: 'hop 420 · shake 360 · bob 560 · blink 4.3 s · pulse 1.2 s · breathe 2.6 s · RM: faces only', src: 'WM:762 spool(expr,size,play)', st: 'built',
+  mk(c) { const draw = play => { c.el.innerHTML = `<div class="exp">${EXPR.map(([k, n]) => `<div>${spool(k, 44, play)}<span>${n}</span></div>`).join('')}</div>`; }; draw(false); return { play: () => draw(true) }; } });
+add('clair', { sub: 'Mascot expressions', term: 'Keyframes (one-shot hop)', q: 'Hop: hello, stitched, proud', when: 'Only when the expression is newly entered. It never loops.', tok: 'translateY −5 px · 420 · up (.2,.8,.3,1), down (.6,0,.9,.5) · RM: face only', src: 'WM:202 · QF:215 · QH:197', st: 'built', mk: solo('hello', 'hello · 96 px') });
+add('clair', { sub: 'Mascot expressions', term: 'Shake / Wiggle', q: 'Oops shake', when: 'A piece frayed or a save failed. One small shake. Never red.', tok: '±3 px, ±3° · 360 ease-in-out · once · RM: face only', src: 'WM:204', st: 'built', mk: solo('oops', 'oops · frayed tail') });
+add('clair', { sub: 'Mascot expressions', term: 'Alternate (yoyo)', q: 'Working bob', when: 'Only the stationary status spool while Clair works. A moving spool dips instead.', tok: 'translateY −2 px · 560 ease-in-out infinite alternate · RM: still', src: 'WM:205', st: 'built', mk: solo('working', 'working · bob + blink') });
+add('clair', { sub: 'Mascot expressions', term: 'Idle animation', q: 'Blink', when: 'Only while working. An irregular double blink, so it does not tick like a clock.', tok: 'eyes scaleY .1 · 4.3 s cycle · RM: none', src: 'WM:207', st: 'built', mk: solo('working', 'blink only (bob off here)', 'nobob') });
+add('clair', { sub: 'Mascot expressions', term: 'Pulse', q: 'Thought stitches', when: 'Thinking: a step is taking longer than about 2 s.', tok: 'opacity .25↔1 · 1.2 s · .2 s stagger · RM: none', src: 'WM:210', st: 'built', mk: solo('thinking', 'thinking') });
+add('clair', { sub: 'Mascot expressions', term: 'Pulse (scale)', q: 'Sleepy breathe', when: 'Empty states and folded apps: nothing to do.', tok: 'body scale 1.035 · 2.6 s ease-in-out · RM: none', src: 'WM:209', st: 'built', mk: solo('sleepy', 'sleepy') });
+add('clair', { sub: 'Mascot expressions', term: 'No motion (still)', q: 'Waiting', when: 'Something is basted and needs your OK. Brows up, needle raised, perfectly still.', tok: 'none (stillness is the signal)', src: 'WM:772', st: 'built', mk: solo('waiting', 'waiting · still') });
+add('clair', { sub: 'Mascot expressions', term: 'Translate', q: 'Stitch dip', when: 'One dip each time a row is sewn, replacing the idle bob on a moving spool.', tok: 'translateY 2 px and back · 220 ease-in-out · RM: none', src: 'WM:857', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in center"><div class="lead" style="position:static">${spool('working', 44)}</div><svg class="seam" viewBox="0 0 280 24" preserveAspectRatio="none" style="width:80%" aria-hidden="true"><line class="g" x1="4" y1="12" x2="276" y2="12"/></svg></div>`;
+    return { async play() { for (let i = 0; i < 4; i++) { const sp = $('.sp', c.el); if (!RM) sp.animate([{ transform: 'none' }, { transform: 'translateY(2px)' }, { transform: 'none' }], { duration: T.state, easing: 'ease-in-out' }); if (!(await c.sleep(520))) return; } } }; } });
+add('clair', { sub: 'Mascot expressions', term: 'Loop (rotate)', q: 'Chalk rock (presence option D)', when: 'Explored as the quietest "working" signal. Not the chosen presence.', tok: 'rotate ±8° · 900 ease-in-out alternate · RM: none', src: 'WM:148', st: 'built', mk(c) { c.el.innerHTML = `<div class="in center"><svg class="rock" width="56" height="56" aria-hidden="true"><use href="#i-chalk"/></svg><p class="cap">exploration</p></div>`; return { play() {} }; } });
+add('clair', { sub: 'Mascot expressions', term: 'Loop', q: 'Needle dip (presence option A)', when: 'Explored as countable progress with no face. Not the chosen presence.', tok: 'translate + rotate · 520 ease-in-out · RM: rests', src: 'WM:181', st: 'built', mk(c) { c.el.innerHTML = `<div class="in center">${NEEDLE}<p class="cap">exploration</p></div>`; return { play() {} }; } });
+
+/* ---------------- BUILDING AN APP ---------------- */
+const PIECES = [['q-sqsq', 'metric', 'Monthly total', '$38.46 a month'], ['q-geese', 'progress', 'Under your $40 cap', '96% of cap'], ['q-cabin', 'list', 'Renewals', 'Spotify · renews Sun 22'], ['q-rail', 'calendar', 'Renewal dates', 'Sun 22 · Spotify'], ['q-churn', 'form', 'Add one', 'name, price, renews on']];
+const pieceHTML = (p, i) => `<div class="piece" data-i="${i}">${OL}<span class="kind"><svg aria-hidden="true"><use href="#${p[0]}"/></svg>${p[1]} · ${p[2]}</span><div class="body">${p[3]}</div><p class="why">This piece didn’t fit: a field was missing. Re-cutting it.</p></div>`;
+async function drawChalk(c, el) { el.classList.add('on'); $('.ol', el).style.display = ''; el.classList.remove('st', 'basted'); if (RM) { await fin(el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.fb, easing: EASE })); return; } await fin($('.ol', el).animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: T.layout, easing: EASE })); }
+function baste(el) { el.classList.add('st', 'basted', 'filled'); $('.ol', el).style.display = 'none'; enterUp($('.body', el), 4); }
+add('build', { term: 'Shared element transition', q: 'Brief lifts into chalk', when: 'Tap "Build it" and your sentence moves to the top as the brief, then the chalk outline draws around it.', tok: 'translate only · 350 · ease, then chalk 350 · RM: crossfade 120', src: 'QF:797', st: 'built', size: 'tall',
+  mk(c) { c.el.innerHTML = `<div class="in" id="d1"><b style="font:800 18px var(--fd)">What do you want to keep track of?</b><div class="fld" style="min-height:88px;align-items:flex-start;padding:10px 12px;color:var(--ink)"><p class="say" style="margin:0;font-size:14px">Track my subscriptions and warn me before they renew.</p></div><button type="button" class="b" id="bi">Build it</button></div>`;
+    $('#bi', c.el).addEventListener('click', async () => {
+      const s0 = $('.say', c.el).getBoundingClientRect();
+      c.el.innerHTML = `<div class="in"><div class="chalk" id="ck">${OL}<p class="say" style="margin:0;font-size:14px">Track my subscriptions and warn me before they renew.</p></div><div class="clairl">${spool('working', 30)}<span>Reading what you asked…</span></div></div>`;
+      const say = $('#ck .say', c.el), ol = $('#ck .ol', c.el), rest = $('.clairl', c.el), s1 = say.getBoundingClientRect();
+      if (RM) { [say, rest].forEach(e => e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.fb, easing: EASE })); return; }
+      ol.style.clipPath = 'inset(0 100% 0 0)'; rest.style.opacity = 0;
+      await fin(say.animate([{ transform: `translate(${s0.left - s1.left}px,${s0.top - s1.top}px)` }, { transform: 'none' }], { duration: T.layout, easing: EASE }));
+      if (!c.alive()) return; rest.style.opacity = ''; enterUp(rest, 4);
+      await fin(ol.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: T.layout, easing: EASE, fill: 'forwards' }));
+    });
+    return { async play() { if (!(await c.sleep(500))) return; await tap(c, $('#bi', c.el)); } }; } });
+add('build', { term: 'Reveal (clip-path)', q: 'Chalk outline', when: 'Each piece Clair proposes is drawn in dotted chalk before it is basted.', tok: 'clip-path inset(0 100% 0 0) → 0 · 350 · ease · RM: fade 120', src: 'QF:639 · WM:587', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in" style="justify-content:center">${pieceHTML(PIECES[2], 0)}</div>`; return { play: () => drawChalk(c, $('.piece', c.el)) }; } });
+add('build', { term: 'Fade + Translate', q: 'Proposed title', when: 'The app’s name appears in chalk, dotted underline: proposed, not made.', tok: 'opacity + translateY 4 · 220 · ease · RM: appears', src: 'WM:595', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in" style="justify-content:center"><div class="ptitle chalked" style="opacity:0"><span class="dye"></span><b>Subscriptions</b></div></div>`; return { play() { const t = $('.ptitle', c.el); t.style.opacity = 1; if (!RM) t.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE }); } }; } });
+add('build', { term: 'Enter (fade + rise)', q: 'Basting a piece', when: 'A piece passes the checker: the chalk becomes long basting stitches and its content rises in.', tok: 'chalk 350 → +240 → body opacity + translateY 4 · 220 · RM: appears', src: 'QF:652 · WM:617', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in" style="justify-content:center">${pieceHTML(PIECES[0], 0)}</div>`; return { async play() { const el = $('.piece', c.el); await drawChalk(c, el); if (!(await c.sleep(RM ? 0 : 240))) return; baste(el); } }; } });
+add('build', { term: 'Shake + state change', q: 'Fray and re-cut', when: 'A piece doesn’t fit: its edge frays, the spool shakes once, Clair says why in plain words and re-cuts it.', tok: 'shake 360 · hold 1.3 s · chalk 350 · RM: face + text', src: 'WM:602-611', st: 'built', size: 'tall',
+  mk(c) { c.el.innerHTML = `<div class="in"><div class="clairl" id="fs"><span id="ff">${spool('working', 30)}</span><span id="ft">Checking piece 4 fits…</span></div>${pieceHTML(PIECES[3], 0)}</div>`;
+    return { async play() { const el = $('.piece', c.el); await drawChalk(c, el); if (!(await c.sleep(250))) return; el.classList.add('st', 'basted', 'frayed'); $('.ol', el).style.display = 'none'; $('#ft', c.el).textContent = 'Piece 4 didn’t fit. Re-cutting it.'; $('#ff', c.el).innerHTML = spool('oops', 30, true); if (!(await c.sleep(1300))) return; $('#ff', c.el).innerHTML = spool('working', 30); el.classList.remove('frayed', 'on'); $('#ft', c.el).textContent = 'Checking piece 4 fits…'; await drawChalk(c, el); if (!(await c.sleep(250))) return; baste(el); $('#ft', c.el).textContent = 'Fits now.'; } }; } });
+add('build', { term: 'Orchestration + Scroll', q: 'Clair builds', when: 'The whole build: the title, then each piece in turn (chalk, then basted) while the view follows the cutting. The status line stays pinned.', tok: '~0.7 s + ~0.75 s per piece · smooth scroll, nearest · RM: narrated, fades 120', src: 'WM:589 · QF:621', st: 'built', size: 'tall',
+  mk(c) { c.el.innerHTML = `<div style="position:absolute;inset:0;overflow:auto;scrollbar-width:none;padding:0 12px 12px" id="bs"><div class="clairl" style="position:sticky;top:0;z-index:2;background:var(--muslin);padding:8px 0"><span>${spool('working', 30)}</span><span id="bt">Reading what you asked…</span></div><div style="display:flex;flex-direction:column;gap:8px"><div class="ptitle chalked" style="opacity:0"><span class="dye"></span><b>Subscriptions</b></div>${PIECES.map(pieceHTML).join('')}</div></div>`;
+    return { async play() { const bs = $('#bs', c.el); if (!(await c.sleep(700))) return; const t = $('.ptitle', c.el); t.style.opacity = 1; if (!RM) t.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE }); if (!(await c.sleep(400))) return;
+      for (let i = 0; i < PIECES.length; i++) { const el = $(`.piece[data-i="${i}"]`, c.el); $('#bt', c.el).textContent = `Checking piece ${i + 1} of 5 fits…`;
+        const top = el.offsetTop - 44, bot = el.offsetTop + el.offsetHeight + 40 - bs.clientHeight; const to = bs.scrollTop > top ? top : bs.scrollTop < bot ? bot : null; if (to !== null) bs.scrollTo({ top: to, behavior: RM ? 'auto' : 'smooth' });
+        await drawChalk(c, el); if (!(await c.sleep(250))) return; baste(el); if (!(await c.sleep(150))) return; }
+      $('#bt', c.el).textContent = 'Basted. Have a look before I stitch it in.'; } }; } });
+add('build', { term: 'Drag + Direction-aware transition', q: 'Layout pager', when: 'Preview: swipe between List first, Calendar first and Summary first. It tracks the finger 1:1, and the new layout enters from the side you swiped toward.', tok: 'commit |dx + projected| > 30% · spring .3 back · enter ±24 px 220 · RM: instant swap', src: 'QF:662-709', st: 'built', size: 'tall', gesture: true,
+  mk(c) { const L = [['List first', [2, 0, 3]], ['Calendar first', [3, 2, 0]], ['Summary first', [0, 1, 2]]]; let li = 0;
+    c.el.innerHTML = `<div class="in"><div class="pager st"><button type="button" class="ib" id="pp" aria-label="Previous layout">${icon('i-back')}</button><span style="display:flex;flex-direction:column;align-items:center;gap:2px"><b id="pn" style="font-size:15px"></b><span class="dots" id="pd"></span></span><button type="button" class="ib" id="pn2" aria-label="Next layout">${icon('i-arrow')}</button></div><div id="pv" style="display:grid;gap:6px;touch-action:pan-y"></div></div>`;
+    const pv = $('#pv', c.el);
+    const render = from => { $('#pn', c.el).textContent = L[li][0]; $('#pd', c.el).innerHTML = L.map((_, i) => `<i class="${i === li ? 'on' : ''}"></i>`).join(''); pv.innerHTML = L[li][1].map(k => `<div class="st minip" style="flex-direction:column;align-items:flex-start;gap:0"><span class="small">${PIECES[k][2]}</span><span>${PIECES[k][3]}</span></div>`).join(''); pv.style.transform = pv.style.opacity = ''; if (from && !RM) pv.animate([{ opacity: 0, transform: `translateX(${from * 24}px)` }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE }); };
+    const swap = d => { li = (li + d + 3) % 3; render(d); };
+    $('#pp', c.el).addEventListener('click', () => swap(-1)); $('#pn2', c.el).addEventListener('click', () => swap(1));
+    let x0 = 0, y0 = 0, dx = 0, st = 'idle', w = 1, stop = null; const tk = tracker();
+    const set = x => { dx = x; pv.style.transform = `translateX(${x}px)`; pv.style.opacity = String(1 - Math.min(1, Math.abs(x) / w) * .4); };
+    drag(pv, { start(cx, cy) { stop && stop(); stop = null; w = pv.offsetWidth; const live = new DOMMatrix(getComputedStyle(pv).transform).m41 || 0; x0 = cx - live; y0 = cy; st = live ? 'drag' : 'pending'; tk.reset(); tk.add(cx); },
+      move(cx, cy) { if (st === 'idle') return; const mx = cx - x0, my = cy - y0; if (st === 'pending') { if (Math.abs(mx) < 10 && Math.abs(my) < 10) return; if (Math.abs(my) > Math.abs(mx)) { st = 'idle'; return; } st = 'drag'; } tk.add(cx); set(mx); },
+      end(cancel) { if (st !== 'drag') { st = 'idle'; return; } st = 'idle'; const v = cancel ? 0 : tk.v(); if (!cancel && Math.abs(dx + project(v)) > .3 * w) { swap(dx + project(v) < 0 ? 1 : -1); return; } stop = spring(dx, 0, v, .3, set, () => { stop = null; pv.style.transform = pv.style.opacity = ''; }); } });
+    render(0);
+    const demo = async () => { const p = pt(c.el, pv); await ghost(c, pv, [['down', p.x + 60, p.y], ['move', p.x - 50, p.y, 130, 'lin'], ['up']]); if (!(await c.sleep(800))) return; await ghost(c, pv, [['down', p.x - 40, p.y], ['move', p.x + 20, p.y, 500], ['hold', 200], ['up']]); };
+    return { play: demo, demo }; } });
+add('build', { term: 'Drag to reorder', q: 'Arrange', when: 'Drag a piece by its grip. It lifts slightly, the others make room as you go, and on drop it settles from where your finger let go.', tok: 'lift scale 1.02 · 120 · siblings 220 · settle spring .3 · RM: no lift, instant', src: 'QF:738-800', st: 'built', size: 'tall', gesture: true,
+  mk(c) { let order = [0, 2, 3, 4]; let stops = [];
+    c.el.innerHTML = `<div class="in"><p class="cap" style="text-align:left">Drag the grip to reorder</p><div class="arr" id="al" style="display:grid;gap:8px"></div></div>`;
+    const Lst = $('#al', c.el);
+    const render = settle => {
+      stops.forEach(f => f()); stops = [];
+      const first = new Map($$('.apiece', Lst).map(e => [e.dataset.id, e.getBoundingClientRect().top]));
+      Lst.innerHTML = order.map(k => `<div class="apiece st" data-id="${k}"><button type="button" class="grip" aria-label="Move ${PIECES[k][2]}">${icon('i-grip')}</button><span style="flex:1">${PIECES[k][2]}</span></div>`).join('');
+      $$('.apiece', Lst).forEach(el => { const f = first.get(el.dataset.id), d = f === undefined ? 0 : f - el.getBoundingClientRect().top;
+        if (settle && el.dataset.id === settle.id) { el.style.translate = `0 ${d}px`; stops.push(spring(d, 0, settle.v, .3, y => { el.style.translate = `0 ${y}px`; }, () => { el.style.translate = ''; })); if (!RM) el.animate([{ scale: '1.02' }, { scale: '1' }], { duration: T.fb, easing: EASE }); }
+        else if (!RM && Math.abs(d) > 1) el.animate([{ transform: `translateY(${d}px)` }, { transform: 'none' }], { duration: T.layout, easing: EASE }); });
+      $$('.grip', Lst).forEach(g => { const el = g.closest('.apiece'), id = el.dataset.id; let all, tops, hs, i, y0, dy, to, shift; const tk = tracker();
+        drag(g, { start(cx, cy, e) { e.preventDefault && e.preventDefault(); all = $$('.apiece', Lst); const live = el.getBoundingClientRect().top; stops.forEach(f => f()); stops = []; all.forEach(x => { x.getAnimations().forEach(a => a.cancel()); x.style.translate = ''; }); tops = all.map(x => x.getBoundingClientRect().top); hs = all.map(x => x.offsetHeight); i = all.indexOf(el); shift = hs[i] + 8; dy = live - tops[i]; y0 = cy - dy; to = i; tk.reset(); tk.add(cy); Lst.classList.add('sorting'); el.classList.add('dragging'); el.style.translate = `0 ${dy}px`; },
+          move(cx, cy) { dy = cy - y0; tk.add(cy); el.style.translate = `0 ${dy}px`; const mid = tops[i] + hs[i] / 2 + dy; to = all.reduce((n, x, k) => n + (k !== i && tops[k] + hs[k] / 2 < mid ? 1 : 0), 0); all.forEach((x, k) => { if (k === i) return; const s2 = i < to && k > i && k <= to ? -shift : to < i && k >= to && k < i ? shift : 0; x.style.translate = s2 ? `0 ${s2}px` : ''; }); },
+          end(cancel) { Lst.classList.remove('sorting'); el.classList.remove('dragging'); const v = cancel ? 0 : tk.v(); const [p] = order.splice(i, 1); order.splice(cancel ? i : to, 0, p); render({ id, v }); } }); });
+    };
+    render();
+    const demo = async () => { const g = $('.grip', Lst), p = pt(c.el, g); await ghost(c, g, [['down', p.x, p.y], ['hold', 150], ['move', p.x, p.y + 110, 700], ['hold', 120], ['up']]); };
+    return { play: demo, demo }; } });
+add('build', { term: 'Exit (scale + fade) + Layout animation', q: 'Rip out a piece', when: 'The seam-ripper removes a piece: it shrinks and fades, then the gap closes.', tok: 'scale .96 + opacity 220 → FLIP 350 · RM: instant', src: 'QF:760-765', st: 'built', size: 'tall',
+  mk(c) { c.el.innerHTML = `<div class="in" id="rl">${[0, 2, 3, 4].map(k => `<div class="apiece st" data-f="p${k}"><span style="flex:1">${PIECES[k][2]}</span><button type="button" class="ib" aria-label="Remove ${PIECES[k][2]}">${icon('i-rip')}</button></div>`).join('')}</div>`;
+    $$('#rl .ib', c.el).forEach(b => b.addEventListener('click', async () => { const el = b.closest('.apiece'); if (!RM) await fin(el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.96)' }], { duration: T.layoutOut, easing: EASE, fill: 'forwards' })); if (c.alive()) flipKeys($('#rl', c.el), () => el.remove()); }));
+    return { async play() { if (!(await c.sleep(400))) return; await tap(c, $$('#rl .ib', c.el)[1]); } }; } });
+add('build', { term: 'Pulse (ring)', q: 'Block flash', when: 'A block added, or moved by Clair ("put the total on top"), flashes once so you can find it.', tok: 'box-shadow 3px #E3A72F → 0 · 600 · ease · RM: none', src: 'QF:758', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in" style="justify-content:center">${[0, 2, 3].map(k => `<div class="apiece st"><span>${PIECES[k][2]}</span></div>`).join('')}</div>`; return { play() { if (!RM) $$('.apiece', c.el)[0].animate([{ boxShadow: '0 0 0 3px #E3A72F' }, { boxShadow: '0 0 0 0 rgba(227,167,47,0)' }], { duration: T.focal, easing: EASE }); } }; } });
+add('build', { term: 'Toggle', q: 'Connection toggle', when: 'Connecting the new app: Clair’s picks come ticked; tap to change.', tok: 'knob translateX 20 + track colour · 220 · ease · RM: colour 120', src: 'QF:153-155', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in" style="justify-content:center">${[['Renewal dates → Calendar', DYE.Calendar, 'i-cal'], ['Cost → Budget', DYE.Budget, 'i-wallet']].map(([t, d, ic]) => `<div style="display:flex;align-items:center;gap:10px"><span class="patchi" style="width:30px;height:30px;background:${d}">${icon(ic, 16)}</span><span style="flex:1;font-size:14px">${t}</span><button type="button" class="toggle" role="switch" aria-checked="true" aria-label="${t}"></button></div>`).join('')}</div>`;
+    $$('.toggle', c.el).forEach(t => t.addEventListener('click', () => t.setAttribute('aria-checked', String(t.getAttribute('aria-checked') !== 'true'))));
+    return { async play() { const t = $('.toggle', c.el); await tap(c, t); if (!(await c.sleep(700))) return; await tap(c, t); } }; } });
+add('build', { term: 'Line drawing', q: 'Connect pull', when: '"Add to my apps": the draft tightens, then one thread runs from each ticked connection into the new app’s patch, and a notch lands on it.', tok: '220 + thread 600 (land 70%) + fade · RM: notch fades', src: 'QF:832-846', st: 'built', size: 'tall',
+  mk(c) { c.el.innerHTML = `<div class="in"><section class="st basted cd" id="dr" style="flex-direction:row;align-items:center;gap:10px"><span class="patchi" id="pdye" style="width:44px;height:44px;background:${DYE.Subscriptions}">${icon('i-repeat', 20)}</span><b style="font-size:16px">Subscriptions</b></section><div class="sect">Connect to your other apps</div>${[['Renewal dates → Calendar', DYE.Calendar, 'i-cal'], ['Cost → Budget', DYE.Budget, 'i-wallet']].map(([t, d, ic]) => `<div style="display:flex;align-items:center;gap:10px;min-height:44px"><span class="patchi src" style="width:30px;height:30px;background:${d}">${icon(ic, 16)}</span><span style="font-size:14px">${t}</span></div>`).join('')}<button type="button" class="b" id="am">Add to my apps</button></div>`;
+    $('#am', c.el).addEventListener('click', async e => { e.currentTarget.disabled = true; $('#dr', c.el).classList.remove('basted'); if (!(await c.sleep(RM ? T.fb : T.state))) return; const dye = $('#pdye', c.el); await threadPull(c, $$('.src', c.el).map(s => ({ from: s, to: dye })), () => notch(dye)); });
+    return { async play() { if (!(await c.sleep(500))) return; await tap(c, $('#am', c.el)); } }; } });
+const finaleHTML = () => `<div class="in" style="gap:6px"><div class="clairl"><span id="fc">${spool('waiting', 30)}</span><span id="ft2">Basted. Have a look before I stitch it in.</span></div><div class="ptitle chalked"><span class="dye"></span><b>Subscriptions</b><span class="qlabel">pieced by clair</span></div>${[0, 2, 4].map(k => `<div class="piece st basted filled on minip">${PIECES[k][2]}</div>`).join('')}</div><div class="dock">${[['Budget', 'i-wallet'], ['Workout', 'i-lift'], ['To-dos', 'i-check'], ['Groceries', 'i-cart']].map(([n, ic]) => `<span class="di" style="background:${DYE[n]}">${icon(ic)}</span>`).join('')}<span class="clairb" style="border-radius:0 14px 14px 0">${icon('i-spool', 20)}<span>Clair</span></span></div>`;
+const stitchIn = async c => { for (const p of $$('.piece', c.el)) { p.classList.remove('basted'); if (!(await c.sleep(RM ? 0 : 40))) return false; } return true; };
+const dyeSweep = async c => { const t = $('.ptitle', c.el); t.classList.remove('chalked'); const d = $('.dye', t); if (RM) { d.style.clipPath = 'circle(150% at 24px 50%)'; return; } await fin(d.animate([{ clipPath: 'circle(0% at 24px 50%)' }, { clipPath: 'circle(150% at 24px 50%)' }], { duration: T.layout, easing: EASE, fill: 'forwards' })); };
+const stamp = c => $('.qlabel', c.el).animate([{ opacity: 0, transform: RM ? 'rotate(-1.5deg)' : 'rotate(-6deg) scale(1.15)' }, { opacity: 1, transform: 'rotate(-1.5deg)' }], { duration: RM ? T.fb : T.state, easing: EASE, fill: 'forwards' });
+const dockIn = c => { const dk = $('.dock', c.el), a = document.createElement('span'); a.className = 'di'; a.style.background = DYE.Subscriptions; a.innerHTML = icon('i-repeat'); dk.insertBefore(a, dk.firstChild); if (!RM) a.animate([{ transform: 'translateX(-24px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: T.layout, easing: EASE }); addTag(a, 'new'); };
+add('build', { term: 'Stagger', q: 'Stitch-in', when: '"Stitch it in": each piece tightens from basted to running stitch, 40 ms after the one before.', tok: 'background-size 220 each · 40 ms apart · RM: 120, no stagger', src: 'WM:627', st: 'built', size: 'tall', mk(c) { c.el.innerHTML = finaleHTML(); return { play: () => stitchIn(c) }; } });
+add('build', { term: 'Reveal (clip-path circle)', q: 'Dye sweep', when: 'The new app’s patch is dyed outward from Clair’s chalk mark.', tok: 'circle(0% → 150% at 24px 50%) · 350 · ease · RM: set at once', src: 'WM:633', st: 'built', size: 'tall', mk(c) { c.el.innerHTML = finaleHTML(); return { play: () => dyeSweep(c) }; } });
+add('build', { term: 'Scale in (from larger)', q: 'Label stamp', when: 'The "pieced by clair" label stamps on, like a quilt label.', tok: 'rotate(−6°) scale(1.15) → rotate(−1.5°) · 220 · ease · RM: fade 120', src: 'WM:637', st: 'built', size: 'tall', mk(c) { c.el.innerHTML = finaleHTML(); return { play: () => stamp(c) }; } });
+add('build', { term: 'Slide in', q: 'Dock insert', when: 'The new app slides into the dock with a "new" tag.', tok: 'translateX(−24) + opacity 350 · tag 220 · RM: appears', src: 'WM:642-645', st: 'built', size: 'tall', mk(c) { c.el.innerHTML = finaleHTML(); return { play: () => dockIn(c) }; } });
+add('build', { term: 'Orchestration', q: 'Sew finale', when: 'All of it, one beat at a time: stitch-in, dye, stamp, the spool hops (+60), dock insert (+120), toast (+250).', tok: '~1.1 s total · RM: same order, fades', src: 'WM:625-646', st: 'built', size: 'tall',
+  mk(c) { c.el.innerHTML = finaleHTML(); return { async play() { if (!(await c.sleep(300))) return; if (!(await stitchIn(c))) return; await dyeSweep(c); if (!c.alive()) return; stamp(c); $('#ft2', c.el).textContent = 'Stitched in. It’s in your apps.'; if (!(await c.sleep(60))) return; $('#fc', c.el).innerHTML = spool('stitched', 30, true); if (!(await c.sleep(120))) return; dockIn(c); if (!(await c.sleep(250))) return; toast(c, 'Added Subscriptions to your apps.', 'Undo'); } }; } });
+add('build', { term: 'Enter', q: 'Landed', when: 'You land in the new, empty app: the header rises in, the "new" tag scales in a beat later, and the spool says hello.', tok: 'translateY 8 + opacity 220 · tag .96→1 +60 · hop 420 · RM: none', src: 'QF:872-876', st: 'built', size: 'tall',
+  mk(c) { const draw = () => { c.el.innerHTML = `<div class="in"><div id="lh" style="display:flex;align-items:center;gap:10px"><span class="patchi" style="background:${DYE.Subscriptions}">${icon('i-repeat')}</span><b style="font:800 24px var(--fd);letter-spacing:-.015em">Subscriptions</b><span class="tag">new</span></div><section class="st cd" style="align-items:center;text-align:center">${spool('hello', 96, true)}<b>Subscriptions is ready</b></section></div>`; };
+    draw(); return { play() { draw(); if (RM) return; $('#lh', c.el).animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE }); $('#lh .tag', c.el).animate([{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: T.state, delay: 60, easing: EASE, fill: 'backwards' }); } }; } });
+
+/* ---------------- STITCHING ---------------- */
+function threadBench(c) {
+  c.el.innerHTML = `<div class="in" style="gap:10px"><div class="st basted cd" id="rc"><div class="pr"><b>Corner Market</b><span class="num">$35.83</span></div><div class="pr"><span class="small" id="rs">basted · 8 of 8 read</span><span class="selv">${['Groceries', 'Budget', 'Calendar'].map(n => `<i class="dot" style="background:${DYE[n]}"></i>`).join('')}</span></div><div style="min-height:44px;display:flex;align-items:center" id="rb"><button type="button" class="b" id="sa">Stitch all 8</button></div></div><div class="grid3">${[['Groceries', 'i-cart', '12 items'], ['Budget', 'i-wallet', '$412 left'], ['Calendar', 'i-cal', 'Free today']].map(([n, ic, v]) => `<button type="button" class="pin st" data-n="${n}" style="background-color:${DYE[n]}"><span class="pd"></span><span style="display:flex;gap:4px;align-items:center;font-weight:600">${icon(ic, 14)}${n}</span><span class="odo"><span>${v}</span></span></button>`).join('')}</div></div>`;
+  const TG = [['Groceries', '20 items', '12 items', false], ['Budget', '$376 left', '$412 left', true], ['Calendar', '1 event today', 'Free today', false]];
+  const pairs = () => $$('.selv .dot', c.el).map((d, i) => ({ from: d, to: $(`.pin[data-n="${TG[i][0]}"] .pd`, c.el) }));
+  const B = { busy: false };
+  B.stitch = async () => {
+    if (B.busy) return; B.busy = true; $('#rc', c.el).classList.remove('basted'); $('#rs', c.el).textContent = `stitched · 12:41${NB}pm`; $('#rb', c.el).innerHTML = '<span class="small">fed 3 apps</span>';
+    if (!(await c.sleep(RM ? T.fb : T.state))) return;
+    const ok = await threadPull(c, pairs(), (to, i) => { const pin = to.closest('.pin'); to.classList.add('fed'); roll($('.odo', pin), TG[i][1], TG[i][3]); addTag(pin, 'just changed'); });
+    if (!ok) return; B.busy = false; toast(c, 'Stitched 8 rows into 3 apps.', 'Undo', B.unstitch, true);
+  };
+  B.setStitched = () => { $('#rc', c.el).classList.remove('basted'); $('#rb', c.el).innerHTML = '<span class="small">fed 3 apps</span>'; TG.forEach(([n, v]) => { const pin = $(`.pin[data-n="${n}"]`, c.el); $('.pd', pin).classList.add('fed'); $('.odo', pin).innerHTML = `<span>${v}</span>`; const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'just changed'; pin.appendChild(t); }); };
+  B.unstitch = async () => {
+    if (B.busy) return; B.busy = true;
+    TG.forEach(([n, , old, down]) => { const pin = $(`.pin[data-n="${n}"]`, c.el); $('.pd', pin).classList.remove('fed'); roll($('.odo', pin), old, !down); dropMark($('.tag', pin)); });
+    await threadRetract(c, pairs()); if (!c.alive()) return;
+    $('#rc', c.el).classList.add('basted'); $('#rs', c.el).textContent = 'basted again · 8 of 8'; $('#rb', c.el).innerHTML = '<button type="button" class="b" id="sa">Stitch all 8</button>'; $('#sa', c.el).addEventListener('click', B.stitch); B.busy = false;
+  };
+  $('#sa', c.el).addEventListener('click', B.stitch);
+  return B;
+}
+add('stitch', { term: 'Morph (dash length)', q: 'Basted → stitched', when: 'Confirming anything: long loose basting tightens into a short running stitch. Undo loosens it again, faster.', tok: 'background-size 20 → 7 px · 220 in / 140 back · ease · RM: 120', src: 'QF:78-82 · WM:84-90 · QH:73-74', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in center"><section class="st basted cd" style="width:240px"><b>Corner Market</b><span class="small">8 items</span></section></div>`; return { async play() { const s = $('section', c.el); s.classList.remove('basted'); if (!(await c.sleep(1400))) return; s.classList.add('basted'); if (!(await c.sleep(900))) return; s.classList.remove('basted'); } }; } });
+add('stitch', { term: 'Line drawing', q: 'Thread pull (the one focal)', when: 'Confirming a basted card: threads pull from its selvedge dots into every app it feeds, each landing at 70% of its draw.', tok: 'stroke-dashoffset · 600 · .45,0,.15,1 · stagger 120 · fade 220 at +400 · RM: values swap, tags fade', src: 'WM:483 · QH:535 · QF:520', st: 'built', size: 'tall',
+  mk(c) { const B = threadBench(c); return { async play() { if (!(await c.sleep(500))) return; await tap(c, $('#sa', c.el)); } }; } });
+add('stitch', { term: 'Number ticker + Tabular numbers', q: 'Odometer roll', when: 'A value changes where a thread lands. The roll direction follows the value: spending rolls down, adding rolls up.', tok: 'translateY ±100% + opacity · 220 · ease · tabular-nums · RM: swap', src: 'WM:412 · QH:492', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in center" style="gap:16px"><span class="big odo" id="o1"><span>$412 left</span></span><span class="big odo" id="o2" style="font-size:22px"><span>12 items</span></span><p class="cap">money rolls down · items roll up</p></div>`;
+    return { async play() { $('#o1', c.el).innerHTML = '<span>$412 left</span>'; $('#o2', c.el).innerHTML = '<span>12 items</span>'; if (!(await c.sleep(300))) return; roll($('#o1', c.el), '$376 left', true); if (!(await c.sleep(160))) return; roll($('#o2', c.el), '20 items', false); } }; } });
+add('stitch', { term: 'Scale in', q: 'Just changed tag', when: 'Where a thread lands. It stays until you open the app, then fades.', tok: 'opacity + scale .95→1, origin left · 220 · out 140 · RM: fade 120', src: 'WM:421-428 · QH:503-512', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in center"><button type="button" class="pin st" style="background-color:${DYE.Budget};width:150px"><span style="font-weight:600">Budget</span><span class="odo"><span>$376 left</span></span></button></div>`;
+    return { async play() { const p = $('.pin', c.el); $$('.tag', p).forEach(t => t.remove()); addTag(p, 'just changed'); if (!(await c.sleep(1600))) return; dropMark($('.tag', p)); } }; } });
+add('stitch', { term: 'Colour transition', q: 'Fed dot', when: 'Each target’s selvedge dot turns mustard when its thread lands.', tok: 'background → #E3A72F · 220 in / 140 out · RM: 120', src: 'WM:110-111', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in center"><div class="grid3" style="width:100%">${['Groceries', 'Budget', 'Calendar'].map(n => `<div class="pin st" style="background-color:${DYE[n]}"><span class="pd"></span><b>${n}</b></div>`).join('')}</div></div>`;
+    return { async play() { for (const d of $$('.pd', c.el)) { d.classList.add('fed'); if (!(await c.sleep(120))) return; } if (!(await c.sleep(1400))) return; $$('.pd', c.el).forEach(d => d.classList.remove('fed')); } }; } });
+add('stitch', { term: 'Line drawing (reverse)', q: 'Seam-ripper undo', when: 'Undo: threads retract toward the receipt, tags fade, numbers roll back, the card loosens to basted again.', tok: 'retract 360 · ease · tags 140 · roll 220 · re-baste 140 · RM: swap + fade 120', src: 'WM:514 · QH:566', st: 'built', size: 'tall',
+  mk(c) { const B = threadBench(c); B.setStitched(); return { async play() { if (!$('.tag', c.el)) B.setStitched(); if (!(await c.sleep(600))) return; B.unstitch(); } }; } });
+
+/* ---------------- LISTS AND SHEETS ---------------- */
+const ROWS = [['Oat milk', '1 carton · from receipt'], ['Eggs', '12'], ['Bananas', '1 bunch'], ['Spinach', '1 bag']];
+const rowHTML = ([t, s], i) => `<div class="swrow" data-f="r${i}"><div class="act" aria-hidden="true"><span class="l">${icon('i-check')}Got it</span><span class="r">Delete${icon('i-trash')}</span></div><div class="fg rowi" tabindex="0"><span class="ck"></span><span class="t"><span>${t}</span><span>${s}</span></span></div></div>`;
+const collapse = row => RM ? Promise.resolve() : fin(row.animate([{ height: row.offsetHeight + 'px' }, { height: '0px' }], { duration: T.layoutOut, easing: EASE, fill: 'forwards' }));
+function bindSwipe(c, row) {
+  const fg = $('.fg', row), ck = $('.ck', row); let x0 = 0, y0 = 0, x = 0, w = 1, st = 'idle', stop = null; const tk = tracker();
+  const setX = v => { x = v; fg.style.transform = v ? `translateX(${v}px)` : ''; row.classList.toggle('dir-r', v > 0); row.classList.toggle('dir-l', v < 0); const a = Math.abs(v) >= 90; if (a !== row.classList.contains('armed')) { row.classList.toggle('armed', a); if (a && st === 'drag') vib(8); } };
+  drag(fg, {
+    start(cx, cy) { stop && stop(); stop = null; const live = new DOMMatrix(getComputedStyle(fg).transform).m41 || 0; w = row.offsetWidth; x0 = cx - live; y0 = cy; tk.reset(); tk.add(cx); st = live ? 'drag' : 'pending'; },
+    move(cx, cy) { if (st === 'idle') return; const dx = cx - x0, dy = cy - y0; if (st === 'pending') { if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return; if (Math.abs(dy) > Math.abs(dx)) { st = 'idle'; return; } st = 'drag'; } tk.add(cx); setX(Math.abs(dx) <= 130 ? dx : Math.sign(dx) * (130 + rubberband(Math.abs(dx) - 130, w))); },
+    end(cancel) {
+      if (st !== 'drag') { st = 'idle'; return; } st = 'idle';
+      const v = cancel ? 0 : tk.v(), proj = x + project(v), dir = Math.sign(x);
+      const commit = !cancel && dir !== 0 && Math.sign(proj) === dir && (Math.abs(x) > 90 || Math.abs(proj) > .4 * w);
+      if (!commit) { stop = spring(x, 0, v, .3, setX, () => stop = null); return; }
+      if (dir < 0) { const done = async () => { stop = null; await collapse(row); if (!c.alive()) return; const parent = row.parentNode, next = row.nextSibling; row.remove(); toast(c, `Deleted ${$('.t span', row).textContent}.`, 'Undo', () => { row.getAnimations().forEach(a => a.cancel()); setX(0); row.classList.remove('armed', 'dir-l'); parent.insertBefore(row, next); row.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ height: '0px', opacity: 0 }, { height: row.offsetHeight + 'px', opacity: 1 }], { duration: RM ? T.fb : T.state, easing: EASE }); }, true); };
+        if (RM) { setX(0); fin(fg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.fb, easing: EASE, fill: 'forwards' })).then(done); } else stop = spring(x, -w, v, .25, setX, done); }
+      else { const on = !ck.classList.contains('on'); ck.classList.toggle('on', on); ck.innerHTML = on ? icon('i-check', 14) : ''; stop = spring(x, 0, v, .3, setX, () => stop = null); }
+    }
+  });
+}
+add('lists', { term: 'Swipe actions (drag + spring)', q: 'Swipe row', when: 'Swipe right: got it. Swipe left: delete. It follows the finger 1:1, arms at 90 px with a colour change and a buzz, and rubber-bands past 130.', tok: 'commit |x| > 90 or projected > 40% · fly off spring .25 · back .3 · RM: no slide, opacity 120', src: 'QF:1107-1168', st: 'built', size: 'tall', gesture: true,
+  mk(c) { c.el.innerHTML = `<div class="in" style="padding:12px 0"><section class="st" style="padding:2px 0;overflow:hidden">${ROWS.map(rowHTML).join('')}</section></div>`; $$('.swrow', c.el).forEach(r => bindSwipe(c, r));
+    const demo = async () => { const r0 = $$('.fg', c.el)[0], p = pt(c.el, r0); await ghost(c, r0, [['down', p.x - 80, p.y], ['move', p.x + 50, p.y, 160, 'lin'], ['up']]); if (!(await c.sleep(700))) return; const r1 = $$('.fg', c.el)[1], q = pt(c.el, r1); await ghost(c, r1, [['down', q.x + 80, q.y], ['move', q.x - 60, q.y, 140, 'lin'], ['up']]); };
+    return { play: demo, demo }; } });
+add('lists', { term: 'Accordion / Collapse', q: 'Row delete + Undo', when: 'A deleted row closes its gap. Undo opens the gap again and the row fades back in.', tok: 'height → 0 · 220 out · re-insert 0 → h 220 in · RM: opacity 120', src: 'QF:1099-1106', st: 'built', size: 'tall',
+  mk(c) { c.el.innerHTML = `<div class="in" style="padding:12px 0"><section class="st" style="padding:2px 0;overflow:hidden">${ROWS.map(rowHTML).join('')}</section></div>`;
+    return { async play() { const row = $$('.swrow', c.el)[1], parent = row.parentNode, next = row.nextSibling; if (!(await c.sleep(400))) return; await collapse(row); if (!c.alive()) return; row.remove(); toast(c, 'Deleted Eggs.', 'Undo', () => { row.getAnimations().forEach(a => a.cancel()); parent.insertBefore(row, next); row.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ height: '0px', opacity: 0 }, { height: row.offsetHeight + 'px', opacity: 1 }], { duration: RM ? T.fb : T.state, easing: EASE }); }, true); if (!(await c.sleep(1100))) return; const b = $('.toast button', c.el); if (b) await tap(c, b); } }; } });
+add('lists', { term: 'Colour transition', q: 'Check fill', when: '"Got it": the check fills moss.', tok: 'background-color · 120 · ease · RM: same', src: 'QF:170', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in" style="justify-content:center;padding:12px 0"><section class="st" style="overflow:hidden">${rowHTML(ROWS[0], 0)}</section></div>`; return { async play() { const ck = $('.ck', c.el); ck.classList.remove('on'); ck.innerHTML = ''; if (!(await c.sleep(300))) return; ck.classList.add('on'); ck.innerHTML = icon('i-check', 14); } }; } });
+add('lists', { term: 'Hold (long-press)', q: 'Select by hold', when: 'Hold a row 450 ms to start selecting. It tints and buzzes; moving cancels.', tok: '450 · tint #E6ECF7 120 · vibrate 10 · RM: same', src: 'QF:1125-1128', st: 'built', size: 'tall', gesture: true,
+  mk(c) { c.el.innerHTML = `<div class="in" style="padding:12px 0"><section class="st" style="padding:2px 0;overflow:hidden">${ROWS.map(rowHTML).join('')}</section></div>`;
+    $$('.swrow', c.el).forEach(r => { const fg = $('.fg', r); let t = 0, x0 = 0, y0 = 0; drag(fg, { start(x, y) { x0 = x; y0 = y; t = setTimeout(() => { vib(10); r.classList.toggle('sel'); const ck = $('.ck', r), on = r.classList.contains('sel'); ck.classList.toggle('on', on); ck.innerHTML = on ? icon('i-check', 14) : ''; }, 450); }, move(x, y) { if (Math.hypot(x - x0, y - y0) > 10) clearTimeout(t); }, end() { clearTimeout(t); } }); fg.addEventListener('contextmenu', e => e.preventDefault()); });
+    const demo = async () => { const f = $$('.fg', c.el)[1], p = pt(c.el, f); await ghost(c, f, [['down', p.x, p.y], ['hold', 700], ['up']]); };
+    return { play: demo, demo }; } });
+function bindSheetDrag(c, sheet, scrim, onClose) {
+  let y0 = 0, x0 = 0, y = 0, mode = 'idle', inTop = false, h = 0, stop = null; const tk = tracker();
+  const set = v => { y = v; sheet.style.transform = `translateY(${v}px)`; scrim.style.opacity = String(Math.max(0, Math.min(1, 1 - v / h))); };
+  drag(sheet, {
+    start(cx, cy, e) { if (!sheet.classList.contains('on')) return false; stop && stop(); stop = null; const r = sheet.getBoundingClientRect(); h = r.height; const live = new DOMMatrix(getComputedStyle(sheet).transform).m42; inTop = !!(e.target.closest && e.target.closest('.grab')) || cy - r.top < 48; x0 = cx; y0 = cy - (live || 0); mode = live ? 'drag' : 'pending'; tk.reset(); tk.add(cy); if (live) { sheet.style.transition = 'none'; scrim.style.transition = 'none'; } },
+    move(cx, cy) { if (mode === 'idle') return; const dy = cy - y0, dx = cx - x0; if (mode === 'pending') { if (Math.abs(dy) < 6 && Math.abs(dx) < 6) return; if (Math.abs(dx) > Math.abs(dy) || !(inTop || dy > 0)) { mode = 'idle'; return; } mode = 'drag'; sheet.style.transition = 'none'; scrim.style.transition = 'none'; } tk.add(cy); set(dy >= 0 ? dy : -rubberband(-dy, h)); },
+    end(cancel) { if (mode !== 'drag') { mode = 'idle'; return; } mode = 'idle'; const v = cancel ? 0 : tk.v(), close = !cancel && y + project(v) > .35 * h;
+      const done = () => { stop = null; sheet.style.transition = 'none'; scrim.style.transition = 'none'; sheet.style.transform = ''; scrim.style.opacity = ''; if (close) onClose(); sheet.offsetHeight; sheet.style.transition = ''; scrim.style.transition = ''; };
+      if (close && RM) { done(); return; } stop = spring(y, close ? h + 80 : 0, v, .35, set, done); }
+  });
+}
+add('lists', { term: 'Slide in (bottom sheet)', q: 'Edit sheet', when: 'Tap a row: its sheet slides up from the bottom edge. Drag it down to dismiss.', tok: 'translateY(105%) → 0 · 350 in / 220 out · scrim same · drag spring .35 · RM: opacity 120', src: 'QF:142-143/1170', st: 'built', size: 'tall', gesture: true,
+  mk(c) { c.el.innerHTML = `<div class="in" style="padding:12px 0"><section class="st" style="padding:2px 0;overflow:hidden">${ROWS.map(rowHTML).join('')}</section></div><div class="scrim"></div><div class="bsheet"><div class="grab" aria-hidden="true"></div><b style="font:800 18px var(--fd)">Oat milk</b><div class="fld">1 carton</div><button type="button" class="b">Save</button></div>`;
+    const sh = $('.bsheet', c.el), sc = $('.scrim', c.el); const open = () => { sh.classList.add('on'); sc.classList.add('on'); }; const close = () => { sh.classList.remove('on'); sc.classList.remove('on'); };
+    $$('.fg', c.el).forEach(f => f.addEventListener('click', open)); sc.addEventListener('pointerdown', close); bindSheetDrag(c, sh, sc, close);
+    const demo = async () => { if (!sh.classList.contains('on')) { await tap(c, $('.fg', c.el)); if (!(await c.sleep(900))) return; } const g = $('.grab', sh), p = pt(c.el, g); await ghost(c, g, [['down', p.x, p.y], ['move', p.x, p.y + 30, 200], ['move', p.x, p.y + 130, 120, 'lin'], ['up']]); };
+    return { play: demo, demo }; } });
+add('lists', { term: 'Rubber-banding (pull to refresh pattern)', q: 'Pull to search', when: 'Pull down from the top of any screen. The content follows with resistance and arms at 64 px; release to search, or let go early and it springs back.', tok: 'rubberband · arm 64 + vibrate 8 · spring .35 back · search enters 220 · RM: no translate', src: 'QF:1003-1037', st: 'built', size: 'tall', gesture: true,
+  mk(c) { const draw = () => { c.el.innerHTML = `<div class="in" id="pc" style="touch-action:none"><p class="cap" id="ph" style="margin-top:-36px;min-height:28px;display:flex;align-items:center;justify-content:center;gap:6px">${icon('i-search', 14)}<span id="pt">Pull down to search Budget</span></p><div style="display:flex;align-items:center;gap:10px"><span class="patchi" style="background:${DYE.Budget}">${icon('i-wallet')}</span><b style="font:800 24px var(--fd)">Budget</b></div><section class="st cd"><span class="big">$376</span><span class="small">left of $800</span></section></div>`; bind(); };
+    const bind = () => { const pc = $('#pc', c.el); let y0 = 0, off = 0, armed = false, stop = null;
+      const set = v => { off = v; pc.style.transform = v ? `translateY(${v}px)` : ''; const a = v >= 64; if (a !== armed) { armed = a; $('#ph', c.el).style.color = a ? 'var(--ink)' : ''; $('#pt', c.el).textContent = a ? 'Release to search' : 'Pull down to search Budget'; if (a) vib(8); } };
+      drag(pc, { start(x, y) { stop && stop(); y0 = y - off; }, move(x, y) { set(Math.max(0, rubberband(Math.max(0, y - y0), 300))); }, end() { if (armed) { pc.style.transform = ''; openSearch(); return; } stop = spring(off, 0, 0, .35, set, () => { stop = null; set(0); }); } }); };
+    const openSearch = () => { c.el.innerHTML = `<div class="in" id="sv"><div class="fld" style="box-shadow:inset 0 0 0 2px var(--denim);color:var(--ink)">${icon('i-search')}&nbsp;coffee</div><div style="display:flex;gap:6px"><span class="chip" style="background:#E6ECF7;box-shadow:inset 0 0 0 1.5px var(--denim)">in Budget</span><span class="chip">Oct</span><span class="chip">Nov</span></div><section class="st cd"><div class="pr"><span>Blue Copper</span><span class="num">$6.25</span></div></section></div>`; if (!RM) $('#sv', c.el).animate([{ opacity: 0, transform: 'translateY(-16px)' }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE }); };
+    draw();
+    const demo = async () => { if (!$('#pc', c.el)) draw(); const pc = $('#pc', c.el), p = pt(c.el, pc); await ghost(c, pc, [['down', p.x, 60], ['move', p.x, 110, 300], ['hold', 120], ['up']]); if (!(await c.sleep(700))) return; await ghost(c, pc, [['down', p.x, 50], ['move', p.x, 280, 700], ['hold', 250], ['up']]); };
+    return { play: demo, demo }; } });
+/* "Just used" (QF bindFold): swipe up on the pinned bar inside an app. The fold's top edge follows the finger 1:1;
+   detents closed / Just used / Home's quilt; release by projected position. Stage is scaled: first detent 140 here, 260 in the app. */
+const JU_RECENT = ['Groceries', 'Calendar', 'Subscriptions', 'Workout', 'To-dos', 'Classes'];
+const JU_ALL = ['Budget', 'Groceries', 'Calendar', 'To-dos', 'Workout', 'Subscriptions', 'Classes', 'Meals'];
+const juPatch = n => `<span class="jfp" style="background:${DYE[n]}">${n}</span>`;
+function bindJustUsed(c) {
+  const st = c.el, fold = $('.jfold', st), fs = $('.jscrim', st), bar = $('.bar', st), DET1 = 140, tk = tracker();
+  let y = 0, det = 0, ys = 0, cy0 = 0, x0 = 0, mode = 'idle', stop = null;
+  const clamp = v => Math.min(1, Math.max(0, v));
+  const geo = () => { const H = st.clientHeight, bt = H - bar.offsetTop; return { H, bt, full: H - bt, commit: Math.max(.45 * H, DET1 + 60) }; };
+  const set = v => { y = v; const g = geo(); fold.style.transform = `translateY(${g.H - g.bt - v}px)`; fs.style.opacity = clamp(v / DET1); $('.jall', fold).style.opacity = clamp((v - DET1) / (g.commit - DET1)); };
+  const show = () => { fold.classList.add('on'); fs.classList.add('on'); };
+  const hide = () => { if (det) return; fold.classList.remove('on'); fs.classList.remove('on'); fold.style.transform = fs.style.opacity = ''; y = 0; };
+  const go = (d, v0 = 0) => {
+    stop && stop(); stop = null; const prev = det; det = d; if (d) show(); const to = [0, DET1, geo().full][d];
+    if (!RM) { stop = spring(y, to, v0, .35, set, () => { stop = null; if (!det) hide(); }); return; }
+    if (d) { set(to); if (!prev) [fold, fs].forEach(e => e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.fb, easing: EASE })); return; }
+    if (!fold.classList.contains('on')) return;
+    Promise.all([fold, fs].map(e => fin(e.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.fb, easing: EASE, fill: 'forwards' })))).then(() => { [fold, fs].forEach(e => e.getAnimations().forEach(a => a.cancel())); hide(); });
+  };
+  const h = {
+    start(cx, cy, e) { if (e.target.closest('.clairb')) return false; if (fold.contains(e.target) && !det) return false; stop && stop(); stop = null; ys = y; cy0 = cy; x0 = cx; mode = 'pending'; tk.reset(); tk.add(cy); },
+    move(cx, cy) {
+      if (mode === 'idle') return; const dy = cy0 - cy, dx = cx - x0;
+      if (mode === 'pending') { if (Math.abs(dy) < 8 && Math.abs(dx) < 8) return; if (Math.abs(dx) > Math.abs(dy) || (!det && dy < 0)) { mode = 'idle'; return; } mode = 'drag'; show(); }
+      tk.add(cy); const full = geo().full, v = ys + dy; y = v > full ? full + rubberband(v - full, full) : Math.max(0, v); if (!RM) set(y);
+    },
+    end(cancel) { if (mode !== 'drag') { mode = 'idle'; return; } mode = 'idle'; const v = cancel ? 0 : -tk.v(), p = y + project(v), g = geo(); go(cancel ? det : p >= g.commit ? 2 : p >= DET1 / 2 ? 1 : 0, v); }
+  };
+  drag(bar, h); drag(fold, h);
+  fs.addEventListener('pointerdown', e => { if (e.target === fs) go(0); });
+  $('.grabln', st).addEventListener('click', () => go(det ? 0 : 1));
+  return { go, det: () => det };
+}
+add('lists', { term: 'Bottom sheet with detents + Rubber-banding', q: 'Just used', when: 'Inside an app, swipe up on the pinned bar: the "Just used" fold follows your finger. Keep pulling, or fling, for Home’s quilt; let go early and it springs back. Drag down or tap outside to close. The pins never move; the grab line is the tap and keyboard path.', tok: '1:1 track · detents 260 / full · commit by projected position (> 45% of height → quilt, > half the first detent → Just used) · spring .35 · rubberband past full · RM: no tracking, opacity 120, detents jump', src: 'QF:433-515', st: 'built', size: 'ph', gesture: true,
+  mk(c) {
+    c.el.innerHTML = `<div class="scr"><b class="hi">Budget</b><p class="stl"><b>$376</b> left of $800 · until 1 Dec</p><section class="st cd"><b>Corner Market</b><span class="small">Groceries · Fri 20 Nov, 5:41${NB}pm · $35.83</span></section></div><div class="jscrim"></div><div class="jfold"><div class="grab" aria-hidden="true"></div><div class="jhd"><span>Just used</span><span class="jlk">All apps ›</span></div><div class="jgrid">${JU_RECENT.map(juPatch).join('')}</div><div class="jall" style="opacity:0"><div class="fld">${icon('i-search')}${NB}Find an app</div><div class="jhd"><span>All apps · 8</span><span>most used first</span></div><div class="jgrid">${JU_ALL.map(juPatch).join('')}</div></div></div>${barHTML()}`;
+    const bar = $('.bar', c.el); bar.classList.add('jbar'); bar.insertAdjacentHTML('beforeend', '<button type="button" class="grabln" aria-label="Just used apps"></button>');
+    const J = bindJustUsed(c);
+    const demo = async () => {
+      if (J.det()) { J.go(0); if (!(await c.sleep(500))) return; }
+      const pb = $('.bar .pb[data-pin="Groceries"]', c.el), p = pt(c.el, pb);
+      await ghost(c, pb, [['down', p.x, p.y], ['move', p.x, p.y - 110, 600], ['hold', 160], ['up']]);
+      if (!(await c.sleep(1100))) return;
+      let g = pt(c.el, $('.jfold .grab', c.el));
+      await ghost(c, $('.jfold', c.el), [['down', g.x, g.y + 6], ['move', g.x, g.y + 160, 500], ['hold', 160], ['up']]);
+      if (!(await c.sleep(800))) return;
+      await ghost(c, pb, [['down', p.x, p.y], ['move', p.x, p.y - 90, 110, 'lin'], ['up']]);
+      if (!(await c.sleep(1400))) return;
+      g = pt(c.el, $('.jfold .grab', c.el));
+      await ghost(c, $('.jfold', c.el), [['down', g.x, g.y + 6], ['move', g.x, g.y + 330, 550], ['hold', 160], ['up']]);
+    };
+    return { play: demo, demo }; } });
+add('lists', { term: 'Fade out (contextual chrome)', q: 'Bar hides for the keyboard', when: 'On a phone, when a text field takes focus the pinned bar fades away and comes back when the keyboard goes. Focused tasks (building an app, logging a set, reviewing a receipt) never show it.', tok: 'opacity 120 · ease · hidden after the fade · RM: same', src: 'QF:204 · QF:518', st: 'built',
+  mk(c) {
+    c.el.classList.add('kbcard');
+    c.el.innerHTML = `<div class="in"><div class="fld" id="kf">${icon('i-search')}${NB}Search Budget</div></div><div class="kbd" aria-hidden="true">keyboard</div>${barHTML()}`;
+    const bar = $('.bar', c.el), f = $('#kf', c.el), k = $('.kbd', c.el);
+    const kb = on => { f.style.boxShadow = on ? 'inset 0 0 0 2px var(--denim)' : ''; f.style.color = on ? 'var(--ink)' : ''; k.classList.toggle('on', on); bar.classList.toggle('off', on); };
+    return { async play() { kb(false); if (!(await c.sleep(500))) return; kb(true); if (!(await c.sleep(1600))) return; kb(false); } }; } });
+add('lists', { term: 'Slide in + Fade', q: 'Search opens', when: 'After a pull or a tap on search, the search view settles down from the top.', tok: 'translateY(−16) → 0 + opacity · 220 · ease · RM: appears', src: 'QF:1001', st: 'built',
+  mk(c) { return { play() { c.el.innerHTML = `<div class="in" id="sv"><div class="fld" style="box-shadow:inset 0 0 0 2px var(--denim);color:var(--ink)">${icon('i-search')}&nbsp;Search every app, or ask</div><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip">coffee</span><span class="chip">rent</span><span class="chip">pull day</span></div></div>`; if (!RM) $('#sv', c.el).animate([{ opacity: 0, transform: 'translateY(-16px)' }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE }); } }; } });
+add('lists', { term: 'Slide in + Fade', q: 'Toast', when: 'Any result that can be undone. It enters and leaves at the same edge, and leaves faster.', tok: 'translateY 8 → 0 + opacity · 220 in / 140 out · RM: opacity 120', src: 'QF:137-138 · QH:183', st: 'built',
+  mk(c) { c.el.innerHTML = `<div class="in center"><p class="cap">Toast enters, waits, leaves</p></div>`; return { async play() { const t = toast(c, 'Deleted Eggs.', 'Undo', null, true); clearTimeout(t._h); if (!(await c.sleep(1600))) return; t.classList.remove('on'); } }; } });
+add('lists', { term: 'Layout animation (FLIP)', q: 'Many apps reflow', when: 'The app grid changes shape at 8 and 20 apps, or when apps fold away. Patches slide to their new spots; a patch that changes size crossfades instead of stretching; new ones grow in.', tok: 'translate only · 350 · size change → crossfade 220 · new .96→1, stagger 12 cap 240 · RM: instant', src: 'WM:703-721', st: 'built', size: 'tall',
+  mk(c) { const NAMES = ['Budget', 'Groceries', 'Calendar', 'To-dos', 'Workout', 'Classes', 'Subscriptions', 'Meals', 'Runs', 'Chores', 'Sleep', 'Plants']; let many = false;
+    const draw = () => { c.el.innerHTML = `<div class="in"><div class="${many ? 'grid4' : 'grid3'}">${NAMES.slice(0, many ? 12 : 6).map((n, i) => `<span class="pt${many ? ' c' : ''}" data-k="${n}" style="background:${Object.values(DYE)[i % 8]}">${n.length > 9 && many ? n.slice(0, 7) + '…' : n}</span>`).join('')}</div></div>`; };
+    const flip = () => { const first = new Map($$('[data-k]', c.el).map(e => [e.dataset.k, e.getBoundingClientRect()])); many = !many; draw(); if (RM) return; let n = 0;
+      $$('[data-k]', c.el).forEach(el => { const f = first.get(el.dataset.k), l = el.getBoundingClientRect(); if (f) { const dx = f.left - l.left, dy = f.top - l.top; if (Math.abs(f.width / l.width - 1) > .02 || Math.abs(f.height / l.height - 1) > .02) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.state, easing: EASE }); else if (Math.abs(dx) + Math.abs(dy) > 1) el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: T.layout, easing: EASE }); } else el.animate([{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: T.state, delay: Math.min(n++ * 12, 240), easing: EASE, fill: 'backwards' }); }); };
+    draw(); return { async play() { many = false; draw(); if (!(await c.sleep(300))) return; flip(); if (!(await c.sleep(1600))) return; flip(); } }; } });
+add('lists', { term: 'Fade out', q: 'Fold offer', when: '"Leave them" on Clair’s offer to fold away unused apps.', tok: 'opacity · 140 · ease · RM: 120', src: 'WM:732', st: 'built',
+  mk(c) { const draw = () => { c.el.innerHTML = `<div class="in" style="justify-content:center"><div class="chalk" id="fo">${OL}<span style="display:flex;gap:8px;align-items:center">${spool('sleepy', 30)}5 apps not opened in 2+ weeks. Fold them away?</span><div style="display:flex;gap:8px;margin-top:6px"><button type="button" class="b">Fold them away</button><button type="button" class="b ghost" id="lv">Leave them</button></div></div></div>`; $('#lv', c.el).addEventListener('click', () => fin($('#fo', c.el).animate([{ opacity: 1 }, { opacity: 0 }], { duration: RM ? T.fb : T.stateOut, easing: EASE, fill: 'forwards' }))); }; draw();
+    return { async play() { draw(); if (!(await c.sleep(500))) return; await tap(c, $('#lv', c.el)); } }; } });
+add('lists', { term: 'Fade in', q: 'Basted placeholder → data', when: 'Opening an app the first time when its data is slow: the layout paints at once, with basting where values will go, then the values fade in. No shimmer, no spinner.', tok: 'opacity · 220 · ease · RM: 120', src: 'WM:916', st: 'built',
+  mk(c) { const draw = loading => { c.el.innerHTML = `<div class="in"><b style="font:800 20px var(--fd)">Workout</b><section class="st cd"><span class="small">volume this week</span>${loading ? '<span class="st basted" style="width:150px;height:36px;background-color:transparent"></span><span class="ph-line" style="width:110px"></span>' : '<span class="big fill">12,450 lb</span><span class="small fill">+8% on last week</span>'}</section></div>`; };
+    draw(true); return { async play() { draw(true); if (!(await c.sleep(1200))) return; draw(false); $$('.fill', c.el).forEach(e => e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: RM ? T.fb : T.state, easing: EASE })); } }; } });
+
+/* ---------------- HOME ---------------- */
+const QCARD = { hulu: `<section class="st basted cd" data-f="hulu"><span class="from"><i class="dot" style="background:${DYE.Subscriptions}"></i>Subscriptions</span><b>Hulu renews Wed 2 Dec. Not opened in 45 days.</b><div style="display:flex;gap:8px"><button type="button" class="b" data-q="hulu">Remind me</button><button type="button" class="b ghost">Keep</button></div></section>`,
+  meals: `<section class="st basted cd" data-f="meals"><span class="from"><i class="dot" style="background:${DYE.Meals}"></i>Meals</span><b>4 dinners from what you bought</b><div style="display:flex;gap:8px"><button type="button" class="b">Add to Meals</button></div></section>`,
+  scan: `<section class="st basted cd" data-f="scan"><span class="from"><i class="dot" style="background:${DYE.Groceries}"></i>Groceries</span><b>Scan after grocery runs?</b></section>` };
+const nextUp = `<div class="sect" data-f="nu">Next up</div><div class="st cd" data-f="nx" style="gap:0">${[['Pull day', `6${NB}pm`], ['Spotify renews', 'Sun 22'], ['Problem set 1', 'Fri 27']].map(([a, b]) => `<div class="pr" style="min-height:30px;align-items:center"><span>${a}</span><span class="small">${b}</span></div>`).join('')}</div>`;
+add('home', { term: 'Layout animation (FLIP)', q: 'Queue advance', when: 'Handling a Needs-your-OK card: it lifts out, everything below slides up into place (no full re-render), and the next card rises in.', tok: 'exit −8 px 140 → FLIP 350 → enter 8 px 220 (40 ms stagger, max 2) · RM: opacity 120', src: 'QH:472-490', st: 'built', size: 'tall',
+  mk(c) { let q = ['hulu', 'meals'];
+    const qhtml = () => `<div class="sect" data-f="qs">Needs your OK · ${q.length}</div>${QCARD[q[0]]}${q.length > 1 ? `<button type="button" class="b ghost" data-f="more" style="justify-self:start;min-height:44px;box-shadow:none;color:var(--denim-ink);padding:0">${q.length - 1} more waiting</button>` : ''}`;
+    c.el.innerHTML = `<div class="in" id="hm" style="gap:8px"><div id="okq" style="display:grid;gap:8px">${qhtml()}</div>${nextUp}</div>`;
+    const handle = async () => { const card = $('#okq section', c.el); await exitUp([card]); if (!c.alive()) return; q = q.slice(1); await flipKeys($('#hm', c.el), () => { $('#okq', c.el).innerHTML = qhtml(); }); };
+    $('#hm', c.el).addEventListener('click', e => { if (e.target.closest('[data-q]')) handle(); });
+    return { async play() { if (!(await c.sleep(500))) return; await tap(c, $('[data-q]', c.el)); } }; } });
+add('home', { term: 'Accordion + Stagger', q: 'N more', when: '"2 more waiting" opens the rest of the queue: the new cards rise in, staggered, and the content below slides down.', tok: 'enter 220, 40 ms stagger, max 2 · FLIP 350 · RM: opacity 120', src: 'QH:829', st: 'built', size: 'tall',
+  mk(c) { let ex = false; const html = () => `<div class="sect" data-f="qs">Needs your OK · 3</div>${QCARD.scan}${ex ? QCARD.meals.replace('<div style="display:flex;gap:8px"><button type="button" class="b">Add to Meals</button></div>', '') + QCARD.hulu.replace(/<div style="display:flex;gap:8px">.*?<\/div>/, '') : ''}<button type="button" class="b ghost" data-f="more" id="mb" style="justify-self:start;box-shadow:none;color:var(--denim-ink);padding:0">${ex ? 'Show one at a time' : '2 more waiting'}</button>`;
+    c.el.innerHTML = `<div class="in" id="hm2" style="gap:8px;overflow:hidden"><div id="okq2" style="display:grid;gap:8px">${html()}</div>${nextUp}</div>`;
+    $('#hm2', c.el).addEventListener('click', e => { if (e.target.closest('#mb')) { ex = !ex; flipKeys($('#hm2', c.el), () => { $('#okq2', c.el).innerHTML = html(); }); } });
+    return { async play() { if (!(await c.sleep(500))) return; await tap(c, $('#mb', c.el)); } }; } });
+add('home', { term: 'Line drawing + Number ticker', q: 'Add to 3 apps (Home)', when: 'The receipt card on Home: threads pull from its dye dots to the pinned-bar pins, notches land, the money line rolls down from $412 to $376, then the card leaves the queue.', tok: 'thread 600 · roll 220 down · exit 140 + FLIP 350 · RM: swap + fade', src: 'QH:550-582', st: 'built', size: 'ph',
+  mk(c) { c.el.classList.add('ph'); c.el.innerHTML = `<div class="scr" id="hh"><b class="hi" data-f="h">Evening, Sam.</b><p class="stl" data-f="s"><b class="odo" id="hmoney"><span>$412</span></b> left this month</p><div class="sect" data-f="qs">Needs your OK · 1</div><div id="hq"><section class="st basted cd" data-f="rc"><b>Corner Market · $35.83</b><span class="from">${['Groceries', 'Budget', 'Calendar'].map(n => `<i class="dot" data-app="${n}" style="background:${DYE[n]}"></i>`).join('')}Adding updates 3 apps</span><button type="button" class="b" id="a3">Add to 3 apps</button></section></div>${nextUp}</div>${barHTML()}`;
+    $('#a3', c.el).addEventListener('click', async e => { e.currentTarget.disabled = true; const card = $('#hq section', c.el); card.classList.remove('basted'); if (!(await c.sleep(RM ? T.fb : T.state))) return;
+      const ok = await threadPull(c, $$('.dot', card).map(d => ({ from: d, to: $(`.pb[data-pin="${d.dataset.app}"] .ico`, c.el), top: true })), to => { const pb = to.closest('.pb'); notch(pb); if (pb.dataset.pin === 'Budget') roll($('#hmoney', c.el), '$376', true); });
+      if (!ok) return; await exitUp([card]); if (!c.alive()) return; await flipKeys($('#hh', c.el), () => { card.remove(); $('[data-f="qs"]', c.el).remove(); }); toast(c, 'Added 8 items to 3 apps.', 'Undo'); });
+    return { async play() { if (!(await c.sleep(500))) return; await tap(c, $('#a3', c.el)); } }; } });
+add('home', { term: 'Scroll + Enter', q: 'Receipt arrives', when: 'After a photo from the Clair sheet: Home scrolls smoothly to the top and the new receipt card rises into the queue.', tok: 'smooth scroll · enter 8 px 220 + FLIP 350 · RM: instant scroll, opacity', src: 'QH:731-740', st: 'built', size: 'tall',
+  mk(c) { c.el.innerHTML = `<div id="rsx" style="position:absolute;inset:0;overflow:auto;scrollbar-width:none;padding:12px;display:flex;flex-direction:column;gap:8px"><b class="hi" data-f="h">Evening, Sam.</b><div class="sect" data-f="qs">Needs your OK</div><div id="rq" style="display:grid;gap:8px">${QCARD.scan}</div>${nextUp}<div class="st cd" data-f="apps" style="min-height:200px"><span class="sect">Your apps · 7</span></div></div>`;
+    return { async play() { const s = $('#rsx', c.el); s.scrollTop = 220; if (!(await c.sleep(600))) return; s.scrollTo({ top: 0, behavior: RM ? 'auto' : 'smooth' }); if (!(await c.sleep(RM ? 0 : 450))) return; flipKeys(s, () => { $('#rq', c.el).insertAdjacentHTML('afterbegin', `<section class="st basted cd" data-f="rc"><b>Corner Market · $35.83</b><span class="small">From your receipt photo · just now</span></section>`); }); } }; } });
+
+/* ======================================================================
+   Render, autoplay, replay, reduced-motion switch
+   ====================================================================== */
+const main = $('#main');
+const counts = {};
+GROUPS.forEach(([g]) => counts[g] = { built: 0, spec: 0, new: 0 });
+CARDS.forEach((c, i) => { c.id = 'c' + i; counts[c.g][c.st]++; });
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+main.innerHTML = GROUPS.map(([g, name, blurb]) => {
+  const list = CARDS.filter(c => c.g === g); let lastSub = null, html = '';
+  const cardHTML = c => `<article class="card" id="${c.id}" aria-labelledby="${c.id}h"><div class="hd"><h4 id="${c.id}h">${esc(c.term)}</h4><span class="badge ${c.st}">${c.st}</span></div><p class="qn">${esc(c.q)}</p><p class="when">${esc(c.when)}</p><p class="tok">${esc(c.tok)}</p><div class="stage${c.size ? ' ' + c.size : ''}" aria-label="Live demo: ${esc(c.q)}"></div><div class="ctl"><button type="button" class="rp" data-id="${c.id}">Replay</button>${c.gesture ? `<button type="button" class="dm" data-id="${c.id}">Play demo</button><span class="hint">or drag it yourself</span>` : ''}</div><p class="src">${esc(c.src)}</p></article>`;
+  let open = false;
+  list.forEach(c => { if ((c.sub || null) !== lastSub) { if (open) html += '</div>'; html += c.sub ? `<h3 class="subh">${esc(c.sub)}</h3>` : ''; html += '<div class="grid">'; open = true; lastSub = c.sub || null; } else if (!open) { html += '<div class="grid">'; open = true; } html += cardHTML(c); });
+  if (open) html += '</div>';
+  const k = counts[g];
+  return `<section class="grp" id="g-${g}"><h2>${name}</h2><p>${blurb} <span style="font-family:var(--fm);font-size:13px">${k.built} built · ${k.spec} spec · ${k.new} new</span></p>${html}</section>`;
+}).join('');
+$('#links').innerHTML = GROUPS.map(([g, name]) => `<a href="#g-${g}">${name}</a>`).join('');
+const tot = Object.values(counts).reduce((a, k) => ({ built: a.built + k.built, spec: a.spec + k.spec, new: a.new + k.new }), { built: 0, spec: 0, new: 0 });
+$('#tally').innerHTML = `<span>${CARDS.length} animations</span><span>${tot.built} built</span><span>${tot.spec} spec</span><span>${tot.new} new</span>`;
+const byId = {}; CARDS.forEach(c => { byId[c.id] = c; c.el = $(`#${c.id} .stage`); });
+
+function mount(card) {
+  const el = card.el; el._run = (el._run || 0) + 1; const run = el._run;
+  el.className = 'stage' + (card.size ? ' ' + card.size : ''); el.innerHTML = '';
+  const ctx = { el, alive: () => el._run === run && el.isConnected, sleep: async ms => { await sleep(ms); return el._run === run; } };
+  try { card.inst = card.mk(ctx) || {}; } catch (e) { console.error(card.q, e); card.inst = {}; }
+  return card.inst;
+}
+const play = card => { const i = mount(card); i.play && Promise.resolve(i.play()).catch(e => console.error(card.q, e)); };
+main.addEventListener('click', e => {
+  const r = e.target.closest('.rp'), d = e.target.closest('.dm');
+  if (r) play(byId[r.dataset.id]);
+  if (d) { const card = byId[d.dataset.id], i = mount(card); (i.demo || i.play) && Promise.resolve((i.demo || i.play)()).catch(err => console.error(card.q, err)); }
+});
+CARDS.forEach(mount);
+const visible = new Set();
+const io = new IntersectionObserver(es => es.forEach(en => { const card = byId[en.target.closest('.card').id]; if (en.isIntersecting) { visible.add(card); if (!card.played) { card.played = true; play(card); } } else visible.delete(card); }), { threshold: .55 });
+CARDS.forEach(c => io.observe(c.el));
+const rmt = $('#rmt');
+const applyRM = () => { document.body.classList.toggle('rm', RM); rmt.setAttribute('aria-pressed', String(RM)); };
+rmt.addEventListener('click', () => { RM = !RM; applyRM(); CARDS.forEach(c => { if (visible.has(c)) { c.played = true; play(c); } else { c.played = false; mount(c); } }); });
+applyRM();
+window.__cards = CARDS; window.__play = id => play(byId[id]); window.__demo = id => { const card = byId[id], i = mount(card); return (i.demo || i.play)(); };
+})();
+</script>
+</body>
+</html>

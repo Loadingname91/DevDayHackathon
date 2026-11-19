@@ -9,7 +9,7 @@ related_targets: []
 
 Scope: the Quilt phone-width web app (home, tab view, Clair build, Clair fill, calendar, chat) and its laptop layout. Visitor mode: Operate.
 
-Audience and job: Sam, the "forgetting tax" student (docs/persona-sam-student.md). Capture in seconds, see what changed across tabs, approve what Clair proposes.
+Audience and job: Sam, the "forgetting tax" student (docs/research/persona-sam-student.md). Capture in seconds, see what changed across tabs, approve what Clair proposes.
 
 ## Direction contract
 
@@ -69,7 +69,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 - Inside an app, swipe up on the border: first fold = "Just used" (recent apps in order); keep going = Home's quilt.
 - Research basis: Arc favourites, super-app service grids, Alipay/WeChat recently used, iOS Smart Stack and App Library. Study: https://claude.ai/artifact/WtBMJUDese1MWWMTjFu8Dd
 
-## Home content, voice and theme (Nov 19, 2026) · from docs/home-jtbd.md
+## Home content, voice and theme (Nov 19, 2026) · from docs/research/home-jtbd.md
 
 - Home is composed from signals every app spec emits (pending items, dated rows, a "face" = headline value + label, changes, cross-app patterns), never from per-app widgets. Every app spec must declare a face.
 - Order = the job: greeting + status line → Waiting for you (basted items, Clair proposals; hidden when empty, replaced by a caught-up win) → Next up (a running-stitch thread of the next dated items from every app, each dot in its app's dye) → Right now (up to 3 faces Clair picks by time of day, with a reason) → Clair noticed (at most one cross-app pattern, "Not useful" to dismiss) → Your quilt (all apps by use, pile filter; "just changed" tag on the big patch, mustard notch on small ones) → pinned border (no chalk chip on Home).
@@ -90,9 +90,9 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 - The bar's right cell is the Clair button: a faceless spool mark (not the character, does not count as a spool) labelled "Clair". Tap opens the Clair sheet (type, Talk, Photo, File; three time-of-day suggestions: one capture, one ask, one build). Hold 450ms = talk while held, release to send, slide up to cancel. Search = pull-down only.
 - Return loops Quilt designs for: quick dump (say or type anything, Clair files it to the right apps after OK), ask across apps (answers cite their source apps), share into Quilt (screenshots, emails, PDFs from the OS share sheet), and Clair asks first (an evening check-in card in Needs your OK). The receipt is one example of the dump, not the product.
 - Talk waveform is a running-stitch line whose stitch lengths follow voice level.
-- Full spec: scratchpad polish/fixspec.md section D.
+- Full spec: design/notes/fixspec.md section D.
 - "Your apps" replaces "Your quilt": find box, no pile chips, a number on every patch, "not opened in N wk" on forgotten ones. Header clock removed.
 - Canvas demo path rebuilt in Workbench (Home, Groceries, Review receipt, Budget, Calendar); final design book: https://claude.ai/artifact/N37FhQVVYTNoeDf4rJFyjq
 
-- Platform (Nov 19, evening): one React app, wrapped with Capacitor for Android (APK) and served as a website for laptops; motion and CSS port from the prototypes unchanged. Clair reads any photo or file, asks with menu questions and keeps Clair notes; voice uses the phone's own speech in and out. See docs/backend.md and docs/clair-agent.md.
+- Platform (Nov 19, evening): one React app, wrapped with Capacitor for Android (APK) and served as a website for laptops; motion and CSS port from the prototypes unchanged. Clair reads any photo or file, asks with menu questions and keeps Clair notes; voice uses the phone's own speech in and out. See spec/backend.md and spec/clair-agent.md.
 - Bar behaviour (Nov 19): the bar never swipes sideways and never moves on scroll. More apps = swipe up on the bar ("Just used", then Home's quilt). The bar hides only for focused tasks: keyboard up, camera, logging a set, reviewing a receipt, building an app; those screens carry their own Done/Back. The Clair sheet floats above the bar and keeps it visible so threads land on the pins.

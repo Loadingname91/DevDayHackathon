@@ -1,0 +1,1639 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#F4EEE1"><meta name="color-scheme" content="light dark">
+<title>Quilt Flows Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a flow bench. Scenario switcher on top; a live phone (or laptop) on the left; the decisions it demonstrates on the right. Phone and laptop are the Workbench world, light only; page chrome follows the viewer's theme. */
+:root{
+  --bg:#EFEEEA; --panel:#FFFFFF; --ink:#1E1F23; --muted:#565A61; --line:#D7D6D0; --accent:#3557A6; --accent-ink:#FFFFFF; --soft:#E7ECF7;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Hanken Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --f-data:"DM Mono",ui-monospace,Menlo,monospace;
+  --muslin:#F4EEE1; --surface:#FFFDF8; --w-ink:#2A2119; --w-ink2:#665847; --stitch:#BFAE90; --denim:#3557A6; --denim-ink:#22396F; --thread:#E3A72F; --moss:#1F6B5E; --wash:#EEE6D6;
+  --ease:cubic-bezier(.16,1,.3,1); --ease-thread:cubic-bezier(.45,0,.15,1);
+  --t-fb:120ms; --t-state:220ms; --t-layout:350ms; --t-focal:600ms;
+  --t-state-out:140ms; --t-layout-out:220ms; --t-focal-out:360ms;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141518;--panel:#1C1E22;--ink:#ECEBE6;--muted:#A5A9B0;--line:#2F3238;--accent:#93ABEA;--accent-ink:#111318;--soft:#232A3A;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141518;--panel:#1C1E22;--ink:#ECEBE6;--muted:#A5A9B0;--line:#2F3238;--accent:#93ABEA;--accent-ink:#111318;--soft:#232A3A;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+html,body{overscroll-behavior:none}
+button,a,[role="button"]{touch-action:manipulation}
+input,textarea,select{font-size:16px}
+.pb,.qp,.chip,.grip,.swrow{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;cursor:pointer;color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding-block:32px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(34px,5vw,56px);letter-spacing:-.035em;line-height:.98;margin:0;text-wrap:balance}
+.lede{margin:8px 0 0;color:var(--muted);max-width:72ch}
+.controls{display:flex;flex-direction:column;gap:10px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;color:var(--ink)}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:transparent;min-height:44px;padding:0 13px;border-radius:9px;font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sub{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.sub .lbl{font-family:var(--f-data);font-size:12px;color:var(--muted);margin-right:6px}
+.sub button{border:1px solid var(--line);background:transparent;min-height:44px;padding:0 11px;border-radius:8px;font-size:13px}
+.sub button[aria-pressed="true"]{background:var(--soft);border-color:var(--accent);color:var(--ink)}
+.stage{display:grid;grid-template-columns:376px minmax(0,1fr);gap:32px;align-items:start}
+.stage.wide{grid-template-columns:minmax(0,1fr)}
+.notes{display:flex;flex-direction:column;gap:14px;min-width:0;color:var(--ink)}
+.notes h2{font-family:var(--f-display);font-weight:800;font-size:28px;letter-spacing:-.025em;margin:0;line-height:1.05}
+.notes p{margin:0;max-width:64ch}
+.beats{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.beats li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:9px 6px;border-bottom:1px solid var(--line);font-size:14.5px}
+.beats .n{font-family:var(--f-data);font-size:12px;color:var(--muted);padding-top:2px}
+.beats li.now{background:var(--soft)}
+.beats b{font-weight:600}
+.dec{font-family:var(--f-data);font-size:12px;color:var(--muted)}
+.try{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
+.try b{font-weight:600}
+
+/* ---------- phone (Workbench) ---------- */
+.phone{width:360px;max-width:100%;height:760px;border-radius:40px;border:8px solid #111216;overflow:hidden;position:relative;background:var(--muslin);color:var(--w-ink);font-family:var(--f-body);box-shadow:0 20px 44px -22px rgba(0,0,0,.4);isolation:isolate}
+.screen{position:absolute;inset:0 0 96px 0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.screen:not(.full){-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent)}
+.screen.full{bottom:0}
+.screen::-webkit-scrollbar{display:none}
+.content{position:relative;padding:40px 16px 32px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:12px;min-height:100%}
+.ico{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px}
+.back,.ib{width:44px;height:44px;border:0;background:transparent;display:grid;place-items:center;border-radius:12px;color:var(--w-ink);flex:none}
+.back{margin-left:-12px}
+@media (hover:hover) and (pointer:fine){.ib:hover,.back:hover{background:rgba(42,33,25,.06)}}
+.h1{margin:0;font-family:var(--f-display);font-weight:800;font-size:28px;letter-spacing:-.025em;line-height:1.05}
+.h1.s24{font-size:24px;letter-spacing:-.015em}
+.h2{margin:0;font-family:var(--f-display);font-weight:800;font-size:20px;letter-spacing:-.015em}
+.h2:focus{outline:none}
+.subt{margin:0;font-size:13.5px;color:var(--w-ink2)}
+.mono{font-family:var(--f-data);font-size:13px;font-variant-numeric:tabular-nums}
+.small{font-size:13px;color:var(--w-ink2)}
+.sect{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;font:600 13px/1.4 var(--f-body);letter-spacing:0;color:var(--w-ink2)}
+.lk{font:600 15px var(--f-body);color:var(--denim-ink);text-decoration:none;min-height:44px;display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:0}
+.st{--d:7px;--sc:var(--stitch);position:relative;background-color:var(--surface);border-radius:16px;
+  background-image:linear-gradient(90deg,var(--sc) 58%,transparent 0),linear-gradient(90deg,var(--sc) 58%,transparent 0),linear-gradient(0deg,var(--sc) 58%,transparent 0),linear-gradient(0deg,var(--sc) 58%,transparent 0);
+  background-size:var(--d) 1.5px,var(--d) 1.5px,1.5px var(--d),1.5px var(--d);
+  background-position:0 5px,0 calc(100% - 5px),5px 0,calc(100% - 5px) 0;background-repeat:repeat-x,repeat-x,repeat-y,repeat-y;transition:background-size var(--t-state) var(--ease)}
+.st.basted{--d:20px;--sc:var(--w-ink2);transition-duration:var(--t-state-out)}
+.card{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.b{min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--denim);color:#FFF;font-weight:600;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.b:disabled{opacity:.55}
+.b,.chip,.pat,.ib,.back,.lk{transition:transform var(--t-fb) var(--ease)}
+.b:active,.chip:active,.pat:active,.ib:active,.back:active,.lk:active{transform:scale(.97)}
+.b.ghost{background:transparent;color:var(--w-ink);box-shadow:inset 0 0 0 1.5px var(--stitch)}
+.b.ink{background:transparent;color:var(--w-ink);box-shadow:inset 0 0 0 1.5px var(--w-ink)}
+.b.wide{width:100%}
+.chip{min-height:44px;padding:0 12px;border-radius:12px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);font-size:13px;color:var(--w-ink);display:inline-flex;align-items:center;gap:8px;flex:none}
+.chip[aria-pressed="true"]{background:#E6ECF7;box-shadow:inset 0 0 0 1.5px var(--denim);color:var(--denim-ink)}
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding-inline:16px}
+.chips>*{scroll-snap-align:start}
+.tag{font:500 13px/1.3 var(--f-body);padding:2px 8px;background:var(--thread);color:#1F180D;border-radius:4px;white-space:nowrap}
+.ex{font-size:13px;color:var(--w-ink2);padding:1px 6px;border-radius:4px;box-shadow:inset 0 0 0 1px var(--stitch);white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(42,33,25,.4);display:inline-block;flex:none}
+.rows{display:flex;flex-direction:column}
+.rowi{display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 12px;font-size:16px}
+.rowi + .rowi{background:linear-gradient(90deg,var(--stitch) 58%,transparent 0) 0 0/8px 1px repeat-x}
+.rowi .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.rowi .t span:first-child{font-weight:500;color:var(--w-ink)}
+.rowi .t span:last-child{font-size:13px;color:var(--w-ink2)}
+.bar{height:8px;border-radius:4px;background:var(--wash);position:relative;overflow:hidden}
+.bar u{position:absolute;inset:0 auto 0 0;background:var(--moss);border-radius:4px}
+.bar s{position:absolute;inset:0 0 0 auto;background:repeating-linear-gradient(45deg,var(--w-ink) 0 1.3px,transparent 1.3px 4px),repeating-linear-gradient(-45deg,var(--w-ink) 0 1.3px,transparent 1.3px 4px)}
+.big{font-family:var(--f-display);font-weight:800;font-size:36px;letter-spacing:-.025em;line-height:1;font-variant-numeric:tabular-nums}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-family:var(--f-data);font-size:13px;text-align:center;color:var(--w-ink2)}
+.week span{padding:8px 0;border-radius:8px;background:#F3ECDD;display:flex;flex-direction:column;gap:2px;align-items:center}
+.week span.r{background:var(--denim);color:#FFF}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--w-ink2)}
+.field input,.field select,.field textarea{min-height:44px;border:0;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);padding:0 12px;font:inherit;font-size:16px;color:var(--w-ink)}
+.field textarea{padding:12px;resize:none;line-height:1.45}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;box-shadow:inset 0 0 0 2px var(--denim)}
+.clair{display:flex;gap:8px;align-items:center;font:500 15px/1.35 var(--f-body);color:var(--denim-ink);min-height:30px}
+.chalk{position:relative;padding:12px 16px;border-radius:16px;background:rgba(53,87,166,.06);color:var(--denim-ink);display:flex;flex-direction:column;gap:8px}
+.chalk>svg.ol,.piece>svg.ol{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.chalk>svg.ol rect,.piece>svg.ol rect{fill:none;stroke:var(--denim);stroke-opacity:.7;stroke-width:2.2;stroke-dasharray:1 6;stroke-linecap:round}
+.say{margin:0;font-size:15px;font-weight:500;line-height:1.45}
+.qmark{width:18px;height:18px;flex:none}
+.kind{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--w-ink2)}
+.piece{position:relative;padding:12px;display:flex;flex-direction:column;gap:8px}
+.patchi{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;flex:none;position:relative}
+.dock{position:absolute;left:12px;right:12px;bottom:max(18px,env(safe-area-inset-bottom,0px));height:62px;z-index:6;display:flex;border-radius:16px;box-shadow:0 8px 22px -14px rgba(42,33,25,.55)}
+.dock .pb{flex:1;min-width:0;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:600;position:relative;color:var(--w-ink);transition:box-shadow var(--t-fb) var(--ease)}
+.dock .pb:first-child{border-radius:16px 0 0 16px}
+.dock .pb + .pb::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:1.5px;background:linear-gradient(0deg,rgba(42,33,25,.45) 58%,transparent 0) 0 0/1.5px 7px repeat-y}
+.dock .pb span{max-width:100%;padding:0 2px;white-space:nowrap;font:600 12px/1.2 var(--f-body);letter-spacing:.01em}  /* 13px clipped in the 344px prototype frame: spec fallback */
+.dock .pb:active{box-shadow:inset 0 0 0 100px rgba(42,33,25,.07)}
+.dock .pb.on{box-shadow:inset 0 -3px 0 var(--denim)}
+.dock .pb.on:active{box-shadow:inset 0 -3px 0 var(--denim),inset 0 0 0 100px rgba(42,33,25,.07)}
+.dock .pb.clairb{flex:0 0 64px;background:var(--w-ink);color:#FBF6EC;border-radius:0 16px 16px 0;overflow:hidden;touch-action:none}
+.dock .pb.clairb::before{display:none}
+.dock .pb.clairb::after{content:"";position:absolute;inset:0;background:rgba(251,246,236,.22);clip-path:inset(0 100% 0 0);pointer-events:none}
+.dock .pb.clairb.holding::after{clip-path:inset(0);transition:clip-path 330ms linear 120ms}
+.dock .pb.clairb:active{box-shadow:inset 0 0 0 100px rgba(251,246,236,.08)}
+.toast{position:absolute;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:9;background:var(--w-ink);color:#FBF6EC;border-radius:12px;padding:8px 8px 8px 16px;display:flex;align-items:center;gap:12px;font-size:13px;line-height:1.35;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity var(--t-state-out) var(--ease),transform var(--t-state-out) var(--ease)}
+.toast.on{opacity:1;transform:none;pointer-events:auto;transition-duration:var(--t-state)}
+.toast button{margin-left:auto;flex:none;min-height:44px;padding:0 12px;border-radius:12px;border:1.5px solid rgba(251,246,236,.5);background:transparent;color:#FBF6EC;font-weight:600;font-size:13px}
+.scrim{position:absolute;inset:0;background:rgba(42,33,25,.32);z-index:10;opacity:0;visibility:hidden;touch-action:none;transition:opacity var(--t-layout-out) var(--ease),visibility 0s linear var(--t-layout-out)}
+.scrim.on{opacity:1;visibility:visible;transition:opacity var(--t-layout) var(--ease),visibility 0s}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:11;background:var(--muslin);border-radius:22px 22px 0 0;padding:8px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:82%;overflow-y:auto;overscroll-behavior:contain;visibility:hidden;transform:translateY(105%);transition:transform var(--t-layout-out) var(--ease),visibility 0s linear var(--t-layout-out);box-shadow:0 -10px 30px -18px rgba(42,33,25,.6)}
+.sheet.on{transform:none;visibility:visible;transition:transform var(--t-layout) var(--ease),visibility 0s}
+.sheet .sc{display:flex;flex-direction:column;gap:12px}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--stitch);margin:4px auto;position:relative;flex:none}
+.grab::before{content:"";position:absolute;left:-40px;right:-40px;top:-20px;bottom:-20px}
+.pager{display:flex;align-items:center;gap:8px}
+.dots{display:flex;gap:4px;justify-content:center}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--stitch)}
+.dots i.on{background:var(--w-ink)}
+.toggle{width:52px;height:44px;border:0;padding:0;background:transparent;position:relative;flex:none}
+.toggle::before{content:"";position:absolute;left:0;right:0;top:6px;height:32px;border-radius:16px;background:var(--stitch);transition:background-color var(--t-state) var(--ease)}
+.toggle::after{content:"";position:absolute;left:3px;top:9px;width:26px;height:26px;border-radius:50%;background:#FFF;transition:transform var(--t-state) var(--ease)}
+.toggle[aria-checked="true"]::before{background:var(--denim)}
+.toggle[aria-checked="true"]::after{transform:translateX(20px)}
+.tgwrap{min-width:52px;min-height:44px;display:grid;place-items:center}
+.swrow{position:relative;overflow:hidden;touch-action:pan-y}
+.swrow .act{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-weight:600;font-size:13px;transition:background-color var(--t-fb) var(--ease)}
+.swrow .act .l{color:var(--moss);display:flex;gap:8px;align-items:center}
+.swrow .act .r{color:var(--w-ink);display:flex;gap:8px;align-items:center}
+.swrow .act .l,.swrow .act .r{transition:opacity var(--t-fb) var(--ease),color var(--t-fb) var(--ease)}
+.swrow.dir-r .act .r,.swrow.dir-l .act .l{opacity:0}
+.swrow.armed.dir-r .act{background-color:var(--moss)}
+.swrow.armed.dir-r .act .l{color:#FFF}
+.swrow.armed.dir-l .act{background-color:var(--w-ink)}
+.swrow.armed.dir-l .act .r{color:#FBF6EC}
+.swrow .fg{position:relative;background-color:var(--surface);touch-action:pan-y;transition:background-color var(--t-fb) var(--ease)}
+.swrow .fg:active{background-color:#F7F1E6}
+.swrow.sel .fg{background-color:#E6ECF7}
+.ck{width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--w-ink2);display:grid;place-items:center;flex:none;transition:background-color var(--t-fb) var(--ease)}
+.ck.on{background-color:var(--moss);box-shadow:none;color:#FFF}
+.radio{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);cursor:pointer}
+.radio input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--denim);flex:none}
+.radio:has(input:checked){box-shadow:inset 0 0 0 2px var(--denim)}
+.meter{height:10px;border-radius:4px;background:var(--wash);overflow:hidden}
+.meter u{display:block;height:100%;background:var(--denim);border-radius:4px}
+.grip{width:44px;height:44px;margin:-8px -6px -8px -10px;border:0;background:transparent;display:grid;place-items:center;color:var(--w-ink2);touch-action:none;cursor:grab;flex:none}
+.arr .piece{transition:scale var(--t-fb) var(--ease),box-shadow var(--t-fb) var(--ease)}
+.arr.sorting .piece:not(.dragging){transition:translate var(--t-state) var(--ease)}
+.arr .piece.dragging{z-index:5;scale:1.02;box-shadow:0 14px 28px -14px rgba(42,33,25,.55);cursor:grabbing}
+.vseg{display:inline-flex;border-radius:8px;box-shadow:inset 0 0 0 1.5px var(--stitch);overflow:hidden}
+.vseg button{min-height:44px;min-width:44px;padding:0 12px;border:0;background:transparent;font-size:13px;color:var(--w-ink2)}
+.vseg button[aria-pressed="true"]{background:var(--w-ink);color:#FBF6EC}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-weight:600;font-size:13px;color:var(--w-ink2);text-align:left;padding:4px 8px}
+.tbl td{padding:8px;border-top:1px solid var(--wash)}
+.tbl td:last-child,.tbl th:last-child{text-align:right;font-family:var(--f-data);font-variant-numeric:tabular-nums}
+.pull{display:flex;justify-content:center;margin:-38px 0 -6px}
+.pull button{border:0;background:transparent;min-height:44px;padding:0 12px;font-size:13px;color:var(--w-ink2);display:flex;align-items:center;gap:8px;transition:color var(--t-fb) var(--ease)}
+.pull.armed button{color:var(--w-ink)}
+#pv{-webkit-user-select:none;user-select:none}
+.answer{padding:12px 16px;border-radius:16px;background:rgba(53,87,166,.06);color:var(--denim-ink);display:flex;flex-direction:column;gap:8px;position:relative}
+.notch{position:absolute;top:-3px;right:-3px;width:12px;height:12px;border-radius:4px;background:var(--thread);box-shadow:0 0 0 2px var(--surface)}
+.dock .pb .notch{top:6px;right:8px;box-shadow:none}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* N1 rise from the button: grows out of the Clair cell (bottom right), same rule as quilt-home */
+.sheet.clairs{left:12px;right:12px;bottom:calc(max(18px,env(safe-area-inset-bottom,0px)) + 70px);border-radius:22px;padding-bottom:16px;max-height:calc(100% - 150px);transform-origin:100% 100%;transform:translateY(16px) scale(.96);opacity:0;transition:transform var(--t-layout-out) var(--ease),opacity var(--t-layout-out) var(--ease),visibility 0s linear var(--t-layout-out)}
+.sheet.clairs.on{transform:none;opacity:1;transition:transform var(--t-layout) var(--ease),opacity var(--t-layout) var(--ease),visibility 0s}
+.phone:has(.sheet.clairs.on) .dock{z-index:12}
+.stw{display:block;width:100%;height:24px}
+.stw rect{fill:var(--w-ink);transition:fill var(--t-fb) var(--ease);transform-box:fill-box;transform-origin:center}
+/* bar: hides while the keyboard is up (app.md "Bar behaviour"); never moves otherwise */
+.dock{touch-action:none;transition:opacity var(--t-fb) var(--ease),visibility 0s}
+.phone.kb .dock{opacity:0;visibility:hidden;transition:opacity var(--t-fb) var(--ease),visibility 0s linear var(--t-fb)}
+/* "Just used": swipe up on the bar inside an app; the grab line is the visible + keyboard path */
+.grabln{position:absolute;left:50%;top:-30px;width:64px;height:44px;margin-left:-32px;border:0;padding:0;background:transparent;border-radius:12px}
+.phone:has(.sheet.clairs.on) .grabln{visibility:hidden}
+.grabln::before{content:"";position:absolute;left:16px;right:16px;bottom:21px;height:4px;border-radius:2px;background:var(--w-ink2);opacity:.6}
+.fscrim{position:absolute;inset:0;z-index:5;background:rgba(42,33,25,.32);opacity:0;visibility:hidden;touch-action:none}
+.fscrim.on{visibility:visible}
+.fold{position:absolute;inset:0;z-index:5;background:var(--muslin);border-radius:22px 22px 0 0;box-shadow:0 -10px 30px -18px rgba(42,33,25,.6);visibility:hidden;transform:translateY(100%);overflow:hidden;overscroll-behavior:contain;touch-action:none;padding:4px 16px calc(112px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.fold.on{visibility:visible}
+.fold.full{overflow-y:auto;touch-action:pan-y}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fp{min-height:52px;min-width:0;border:0;border-radius:12px;display:flex;align-items:center;gap:8px;padding:0 12px;font:600 15px var(--f-body);color:var(--w-ink);text-align:left;transition:transform var(--t-fb) var(--ease)}
+.fp:active{transform:scale(.98)}
+.fp span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fq .fp:first-child{grid-column:span 2;min-height:72px}
+.fall{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.find{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 12px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch)}
+.find input{flex:1;min-width:0;min-height:44px;border:0;background:transparent;font:inherit;font-size:16px;color:var(--w-ink);outline:none}
+.sheet.cancelling .stw rect{fill:var(--stitch)}
+.tr20{margin:0;min-height:50px;font:800 20px/1.25 var(--f-display);letter-spacing:-.015em;color:var(--w-ink)}
+.sugg{display:flex;flex-direction:column}
+.sg{display:flex;align-items:center;gap:12px;min-height:48px;width:100%;border:0;background:transparent;padding:4px 0;text-align:left;font:inherit;font-size:16px;color:var(--w-ink);transition:background-color var(--t-fb) var(--ease)}
+.sg + .sg{background-image:linear-gradient(90deg,var(--stitch) 58%,transparent 0);background-size:8px 1px;background-repeat:repeat-x}
+.sg:active{background-color:#F7F1E6}
+.sg .k{flex:0 0 44px;font-size:13px;font-weight:600;color:var(--w-ink2)}
+svg.threads{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:16;contain:layout paint}
+svg.threads path{fill:none;stroke:#E3A72F;stroke-width:2.4;stroke-linecap:round}
+
+/* spool (section A: motion on the outer svg) */
+.sp{overflow:visible;flex:none;transform-origin:50% 100%}
+.sp .eyes{transform-box:fill-box;transform-origin:center}
+.sp-hop{animation:hop 420ms 1}
+@keyframes hop{0%{transform:none;animation-timing-function:cubic-bezier(.2,.8,.3,1)}40%{transform:translateY(-5px);animation-timing-function:cubic-bezier(.6,0,.9,.5)}75%,100%{transform:none}}
+.sp-shake{animation:shake 360ms ease-in-out 1}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-3px) rotate(-3deg)}45%{transform:translateX(3px) rotate(2deg)}70%{transform:translateX(-1.5px)}}
+.sp-bob{animation:bob 560ms ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-2px)}}
+.sp-bob .eyes{animation:blink 4.3s infinite;animation-delay:-1.7s}
+@keyframes blink{0%,90%,94%,96%,100%{transform:scaleY(1)}92%,95%{transform:scaleY(.1)}}
+.sp .body{transform-box:fill-box;transform-origin:50% 100%}
+.sp-breathe .body{animation:breathe 2.6s ease-in-out infinite}
+.sp-think .dots2 circle{animation:pulse 1.2s ease-in-out infinite}
+.sp-think .dots2 circle:nth-child(2){animation-delay:.2s}.sp-think .dots2 circle:nth-child(3){animation-delay:.4s}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+
+/* ---------- laptop ---------- */
+.lapwrap{overflow-x:auto;border-radius:18px}
+.laptop{min-width:980px;height:640px;border-radius:18px;border:10px solid #111216;background:var(--muslin);color:var(--w-ink);font-family:var(--f-body);display:grid;grid-template-columns:220px minmax(0,1fr) 300px;overflow:hidden;position:relative}
+.laptop.build{grid-template-columns:400px minmax(0,1fr)}
+.side{border-right:1.5px solid var(--wash);padding:18px 12px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+.side .k{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 10px;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);font-size:13px;color:var(--w-ink2)}
+.side .k kbd{margin-left:auto;font-family:var(--f-data);font-size:13px;padding:1px 6px;border-radius:5px;background:var(--wash)}
+.side .tb{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 8px;border-radius:10px;font-size:14px;border:0;background:transparent;text-align:left}
+.side .tb.on{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);font-weight:600}
+.side .tb .patchi{width:26px;height:26px;border-radius:8px}
+.mainp{padding:22px 26px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;min-width:0}
+.detail{border-left:1.5px solid var(--wash);padding:22px 18px;display:flex;flex-direction:column;gap:12px;background:var(--surface);overflow-y:auto}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) 170px 80px;gap:10px;align-items:center;min-height:46px;padding:0 12px;font-size:14px;border-radius:10px;border:0;background:transparent;text-align:left;width:100%}
+.lrow.on{background:#E6ECF7;box-shadow:inset 0 0 0 1.5px var(--denim)}
+.lrow span:last-child{text-align:right;font-family:var(--f-data)}
+.chat{border-right:1.5px solid var(--wash);padding:20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;background:var(--surface)}
+.bub{align-self:flex-end;max-width:85%;padding:12px 16px;border-radius:16px 16px 4px 16px;background:var(--wash);font-size:16px}
+.prevp{padding:22px 30px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.prevp .frame{max-width:420px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+
+@media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.phone{margin:0 auto}}
+@media (max-width:420px){.phone{border-width:6px}}
+@media (prefers-reduced-motion:reduce){
+  .sp,.sp .body,.sp .eyes,.sp .dots2 circle{animation:none!important}
+  .sheet{transform:none;opacity:0;transition:opacity 120ms var(--ease),visibility 0s linear 120ms}
+  .sheet.on{opacity:1;transition:opacity 120ms var(--ease),visibility 0s}
+  .scrim{transition:opacity 120ms var(--ease),visibility 0s linear 120ms}
+  .scrim.on{transition:opacity 120ms var(--ease),visibility 0s}
+  .toast,.toast.on{transform:none;transition:opacity 120ms var(--ease)}
+  .st,.st.basted{transition-duration:120ms}
+  .b:active,.chip:active,.pat:active,.ib:active,.back:active,.lk:active{transform:none}
+  .arr .piece.dragging{scale:1}
+  .dock .pb.clairb.holding::after{transition:none}
+  .sheet.clairs{transform:none;transition:opacity 120ms var(--ease),visibility 0s linear 120ms}
+  .fp:active{transform:none}
+  .sheet.clairs.on{transition:opacity 120ms var(--ease),visibility 0s}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7h18v12H3zM3 10h18M16 15h2"/></symbol>
+  <symbol id="i-lift" viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.5h10.6L20 7H6.2M9 19.5h.01M17 19.5h.01"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M9 3v4M15 3v4"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 3l3 3-3 3M4 12V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3M20 12v3a3 3 0 0 1-3 3H4"/></symbol>
+  <symbol id="i-spool" viewBox="0 0 24 24"><rect x="4" y="2.5" width="16" height="3.5" rx="1.2"/><rect x="4" y="18" width="16" height="3.5" rx="1.2"/><path d="M7 6v12M17 6v12M17 13.5c2.6.4 3.6 2.4 4 4.8"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="M20 11.5l-7.6 7.6a5 5 0 0 1-7.1-7.1l8.1-8.1a3.3 3.3 0 0 1 4.7 4.7l-8.1 8.1a1.7 1.7 0 0 1-2.4-2.4L15 6.9"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-type" viewBox="0 0 24 24"><path d="M5 7V5h14v2M12 5v14M9 19h6"/></symbol>
+  <symbol id="i-import" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/></symbol>
+  <symbol id="i-rip" viewBox="0 0 24 24"><path d="M4 20l9-9M13 11l3-7 4 4-7 3M7 14l3 3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1.2-3.6 4-5 7-5s5.8 1.4 7 5"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 5h12v15H7a2 2 0 0 1-2-2zM5 18a2 2 0 0 1 2-2h10"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4M12 8v4l3 2"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-bowl" viewBox="0 0 24 24"><path d="M4 11h16a8 8 0 0 1-16 0zM10 7.5c0-1.5 1-2 1-3.5M14 7.5c0-1.5 1-2 1-3.5"/></symbol>
+  <symbol id="i-layout" viewBox="0 0 24 24"><path d="M4 4h16v6H4zM4 14h7v6H4zM15 14h5v6h-5z"/></symbol>
+  <symbol id="q-page" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="#F4EEE1" stroke="#2A2119" stroke-width="1.3"/></symbol>
+  <symbol id="q-text" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="none" stroke="#2A2119" stroke-width="1.3"/><rect x="2.6" y="7.9" width="14.8" height="4.1" fill="#FBEBC4"/><path d="M2 7.3h16M2 12.6h16" stroke="#2A2119" stroke-width="1.3"/></symbol>
+  <symbol id="q-metric" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="none" stroke="#2A2119" stroke-width="1.3"/><path d="M10 2L18 10L10 18L2 10Z" fill="#D3ECE7" stroke="#2A2119" stroke-width="1.3"/></symbol>
+  <symbol id="q-progress" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="none" stroke="#2A2119" stroke-width="1.3"/><path d="M2 18L6 10L10 18ZM10 18L14 10L18 18ZM2 10L6 2L10 10ZM10 10L14 2L18 10Z" fill="#F8DCC2" stroke="#2A2119" stroke-width="1.1"/></symbol>
+  <symbol id="q-collection" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="none" stroke="#2A2119" stroke-width="1.3"/><path d="M2.6 2.6h4.1v4.1H2.6zM12.9 2.6h4.5v4.1h-4.5zM7.9 7.9h4.1v4.1H7.9zM2.6 12.9h4.1v4.5H2.6zM12.9 12.9h4.5v4.5h-4.5z" fill="#DDEBD2"/><path d="M2 7.3h16M2 12.6h16M7.3 2v16M12.6 2v16" stroke="#2A2119" stroke-width="1.3"/></symbol>
+  <symbol id="q-list" viewBox="0 0 20 20"><path d="M2 2h16v16H2z M5 5h10v10H5z M8 8h4v4H8z" fill="none" stroke="#2A2119" stroke-width="1.3"/><rect x="8" y="8" width="4" height="4" fill="#E3A72F"/></symbol>
+  <symbol id="q-cal" viewBox="0 0 20 20"><path d="M2 2h16v16H2z M2 7.3h16 M2 12.6h16 M7.3 2v5.3 M12.6 7.3v5.3 M7.3 12.6V18" fill="none" stroke="#2A2119" stroke-width="1.3"/></symbol>
+  <symbol id="q-form" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="none" stroke="#2A2119" stroke-width="1.3"/><path d="M2 2h6L2 8zM18 2h-6l6 6zM2 18h6l-6-6zM18 18h-6l6-6z" fill="#DCE4F3" stroke="#2A2119" stroke-width="1.1"/></symbol>
+  <symbol id="q-chart" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="none" stroke="#2A2119" stroke-width="1.3"/><path d="M2 18L18 2V18Z" fill="#EADCF0" stroke="#2A2119" stroke-width="1.3"/></symbol>
+</defs></svg>
+
+<main class="wrap">
+  <header>
+    <h1>Quilt Flows Prototype</h1>
+    <p class="lede">Every decision from the last grilling round, rendered and clickable. Pick a scenario; the phone (or laptop) is live, and the notes on the right show which decision each part demonstrates. Rows in the build preview are examples.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Scenario controls">
+    <div class="seg" role="group" aria-label="Scenario">
+      <button type="button" data-sc="build" aria-pressed="true">1 · Build an app</button>
+      <button type="button" data-sc="stitched" aria-pressed="false">2 · Connected in Calendar</button>
+      <button type="button" data-sc="search" aria-pressed="false">3 · Search</button>
+      <button type="button" data-sc="rows" aria-pressed="false">4 · Edit rows</button>
+      <button type="button" data-sc="settings" aria-pressed="false">5 · Settings + activity</button>
+      <button type="button" data-sc="laptop" aria-pressed="false">6 · Laptop</button>
+    </div>
+    <div class="sub" id="subctl"></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div id="device"></div>
+    <div class="notes" id="notes" aria-live="polite"></div>
+  </div>
+</main>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const EASE = 'cubic-bezier(.16,1,.3,1)', EASE_THREAD = 'cubic-bezier(.45,0,.15,1)';
+  const T = { fb: 120, state: 220, layout: 350, focal: 600, stateOut: 140, layoutOut: 220, focalOut: 360 };
+  let RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', e => RM = e.matches);
+  document.addEventListener('touchstart', () => {}, { passive: true });
+  /* gesture release: critically damped spring (no overshoot), carries finger speed */
+  function spring(from, to, v0, response, onUpdate, onDone) {
+    if (RM) { onUpdate(to, 0); onDone && onDone(); return () => {}; }
+    const w = 2 * Math.PI / response, x0 = from - to, t0 = performance.now(); let id;
+    const step = n => { const t = (n - t0) / 1000, e = Math.exp(-w * t), x = (x0 + (v0 + w * x0) * t) * e, v = (v0 - w * (v0 + w * x0) * t) * e;
+      if (Math.abs(x) < .5 && Math.abs(v) < 5) { onUpdate(to, 0); onDone && onDone(); } else { onUpdate(to + x, v); id = requestAnimationFrame(step); } };
+    id = requestAnimationFrame(step); return () => cancelAnimationFrame(id);
+  }
+  const project = (v, d = .995) => (v / 1000) * d / (1 - d);
+  const rubberband = (o, d, c = .55) => (o * d * c) / (d + c * Math.abs(o));
+  /* velocity (px/s) from the last 3 move samples */
+  const tracker = () => { let a = []; return { add(x) { a.push([x, performance.now()]); if (a.length > 3) a.shift(); }, v() { if (a.length < 2) return 0; const [x0, t0] = a[0], [x1, t1] = a[a.length - 1]; if (performance.now() - t1 > 80) return 0; /* finger paused before lifting */ return t1 > t0 ? (x1 - x0) / (t1 - t0) * 1000 : 0; }, reset() { a = []; } }; };
+  const vibrate = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+  const icon = (id, size = 18) => `<svg class="ico" style="width:${size}px;height:${size}px" aria-hidden="true"><use href="#${id}"/></svg>`;
+  const qm = id => `<svg class="qmark" viewBox="0 0 20 20" aria-hidden="true"><use href="#q-${id}"/></svg>`;
+  const DYES = ['#FBEBC4', '#DDEBD2', '#D3ECE7', '#F8DCC2', '#DCE4F3', '#EADCF0', '#E7EBC2', '#F3DCE0'];
+  const DYE_NAMES = ['butter', 'sage', 'sea glass', 'apricot', 'chambray', 'lavender', 'pear', 'blush'];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const chalkOl = () => `<svg class="ol" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="16"/></svg>`;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  let runId = 0, cRun = 0;   /* cRun: Clair sheet state token; stale timers stop when it moves */
+
+  /* spool buddy: Clair's face. spool(expr, size 30|44|96, play one-shot hop/shake only when newly entered) */
+  function spool(expr, size = 44, play = false) {
+    if (expr === 'happy') expr = 'stitched';
+    const W = '#FFFFFF', sm = size <= 44, o = sm ? 2.6 : 1.6, fw = sm ? 2.6 : 1.8, er = sm ? 3.2 : 2.3;
+    const eyes = (dx = 0, dy = 0) => `<g class="eyes"><circle cx="${23 + dx}" cy="${26 + dy}" r="${er}" fill="${W}"/><circle cx="${33 + dx}" cy="${26 + dy}" r="${er}" fill="${W}"/></g>`;
+    const P = d => `<path d="${d}" fill="none" stroke="${W}" stroke-width="${fw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const happy = P('M20.5 27 q2.5 -3.5 5 0 M30.5 27 q2.5 -3.5 5 0');
+    let face = '', extra = '', tail = 'M14 38 C8 40 5 43 0 45', cls = '';
+    if (expr === 'hello') { face = eyes() + P('M24 31 q4 3 8 0'); cls = play ? 'sp-hop' : ''; }
+    if (expr === 'working') { face = eyes(1.5, 1.5) + `<ellipse cx="29.5" cy="33" rx="1.8" ry="1.5" fill="${W}"/>`; cls = 'sp-bob'; }
+    if (expr === 'thinking') { face = eyes(1.5, -2) + P('M26 33 h5'); extra = `<g class="dots2"><circle cx="50" cy="8" r="1.8" fill="#2A2119"/><circle cx="55" cy="2" r="2.2" fill="#2A2119"/><circle cx="61" cy="-5" r="2.6" fill="#2A2119"/></g>`; cls = 'sp-think'; }
+    if (expr === 'waiting') { face = eyes() + P('M20.5 21 q2.5 -2 5 0 M30.5 21 q2.5 -2 5 0') + P('M25 31.5 q3 2 6 0'); extra = `<path d="M41 9 L55 -5 L57 -7 L55 -3 Z" fill="#C9CCD1" stroke="#2A2119" stroke-width="1.2" stroke-linejoin="round"/><path d="M54 -4 C60 -3 62 3 58 9" fill="none" stroke="#E3A72F" stroke-width="1.5" stroke-linecap="round"/>`; }
+    if (expr === 'stitched') { face = happy + P('M23.5 30.5 q4.5 4.5 9 0'); cls = play ? 'sp-hop' : ''; if (sm) extra = `<path d="M46 2l3 3 6-7" fill="none" stroke="#2A2119" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`; }
+    if (expr === 'proud') { face = happy + `<circle cx="18.5" cy="31" r="2.1" fill="#F8DCC2"/><circle cx="37.5" cy="31" r="2.1" fill="#F8DCC2"/><path d="M23 30 q5 6.5 10 0 z" fill="${W}"/>`; cls = play ? 'sp-hop' : ''; if (sm) extra = `<path d="M50 -1v10M45 4h10" stroke="#E3A72F" stroke-width="2.4" stroke-linecap="round"/>`; }
+    if (expr === 'oops') { face = eyes(0, 1) + P('M20.5 22.5 L25.5 20.5 M30.5 20.5 L35.5 22.5') + P('M23.5 33.5 q1.5 -1.6 3 0 t3 0 t3 0'); tail = 'M14 40 l-4 1.5 l2 3 l-4.5 1 l2 3 l-5 1'; cls = play ? 'sp-shake' : ''; }
+    if (expr === 'sleepy') { face = P('M20.5 26 q2.5 2 5 0 M30.5 26 q2.5 2 5 0') + P('M26 32.5 q2 1.2 4 0'); extra = `<path d="M47 1h5l-5 6h5M55 -7h4l-4 5h4" fill="none" stroke="#2A2119" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`; cls = 'sp-breathe'; }
+    const band = sm ? '' : `<path d="M14 18.5h28M14 38h28" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="1.4"/>`;
+    return `<svg class="sp ${cls}" width="${size}" height="${Math.round(size * 70 / 68)}" viewBox="-6 -10 68 70" aria-hidden="true"><g class="body"><path d="${tail}" fill="none" stroke="#2A2119" stroke-width="${o}" stroke-linecap="round" stroke-linejoin="round"/><rect x="10" y="6" width="36" height="8" rx="3" fill="#D9B98F" stroke="#2A2119" stroke-width="${o}"/><rect x="14" y="14" width="28" height="28" fill="#3557A6" stroke="#2A2119" stroke-width="${o}"/>${band}<rect x="10" y="42" width="36" height="8" rx="3" fill="#D9B98F" stroke="#2A2119" stroke-width="${o}"/>${face}</g>${extra}</svg>`;
+  }
+
+  /* ---------- device scaffold ---------- */
+  const device = $('#device'), notes = $('#notes'), stage = $('#stage'), subctl = $('#subctl');
+  function phone(withDock = true) {
+    device.innerHTML = `<div class="phone" id="phone" aria-label="Quilt phone prototype">
+      <div class="screen${withDock ? '' : ' full'}" id="screen"><div class="content" id="content"></div></div>
+      ${withDock ? '<div class="fscrim" id="fscrim"></div><section class="fold" id="fold" aria-label="Just used and all apps" inert></section><nav class="dock" id="dock" aria-label="Pinned apps and capture"></nav>' : ''}
+      <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button type="button" id="toastBtn" hidden></button></div>
+      <div class="scrim" id="scrim"></div>
+      <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Sheet" inert></div>
+    </div>`;
+    /* close only on a press that STARTS on the scrim; the scrim stays hit-testable through its exit, so the tap's own click can't land on the row below */
+    $('#scrim').addEventListener('pointerdown', e => { if (e.target === e.currentTarget) closeSheet(); });
+    const s = $('#sheet');
+    s.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
+    bindSheetDrag(s);
+    foldCtl = withDock ? bindFold($('#phone')) : null;
+    return $('#content');
+  }
+  const TABS = { budget: { n: 'Budget', i: 2, ic: 'i-wallet' }, groceries: { n: 'Groceries', i: 1, ic: 'i-cart' }, calendar: { n: 'Calendar', i: 4, ic: 'i-cal' }, todos: { n: 'To-dos', i: 0, ic: 'i-check' }, workout: { n: 'Workout', i: 3, ic: 'i-lift' }, subs: { n: 'Subscriptions', i: 5, ic: 'i-repeat' }, classes: { n: 'Classes', i: 6, ic: 'i-book' }, meals: { n: 'Meals', i: 7, ic: 'i-bowl' } };
+
+  /* ---------- "Just used" (app.md, Bar behaviour): inside an app, swipe up on the bar. The fold's top edge follows the finger 1:1;
+     detents: closed · Just used (260px above the bar) · Home's quilt (full height). Pins never move. Vertical only, starts on the bar
+     (not on the Clair cell: its hold owns slide-up-to-cancel), so it can't meet row swipes or pull-down search, which live in #screen. */
+  const RECENT = ['groceries', 'calendar', 'subs', 'workout', 'todos', 'classes', 'meals', 'budget'];   /* most recent first */
+  const BY_USE = ['budget', 'groceries', 'calendar', 'todos', 'workout', 'subs', 'classes', 'meals'];
+  const OPENS = { budget: () => pick('search'), groceries: () => pick('rows'), calendar: () => pick('stitched') };
+  let foldApp = null, foldCtl = null;   /* foldApp: the app the bar sits in (null on Home = no fold) */
+  const patchBtn = k => `<button type="button" class="fp" data-app="${k}" style="background:${DYES[TABS[k].i]}">${icon(TABS[k].ic)}<span>${TABS[k].n}</span></button>`;
+  function bindFold(ph) {
+    const fold = $('#fold', ph), fs = $('#fscrim', ph), dk = $('#dock', ph), DET1 = 260, tr = tracker();
+    let y = 0, det = 0, ys = 0, cy0 = 0, x0 = 0, st = 'idle', stop = null, fromFold = false, inTop = false;
+    const clamp = v => Math.min(1, Math.max(0, v));
+    const geo = () => { const H = ph.clientHeight, bt = H - dk.offsetTop; return { H, bt, full: H - bt, commit: Math.max(.45 * H, DET1 + 60) }; };
+    const set = v => { y = v; const g = geo(); fold.style.transform = `translateY(${g.H - g.bt - v}px)`; fs.style.opacity = clamp(v / DET1);
+      const fa = $('.fall', fold); if (fa) fa.style.opacity = clamp((v - DET1) / (g.commit - DET1)); };
+    const render = () => {
+      const recent = RECENT.filter(k => k !== foldApp).slice(0, 6);
+      fold.innerHTML = `<div class="grab" aria-hidden="true"></div>
+        <div class="sect" style="margin:0;align-items:center"><span>Just used</span><button type="button" class="lk" data-full>All apps ›</button></div>
+        <div class="fgrid">${recent.map(patchBtn).join('')}</div>
+        <div class="fall"><label class="find">${icon('i-search')}<span class="vh">Find an app</span><input type="search" id="fq" enterkeyhint="search" autocapitalize="none" autocomplete="off" placeholder="Find an app"></label>
+          <div class="sect"><span>All apps · ${BY_USE.length}</span><span>most used first</span></div>
+          <div class="fgrid fq">${BY_USE.map(patchBtn).join('')}</div><p class="small" id="fnone" style="margin:0" hidden></p></div>`;
+    };
+    const show = () => { if (fold.classList.contains('on')) return; render(); fold.scrollTop = 0; fold.classList.add('on'); fs.classList.add('on'); };
+    const hide = () => { if (det) return; fold.classList.remove('on', 'full'); fs.classList.remove('on'); fold.style.transform = fs.style.opacity = ''; y = 0; };
+    const go = (d, v0 = 0) => {
+      stop && stop(); stop = null; const prev = det; det = d; if (d) show();
+      const to = [0, DET1, geo().full][d], gb = $('.grabln', dk);
+      fold.classList.toggle('full', d === 2); fold.inert = !d; const fa = $('.fall', fold); if (fa) fa.inert = d !== 2;
+      gb && gb.setAttribute('aria-expanded', String(!!d));
+      if (!d && fold.contains(document.activeElement)) gb && gb.focus({ preventScroll: true });
+      if (!RM) { stop = spring(y, to, v0, .35, set, () => { stop = null; if (!det) hide(); }); return; }
+      /* RM: no tracking; the fold opens / closes with a 120ms fade, detent changes jump */
+      if (d) { set(to); if (!prev) [fold, fs].forEach(e => e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.fb, easing: EASE })); return; }
+      if (!fold.classList.contains('on')) return;
+      Promise.all([fold, fs].map(e => e.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.fb, easing: EASE, fill: 'forwards' }).finished))
+        .then(() => { [fold, fs].forEach(e => e.getAnimations().forEach(a => a.cancel())); hide(); }, () => {});
+    };
+    const begin = (cx, cy, target) => {
+      if (!foldApp && !det) return false;
+      if (target.closest('#clairBtn,input')) return false;
+      fromFold = fold.contains(target); if (fromFold && !det) return false;
+      inTop = fromFold && (cy - fold.getBoundingClientRect().top < 48);
+      stop && stop(); stop = null;   /* grab mid-spring from the live value */
+      ys = y; cy0 = cy; x0 = cx; st = 'pending'; tr.reset(); tr.add(cy); return true;
+    };
+    const move = (cx, cy) => {
+      if (st === 'idle') return false;
+      const dy = cy0 - cy, dx = cx - x0;   /* dy > 0 = finger moved up */
+      if (st === 'pending') {
+        if (Math.abs(dy) < 8 && Math.abs(dx) < 8) return false;
+        if (Math.abs(dx) > Math.abs(dy) || (!det && dy < 0)) { st = 'idle'; return false; }   /* the bar never swipes sideways */
+        if (fromFold && det === 2 && !(inTop || (dy < 0 && fold.scrollTop <= 0))) { st = 'idle'; return false; }
+        st = 'drag'; show();
+      }
+      tr.add(cy); const full = geo().full, v = ys + dy;
+      y = v > full ? full + rubberband(v - full, full) : Math.max(0, v);
+      if (!RM) set(y);
+      return true;
+    };
+    const end = cancel => {
+      if (st !== 'drag') { st = 'idle'; return; } st = 'idle';
+      const v = cancel ? 0 : -tr.v(), p = y + project(v), g = geo();
+      go(cancel ? det : p >= g.commit ? 2 : p >= DET1 / 2 ? 1 : 0, v);
+      swallowClick();
+    };
+    [dk, fold].forEach(el => {
+      el.addEventListener('touchstart', e => { if (e.touches.length === 1) begin(e.touches[0].clientX, e.touches[0].clientY, e.target); else st = 'idle'; }, { passive: true });
+      el.addEventListener('touchmove', e => { if (move(e.touches[0].clientX, e.touches[0].clientY) && e.cancelable) e.preventDefault(); }, { passive: false });
+      el.addEventListener('touchend', () => end(false));
+      el.addEventListener('touchcancel', () => end(true));
+      el.addEventListener('pointerdown', e => {
+        if (e.pointerType !== 'mouse' || e.button || !begin(e.clientX, e.clientY, e.target)) return;
+        const mv = ev => { if (move(ev.clientX, ev.clientY)) ev.preventDefault(); };
+        const up = ev => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); end(ev.type === 'pointercancel'); };
+        addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+      });
+    });
+    fs.addEventListener('pointerdown', e => { if (e.target === fs) go(0); });
+    fold.addEventListener('click', e => {
+      if (e.target.closest('[data-full]')) { go(2); return; }
+      const p = e.target.closest('[data-app]'); if (!p) return; const k = p.dataset.app;
+      go(0); if (k !== foldApp) OPENS[k] ? OPENS[k]() : toast(`Opens ${TABS[k].n}.`);
+    });
+    fold.addEventListener('input', e => {
+      if (e.target.id !== 'fq') return; const q = e.target.value.trim().toLowerCase();
+      $$('.fq .fp', fold).forEach(b => { b.hidden = !!q && !TABS[b.dataset.app].n.toLowerCase().includes(q); });
+      const n = $$('.fq .fp:not([hidden])', fold).length, none = $('#fnone', fold); none.hidden = !!n; none.textContent = n ? '' : `No app called “${e.target.value}”.`;
+    });
+    return { go, det: () => det };
+  }
+  /* the bar hides while the keyboard is up: touch + a text field focused (app.md "Bar behaviour") */
+  const typing = el => coarse.matches && !!el && !!el.matches && el.matches('textarea,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]):not([type=submit])');
+  const kbSync = () => { const p = $('#phone'); p && p.classList.toggle('kb', typing(document.activeElement)); };
+  document.addEventListener('focusin', kbSync); document.addEventListener('focusout', () => setTimeout(kbSync, 0));
+
+  function dock(active) {
+    const d = $('#dock'); if (!d) return;
+    const PINS = ['budget', 'groceries', 'calendar', 'todos'];
+    foldApp = active || null;
+    if (active) { const i = RECENT.indexOf(active); if (i >= 0) RECENT.splice(i, 1); RECENT.unshift(active); }
+    d.setAttribute('aria-label', 'Pinned apps and Clair');
+    d.innerHTML = PINS.map(k => `<button type="button" class="pb${k === active ? ' on' : ''}" data-pin="${k}" aria-label="${TABS[k].n}" ${k === active ? 'aria-current="page"' : ''} style="background:${DYES[TABS[k].i]}">${icon(TABS[k].ic)}<span>${TABS[k].n}</span></button>`).join('')
+      + `<button type="button" class="pb clairb" id="clairBtn" aria-label="Clair: type, talk or add a photo. Hold to talk">${icon('i-spool', 20)}<span>Clair</span></button>`
+      + (active ? `<button type="button" class="grabln" aria-label="Just used apps" aria-controls="fold" aria-expanded="false"></button>` : '');
+    const gl = $('.grabln', d);
+    if (gl) gl.addEventListener('click', e => { if (!foldCtl) return; const open = !foldCtl.det(); foldCtl.go(open ? 1 : 0); if (open && e.detail === 0) { const f = $('#fold .fp'); f && f.focus({ preventScroll: true }); } });
+    /* tap = Clair sheet; hold 450ms = talk while held; release sends; slide up 60px+ cancels */
+    const cb = $('#clairBtn'); let t = null, held = false, cancel = false, y0 = 0;
+    const clear = () => { clearTimeout(t); cb.classList.remove('holding'); };
+    cb.addEventListener('pointerdown', e => {
+      if (e.button) return; held = false; cancel = false; y0 = e.clientY; cb.setPointerCapture(e.pointerId); cb.classList.add('holding');
+      t = setTimeout(() => { held = true; cb.classList.remove('holding'); vibrate(10); clairTalk(true); }, 450);
+    });
+    cb.addEventListener('pointermove', e => {
+      if (!held) return; const c = e.clientY - y0 <= -60; if (c === cancel) return; cancel = c;
+      const h = $('#chint'); if (h) h.textContent = c ? 'Release to cancel' : HINT; $('#sheet').classList.toggle('cancelling', c);
+    });
+    cb.addEventListener('pointerup', () => { clear(); if (!held) return; $('#sheet').classList.remove('cancelling'); cancel ? closeSheet() : talkSend(); });
+    cb.addEventListener('pointercancel', () => { clear(); if (held) { $('#sheet').classList.remove('cancelling'); closeSheet(); } held = false; });
+    cb.addEventListener('contextmenu', e => e.preventDefault());
+    cb.addEventListener('mousedown', e => e.preventDefault());
+    cb.addEventListener('click', () => { if (held) { held = false; return; } const sh = $('#sheet'); sh.classList.contains('on') && sh.classList.contains('clairs') ? closeSheet() : clairStart(); });
+  }
+  let toastTimer;
+  function toast(text, btn, fn) {
+    const t = $('#toast'); if (!t) return;
+    $('#toastText').textContent = text; const b = $('#toastBtn');
+    b.hidden = !btn; b.textContent = btn || ''; b.onclick = () => { t.classList.remove('on'); fn && fn(); };
+    t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 5000);
+  }
+  let sheetReturn = null;
+  const coarse = matchMedia('(pointer:coarse)');
+  function focusSheet(s) {
+    const h = s.querySelector('.h2');
+    if (coarse.matches && h) { h.tabIndex = -1; h.focus({ preventScroll: true }); return; }
+    const f = s.querySelector('.sc input,.sc button,.sc select,.sc textarea'); f && f.focus({ preventScroll: true });
+  }
+  function openSheet(html, label, kind) {
+    if (foldCtl && foldCtl.det()) foldCtl.go(0);
+    const s = $('#sheet');
+    /* kind changed while closed: settle on that kind's closed pose first, so the Clair sheet rises from its own cell (N1), not from 105% */
+    if (!s.classList.contains('on') && s.classList.contains('clairs') !== (kind === 'clairs')) { s.style.transition = 'none'; s.classList.toggle('clairs'); s.offsetHeight; }
+    s.classList.toggle('clairs', kind === 'clairs'); s.innerHTML = `<div class="grab" aria-hidden="true"></div><div class="sc">${html}</div>`; s.setAttribute('aria-label', label || 'Sheet');
+    s.style.transform = s.style.transition = s.style.opacity = ''; s.scrollTop = 0; s.inert = false;
+    sheetReturn = document.activeElement; $('#scrim').style.opacity = ''; $('#scrim').classList.add('on'); s.classList.add('on');
+    focusSheet(s);
+    return s;
+  }
+  /* chained sheet: swap content in place (fade old, FLIP height, fade new) instead of close + reopen */
+  async function swapSheet(html, label) {
+    const s = $('#sheet'); if (!s || !s.classList.contains('on')) return openSheet(html, label);
+    const sc = $('.sc', s), h0 = s.offsetHeight;
+    if (!RM) await sc.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.fb, easing: EASE, fill: 'forwards' }).finished;
+    sc.innerHTML = html; s.setAttribute('aria-label', label || 'Sheet'); s.scrollTop = 0;
+    sc.getAnimations().forEach(a => a.cancel());
+    const h1 = s.offsetHeight;
+    if (!RM) {
+      if (Math.abs(h1 - h0) > 1) s.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: T.state, easing: EASE });
+      sc.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.fb, delay: Math.abs(h1 - h0) > 1 ? T.state - T.fb : 0, easing: EASE, fill: 'backwards' });
+    }
+    focusSheet(s);
+    return s;
+  }
+  function closeSheet() {
+    const s = $('#sheet'); if (!s || !s.classList.contains('on')) return;
+    s.classList.remove('on'); s.inert = true; $('#scrim').classList.remove('on'); cRun++;
+    sheetReturn && sheetReturn.isConnected && sheetReturn.focus && sheetReturn.focus({ preventScroll: true });
+  }
+  /* drag-to-dismiss: from the grab bar / top 48px, or from the body when it is scrolled to the top and moving down.
+     Touch uses touch events (so the move can be claimed before the sheet scrolls); mouse uses pointer events. */
+  function bindSheetDrag(s) {
+    let y0 = 0, x0 = 0, y = 0, state = 'idle', inTop = false, h = 0, stop = null; const tr = tracker();
+    const scrim = () => $('#scrim');
+    const set = v => { y = v; s.style.transform = `translateY(${v}px)`; scrim().style.opacity = String(Math.max(0, Math.min(1, 1 - v / h))); };
+    const begin = (cx, cy, target) => {
+      if (!s.classList.contains('on')) return false;
+      if (target.closest('input,textarea,select')) { state = 'idle'; return false; }
+      stop && stop(); stop = null;
+      const r = s.getBoundingClientRect(); h = r.height;
+      const live = new DOMMatrix(getComputedStyle(s).transform).m42;
+      inTop = !!target.closest('.grab') || cy - r.top < 48;
+      x0 = cx; y0 = cy - (live || 0); state = live ? 'drag' : 'pending'; tr.reset(); tr.add(cy);
+      if (live) { s.style.transition = 'none'; scrim().style.transition = 'none'; }
+      return true;
+    };
+    const move = (cx, cy) => {
+      if (state === 'idle') return false;
+      const dy = cy - y0, dx = cx - x0;
+      if (state === 'pending') {
+        if (Math.abs(dy) < 6 && Math.abs(dx) < 6) return false;
+        if (Math.abs(dx) > Math.abs(dy) || !(inTop || (dy > 0 && s.scrollTop <= 0))) { state = 'idle'; return false; }
+        state = 'drag'; s.style.transition = 'none'; scrim().style.transition = 'none';
+      }
+      tr.add(cy); set(dy >= 0 ? dy : -rubberband(-dy, h));
+      return true;
+    };
+    const end = cancel => {
+      if (state !== 'drag') { state = 'idle'; return; }
+      state = 'idle'; const v = cancel ? 0 : tr.v();
+      const close = !cancel && y + project(v) > .35 * h;
+      const done = () => { stop = null; s.style.transition = 'none'; scrim().style.transition = 'none'; s.style.transform = ''; scrim().style.opacity = '';
+        if (close) closeSheet(); s.offsetHeight; s.style.transition = ''; scrim().style.transition = ''; };
+      if (close && RM) { done(); return; }
+      stop = spring(y, close ? h : 0, v, .35, set, done);
+      swallowClick();
+    };
+    s.addEventListener('touchstart', e => { if (e.touches.length === 1) begin(e.touches[0].clientX, e.touches[0].clientY, e.target); }, { passive: true });
+    s.addEventListener('touchmove', e => { if (move(e.touches[0].clientX, e.touches[0].clientY) && e.cancelable) e.preventDefault(); }, { passive: false });
+    s.addEventListener('touchend', () => end(false));
+    s.addEventListener('touchcancel', () => end(true));
+    s.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'mouse' || e.button || !begin(e.clientX, e.clientY, e.target)) return;
+      const mv = ev => { if (move(ev.clientX, ev.clientY)) ev.preventDefault(); };
+      const up = ev => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); end(ev.type === 'pointercancel'); };
+      addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+    });
+  }
+  /* after a drag, eat the click the release would otherwise send to whatever is under the finger */
+  function swallowClick() {
+    const f = e => { e.stopPropagation(); e.preventDefault(); };
+    document.addEventListener('click', f, true); setTimeout(() => document.removeEventListener('click', f, true), 0);
+  }
+  document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (foldCtl && foldCtl.det()) foldCtl.go(0); else closeSheet(); });
+  /* signature thread pull (section A): draw with the thread curve, land at 70% of the draw, fade 400ms after the last landing */
+  async function threadPull(pairs, land, alive) {
+    const ph = $('#phone'), pr = ph.getBoundingClientRect(), ox = pr.left + ph.clientLeft, oy = pr.top + ph.clientTop;
+    const pt = (el, top) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2 - ox, y: (top ? r.top : r.top + r.height / 2) - oy }; };
+    const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'threads'); svg.setAttribute('aria-hidden', 'true'); ph.appendChild(svg);
+    const lands = pairs.map(({ from, to, top }, i) => {
+      const a = pt(from), b = pt(to, top), dy = Math.max(40, (b.y - a.y) * .55);
+      const path = document.createElementNS(NS, 'path'); path.setAttribute('d', `M${a.x},${a.y} C${a.x},${a.y + dy} ${b.x},${b.y - dy} ${b.x},${b.y}`); svg.appendChild(path);
+      const L = path.getTotalLength(); path.style.strokeDasharray = L; path.style.strokeDashoffset = L;
+      path.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: T.focal, delay: i * 120, easing: EASE_THREAD, fill: 'forwards' });
+      return sleep(i * 120 + T.focal * .7).then(() => { if (alive()) land(to, i); });
+    });
+    await Promise.all(lands); await sleep(400);
+    if (alive()) await svg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.layoutOut, easing: EASE, fill: 'forwards' }).finished;
+    svg.remove(); return alive();
+  }
+  function setNotes(html, now) { notes.innerHTML = html; markBeat(now); }
+  function markBeat(i) { $$('.beats li', notes).forEach((li, k) => li.classList.toggle('now', k === i)); }
+  function setSub(html) { subctl.innerHTML = html; subctl.hidden = !html; }
+
+  /* =========================================================
+     1. BUILD AN APP
+     ========================================================= */
+  const SUBS = [
+    { n: 'Spotify', when: 'renews Sun 22 Nov', day: 22, p: 11.99 },
+    { n: 'Hulu', when: 'not opened in 45 days', day: 28, p: 9.99 },
+    { n: 'Adobe CC, student', when: 'renews Thu 3 Dec', day: 3, p: 13.49 },
+    { n: 'iCloud 50 GB', when: 'renews Wed 9 Dec', day: 9, p: 2.99 }
+  ];
+  const PIECE = {
+    metric: { k: 'metric', mark: 'metric', name: 'Monthly total' },
+    progress: { k: 'progress', mark: 'progress', name: 'Under your $40 cap' },
+    list: { k: 'list', mark: 'list', name: 'Renewals', view: 'list' },
+    cal: { k: 'cal', mark: 'cal', name: 'Renewal dates' },
+    form: { k: 'form', mark: 'form', name: 'Add a subscription' },
+    chart: { k: 'chart', mark: 'chart', name: 'Cost by month' },
+    text: { k: 'text', mark: 'text', name: 'Notes' },
+    collection: { k: 'collection', mark: 'collection', name: 'Categories' },
+    page: { k: 'page', mark: 'page', name: 'Sub-page' }
+  };
+  const LAYOUTS = [
+    { name: 'List first', pieces: ['list', 'metric', 'cal', 'form'] },
+    { name: 'Calendar first', pieces: ['cal', 'list', 'metric', 'form'] },
+    { name: 'Summary first', pieces: ['metric', 'progress', 'list', 'form'] }
+  ];
+  const B = { say: 'Track my subscriptions and warn me before they renew', lift: null, step: 0, layout: 0, pieces: [], name: 'Subscriptions', dye: 5, ic: 'i-repeat', conn: { cal: true, budget: true, nudge: false }, keep: false, answer: null, uid: 0 };
+  const newPiece = k => ({ ...PIECE[k], id: 'p' + (++B.uid) });
+  const total = SUBS.reduce((a, s) => a + s.p, 0).toFixed(2);
+
+  function pieceBody(p) {
+    const exRow = s => `<div class="rowi"><span class="t"><span>${s.n}</span><span>${s.when}</span></span><span class="ex">example</span><span class="mono">$${s.p.toFixed(2)}</span></div>`;
+    if (p.k === 'metric') return `<div style="display:flex;align-items:baseline;gap:8px"><span class="big">$${total}</span><span class="small">a month · 4 subscriptions</span></div>`;
+    if (p.k === 'progress') return `<div class="bar"><u style="width:96%"></u></div><div class="small">$${total} of $40 · 96%</div>`;
+    if (p.k === 'cal' || (p.k === 'list' && p.view === 'calendar')) {
+      const days = [['F', 20], ['S', 21], ['S', 22], ['M', 23], ['T', 24], ['W', 25], ['T', 26]];
+      return `<div class="week">${days.map(([d, n]) => `<span class="${n === 22 ? 'r' : ''}">${d}<b class="mono">${n}</b></span>`).join('')}</div><div class="small">Sun 22: Spotify renews · $11.99 <span class="ex">example</span></div>`;
+    }
+    if (p.k === 'list' && p.view === 'table') return `<table class="tbl"><thead><tr><th scope="col">Name</th><th scope="col">Renews</th><th scope="col">Cost</th></tr></thead><tbody>${SUBS.map(s => `<tr><td>${s.n} <span class="ex">example</span></td><td class="small">${s.when.replace('renews ', '')}</td><td>$${s.p.toFixed(2)}</td></tr>`).join('')}</tbody></table>`;
+    if (p.k === 'list') return `<div class="rows" style="margin:0 -12px">${SUBS.map(exRow).join('')}</div>`;
+    if (p.k === 'form') return `<div style="display:flex;gap:8px"><span class="st basted" style="flex:1;min-height:48px;background-color:transparent;display:flex;align-items:center;padding:0 12px;font-size:13px;color:var(--w-ink2)">Name, price, renews on</span><span class="b" style="min-width:64px;padding:0 16px">Add</span></div>`;
+    if (p.k === 'chart') return `<div style="display:flex;align-items:flex-end;gap:8px;height:70px">${[30, 34, 38, 38].map((v, i) => `<span style="flex:1;height:${v * 1.6}px;border-radius:8px 8px 4px 4px;background:${i === 3 ? '#3557A6' : '#B9C7E6'}"></span>`).join('')}</div><div class="small">Aug–Nov <span class="ex">example</span></div>`;
+    if (p.k === 'text') return `<div class="small">Cancel anything I haven't opened in a month. <span class="ex">example</span></div>`;
+    if (p.k === 'collection') return `<div class="chips" style="margin:0;padding:0">${['music', 'video', 'school', 'storage'].map(c => `<span class="chip" style="min-height:32px">${c}</span>`).join('')}</div>`;
+    return `<div class="small">A sub-page for anything that doesn't fit.</div>`;
+  }
+  const pieceCard = p => `<section class="st card" aria-label="${p.name}"><div class="sect" style="margin:0"><span>${p.name}</span></div>${pieceBody(p)}</section>`;
+
+  const BUILD_STEPS = ['Describe', 'Build', 'Preview', 'Arrange', 'Add', 'Landed'];
+  const BUILD_NOTES = () => `
+    <h2>Build an app</h2>
+    <p>Five screens, then you land in the new app. Use the buttons inside the phone, or jump with the step chips above.</p>
+    <ol class="beats">
+      <li><span class="n">1</span><span><b>Describe:</b> the sentence comes first, with suggestion chips; ready-made patterns below skip straight to the preview. <span class="dec">Q40</span></span></li>
+      <li><span class="n">2</span><span><b>Build:</b> chalk outlines become basted pieces; the spool works, thinks, and asks one quick-choice question because "warn me" is ambiguous. <span class="dec">Q28</span></span></li>
+      <li><span class="n">3</span><span><b>Preview:</b> the whole app with labelled example rows. Swipe or tap the arrows to compare List first, Calendar first and Summary first. <span class="dec">Q25 · Q26 · Q32</span></span></li>
+      <li><span class="n">4</span><span><b>Arrange:</b> drag the grip (or use arrow keys on it), rip a piece out, add one of the 9 blocks, flip list / table / calendar, or tell Clair. <span class="dec">Q33</span></span></li>
+      <li><span class="n">5</span><span><b>Add:</b> name, dye and icon are pre-filled on top; Clair's connections are pre-ticked and say what flows; example rows clear unless kept. <span class="dec">Q27 · Q42</span></span></li>
+      <li><span class="n">6</span><span><b>Landed:</b> the new app, empty and ready; the spool says hello and offers type, talk, a photo or import from Budget. <span class="dec">Q41</span></span></li>
+    </ol>`;
+  function buildSub() {
+    setSub(`<span class="lbl">step</span>${BUILD_STEPS.map((s, i) => `<button type="button" data-step="${i}" aria-pressed="${i === B.step}">${i + 1} ${s}</button>`).join('')}`);
+    $$('[data-step]', subctl).forEach(b => b.addEventListener('click', () => { if (+b.dataset.step >= 3 && !B.pieces.length) B.pieces = LAYOUTS[B.layout].pieces.map(newPiece); goStep(+b.dataset.step); }));
+  }
+  function goStep(i) { B.step = i; runId++; buildSub(); markBeat(i); [b1, b2, b3, b4, b5, b6][i](); }
+
+  function b1() {
+    const c = phone(false);
+    c.innerHTML = `
+      <div class="top"><button type="button" class="back" aria-label="Back to all apps">${icon('i-back', 22)}</button><span class="small">new app</span><span style="width:44px"></span></div>
+      <div style="display:flex;gap:12px;align-items:center">${spool('hello', 44, true)}<h2 class="h1 s24">What do you want to keep track of?</h2></div>
+      <label class="field"><span>Say it the way you'd tell a friend</span><textarea id="say" rows="3" enterkeyhint="done">Track my subscriptions and warn me before they renew</textarea></label>
+      <div class="chips">${['log my lifts and PRs', 'plan meals from my pantry', 'track internship applications'].map(s => `<button type="button" class="chip" data-say="${s}">${s}</button>`).join('')}</div>
+      <button type="button" class="b wide" id="buildIt">Build it</button>
+      <div class="sect"><span>Or start from a pattern</span><span>skips to preview</span></div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+        ${[['Subscriptions', 5, 'i-repeat', '4 blocks'], ['Lift log', 3, 'i-lift', '5 blocks'], ['Meal plan', 1, 'i-cart', '4 blocks'], ['Job hunt', 4, 'i-book', '4 blocks']].map(([n, d, ic, b]) => `<button type="button" class="pat" data-pat="${n}" style="min-height:84px;border:0;border-radius:16px;background:${DYES[d]};display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;padding:12px;text-align:left">${icon(ic)}<span style="display:flex;flex-direction:column"><b style="font-size:16px">${n}</b><span class="small">${b}</span></span></button>`).join('')}
+      </div>`;
+    $$('[data-say]', c).forEach(b => b.addEventListener('click', () => { $('#say').value = b.dataset.say; }));
+    /* N6: remember where the sentence sits so b2 can lift it into the chalk card */
+    $('#buildIt').addEventListener('click', () => { const ta = $('#say'), r = ta.getBoundingClientRect(), cs = getComputedStyle(ta);
+      B.say = ta.value.trim() || B.say; B.lift = { x: r.left + ta.clientLeft + parseFloat(cs.paddingLeft), y: r.top + ta.clientTop + parseFloat(cs.paddingTop) - ta.scrollTop }; goStep(1); });
+    $$('[data-pat]', c).forEach(b => b.addEventListener('click', () => { B.layout = 0; B.pieces = LAYOUTS[0].pieces.map(newPiece); goStep(2); }));
+  }
+
+  async function b2() {
+    const c = phone(false), id = runId;
+    const order = ['metric', 'list', 'cal', 'form'];
+    c.innerHTML = `
+      <div class="top"><button type="button" class="back" aria-label="Back to describe">${icon('i-back', 22)}</button><span class="small">new app</span><span style="width:44px"></span></div>
+      <div class="chalk">${chalkOl()}<p class="say">${esc(/[.!?]$/.test(B.say) ? B.say : B.say + '.')}</p></div>
+      <div class="clair" role="status" aria-live="polite"><span id="face">${spool('working', 30, true)}</span><span id="cst">Reading what you asked…</span></div>
+      <div id="q"></div>
+      <div id="pcs" style="display:grid;gap:10px">${order.map(k => `<div class="piece" id="b-${k}" style="opacity:0;border-radius:16px">${chalkOl()}<span class="kind">${qm(PIECE[k].mark)}${PIECE[k].k === 'cal' ? 'calendar' : PIECE[k].k} · ${PIECE[k].name}</span><div class="pb" style="opacity:0">${pieceBody({ ...PIECE[k] })}</div></div>`).join('')}</div>`;
+    let lastFace = 'working';
+    const face = e => { const f = $('#face'); if (f && e !== lastFace) { f.innerHTML = spool(e, 30, true); lastFace = e; } };
+    const cst = t => { const s = $('#cst'); if (s) s.textContent = t; };
+    $('.back', c).addEventListener('click', () => goStep(0));
+    if (B.lift) { liftBrief(c, B.lift); B.lift = null; }   /* runs inside the 800ms read beat below */
+    await sleep(800); if (id !== runId) return;
+    cst('Cutting 4 pieces…');
+    for (let i = 0; i < order.length; i++) {
+      const el = $('#b-' + order[i]); if (!el) return;
+      el.style.opacity = 1;
+      if (!RM) await el.querySelector('.ol').animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: T.layout, easing: EASE }).finished;
+      if (id !== runId) return;
+      if (i === 1 && !B.answer) {
+        face('waiting'); cst('One question before I go on');
+        $('#q').innerHTML = `<div class="chalk">${chalkOl()}<p class="say">How early should I warn you before a renewal?</p><div style="display:flex;gap:8px;flex-wrap:wrap">${['3 days before', '1 week before'].map(a => `<button type="button" class="chip" data-ans="${a}">${a}</button>`).join('')}</div></div>`;
+        await new Promise(res => $$('[data-ans]').forEach(b => b.addEventListener('click', () => { B.answer = b.dataset.ans; res(); })));
+        if (id !== runId) return;
+        $('#q').innerHTML = `<p class="say">Warning you ${B.answer.replace(' before', '')} before each renewal.</p>`;
+        face('working'); cst('Cutting 4 pieces…');
+      }
+      await sleep(RM ? 0 : 240); if (id !== runId) return;
+      el.classList.add('st', 'basted'); el.querySelector('.ol').style.display = 'none'; el.style.background = '';
+      const pb = el.querySelector('.pb'); pb.style.opacity = 1;
+      if (!RM) pb.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE });
+      cst(`Checked piece ${i + 1} of 4`);
+      await sleep(RM ? 0 : 380); if (id !== runId) return;
+    }
+    face('waiting'); cst('Basted. I made 3 layouts for you to compare.');
+    const go = document.createElement('button'); go.className = 'b wide'; go.textContent = 'See the layouts'; c.appendChild(go);
+    go.addEventListener('click', () => { B.pieces = LAYOUTS[B.layout].pieces.map(newPiece); goStep(2); });
+    go.focus();
+  }
+
+  /* N6 brief lifts into chalk: the sentence moves from the textarea into the chalk card (translate only, 350), then the outline draws. RM: crossfade 120 */
+  function liftBrief(c, from) {
+    const say = $('.chalk .say', c), ol = $('.chalk .ol', c), rest = $('.clair', c), to = say.getBoundingClientRect();
+    if (RM) { [say, rest].forEach(e => e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.fb, easing: EASE })); return; }
+    ol.style.clipPath = 'inset(0 100% 0 0)'; rest.style.opacity = 0;
+    say.animate([{ transform: `translate(${from.x - to.left}px,${from.y - to.top}px)` }, { transform: 'none' }], { duration: T.layout, easing: EASE }).finished.then(() => {
+      rest.style.opacity = ''; rest.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE });
+      ol.style.clipPath = ''; ol.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: T.layout, easing: EASE });
+    }, () => {});
+  }
+
+  function b3() {
+    const c = phone(false);
+    const L = LAYOUTS[B.layout];
+    if (!B.pieces.length) B.pieces = L.pieces.map(newPiece);
+    c.innerHTML = `
+      <div class="top"><button type="button" class="back" aria-label="Back to build">${icon('i-back', 22)}</button><b>Preview</b><span style="width:44px"></span></div>
+      <div class="pager st" role="group" aria-label="Layouts" style="justify-content:space-between;padding:4px;border-radius:16px"><button type="button" class="ib" id="prevL" aria-label="Previous layout">${icon('i-back')}</button><span id="pgl" style="display:flex;flex-direction:column;align-items:center;gap:4px"></span><button type="button" class="ib" id="nextL" aria-label="Next layout">${icon('i-arrow')}</button></div>
+      <div id="pv" style="display:grid;gap:12px;touch-action:pan-y"></div>
+      <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:8px;position:sticky;bottom:0;padding:12px 0 4px;background:var(--muslin)"><button type="button" class="b ghost" id="arr">${icon('i-layout')}Arrange</button><button type="button" class="b" id="use">Use this layout</button></div>`;
+    const pv = $('#pv');
+    /* re-render only the label + #pv; the new layout enters from the side the swipe came from */
+    const renderPv = from => {
+      const L = LAYOUTS[B.layout];
+      $('#pgl').innerHTML = `<b style="font-size:16px">${L.name}</b><span class="dots" aria-hidden="true">${LAYOUTS.map((_, i) => `<i class="${i === B.layout ? 'on' : ''}"></i>`).join('')}</span><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">${B.layout + 1} of 3</span>`;
+      pv.innerHTML = `<div style="display:flex;align-items:center;gap:12px"><span class="patchi" style="background:${DYES[B.dye]}">${icon(B.ic)}</span><h2 class="h1 s24">${esc(B.name)}</h2></div>
+        <p class="small" style="margin:0">Example rows · cleared when you add it, unless you keep them</p>
+        ${B.pieces.map(pieceCard).join('')}`;
+      pv.style.transform = pv.style.opacity = '';
+      if (!RM) pv.animate([{ opacity: 0, transform: `translateX(${from * 24}px)` }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE });
+    };
+    const swap = d => { B.layout = (B.layout + d + 3) % 3; B.pieces = LAYOUTS[B.layout].pieces.map(newPiece); renderPv(d); };
+    $('#prevL').addEventListener('click', () => swap(-1)); $('#nextL').addEventListener('click', () => swap(1));
+    $('.back', c).addEventListener('click', () => goStep(1));
+    $('#arr').addEventListener('click', () => goStep(3)); $('#use').addEventListener('click', () => goStep(4));
+    /* pager: track 1:1, release on the pager rule (|dx + projected| > 30% of width) */
+    let x0 = 0, y0 = 0, dx = 0, st = 'idle', w = 1, stop = null; const tr = tracker();
+    const set = x => { dx = x; pv.style.transform = `translateX(${x}px)`; pv.style.opacity = String(1 - Math.min(1, Math.abs(x) / w) * .4); };
+    pv.addEventListener('pointerdown', e => {
+      if (e.button) return; stop && stop(); stop = null; pv.getAnimations().forEach(a => a.cancel());
+      w = pv.offsetWidth; const live = new DOMMatrix(getComputedStyle(pv).transform).m41 || 0;
+      x0 = e.clientX - live; y0 = e.clientY; st = live ? 'drag' : 'pending'; tr.reset(); tr.add(e.clientX);
+      pv.setPointerCapture(e.pointerId);
+    });
+    pv.addEventListener('pointermove', e => {
+      if (st === 'idle') return; const mx = e.clientX - x0, my = e.clientY - y0;
+      if (st === 'pending') { if (Math.abs(mx) < 10 && Math.abs(my) < 10) return; if (Math.abs(my) > Math.abs(mx)) { st = 'idle'; return; } st = 'drag'; }
+      tr.add(e.clientX); set(mx);
+    });
+    const release = cancel => {
+      if (st !== 'drag') { st = 'idle'; return; } st = 'idle';
+      const v = cancel ? 0 : tr.v();
+      if (!cancel && Math.abs(dx + project(v)) > .3 * w) { swap(dx + project(v) < 0 ? 1 : -1); return; }
+      stop = spring(dx, 0, v, .3, set, () => { stop = null; pv.style.transform = pv.style.opacity = ''; });
+    };
+    pv.addEventListener('pointerup', () => release(false));
+    pv.addEventListener('pointercancel', () => release(true));
+    renderPv(1);
+  }
+
+  function b4() {
+    const c = phone(false);
+    c.innerHTML = `
+      <div class="top"><button type="button" class="back" aria-label="Back to preview">${icon('i-back', 22)}</button><b>Arrange</b><button type="button" class="lk" id="done" aria-label="Done arranging" style="padding:0 8px">Done</button></div>
+      <p class="small" style="margin:0">Drag the grip to reorder. The rows are examples.</p>
+      <div class="arr" id="arrList" style="display:grid;gap:10px"></div>
+      <button type="button" class="b ghost wide" id="addB">${icon('i-plus')}Add a block</button>
+      <form id="tell" class="chalk" style="flex-direction:row;align-items:center;gap:8px;padding:6px 6px 6px 12px">${chalkOl()}<label style="flex:1;display:flex"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Tell Clair a change</span><input id="tellIn" enterkeyhint="send" placeholder="Tell Clair: put the total on top" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:16px;color:var(--w-ink);min-height:44px;outline:none"></label><button class="b" aria-label="Send to Clair" style="width:48px;padding:0">${icon('i-send')}</button></form>`;
+    renderArr();
+    $('.back', c).addEventListener('click', () => goStep(2)); $('#done').addEventListener('click', () => goStep(4));
+    $('#addB').addEventListener('click', () => {
+      const s = openSheet(`<b class="h2">Add a block</b><p class="small" style="margin:0">Clair fills in the fields from your app.</p><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">${['page', 'text', 'metric', 'progress', 'collection', 'list', 'cal', 'form', 'chart'].map(k => `<button type="button" class="chip" data-add="${k}" style="flex-direction:column;min-height:76px;justify-content:center">${qm(k === 'cal' ? 'cal' : k)}<span>${k === 'cal' ? 'calendar' : k === 'list' ? 'list view' : k}</span></button>`).join('')}</div>`, 'Add a block');
+      $$('[data-add]', s).forEach(b => b.addEventListener('click', () => {
+        const k = b.dataset.add; const p = newPiece(k === 'list' || k === 'cal' || k === 'metric' || k === 'progress' || k === 'form' ? k : k);
+        B.pieces.push(p); closeSheet(); renderArr(p.id); toast(`Added ${p.name}.`, 'Undo', () => { B.pieces = B.pieces.filter(x => x.id !== p.id); renderArr(); });
+      }));
+    });
+    $('#tell').addEventListener('submit', async e => {
+      e.preventDefault(); const v = $('#tellIn').value.trim(); if (!v) return;
+      $('#tellIn').value = ''; toast('Clair is on it…');
+      await sleep(700);
+      const before = B.pieces.slice(); const m = B.pieces.find(p => p.k === 'metric');
+      if (m) { B.pieces = [m, ...B.pieces.filter(p => p !== m)]; renderArr(m.id); toast('Moved Monthly total to the top.', 'Undo', () => { B.pieces = before; renderArr(); }); }
+      else toast('I couldn’t find a total to move. Add a metric block first.');
+    });
+  }
+  let arrStops = [];
+  function renderArr(flashId, settle) {
+    const L = $('#arrList'); if (!L) return;
+    arrStops.forEach(f => f()); arrStops = [];
+    const first = new Map($$('.piece', L).map(el => [el.dataset.id, el.getBoundingClientRect().top]));
+    L.innerHTML = B.pieces.map((p, i) => `<section class="piece st" data-id="${p.id}" aria-label="${p.name}, piece ${i + 1} of ${B.pieces.length}">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button type="button" class="grip" aria-label="Move ${p.name}. Drag, or use arrow keys">${icon('i-grip')}</button>
+        <span class="kind" style="flex:1">${qm(p.mark)}<b style="font-family:var(--f-body);font-size:16px;font-weight:500;color:var(--w-ink)">${p.name}</b></span>
+        <button type="button" class="ib" data-rip="${p.id}" aria-label="Remove ${p.name}" title="Remove">${icon('i-rip')}</button>
+      </div>
+      ${p.k === 'list' ? `<div class="vseg" role="group" aria-label="View type for ${p.name}">${['list', 'table', 'calendar'].map(v => `<button type="button" data-view="${v}" data-pid="${p.id}" aria-pressed="${p.view === v}">${v}</button>`).join('')}</div>` : ''}
+      <div style="pointer-events:none">${pieceBody(p)}</div></section>`).join('');
+    $$('.piece', L).forEach(el => {
+      const f = first.get(el.dataset.id); const d = f === undefined ? 0 : f - el.getBoundingClientRect().top;
+      if (settle && el.dataset.id === settle.id) {
+        /* dropped piece: settle from where the finger left it, carrying its speed */
+        el.style.translate = `0 ${d}px`;
+        arrStops.push(spring(d, 0, settle.v, .3, y => { el.style.translate = `0 ${y}px`; }, () => { el.style.translate = ''; }));
+        if (!RM) el.animate([{ scale: '1.02' }, { scale: '1' }], { duration: T.fb, easing: EASE });
+      } else if (!RM && Math.abs(d) > 1) el.animate([{ transform: `translateY(${d}px)` }, { transform: 'none' }], { duration: T.layout, easing: EASE });
+      if (el.dataset.id === flashId && !RM) el.animate([{ boxShadow: '0 0 0 3px #E3A72F' }, { boxShadow: '0 0 0 0 rgba(227,167,47,0)' }], { duration: T.focal, easing: EASE });
+    });
+    $$('[data-rip]', L).forEach(b => b.addEventListener('click', () => {
+      const idx = B.pieces.findIndex(p => p.id === b.dataset.rip); const [p] = B.pieces.splice(idx, 1);
+      const el = b.closest('.piece');
+      const done = () => { renderArr(); toast(`Ripped out ${p.name}.`, 'Undo', () => { B.pieces.splice(idx, 0, p); renderArr(p.id); }); };
+      if (RM) done(); else el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.96)' }], { duration: T.layoutOut, easing: EASE, fill: 'forwards' }).onfinish = done;
+    }));
+    $$('[data-view]', L).forEach(b => b.addEventListener('click', () => { const p = B.pieces.find(x => x.id === b.dataset.pid); p.view = b.dataset.view; renderArr(); }));
+    $$('.grip', L).forEach(g => {
+      const el = g.closest('.piece'); const id = el.dataset.id;
+      g.addEventListener('keydown', e => {
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return; e.preventDefault();
+        const i = B.pieces.findIndex(p => p.id === id), j = i + (e.key === 'ArrowUp' ? -1 : 1);
+        if (j < 0 || j >= B.pieces.length) return; [B.pieces[i], B.pieces[j]] = [B.pieces[j], B.pieces[i]]; renderArr(); $(`.piece[data-id="${id}"] .grip`, L).focus();
+      });
+      g.addEventListener('contextmenu', e => e.preventDefault());
+      g.addEventListener('pointerdown', e => {
+        if (e.button) return;
+        e.preventDefault(); g.setPointerCapture(e.pointerId);
+        /* grab from the live position: stop any running settle/FLIP first */
+        const all = $$('.piece', L), live = el.getBoundingClientRect().top;
+        arrStops.forEach(f => f()); arrStops = [];
+        all.forEach(x => { x.getAnimations().forEach(a => a.cancel()); x.style.translate = ''; });
+        const tops = all.map(x => x.getBoundingClientRect().top), hs = all.map(x => x.offsetHeight);
+        const i = all.indexOf(el), gap = parseFloat(getComputedStyle(L).rowGap) || 0, shift = hs[i] + gap;
+        const y0 = e.clientY - (live - tops[i]); let dy = live - tops[i], to = i; const tr = tracker(); tr.add(e.clientY);
+        L.classList.add('sorting'); el.classList.add('dragging'); el.style.translate = `0 ${dy}px`;
+        const move = ev => {
+          dy = ev.clientY - y0; tr.add(ev.clientY); el.style.translate = `0 ${dy}px`;
+          const mid = tops[i] + hs[i] / 2 + dy;
+          to = all.reduce((n, x, k) => n + (k !== i && tops[k] + hs[k] / 2 < mid ? 1 : 0), 0);
+          all.forEach((x, k) => { if (k === i) return; const s2 = i < to && k > i && k <= to ? -shift : to < i && k >= to && k < i ? shift : 0; x.style.translate = s2 ? `0 ${s2}px` : ''; });
+        };
+        const up = ev => {
+          g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up);
+          L.classList.remove('sorting'); el.classList.remove('dragging');
+          const v = ev.type === 'pointercancel' ? 0 : tr.v();
+          const [p] = B.pieces.splice(i, 1); B.pieces.splice(ev.type === 'pointercancel' ? i : to, 0, p);
+          renderArr(null, { id, v });   /* rects are read before anything is cleared, so the FLIP starts from the drop position */
+        };
+        g.addEventListener('pointermove', move); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
+      });
+    });
+  }
+
+  function b5() {
+    const c = phone(false);
+    const icons = ['i-repeat', 'i-wallet', 'i-cal', 'i-book'];
+    const conns = [
+      ['cal', 4, 'i-cal', 'Renewal dates → Calendar', `Each renewal shows on its day, ${B.answer ? B.answer.replace(' before', '') : '3 days'} warning included`],
+      ['budget', 2, 'i-wallet', 'Cost → Budget', 'Counts in your Subscriptions category ($40 cap)'],
+      ['nudge', 0, 'i-history', 'Unused 30 days → Home nudge', 'Clair suggests cancelling what you don’t open']
+    ];
+    c.innerHTML = `
+      <div class="top"><button type="button" class="back" aria-label="Back to preview">${icon('i-back', 22)}</button><b>Add to my apps</b><span style="width:44px"></span></div>
+      <section class="st card basted" id="draft">
+        <div style="display:flex;gap:12px;align-items:center"><span class="patchi" id="pdye" style="width:48px;height:48px;border-radius:12px;background:${DYES[B.dye]}">${icon(B.ic, 22)}</span><label class="field" style="flex:1"><span>Name</span><input id="tname" value="${esc(B.name)}" autocapitalize="words" enterkeyhint="done"></label></div>
+        <div role="radiogroup" aria-label="Patch dye" class="chips" style="gap:0">${DYES.map((d, i) => `<button type="button" role="radio" aria-checked="${i === B.dye}" aria-label="${DYE_NAMES[i]}" data-dye="${i}" style="flex:none;width:44px;height:44px;border:0;background:transparent;display:grid;place-items:center;padding:0"><span style="width:32px;height:32px;border-radius:50%;background:${d};box-shadow:${i === B.dye ? '0 0 0 2px #FFFDF8, 0 0 0 4px #2A2119' : 'inset 0 0 0 1px rgba(42,33,25,.2)'}"></span></button>`).join('')}</div>
+        <div role="radiogroup" aria-label="Icon" style="display:flex;gap:8px">${icons.map(ic => `<button type="button" role="radio" aria-checked="${ic === B.ic}" data-ic="${ic}" aria-label="icon ${ic.slice(2)}" class="ib" style="box-shadow:${ic === B.ic ? 'inset 0 0 0 1.5px #3557A6' : 'inset 0 0 0 1.5px var(--stitch)'}">${icon(ic)}</button>`).join('')}</div>
+      </section>
+      <div class="sect"><span>Connect to your other apps</span><span>Clair's picks</span></div>
+      <section class="st card" style="padding:4px 4px 4px 12px;gap:0">
+        ${conns.map(([k, d, ic, t, s]) => `<div style="display:flex;align-items:center;gap:12px;min-height:64px;${k !== 'cal' ? 'background:linear-gradient(90deg,var(--stitch) 58%,transparent 0) 0 0/8px 1px repeat-x' : ''}"><span class="patchi" data-src="${k}" style="width:30px;height:30px;background:${DYES[d]}">${icon(ic, 16)}</span><span style="flex:1;display:flex;flex-direction:column"><b style="font-size:16px;font-weight:500">${t}</b><span class="small">${s}</span></span><span class="tgwrap"><button type="button" class="toggle" role="switch" data-conn="${k}" aria-checked="${B.conn[k]}" aria-label="${t}"></button></span></div>`).join('')}
+      </section>
+      <label style="display:flex;align-items:center;gap:12px;min-height:44px;font-size:16px"><input type="checkbox" id="keep" ${B.keep ? 'checked' : ''} style="width:20px;height:20px;accent-color:#3557A6"> Keep the example rows</label>
+      <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:8px;min-height:48px"><button type="button" class="b ghost" id="skip">Skip</button><button type="button" class="b" id="stitch">Add to my apps</button></div>`;
+    $('.back', c).addEventListener('click', () => goStep(2));
+    $('#tname').addEventListener('input', e => { B.name = e.target.value || 'Untitled'; });
+    $$('[data-dye]', c).forEach(b => b.addEventListener('click', () => { B.dye = +b.dataset.dye; B.name = $('#tname').value; b5(); }));
+    $$('[data-ic]', c).forEach(b => b.addEventListener('click', () => { B.ic = b.dataset.ic; B.name = $('#tname').value; b5(); }));
+    $$('[data-conn]', c).forEach(b => b.addEventListener('click', () => { const k = b.dataset.conn; B.conn[k] = !B.conn[k]; b.setAttribute('aria-checked', B.conn[k]); }));
+    $('#keep').addEventListener('change', e => { B.keep = e.target.checked; });
+    $('#skip').addEventListener('click', () => { B.conn = { cal: false, budget: false, nudge: false }; goStep(5); });
+    let busy = false;
+    $('#stitch').addEventListener('click', async e => {
+      if (busy) return; busy = true; e.currentTarget.disabled = true; const id = runId;
+      const dye = $('#pdye');
+      const landNotch = () => { if ($('.notch', dye)) return; const n = document.createElement('i'); n.className = 'notch'; dye.appendChild(n);
+        n.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'scale(.95)' }, { opacity: 1, transform: 'none' }], { duration: RM ? T.fb : T.state, easing: EASE }); };
+      /* 1 · the basted draft tightens into a running stitch */
+      $('#draft').classList.remove('basted');
+      await sleep(RM ? T.fb : T.state); if (id !== runId) return;
+      const srcs = $$('[data-src]', c).filter(x => B.conn[x.dataset.src]);
+      if (RM || !srcs.length) { landNotch(); await sleep(RM ? T.fb : T.state); if (id !== runId) return; B.justAdded = true; goStep(5); return; }
+      /* 2 · signature thread pull: one mustard thread per ticked connection, into the patch */
+      if (!(await threadPull(srcs.map(src => ({ from: src, to: dye })), landNotch, () => id === runId))) return;
+      B.justAdded = true; goStep(5);
+    });
+  }
+
+  function b6(entering = true) {
+    const c = phone(true);
+    const linked = Object.entries(B.conn).filter(([, v]) => v).map(([k]) => k);
+    c.innerHTML = `
+      <div class="top"><button type="button" class="back" aria-label="Back to all apps">${icon('i-back', 22)}</button><span></span><button type="button" class="ib" id="tmenu" aria-label="App menu">${icon('i-more')}</button></div>
+      <div id="b6h" style="display:flex;align-items:center;gap:12px"><span class="patchi" style="background:${DYES[B.dye]}">${icon(B.ic)}</span><h2 class="h1">${esc(B.name)}</h2><span class="tag">new</span></div>
+      ${linked.length ? `<div class="small" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">connected to ${linked.map(k => k === 'cal' ? `<span style="display:inline-flex;gap:4px;align-items:center"><i class="dot" style="background:${DYES[4]}"></i>Calendar</span>` : k === 'budget' ? `<span style="display:inline-flex;gap:4px;align-items:center"><i class="dot" style="background:${DYES[2]}"></i>Budget</span>` : `<span style="display:inline-flex;gap:4px;align-items:center"><i class="dot" style="background:${DYES[0]}"></i>Home nudges</span>`).join('')}</div>` : '<p class="small" style="margin:0">Not connected to other apps yet. App menu › Connections.</p>'}
+      ${B.keep ? B.pieces.map(pieceCard).join('') : `
+      <section class="st card" style="align-items:center;text-align:center;padding:24px 16px">
+        ${spool('hello', 96, entering)}
+        <b class="h2">${esc(B.name)} is ready</b>
+        <p class="small" style="margin:0;max-width:30ch">Add your first one. The fastest way is usually a photo of the bill or email.</p>
+      </section>
+      <div style="display:grid;gap:8px">
+        <button type="button" class="b ghost wide">${icon('i-cam')}Add a photo</button>
+        <button type="button" class="b ghost wide">${icon('i-type')}Type one in</button>
+        <button type="button" class="b ghost wide" id="imp">${icon('i-import')}Bring 4 in from Budget</button>
+      </div>`}`;
+    dock('subs');
+    $('.back', c).addEventListener('click', () => goStep(0));
+    $('#tmenu').addEventListener('click', () => tabMenu(B.name));
+    const imp = $('#imp'); if (imp) imp.addEventListener('click', () => { B.keep = true; toast('Brought 4 subscriptions in from Budget.', 'Undo', () => { B.keep = false; b6(false); }); b6(false); });
+    if (B.justAdded) {
+      B.justAdded = false;
+      if (!RM) {
+        $('#b6h').animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE });
+        $('#b6h .tag').animate([{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: T.state, delay: 60, easing: EASE, fill: 'backwards' });
+      }
+    }
+    if (entering) toast(`Added ${B.name} to your apps.`, 'Undo', () => goStep(4));
+  }
+  function tabMenu(name) {
+    const s = openSheet(`<b class="h2">${esc(name)}</b>
+      <div style="display:grid;gap:8px">
+        <button type="button" class="b ghost wide" data-m="arrange" style="justify-content:flex-start">${icon('i-layout')}Arrange <span class="small" style="margin-left:auto">same editor as building</span></button>
+        <button type="button" class="b ghost wide" data-m="stitches" style="justify-content:flex-start">${icon('i-link')}Connections <span class="small" style="margin-left:auto">in and out</span></button>
+        <button type="button" class="b ghost wide" data-m="history" style="justify-content:flex-start">${icon('i-history')}History <span class="small" style="margin-left:auto">this app only</span></button>
+      </div>`, 'App menu');
+    $('[data-m="arrange"]', s).addEventListener('click', () => { closeSheet(); if (current === 'build') goStep(3); else { pick('build'); B.pieces = LAYOUTS[0].pieces.map(newPiece); goStep(3); } });
+    $('[data-m="stitches"]', s).addEventListener('click', () => stitchesSheet(name));
+    $('[data-m="history"]', s).addEventListener('click', () => historySheet(name));
+  }
+  function stitchesSheet(name) {
+    const rows = name === 'Calendar'
+      ? [['In', 'Subscriptions', 5, 'renewal dates', true], ['In', 'Workout', 3, 'session times', true], ['In', 'Groceries', 1, 'use-by dates', true], ['Out', 'Home nudges', 0, 'tomorrow’s first event', false]]
+      : [['Out', 'Calendar', 4, 'renewal dates', B.conn.cal], ['Out', 'Budget', 2, 'monthly cost', B.conn.budget], ['Out', 'Home nudges', 0, 'unused 30 days', B.conn.nudge]];
+    swapSheet(`<b class="h2">Connections · ${esc(name)}</b><p class="small" style="margin:0">What flows into and out of this app. Turning one off keeps the rows already added.</p>
+      <div class="st card" style="padding:4px 4px 4px 12px;gap:0">${rows.map(([dir, t, d, what, on], i) => `<div style="display:flex;align-items:center;gap:12px;min-height:58px;${i ? 'background:linear-gradient(90deg,var(--stitch) 58%,transparent 0) 0 0/8px 1px repeat-x' : ''}"><span class="small" style="width:28px">${dir}</span><i class="dot" style="background:${DYES[d]}"></i><span style="flex:1;display:flex;flex-direction:column"><b style="font-size:16px;font-weight:500">${t}</b><span class="small">${what}</span></span><span class="tgwrap"><button type="button" class="toggle" role="switch" aria-checked="${on}" aria-label="${dir === 'In' ? 'From' : 'To'} ${t}" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') !== 'true')"></button></span></div>`).join('')}</div>
+      <button type="button" class="b ghost wide" data-close>Done</button>`, 'Connections');
+  }
+  function historySheet(name) {
+    swapSheet(`<b class="h2">History · ${esc(name)}</b>
+      <div class="st card" style="padding:4px 12px;gap:0">${[['5:41 pm', 'Spotify renewal added from Subscriptions', 'Clair'], ['12:20 pm', 'Subscriptions connected to this app', 'You'], ['Tue', 'Leg day moved to 7 am', 'You']].map(([t, w, by], i) => `<div style="display:flex;gap:12px;align-items:center;min-height:58px;${i ? 'background:linear-gradient(90deg,var(--stitch) 58%,transparent 0) 0 0/8px 1px repeat-x' : ''}"><span class="mono" style="width:64px;color:var(--w-ink2)">${t}</span><span style="flex:1;display:flex;flex-direction:column;font-size:16px">${w}<span class="small">${by}</span></span><button type="button" class="b ghost" style="padding:0 12px">Undo</button></div>`).join('')}</div>`, 'History');
+  }
+  /* =========================================================
+     2. STITCHED INTO CALENDAR
+     ========================================================= */
+  function stitched() {
+    setSub('');
+    const c = phone(true);
+    const day = (label, items) => `<div class="sect"><span>${label}</span></div><section class="st card" style="padding:4px 0;gap:0">${items.join('')}</section>`;
+    const ev = (t, sub, time, src) => `<div class="rowi"><span class="t"><span>${t}</span><span>${sub}</span></span>${src || ''}<span class="mono">${time}</span></div>`;
+    c.innerHTML = `
+      <div class="top"><button type="button" class="back" aria-label="Back to home">${icon('i-back', 22)}</button><span></span><button type="button" class="ib" id="cmenu" aria-label="Calendar app menu">${icon('i-more')}</button></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="patchi" style="background:${DYES[4]}">${icon('i-cal')}</span><h2 class="h1">This week</h2></div>
+      ${day('Today · Fri 20 Nov', [ev('DevDay demo', 'Lassonde Studios', '3 pm'), ev('Grocery trip', 'Corner Market · from Groceries', '5:41 pm'), ev('Pull day', 'from Workout', '6 pm')])}
+      ${day('Sun 22 Nov', [`<div class="rowi" style="flex-wrap:wrap"><span class="t"><span style="display:flex;align-items:center;gap:8px">Spotify renews <span class="tag">just changed</span></span><button type="button" id="src" class="lk"><i class="dot" style="background:${DYES[5]}"></i>from Subscriptions ›</button></span><span class="mono">$11.99</span></div>`])}
+      ${day('Mon 23 Nov', [ev('CS 3500 project due', 'from Classes', '11:59 pm')])}
+      ${day('Tue 24 Nov', [ev('Spinach use by', 'from Groceries', '')])}`;
+    dock('calendar');
+    $('#cmenu').addEventListener('click', () => tabMenu('Calendar'));
+    $('#src').addEventListener('click', () => toast('Opens Subscriptions at Spotify.'));
+    setNotes(`
+      <h2>Connected in Calendar</h2>
+      <p>What Sam sees in an app that receives data from the new Subscriptions app.</p>
+      <ol class="beats">
+        <li><span class="n">a</span><span><b>Source dot:</b> the Spotify row carries a dot in Subscriptions' lavender dye and "from Subscriptions ›", which jumps there. <span class="dec">Q27b</span></span></li>
+        <li><span class="n">b</span><span><b>First arrival:</b> the mustard "just changed" tag stays until Sam has seen it.</span></li>
+        <li><span class="n">c</span><span><b>App menu ⋯:</b> Arrange (same editor as building), Stitches (incoming and outgoing, each on/off), History (this app only, each change with undo). <span class="dec">Q29 · Q36</span></span></li>
+      </ol>
+      <div class="try"><b>Try:</b> tap ⋯ → Stitches and switch Workout off; tap "from Subscriptions ›".</div>`);
+  }
+
+  /* =========================================================
+     3. SEARCH
+     ========================================================= */
+  const DATA = [
+    { tab: 'budget', t: 'Blue Copper', sub: 'Eating out · Sat 3 Oct', m: 'Oct', cat: 'Eating out', v: '$5.25', n: 5.25, q: 'coffee' },
+    { tab: 'budget', t: 'Blue Copper', sub: 'Eating out · Sun 11 Oct', m: 'Oct', cat: 'Eating out', v: '$5.25', n: 5.25, q: 'coffee' },
+    { tab: 'budget', t: 'Starbucks', sub: 'Eating out · Mon 19 Oct', m: 'Oct', cat: 'Eating out', v: '$6.10', n: 6.10, q: 'coffee' },
+    { tab: 'budget', t: 'Blue Copper', sub: 'Eating out · Fri 6 Nov', m: 'Nov', cat: 'Eating out', v: '$5.25', n: 5.25, q: 'coffee' },
+    { tab: 'budget', t: 'Corner Market', sub: 'Groceries · Fri 20 Nov', m: 'Nov', cat: 'Groceries', v: '$35.83', n: 35.83, q: 'groceries receipt corner' },
+    { tab: 'budget', t: 'Spotify', sub: 'Subscriptions · Sun 22 Nov', m: 'Nov', cat: 'Subscriptions', v: '$11.99', n: 11.99, q: 'music subscription' },
+    { tab: 'groceries', t: 'Coffee beans', sub: 'bought · Fri 20 Nov', q: 'coffee' },
+    { tab: 'groceries', t: 'Oat milk', sub: 'bought · Fri 20 Nov', q: 'milk coffee' },
+    { tab: 'todos', t: 'Buy coffee filters', sub: 'this week', q: 'coffee' },
+    { tab: 'calendar', t: 'Coffee with Maya', sub: 'Sat 21 Nov · 10 am', q: 'coffee' },
+    { tab: 'workout', t: 'Pull day', sub: 'today 6 pm', q: 'gym lift' }
+  ];
+  const S = { scope: null, month: null, cat: null, q: '' };
+  function searchView(c, opts = {}) {
+    S.scope = opts.scope || null; S.q = opts.q ?? ''; S.month = null; S.cat = null;
+    c.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;min-height:48px;padding:0 12px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 2px var(--denim)">${icon('i-search')}<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search your quilt</span><input id="sq" type="search" enterkeyhint="search" autocapitalize="none" autocomplete="off" value="${esc(S.q)}" placeholder="${S.scope ? 'Search ' + TABS[S.scope].n : 'Search every app, or ask'}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:16px;color:var(--w-ink);outline:none"></label>
+        <button type="button" class="lk" id="scancel" style="padding:0 4px">Cancel</button>
+      </div>
+      <div class="chips" id="schips"></div>
+      <div id="sres" style="display:grid;gap:10px"></div>`;
+    let lastFace = null;
+    const draw = () => {
+      const q = S.q.trim().toLowerCase();
+      const chips = [];
+      if (S.scope) chips.push(`<button type="button" class="chip" aria-pressed="true" id="unscope">in ${TABS[S.scope].n} ${icon('i-x', 14)}</button>`);
+      if (S.scope === 'budget') {
+        ['Oct', 'Nov'].forEach(m => chips.push(`<button type="button" class="chip" data-month="${m}" aria-pressed="${S.month === m}">${m}</button>`));
+        ['Eating out', 'Groceries', 'Subscriptions'].forEach(k => chips.push(`<button type="button" class="chip" data-cat="${k}" aria-pressed="${S.cat === k}">${k}</button>`));
+      }
+      $('#schips').innerHTML = chips.join('');
+      const match = d => (!q || (d.t + ' ' + d.sub + ' ' + (d.q || '')).toLowerCase().includes(q.replace(/\?|how much|did i|spend|on|in october|in november|last month/g, ' ').trim().split(/\s+/)[0] || ''));
+      const inScope = d => !S.scope || d.tab === S.scope;
+      const facet = d => (!S.month || d.m === S.month) && (!S.cat || d.cat === S.cat);
+      const hits = DATA.filter(d => match(d) && inScope(d) && facet(d));
+      const elsewhere = S.scope ? DATA.filter(d => match(d) && !inScope(d)) : [];
+      const isQ = /\?|how much|how many|when did/.test(q);
+      let html = '';
+      if (!q && !S.scope) html += `<div class="sect"><span>Recent</span></div><div class="chips" style="flex-wrap:wrap;margin:0;padding:0">${['coffee', 'rent', 'spinach', 'pull day'].map(r => `<button type="button" class="chip" data-recent="${r}">${icon('i-history', 14)}${r}</button>`).join('')}</div>`;
+      const faceNow = isQ ? 'answer' : q ? 'ask' : null, play = faceNow !== lastFace; lastFace = faceNow;
+      if (isQ) {
+        const oct = DATA.filter(d => d.q === 'coffee' && d.m === 'Oct');
+        const sum = oct.reduce((a, d) => a + d.n, 0).toFixed(2);
+        html += `<section class="answer">${spool('stitched', 30, play)}<b style="font-size:16px;color:var(--w-ink)">$${sum} on coffee in October</b><span style="font:500 15px/1.4 var(--f-body);color:var(--denim-ink)">3 visits: Blue Copper twice, Starbucks once. From Budget.</span><button type="button" class="lk" style="align-self:flex-start">Show the 3 rows ›</button></section>`;
+      }
+      if (q || S.scope) {
+        const groups = {};
+        hits.forEach(d => (groups[d.tab] = groups[d.tab] || []).push(d));
+        html += Object.entries(groups).map(([tab, rows]) => `<div class="sect"><span style="display:inline-flex;gap:6px;align-items:center"><i class="dot" style="background:${DYES[TABS[tab].i]}"></i>${TABS[tab].n}</span><span>${rows.length}</span></div><section class="st card" style="padding:2px 0;gap:0">${rows.map(d => `<div class="rowi"><span class="t"><span>${d.t}</span><span>${d.sub}</span></span>${d.v ? `<span class="mono">${d.v}</span>` : ''}</div>`).join('')}</section>`).join('') || (q ? `<p class="small" style="margin:0">Nothing in ${S.scope ? TABS[S.scope].n : 'your apps'} matches "${esc(S.q)}".</p>` : '');
+        if (S.scope && q && elsewhere.length) html += `<button type="button" class="b ghost wide" id="widen" style="justify-content:space-between">Everywhere else (${elsewhere.length})${icon('i-arrow')}</button>`;
+        if (q && !isQ) html += `<button type="button" class="chalk" id="askc" style="border:0;text-align:left;flex-direction:row;align-items:center;gap:12px;min-height:56px;font:500 15px/1.4 var(--f-body)">${chalkOl()}${spool('hello', 30, play)}<span>Ask Clair about "${esc(S.q)}"</span></button>`;
+      }
+      $('#sres').innerHTML = html;
+      const u = $('#unscope'); if (u) u.addEventListener('click', () => { S.scope = null; S.month = S.cat = null; $('#sq').placeholder = 'Search every app, or ask'; draw(); });
+      $$('[data-month]').forEach(b => b.addEventListener('click', () => { S.month = S.month === b.dataset.month ? null : b.dataset.month; draw(); }));
+      $$('[data-cat]').forEach(b => b.addEventListener('click', () => { S.cat = S.cat === b.dataset.cat ? null : b.dataset.cat; draw(); }));
+      $$('[data-recent]').forEach(b => b.addEventListener('click', () => { S.q = b.dataset.recent; $('#sq').value = S.q; draw(); }));
+      const w = $('#widen'); if (w) w.addEventListener('click', () => { S.scope = null; S.month = S.cat = null; draw(); });
+      const a = $('#askc'); if (a) a.addEventListener('click', () => { S.q = 'How much did I spend on coffee in October?'; $('#sq').value = S.q; draw(); $('#screen').scrollTop = 0; });
+    };
+    $('#sq').addEventListener('input', e => { S.q = e.target.value; draw(); });
+    $('#scancel').addEventListener('click', () => opts.onCancel && opts.onCancel());
+    draw();
+    /* focus synchronously: callers run inside the user gesture (tap, hold release, pull release), so iOS raises the keyboard */
+    $('#sq').focus({ preventScroll: true });
+    if (opts.enter && !RM) c.animate([{ opacity: 0, transform: 'translateY(-16px)' }, { opacity: 1, transform: 'none' }], { duration: T.state, easing: EASE });
+  }
+  function budgetScreen(c, onPull) {
+    c.innerHTML = `
+      <div class="pull" id="pullw"><button type="button" id="pull">${icon('i-search', 14)}<span id="pullT">Pull down to search Budget</span></button></div>
+      <div class="top"><button type="button" class="back" aria-label="Back to home">${icon('i-back', 22)}</button><span></span><button type="button" class="ib" aria-label="Budget app menu">${icon('i-more')}</button></div>
+      <div style="display:flex;align-items:center;gap:12px"><span class="patchi" style="background:${DYES[2]}">${icon('i-wallet')}</span><h2 class="h1">Budget</h2></div>
+      <section class="st card"><div style="display:flex;align-items:baseline;gap:8px"><span class="big">$376</span><span class="small">left of $800</span></div><div class="bar"><u style="width:53%"></u></div></section>
+      <div class="sect"><span>Recent</span></div>
+      <section class="st card" style="padding:2px 0;gap:0">${DATA.filter(d => d.tab === 'budget').slice(3).map(d => `<div class="rowi"><span class="t"><span>${d.t}</span><span>${d.sub}</span></span><span class="mono">${d.v}</span></div>`).join('')}</section>`;
+    $('#pull').addEventListener('click', () => onPull());
+    /* pull-down: claim the move only while pulling down from the top; content follows with a rubber band; arms at 64px */
+    const scr = $('#screen'); let y0 = null, off = 0, st = 'idle', stop = null, armed = false; const tr = tracker();
+    const live = () => !!$('#pullw', c);
+    const set = v => { off = v; c.style.transform = v ? `translateY(${v}px)` : '';
+      const a = v >= 64; if (a !== armed) { armed = a; $('#pullw').classList.toggle('armed', a); $('#pullT').textContent = a ? 'Release to search' : 'Pull down to search Budget'; if (a) vibrate(8); } };
+    const start = y => { if (!live() || scr.scrollTop > 0) { st = 'idle'; return; } stop && stop(); stop = null; y0 = y - (off ? off : 0); st = off ? 'pull' : 'pending'; tr.reset(); tr.add(y); };
+    const move = y => {
+      if (st === 'idle') return false; const dy = y - y0;
+      if (st === 'pending') { if (Math.abs(dy) < 4) return false; if (dy < 0 || scr.scrollTop > 0) { st = 'idle'; return false; } st = 'pull'; }
+      tr.add(y); set(Math.max(0, rubberband(Math.max(0, dy), scr.clientHeight))); return true;
+    };
+    const end = () => {
+      if (st !== 'pull') { st = 'idle'; return; } st = 'idle';
+      if (armed) { c.style.transform = ''; off = 0; armed = false; onPull(true); return; }
+      stop = spring(off, 0, 0, .35, set, () => { stop = null; set(0); });
+    };
+    scr.addEventListener('touchstart', e => { if (e.touches.length === 1) start(e.touches[0].clientY); else st = 'idle'; }, { passive: true });
+    scr.addEventListener('touchmove', e => { if (move(e.touches[0].clientY) && e.cancelable) e.preventDefault(); }, { passive: false });
+    scr.addEventListener('touchend', end);
+    scr.addEventListener('touchcancel', () => { st = 'pull'; armed = false; end(); });
+    scr.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'mouse' || e.button) return; start(e.clientY); if (st === 'idle') return;
+      const mv = ev => { if (move(ev.clientY)) ev.preventDefault(); };
+      const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); const was = st; end(); if (was === 'pull') swallowClick(); };
+      addEventListener('pointermove', mv); addEventListener('pointerup', up);
+    });
+  }
+  function search() {
+    let mode = 'scoped';
+    const render = () => {
+      setSub(`<span class="lbl">start from</span><button type="button" data-sm="scoped" aria-pressed="${mode === 'scoped'}">Inside Budget (pull down)</button><button type="button" data-sm="global" aria-pressed="${mode === 'global'}">Everywhere (Search board)</button>`);
+      $$('[data-sm]', subctl).forEach(b => b.addEventListener('click', () => { mode = b.dataset.sm; render(); }));
+      const c = phone(true);
+      const openScoped = enter => searchView(c, { scope: 'budget', q: 'coffee', onCancel: render, enter });
+      const openGlobal = () => searchView(c, { onCancel: render, enter: true });
+      dock('budget');
+      if (mode === 'scoped') budgetScreen(c, openScoped); else openGlobal();
+    };
+    render();
+    setNotes(`
+      <h2>Search</h2>
+      <p>One search everywhere. Where you start decides its scope.</p>
+      <ol class="beats">
+        <li><span class="n">a</span><span><b>Pull down</b> on any screen to search; it no longer lives on a hold. Questions go to Clair: tap the Clair button in the pinned bar, or hold it to talk. <span class="dec">Q34 · Nov 19</span></span></li>
+        <li><span class="n">b</span><span><b>Scoped to here:</b> from Budget it opens "in Budget ×" with filter chips built from Budget's own fields (month, category). Tap × to widen. <span class="dec">Q38</span></span></li>
+        <li><span class="n">c</span><span><b>Everywhere else (N):</b> matches in other apps are one tap away, grouped by app in their colour.</span></li>
+        <li><span class="n">d</span><span><b>Ask:</b> a question gets Clair's answer card on top, with the rows it used. Recent searches show when the field is empty.</span></li>
+      </ol>
+      <div class="try"><b>Try:</b> tap "Pull down to search Budget" (or drag down), filter Oct + Eating out, tap "Everywhere else", then "Ask Clair". In Everywhere mode, tap a recent search. Tap Clair, pick a "Try" line, then "Add to N apps".</div>`);
+  }
+
+  /* =========================================================
+     4. EDIT ROWS
+     ========================================================= */
+  function rows() {
+    setSub('');
+    const items = [
+      { id: 'a', t: 'Coffee filters', s: '1 box', got: false },
+      { id: 'b', t: 'Tortillas', s: '1 pack', got: false },
+      { id: 'c', t: 'Olive oil', s: '1 bottle', got: false },
+      { id: 'd', t: 'Dish soap', s: '1 bottle', got: false },
+      /* ticked by the Corner Market receipt, Fri 20 Nov 5:41 pm */
+      { id: 'e', t: 'Oat milk', s: '1 carton · from receipt', got: true, rc: true },
+      { id: 'f', t: 'Eggs', s: '12 · from receipt', got: true, rc: true },
+      { id: 'g', t: 'Bananas', s: '1 bunch · from receipt', got: true, rc: true },
+      { id: 'h', t: 'Chicken thighs', s: '2 lb · from receipt', got: true, rc: true },
+      { id: 'i', t: 'Rice', s: '2 lb bag · from receipt', got: true, rc: true },
+      { id: 'j', t: 'Spinach', s: '1 bag · use by Tue · from receipt', got: true, rc: true },
+      { id: 'k', t: 'Greek yogurt', s: '32 oz · from receipt', got: true, rc: true },
+      { id: 'l', t: 'Coffee beans', s: '1 bag · from receipt', got: true, rc: true },
+      /* other lists: an item's list is a field; the chips filter by it */
+      { id: 'm', t: 'Ground beef', s: '1 lb', got: false, l: 1 }, { id: 'n', t: 'Avocados', s: '3', got: false, l: 1 },
+      { id: 'o', t: 'Limes', s: '4', got: false, l: 1 }, { id: 'p', t: 'Salsa', s: '1 jar', got: false, l: 1 }, { id: 'q', t: 'Shredded cheese', s: '8 oz', got: false, l: 1 },
+      { id: 'r', t: 'Paper towels', s: '12 rolls', got: false, l: 2 }, { id: 's', t: 'Laundry pods', s: '1 tub', got: false, l: 2 },
+      { id: 't', t: 'Frozen berries', s: '3 lb', got: false, l: 2 }, { id: 'u', t: 'Almonds', s: '2 lb', got: false, l: 2 }, { id: 'v', t: 'Toilet paper', s: '24 rolls', got: false, l: 2 }
+    ];
+    items.forEach(i => { i.l = i.l || 0; });
+    const LISTS = [['Weekly shop', 'Fri 20 Nov'], ['Taco night', 'Sat 21 Nov'], ['Costco run', 'once a month']];
+    let cur = 0;
+    let sel = null, justLP = false;
+    const c = phone(true);
+    const vis = () => items.filter(i => i.l === cur);
+    const group = list => list.length ? `<section class="st card" style="padding:2px 0;gap:0;overflow:hidden">${list.map(i => `
+          <div class="swrow${sel && sel.has(i.id) ? ' sel' : ''}" data-id="${i.id}">
+            <div class="act" aria-hidden="true"><span class="l">${icon('i-check')}${i.got ? 'Not yet' : 'Got it'}</span><span class="r">Delete${icon('i-trash')}</span></div>
+            <div class="fg rowi" role="button" tabindex="0" aria-label="${i.t}, ${i.s}. Enter to edit">
+              <span class="ck${i.got || (sel && sel.has(i.id)) ? ' on' : ''}" aria-hidden="true">${i.got || (sel && sel.has(i.id)) ? icon('i-check', 14) : ''}</span>
+              <span class="t"><span style="${i.got ? 'text-decoration:line-through;color:var(--w-ink2)' : ''}">${i.t}</span><span>${i.s}</span></span>
+            </div>
+          </div>`).join('')}</section>` : '';
+    const draw = enterId => {
+      c.innerHTML = `
+        <div class="top"><button type="button" class="back" aria-label="Back to home">${icon('i-back', 22)}</button><span></span><button type="button" class="ib" aria-label="Groceries app menu">${icon('i-more')}</button></div>
+        <div style="display:flex;align-items:center;gap:12px"><span class="patchi" style="background:${DYES[1]}">${icon('i-cart')}</span><h2 class="h1">Groceries</h2></div>
+        <div class="chips" role="group" aria-label="Your lists" style="display:flex;gap:8px;min-height:44px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none">${LISTS.map((L, k) => `<button type="button" class="chip" data-list="${k}" aria-pressed="${k === cur}">${L[0]}<b class="num">${items.filter(i => i.l === k && !i.got).length}</b></button>`).join('')}<button type="button" class="chip" id="newList" style="background:transparent;color:var(--denim-ink);font-weight:600">${icon('i-plus', 16)}New list</button></div>
+        ${sel ? `<div style="display:flex;align-items:center;gap:8px;min-height:48px"><b>${sel.size} selected</b><button type="button" class="b ghost" id="mGot" style="margin-left:auto;padding:0 16px">Got them</button><button type="button" class="b ink" id="mDel" style="padding:0 16px">Delete</button><button type="button" class="ib" id="mX" aria-label="Stop selecting">${icon('i-x')}</button></div>` : `<div class="sect"><span>${LISTS[cur][0]} · ${vis().filter(i => !i.got).length} to buy</span><span>${LISTS[cur][1]}</span></div>`}
+        ${vis().length ? '' : '<p class="st card" style="margin:0;color:var(--w-ink2)">Nothing on this list yet. Tell Clair what to add, or add a photo of a recipe.</p>'}
+        ${group(vis().filter(i => !(i.got && i.rc)))}
+        ${vis().some(i => i.got && i.rc) ? `<div class="sect"><span>Bought at Corner Market · ${vis().filter(i => i.got && i.rc).length}</span><span>Fri 20 Nov</span></div>${group(vis().filter(i => i.got && i.rc))}` : ''}`;
+      $$('[data-list]', c).forEach(b => b.addEventListener('click', () => { cur = +b.dataset.list; sel = null; draw(); }));
+      $('#newList', c).addEventListener('click', () => { LISTS.push([LISTS.length > 3 ? `New list ${LISTS.length - 2}` : 'New list', 'just made']); cur = LISTS.length - 1; sel = null; draw(); $(`[data-list="${cur}"]`, c).scrollIntoView({ inline: 'nearest', block: 'nearest' }); });
+      dock('groceries');
+      $$('.swrow', c).forEach(bindRow);
+      if (sel) {
+        $('#mX').addEventListener('click', () => { sel = null; draw(); });
+        $('#mGot').addEventListener('click', () => { const ids = [...sel]; items.forEach(i => { if (sel.has(i.id)) i.got = true; }); sel = null; draw(); toast(`Marked ${ids.length} as got.`, 'Undo', () => { items.forEach(i => { if (ids.includes(i.id)) i.got = false; }); draw(); }); });
+        $('#mDel').addEventListener('click', () => { const removed = items.filter(i => sel.has(i.id)); removed.forEach(r => items.splice(items.indexOf(r), 1)); sel = null; draw(); toast(`Deleted ${removed.length}.`, 'Undo', () => { items.push(...removed); draw(); }); });
+      }
+      /* Undo re-inserts a row: height 0 → h with opacity */
+      const r = enterId && $(`.swrow[data-id="${enterId}"]`, c);
+      if (r) r.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ height: '0px', opacity: 0 }, { height: r.offsetHeight + 'px', opacity: 1 }], { duration: RM ? T.fb : T.state, easing: EASE });
+    };
+    const selDraw = () => setTimeout(draw, T.fb);   /* let the 120ms .sel tint play before the header swaps */
+    const collapse = row => new Promise(res => {
+      if (RM) return res();
+      row.animate([{ height: row.offsetHeight + 'px' }, { height: '0px' }], { duration: T.layoutOut, easing: EASE, fill: 'forwards' }).onfinish = res;
+    });
+    function bindRow(row) {
+      const fg = row.querySelector('.fg'), ck = fg.querySelector('.ck'); const id = row.dataset.id; const it = items.find(i => i.id === id);
+      let x0 = 0, y0 = 0, x = 0, w = 1, st = 'idle', lp = null, stop = null, moved = false; const tr = tracker();
+      const setX = v => {
+        x = v; fg.style.transform = v ? `translateX(${v}px)` : '';
+        row.classList.toggle('dir-r', v > 0); row.classList.toggle('dir-l', v < 0);
+        const a = Math.abs(v) >= 90; if (a !== row.classList.contains('armed')) { row.classList.toggle('armed', a); if (a && st === 'drag') vibrate(8); }
+      };
+      const setCk = on => { ck.classList.toggle('on', on); ck.innerHTML = on ? icon('i-check', 14) : ''; };
+      fg.addEventListener('contextmenu', e => e.preventDefault());
+      fg.addEventListener('pointerdown', e => {
+        if (e.button) return;
+        justLP = false; moved = false; clearTimeout(lp);
+        stop && stop(); stop = null;   /* grab a row mid-animation from where it is */
+        const live = new DOMMatrix(getComputedStyle(fg).transform).m41 || 0;
+        w = row.offsetWidth; x0 = e.clientX - live; y0 = e.clientY; tr.reset(); tr.add(e.clientX);
+        st = live ? 'drag' : 'pending'; if (live) moved = true;
+        fg.setPointerCapture(e.pointerId);
+        if (!live) lp = setTimeout(() => {
+          if (st !== 'pending') return; st = 'idle'; justLP = true; vibrate(10);
+          sel = sel || new Set(); sel.add(id); row.classList.add('sel'); setCk(true); selDraw();
+        }, 450);
+      });
+      fg.addEventListener('pointermove', e => {
+        if (st === 'idle') return; const dx = e.clientX - x0, dy = e.clientY - y0;
+        if (st === 'pending') {
+          if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+          clearTimeout(lp); moved = true;
+          if (sel || Math.abs(dy) > Math.abs(dx)) { st = 'idle'; return; }
+          st = 'drag';
+        }
+        tr.add(e.clientX);
+        setX(Math.abs(dx) <= 130 ? dx : Math.sign(dx) * (130 + rubberband(Math.abs(dx) - 130, w)));
+      });
+      const release = cancel => {
+        clearTimeout(lp);
+        if (st !== 'drag') { st = 'idle'; return; } st = 'idle';
+        const v = cancel ? 0 : tr.v(), proj = x + project(v), dir = Math.sign(x);
+        const commit = !cancel && dir !== 0 && Math.sign(proj) === dir && (Math.abs(x) > 90 || Math.abs(proj) > .4 * w);
+        if (!commit) { stop = spring(x, 0, v, .3, setX, () => { stop = null; }); return; }
+        if (dir < 0) {
+          /* delete: fly off with the release speed, close the gap, then remove */
+          const idx = items.indexOf(it);
+          const finish = async () => { stop = null; await collapse(row); items.splice(items.indexOf(it), 1); draw(); toast(`Deleted ${it.t}.`, 'Undo', () => { items.splice(idx, 0, it); draw(it.id); }); };
+          if (RM) { setX(0); fg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.fb, easing: EASE, fill: 'forwards' }).onfinish = finish; }
+          else stop = spring(x, -w, v, .25, setX, finish);
+        } else {
+          /* got it: the row returns and its check fills moss */
+          setCk(!it.got);
+          stop = spring(x, 0, v, .3, setX, () => { stop = null; it.got = !it.got; draw(); toast(`${it.t}: ${it.got ? 'got it' : 'back on the list'}.`, 'Undo', () => { it.got = !it.got; draw(); }); });
+        }
+      };
+      fg.addEventListener('pointerup', () => release(false));
+      fg.addEventListener('pointercancel', () => release(true));
+      /* tap opens the sheet from click (after the finger is up), never from pointerup */
+      fg.addEventListener('click', () => {
+        if (justLP) { justLP = false; return; }
+        if (moved) return;
+        if (sel) { sel.has(id) ? sel.delete(id) : sel.add(id); row.classList.toggle('sel', sel.has(id)); setCk(sel.has(id) || it.got); if (!sel.size) sel = null; selDraw(); return; }
+        editSheet(it);
+      });
+      fg.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editSheet(it); } });
+    }
+    function editSheet(it) {
+      const s = openSheet(`<b class="h2">Edit item</b>
+        <label class="field"><span>Name</span><input id="eN" value="${esc(it.t)}" autocapitalize="sentences" enterkeyhint="next"></label>
+        <label class="field"><span>Amount</span><input id="eA" value="${esc(it.s.split(' · ')[0])}" enterkeyhint="done"></label>
+        <label class="field"><span>Category</span><select id="eC"><option>Dairy</option><option>Produce</option><option>Meat</option><option>Pantry</option></select></label>
+        ${it.s.includes('receipt') ? `<p class="small" style="margin:0;display:flex;gap:8px;align-items:center"><i class="dot" style="background:${DYES[2]}"></i>From your Corner Market receipt · also in Budget</p>` : ''}
+        <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:8px"><button type="button" class="b ink" id="eDel">${icon('i-trash')}Delete</button><button type="button" class="b" id="eSave">Save</button></div>`, 'Edit item');
+      $('#eSave', s).addEventListener('click', () => { const old = { ...it }; it.t = $('#eN', s).value || it.t; const amt = $('#eA', s).value; it.s = [amt, ...it.s.split(' · ').slice(1)].filter(Boolean).join(' · '); closeSheet(); draw(); toast('Saved.', 'Undo', () => { Object.assign(it, old); draw(); }); });
+      $('#eDel', s).addEventListener('click', () => { const idx = items.indexOf(it); items.splice(idx, 1); closeSheet(); draw(); toast(`Deleted ${it.t}.`, 'Undo', () => { items.splice(idx, 0, it); draw(it.id); }); });
+    }
+    draw();
+    setNotes(`
+      <h2>Edit rows</h2>
+      <p>Fixing a misread receipt item has to take seconds.</p>
+      <ol class="beats">
+        <li><span class="n">a</span><span><b>Tap</b> a row → edit sheet with its fields, where it came from, and Delete (ink, never red). Enter works on keyboard. <span class="dec">Q35</span></span></li>
+        <li><span class="n">b</span><span><b>Swipe right</b> → got it (moss). <b>Swipe left</b> → delete. Both undo from the toast.</span></li>
+        <li><span class="n">c</span><span><b>Long-press</b> → select several, then "Got them" or Delete in one go.</span></li>
+      </ol>
+      <div class="try"><b>Try:</b> swipe a to-buy row sideways (or drag it with the mouse), press and hold another, or tap Oat milk under Bought to fix a misread item.</div>`);
+  }
+
+  /* =========================================================
+     5. SETTINGS + ACTIVITY
+     ========================================================= */
+  function settings() {
+    setSub('');
+    const acts = [
+      { t: 'Added 8 items from your Corner Market receipt', s: 'Groceries, Budget, Calendar · 5:41 pm', undone: false },
+      { t: 'Built the Subscriptions app', s: 'and connected it to Calendar and Budget · 12:20 pm', undone: false },
+      { t: 'Set a reminder to cancel Hulu', s: 'Subscriptions · yesterday', undone: false },
+      { t: 'Moved Leg day to 7 am', s: 'Workout · Tuesday', undone: false }
+    ];
+    let screen = 'home';
+    const c = phone(true);
+    const draw = () => {
+      if (screen === 'home') {
+        c.innerHTML = `
+          <div class="top"><span style="display:flex;gap:8px;align-items:center;font-family:var(--f-display);font-weight:800;font-size:17px;letter-spacing:-.005em"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="9" height="9" rx="2" fill="#E3A72F"/><rect x="12" y="1" width="9" height="9" rx="2" fill="#5B7DB1"/><rect x="1" y="12" width="9" height="9" rx="2" fill="#8DB580"/><rect x="12" y="12" width="9" height="9" rx="2" fill="#9C6BA8"/></svg>quilt</span>
+            <button type="button" class="ib" id="prof" aria-label="Profile and settings" style="background:${DYES[3]};border-radius:50%">${icon('i-user')}</button></div>
+          <h2 class="h1">Evening, Sam.</h2><p class="subt">3 things to look at today</p>
+          <section class="st card"><b>Clair added a receipt</b><span class="small">8 rows into Groceries, Budget and Calendar · 5:41 pm</span><button type="button" class="lk" id="seeAct" style="align-self:flex-start">See activity ›</button></section>
+          <p class="small" style="margin:0">Tap the profile button (top right).</p>`;
+        $('#prof').addEventListener('click', () => { screen = 'settings'; draw(); });
+        $('#seeAct').addEventListener('click', () => { screen = 'settings'; draw(); });
+      } else {
+        c.innerHTML = `
+          <div class="top"><button type="button" class="back" aria-label="Back to home">${icon('i-back', 22)}</button><b>You</b><span style="width:44px"></span></div>
+          <div class="sect"><span>Activity · what Clair changed</span><span>all apps</span></div>
+          <section class="st card" style="padding:2px 12px;gap:0">${acts.map((a, i) => `<div style="display:flex;gap:10px;align-items:center;min-height:62px;${i ? 'background:linear-gradient(90deg,var(--stitch) 58%,transparent 0) 0 0/8px 1px repeat-x' : ''}${a.undone ? ';color:var(--w-ink2)' : ''}"><span style="flex:1;display:flex;flex-direction:column;font-size:16px"><span style="${a.undone ? 'text-decoration:line-through' : ''}">${a.t}</span><span class="small">${a.undone ? 'Undone' : a.s}</span></span><button type="button" class="b ghost" data-act="${i}" style="padding:0 16px">${a.undone ? 'Redo' : 'Undo'}</button></div>`).join('')}</section>
+          <div class="sect"><span>Clair credits</span><span>Free plan</span></div>
+          <section class="st card"><div style="display:flex;align-items:baseline;gap:8px"><span class="big" style="font-size:30px">32</span><span class="small">of 50 left · resets Tue 1 Dec</span></div><div class="meter" role="meter" aria-valuemin="0" aria-valuemax="50" aria-valuenow="32" aria-label="Clair credits left"><u style="width:64%"></u></div><span class="small">A chat step is 1, a photo fill 5, building an app 10. At zero, Clair pauses; your apps keep working.</span><button type="button" class="b ghost" style="align-self:flex-start">See Plus · $6 a month</button></section>
+          <div class="sect"><span>What Clair can read</span></div>
+          <fieldset style="border:0;padding:0;margin:0;display:grid;gap:8px"><legend style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">What Clair can read</legend>
+            ${[['full', 'Full help', 'Clair reads your rows to answer and fill apps. Sent to the AI provider only when you ask.'], ['fields', 'Field names only', 'Clair sees column names, never your values. Answers get vaguer.'], ['none', 'Nothing', 'Clair is off. Apps, search and connections still work.']].map(([v, t, s], i) => `<label class="radio"><input type="radio" name="read" value="${v}" ${i === 0 ? 'checked' : ''}><span style="display:flex;flex-direction:column"><b style="font-size:16px;font-weight:600">${t}</b><span class="small">${s}</span></span></label>`).join('')}
+          </fieldset>
+          <div class="sect"><span>Your data</span></div>
+          <button type="button" class="b ghost wide" style="justify-content:space-between">Export everything (apps + data)${icon('i-import')}</button>
+          <button type="button" class="b ink wide" id="delAcc" style="justify-content:space-between">Delete my account${icon('i-arrow')}</button>
+          <p class="small" style="margin:0">Encrypted with a key for your account. Deleting destroys your data and the key.</p>`;
+        $('.back', c).addEventListener('click', () => { screen = 'home'; draw(); });
+        $$('[data-act]', c).forEach(b => b.addEventListener('click', () => { const a = acts[+b.dataset.act]; a.undone = !a.undone; draw(); toast(a.undone ? `Undone: ${a.t.toLowerCase()}.` : 'Redone.'); }));
+        $('#delAcc').addEventListener('click', () => {
+          const s = openSheet(`<b class="h2">Delete your account?</b><p style="margin:0;font-size:16px">This removes all 7 apps, every row and your encryption key. It can't be undone. Export first if you want a copy.</p><label class="field"><span>Type DELETE to confirm</span><input id="dc" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="done"></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" class="b ghost" id="dcCancel">Keep my account</button><button type="button" class="b ink" id="dcGo" disabled>Delete</button></div>`, 'Delete account');
+          $('#dc', s).addEventListener('input', e => { $('#dcGo', s).disabled = e.target.value !== 'DELETE'; });
+          $('#dcCancel', s).addEventListener('click', closeSheet);
+          $('#dcGo', s).addEventListener('click', () => { closeSheet(); toast('Prototype: nothing was deleted.'); });
+        });
+      }
+    };
+    dock(null);   /* Home and You: not inside an app, so no Just used fold */
+    draw();
+    setNotes(`
+      <h2>Settings + activity</h2>
+      <p>The trust promises from the pitch, made into one screen behind the profile button.</p>
+      <ol class="beats">
+        <li><span class="n">a</span><span><b>Profile</b> top-right on Home opens "You". <span class="dec">Q36</span></span></li>
+        <li><span class="n">b</span><span><b>Activity first:</b> every change Clair made, across all apps, each with Undo (and Redo). Per-tab History lives in each app's menu.</span></li>
+        <li><span class="n">c</span><span><b>Credits:</b> what's left this month and what each action costs; at zero Clair pauses, apps keep working. The same meter sits in Clair's chat header.</span></li>
+        <li><span class="n">d</span><span><b>What Clair can read:</b> full help, field names only, or nothing, each said plainly.</span></li>
+        <li><span class="n">e</span><span><b>Your data:</b> export everything; delete asks you to type DELETE. Destructive is ink, never red.</span></li>
+      </ol>
+      <div class="try"><b>Try:</b> tap the profile button, undo the receipt, switch to "Field names only".</div>`);
+  }
+
+  /* =========================================================
+     6. LAPTOP
+     ========================================================= */
+  function laptop() {
+    let mode = 'use', selRow = 0;
+    const recent = [['Corner Market', 'Groceries · just now', '$35.83'], ['Union food court', 'Eating out · yesterday', '$11.40'], ['Gas', 'Transport · Tue', '$28.00'], ['Spotify', 'Subscriptions · Sun 22 Nov', '$11.99']];
+    const render = () => {
+      setSub(`<span class="lbl">mode</span><button type="button" data-lm="use" aria-pressed="${mode === 'use'}">Using an app</button><button type="button" data-lm="build" aria-pressed="${mode === 'build'}">Building an app</button>`);
+      $$('[data-lm]', subctl).forEach(b => b.addEventListener('click', () => { mode = b.dataset.lm; render(); }));
+      const side = active => `<aside class="side" aria-label="Tabs">
+          <span style="display:flex;gap:8px;align-items:center;font-family:var(--f-display);font-weight:800;font-size:17px;padding:0 6px 6px"><svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="9" height="9" rx="2" fill="#E3A72F"/><rect x="12" y="1" width="9" height="9" rx="2" fill="#5B7DB1"/><rect x="1" y="12" width="9" height="9" rx="2" fill="#8DB580"/><rect x="12" y="12" width="9" height="9" rx="2" fill="#9C6BA8"/></svg>quilt</span>
+          <button type="button" class="k" style="border:0;text-align:left">${icon('i-search', 16)}Search or ask<kbd>⌘K</kbd></button>
+          <span class="sect" style="padding:8px 8px 0"><span>Apps</span></span>
+          ${['budget', 'groceries', 'calendar', 'todos', 'workout', 'subs'].map(k => `<button type="button" class="tb${k === active ? ' on' : ''}" ${k === active ? 'aria-current="page"' : ''}><span class="patchi" style="background:${DYES[TABS[k].i]}">${icon(TABS[k].ic, 15)}</span>${TABS[k].n}${k === 'budget' && mode === 'use' ? '<span class="tag" style="margin-left:auto">just changed</span>' : ''}</button>`).join('')}
+          <button type="button" class="tb" style="color:var(--denim)">${icon('i-plus', 16)}New app</button>
+          <span style="margin-top:auto;display:flex;align-items:center;gap:8px;padding:8px;font-size:13px"><span class="patchi" style="width:28px;height:28px;border-radius:50%;background:${DYES[3]}">${icon('i-user', 15)}</span>Sam · 32 credits</span>
+        </aside>`;
+      if (mode === 'use') {
+        const r = recent[selRow];
+        device.innerHTML = `<div class="lapwrap"><div class="laptop" role="region" aria-label="Quilt on a laptop">${side('budget')}
+          <div class="mainp">
+            <div style="display:flex;align-items:center;gap:10px"><span class="patchi" style="background:${DYES[2]}">${icon('i-wallet')}</span><h2 class="h1">Budget</h2><span class="small">November</span><button type="button" class="ib" style="margin-left:auto" aria-label="Budget app menu">${icon('i-more')}</button></div>
+            <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:14px">
+              <section class="st card"><div style="display:flex;align-items:baseline;gap:8px"><span class="big">$376</span><span class="small">left of $800</span><span class="tag">just changed</span></div><div class="bar"><u style="width:53%"></u></div><span class="small">was $412 · Corner Market receipt from your phone, 5:41 pm</span></section>
+              <section class="st card">${[['Groceries', 89, 0, '$177.83 / $200'], ['Eating out', 91, 9, '$165 / $150'], ['Transport', 52, 0, '$42 / $80'], ['Subscriptions', 96, 0, '$38.46 / $40']].map(([n, w, o, v]) => `<div style="display:flex;justify-content:space-between;font-size:13px"><span>${n}</span><span class="mono">${v}</span></div><div class="bar" style="height:6px"><u style="width:${w}%"></u>${o ? `<s style="width:${o}%"></s>` : ''}</div>`).join('')}</section>
+            </div>
+            <div class="sect"><span>Recent</span><span>click a row</span></div>
+            <section class="st card" style="padding:6px;gap:2px">${recent.map((x, i) => `<button type="button" class="lrow${i === selRow ? ' on' : ''}" data-r="${i}"><span>${x[0]}</span><span class="small">${x[1]}</span><span>${x[2]}</span></button>`).join('')}</section>
+          </div>
+          <aside class="detail" aria-label="Row detail">
+            <span class="sect" style="margin:0"><span>Detail</span></span>
+            <h3 class="h2">${r[0]}</h3><span class="big" style="font-size:28px">${r[2]}</span><span class="small">${r[1]}</span>
+            ${selRow === 0 ? `<div class="st card" style="gap:4px">${['Oat milk $3.49', 'Eggs, dozen $4.29', 'Bananas $1.87', 'Chicken thighs $8.62', '+ 4 more'].map(t => `<span style="font-size:13px">${t}</span>`).join('')}</div><span class="small" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">also in <i class="dot" style="background:${DYES[1]}"></i>Groceries <i class="dot" style="background:${DYES[4]}"></i>Calendar</span>` : ''}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto"><button type="button" class="b ghost">Edit</button><button type="button" class="b ink">${icon('i-trash', 16)}Delete</button></div>
+          </aside></div></div>`;
+        $$('[data-r]').forEach(b => b.addEventListener('click', () => { selRow = +b.dataset.r; render(); }));
+      } else {
+        const L = LAYOUTS[B.layout];
+        const pcs = L.pieces.map(k => ({ ...PIECE[k] }));
+        device.innerHTML = `<div class="lapwrap"><div class="laptop build" role="region" aria-label="Building an app on a laptop">
+          <section class="chat" aria-label="Clair">
+            <div style="display:flex;align-items:center;gap:10px">${spool('waiting', 44)}<span style="flex:1;display:flex;flex-direction:column"><b>Clair</b><span class="small">answers from your apps only</span></span><span class="small"><span class="mono">32</span> credits</span></div>
+            <div class="bub">Track my subscriptions and warn me before they renew</div>
+            <div class="chalk">${chalkOl()}<p class="say">How early should I warn you before a renewal?</p><div style="display:flex;gap:8px"><span class="chip" aria-pressed="true">3 days before</span><span class="chip">1 week before</span></div></div>
+            <div class="clair">Basted 4 pieces. Here are 3 layouts.</div>
+            <div style="display:grid;gap:6px">${LAYOUTS.map((l, i) => `<button type="button" class="b ${i === B.layout ? '' : 'ghost'} wide" data-l="${i}" style="justify-content:space-between">${l.name}<span class="mono">${i + 1} of 3</span></button>`).join('')}</div>
+            <form class="chalk" style="flex-direction:row;align-items:center;gap:8px;padding:6px 6px 6px 12px;margin-top:auto" onsubmit="event.preventDefault()">${chalkOl()}<input placeholder="Tell Clair a change" aria-label="Tell Clair a change" enterkeyhint="send" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:16px;min-height:44px;outline:none;color:var(--w-ink)"><button class="b" aria-label="Send" style="width:44px;padding:0">${icon('i-send')}</button></form>
+          </section>
+          <section class="prevp" aria-label="Live preview">
+            <div style="display:flex;align-items:center;gap:10px"><span class="sect" style="margin:0">Live preview · ${L.name}</span><span style="margin-left:auto;display:flex;gap:8px"><button type="button" class="b ghost">${icon('i-layout')}Arrange</button><button type="button" class="b">Add to my apps</button></span></div>
+            <div class="frame">
+              <div style="display:flex;align-items:center;gap:10px"><span class="patchi" style="background:${DYES[5]}">${icon('i-repeat')}</span><h2 class="h1" style="font-size:26px">Subscriptions</h2></div>
+              <p class="small" style="margin:0">Example rows · cleared when you add it</p>
+              ${pcs.map(pieceCard).join('')}
+            </div>
+          </section></div></div>`;
+        $$('[data-l]').forEach(b => b.addEventListener('click', () => { B.layout = +b.dataset.l; render(); }));
+      }
+    };
+    render();
+    setNotes(`
+      <h2>Laptop</h2>
+      <p>Same components, wider. This is the screen beside the phone in the demo.</p>
+      <ol class="beats">
+        <li><span class="n">a</span><span><b>Using an app:</b> app list | open app | row detail. ⌘K opens the same search. <span class="dec">Q30</span></span></li>
+        <li><span class="n">b</span><span><b>Live update:</b> when the phone stitches the receipt, Budget here gets the "just changed" tag. The thread pull plays only on the phone that acted. <span class="dec">Q17</span></span></li>
+        <li><span class="n">c</span><span><b>Building:</b> Clair's conversation left (question, layouts, tell-Clair field), live preview right, with Arrange and Add to my apps.</span></li>
+      </ol>
+      <div class="try"><b>Try:</b> click Recent rows to change the detail panel; switch to "Building an app" and pick a layout on the left.</div>`);
+  }
+
+  /* =========================================================
+     CLAIR: the pinned bar's main button (section D). Tap = sheet; hold = talk.
+     ========================================================= */
+  const TALK = 'Spent $12 on lunch, gym tomorrow 6 pm';
+  const HINT = 'Release to send · slide up to cancel';
+  const CAP = {
+    'Spent $12 on lunch, gym tomorrow 6 pm': [{ d: 2, t: 'Budget · Eating out · $12', apps: ['Budget'], pins: ['budget'] }, { d: 4, t: 'Calendar + Workout · Gym · Sat 21 Nov, 6 pm', apps: ['Calendar', 'Workout'], pins: ['calendar'] }],
+    'Coffee $4.50, study group 2 pm': [{ d: 2, t: 'Budget · Eating out · $4.50', apps: ['Budget'], pins: ['budget'] }, { d: 4, t: 'Calendar · Study group · Fri 20 Nov, 2 pm', apps: ['Calendar'], pins: ['calendar'] }],
+    'Groceries $23, gym done 45 min': [{ d: 1, t: 'Budget + Groceries · $23', apps: ['Budget', 'Groceries'], pins: ['budget', 'groceries'] }, { d: 3, t: 'Workout · Gym · 45 min', apps: ['Workout'], pins: [] }]
+  };
+  const ASK = {
+    'Can I afford $60 concert tickets?': ['Yes. $376 left until 1 Dec; after $60 you’d have $316, about $29 a day.', [[2, 'Budget'], [4, 'Calendar']], 'Add to Budget as planned'],
+    'What’s due this week?': ['CS 3500 project, Mon 23 Nov at 11:59 pm. Spotify renews Sun 22 Nov ($11.99).', [[4, 'Calendar'], [5, 'Subscriptions']], 'Open Calendar'],
+    'How much did I spend today?': ['$35.83, all at Corner Market. $376 left until 1 Dec.', [[2, 'Budget']], 'Open Budget']
+  };
+  const TRY = h => h < 12 ? [['capture', 'Coffee $4.50, study group 2 pm'], ['ask', 'What’s due this week?'], ['build', 'Track my sleep']]
+    : h < 17 ? [['capture', TALK], ['ask', 'Can I afford $60 concert tickets?'], ['build', 'Track my plants']]
+    : [['capture', 'Groceries $23, gym done 45 min'], ['ask', 'How much did I spend today?'], ['build', 'Plan meals for next week']];
+  const listJoin = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+  const clairShow = html => $('#sheet').classList.contains('on') ? swapSheet(html, 'Clair') : openSheet(html, 'Clair', 'clairs');
+  const head = (face, title) => `<div style="display:flex;gap:12px;align-items:center">${face}<b class="h2">${title}</b></div>`;
+  function notchPin(pb) {
+    if (!pb || $('.notch', pb)) return; const n = document.createElement('i'); n.className = 'notch'; pb.appendChild(n);
+    n.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'scale(.95)' }, { opacity: 1, transform: 'none' }], { duration: RM ? T.fb : T.state, easing: EASE });
+  }
+
+  async function clairStart(prefill = '') {
+    const run = ++cRun, K = { capture: 'Add', ask: 'Ask', build: 'Build' };
+    const s = await clairShow(`${head(spool('hello', 44, true), 'Tell Clair anything')}
+      <form id="cform" style="display:flex;gap:8px;align-items:center"><label style="flex:1;display:flex"><span class="vh">Tell Clair anything</span><input id="cin" value="${esc(prefill)}" placeholder="Spent $12 on lunch, gym tomorrow 6 pm…" enterkeyhint="send" autocomplete="off" style="flex:1;min-width:0;min-height:48px;border:0;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--stitch);padding:0 12px;font:inherit;font-size:16px;color:var(--w-ink)"></label><button class="b" aria-label="Send to Clair" style="width:48px;padding:0">${icon('i-send')}</button></form>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">${[['talk', 'i-mic', 'Talk'], ['photo', 'i-cam', 'Photo'], ['file', 'i-clip', 'File']].map(([k, ic, n]) => `<button type="button" class="chip" data-cm="${k}" style="min-height:48px;justify-content:center;font-size:16px">${icon(ic)}${n}</button>`).join('')}</div>
+      <p class="small" id="cnote" aria-live="polite" style="margin:0" hidden></p>
+      <div class="sect"><span>Try</span></div>
+      <div class="sugg">${TRY(new Date().getHours()).map(([k, t]) => `<button type="button" class="sg" data-kind="${k}" data-t="${esc(t)}"><span class="k">${K[k]}</span><span>${esc(t)}</span></button>`).join('')}</div>
+      <button type="button" class="lk" data-cm="chat" style="align-self:flex-start">Open chat ›</button>`);
+    if (run !== cRun) return;
+    const note = t => { const n = $('#cnote', s); n.hidden = false; n.textContent = t; };
+    const route = (t, kind) => {
+      if (kind === 'ask') return clairAsk(t);
+      if (kind === 'capture') return clairResult(t);
+      closeSheet(); B.step = 0; pick('build'); const say = $('#say'); if (say) say.value = t;
+    };
+    $('#cform', s).addEventListener('submit', e => { e.preventDefault(); const v = $('#cin', s).value.trim(); if (v) route(v, /\?$/.test(v) ? 'ask' : 'capture'); });
+    $$('[data-kind]', s).forEach(b => b.addEventListener('click', () => route(b.dataset.t, b.dataset.kind)));
+    $$('[data-cm]', s).forEach(b => b.addEventListener('click', () => {
+      const k = b.dataset.cm;
+      if (k === 'talk') clairTalk(false);
+      else if (k === 'photo') note('Opens the camera, then Review receipt.');
+      else if (k === 'file') note('Opens your files; the item comes back attached here.');
+      else note('Opens the full Clair chat.');
+    }));
+  }
+
+  /* talk: the waveform is a running stitch whose stitch lengths follow the voice level */
+  async function clairTalk(held) {
+    const run = ++cRun, N = 24;
+    const s = await clairShow(`${head(spool('waiting', 44), 'Listening')}
+      <svg class="stw" viewBox="0 0 300 24" preserveAspectRatio="none" aria-hidden="true">${Array.from({ length: N }, (_, i) => `<rect x="${i * 12.5 + 2.75}" y="11" width="7" height="2.2" rx="1.1"/>`).join('')}</svg>
+      <p class="tr20" id="ctr" aria-live="polite"></p>
+      ${held ? `<p class="small" id="chint" style="margin:0">${HINT}</p>` : `<div style="display:grid;grid-template-columns:1fr 1.6fr;gap:8px"><button type="button" class="b ghost" id="tCancel">Cancel</button><button type="button" class="b" id="tSend">Send</button></div>`}`);
+    if (run !== cRun) return;
+    const words = TALK.split(' '), out = $('#ctr', s), rects = $$('.stw rect', s); let i = 0;
+    const wt = setInterval(() => { if (run !== cRun || i >= words.length) return clearInterval(wt); out.textContent = words.slice(0, ++i).join(' '); }, 220);
+    if (!RM) {
+      let ph = 0;
+      const wv = setInterval(() => {
+        if (run !== cRun) return clearInterval(wv); ph += .7; const speaking = i < words.length;
+        rects.forEach((r, k) => { const lvl = speaking ? .3 + .7 * Math.abs(Math.sin(ph + k * .55)) * Math.random() : .15, w = 3 + lvl * 8.5; r.setAttribute('width', w.toFixed(1)); r.setAttribute('x', (k * 12.5 + (12.5 - w) / 2).toFixed(1)); });
+      }, 90);
+    }
+    if (!held) { $('#tCancel', s).addEventListener('click', () => clairStart()); $('#tSend', s).addEventListener('click', talkSend); }
+  }
+
+  /* N2 stitches settle: on send every stitch eases back to its rest length and the hint says "Sending", then the swap. RM: hint only */
+  async function talkSend() {
+    const s = $('#sheet'), rects = $$('.stw rect', s); if (!rects.length) return clairResult(TALK);
+    const run = ++cRun;   /* stops the waveform + transcript timers */
+    const h = $('#chint', s), b = $('#tSend', s); if (h) h.textContent = 'Sending'; if (b) { b.textContent = 'Sending'; b.disabled = true; }
+    if (!RM) rects.forEach((r, k) => { const w = +r.getAttribute('width'); r.setAttribute('width', 7); r.setAttribute('x', k * 12.5 + 2.75); r.animate([{ transform: `scaleX(${w / 7})` }, { transform: 'none' }], { duration: T.fb, easing: EASE }); });
+    await sleep(T.fb + 40); if (run === cRun) clairResult(TALK);
+  }
+
+  /* capture result: basted proposals; nothing saves before "Add to N apps" */
+  async function clairResult(text) {
+    const run = ++cRun;
+    const quote = `<p style="margin:0;font-size:16px;color:var(--w-ink)">“${esc(text)}”</p>`;
+    let s = await clairShow(`${head(spool('thinking', 44), 'Reading that')}${quote}`);
+    await sleep(RM ? T.fb : 700); if (run !== cRun) return;
+    const cards = CAP[text] || CAP[TALK], apps = [...new Set(cards.flatMap(c => c.apps))];
+    s = await clairShow(`${head(spool('waiting', 44), 'Ready to add')}${quote}
+      ${cards.map((c, k) => `<section class="st card basted cprop" data-k="${k}"><div style="display:flex;gap:12px;align-items:center;min-height:24px"><i class="dot" style="background:${DYES[c.d]}"></i><span style="font-size:16px;font-weight:500">${c.t}</span></div></section>`).join('')}
+      <p class="small" style="margin:0">Nothing is saved until you add it.</p>
+      <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:8px;min-height:48px"><button type="button" class="b ghost" id="cEdit">Edit</button><button type="button" class="b" id="cAdd">Add to ${apps.length} apps</button></div>`);
+    if (run !== cRun) return;
+    /* N3 proposals arrive: each destination card lands on its own, 40ms apart (cap 3); the buttons stay put. RM: opacity 120, no stagger */
+    $$('.cprop', s).forEach((p, i) => p.animate(RM ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: RM ? T.fb : T.state, delay: RM ? 0 : Math.min(i, 2) * 40, easing: EASE, fill: 'backwards' }));
+    $('#cEdit', s).addEventListener('click', () => clairStart(text));
+    let busy = false;
+    $('#cAdd', s).addEventListener('click', async e => {
+      if (busy) return; busy = true; e.currentTarget.disabled = true;
+      const alive = () => run === cRun;
+      $$('.cprop', s).forEach(c => c.classList.remove('basted'));   /* basted → running stitch */
+      await sleep(RM ? T.fb : T.state); if (!alive()) return;
+      const pairs = [];
+      $$('.cprop', s).forEach(el => cards[+el.dataset.k].pins.forEach(p => { const ico = $(`.dock .pb[data-pin="${p}"] .ico`); if (ico) pairs.push({ from: $('.dot', el), to: ico, top: true }); }));
+      const land = to => notchPin(to.closest('.pb'));
+      if (RM || !pairs.length) { pairs.forEach(p => land(p.to)); await sleep(RM ? T.fb : T.state); }
+      else if (!(await threadPull(pairs, land, alive))) return;
+      if (!alive()) return;
+      closeSheet();
+      toast(`Added to ${listJoin(apps)}.`, 'Undo', () => $$('.dock .notch').forEach(n => n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.stateOut, easing: EASE }).onfinish = () => n.remove()));
+    });
+  }
+
+  async function clairAsk(text) {
+    const run = ++cRun;
+    await clairShow(`${head(spool('thinking', 44), 'Looking')}<p style="margin:0;font-size:16px;color:var(--w-ink)">“${esc(text)}”</p>`);
+    await sleep(RM ? T.fb : 700); if (run !== cRun) return;
+    const [ans, srcs, act] = ASK[text] || ASK['Can I afford $60 concert tickets?'];
+    const s = await clairShow(`${head(spool('stitched', 44, true), esc(text))}
+      <section class="answer" style="color:var(--w-ink)"><p style="margin:0;font-size:16px;line-height:1.45">${ans}</p><div style="display:flex;gap:8px;flex-wrap:wrap">${srcs.map(([d, n]) => `<button type="button" class="chip" data-from="${n}"><i class="dot" style="background:${DYES[d]}"></i>${n}</button>`).join('')}</div></section>
+      <button type="button" class="b wide" id="aAct">${act}</button>
+      <button type="button" class="lk" id="aBack" style="align-self:flex-start">Ask something else ›</button>`);
+    if (run !== cRun) return;
+    $('#aAct', s).addEventListener('click', () => { closeSheet(); toast(act.startsWith('Add') ? 'Added $60 concert tickets to Budget as planned.' : act.replace('Open', 'Opens') + '.'); });
+    $$('[data-from]', s).forEach(b => b.addEventListener('click', () => { closeSheet(); toast(`Opens ${b.dataset.from}.`); }));
+    $('#aBack', s).addEventListener('click', () => clairStart());
+  }
+
+  /* ---------- wiring ---------- */
+  let current = 'build';
+  function pick(sc) {
+    current = sc; runId++;
+    $$('[data-sc]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.sc === sc)));
+    stage.classList.toggle('wide', sc === 'laptop');
+    if (sc === 'build') { setNotes(BUILD_NOTES(), B.step); buildSub(); goStep(B.step); }
+    else if (sc === 'stitched') stitched();
+    else if (sc === 'search') search();
+    else if (sc === 'rows') rows();
+    else if (sc === 'settings') settings();
+    else laptop();
+  }
+  $$('[data-sc]').forEach(b => b.addEventListener('click', () => pick(b.dataset.sc)));
+  pick('build');
+})();
+</script>
