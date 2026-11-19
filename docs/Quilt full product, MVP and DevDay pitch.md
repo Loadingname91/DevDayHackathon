@@ -2,9 +2,12 @@
 
 Nov 15, 2026 · @VendorSpace
 
-Quilt stitches your life together: describe any need and Clair sews a new patch, a tab made to fit you, into one quilt where every patch connects. This doc starts with everything Quilt can become, then picks the slice we build for Lassonde DevDay on Nov 20, with the business model, technical risks, why people can trust it, the pitch and the application.
+Quilt stitches your life together: describe any need and Clair sews a new patch, an app made to fit you, into one quilt where every patch connects. This doc starts with everything Quilt can become, then picks the slice we build for Lassonde DevDay on Nov 20, with the business model, technical risks, why people can trust it, the pitch and the application.
 
 **Taglines to pick from:** "Your life, stitched together." · "Every app you need, stitched into one." · "Say what you need. Clair stitches it in."
+
+Mock App from claude Design - https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P (design system + every screen in the Quilter's Workbench style, clickable; updated Nov 19)
+Design book (all screens, decisions and prototypes in one place) - https://claude.ai/artifact/N37FhQVVYTNoeDf4rJFyjq
 
 ## Focus: what wins the pitch
 
@@ -23,7 +26,7 @@ Judged the way YC judges, the pitch wins on one painful problem, one starting us
 
 Every persona has the same three pains in different clothes: too many paid apps, data that doesn't connect, and the one app they need that nobody built. Quilt starts with students and grows by persona, one set of patches at a time.
 
-| Persona | Their pain | First tabs | How the stitching helps |
+| Persona | Their pain | First apps | How the stitching helps |
 | --- | --- | --- | --- |
 | Student (first user) | Forgotten subscriptions, tight budget, gym, classes and deadlines in separate apps | Budget and subscriptions, grocery from photo, gym log, assignments | A receipt updates groceries and budget; renewals, workouts and due dates share one calendar |
 | Busy parent or household | Bills, chores, meals, kids' schedules spread across apps and group chats | Bills, chore rota, meal plan and pantry, family calendar | The pantry feeds the shopping list, bills land on the family calendar, a chore form roommates or kids can fill |
@@ -35,15 +38,15 @@ Every persona has the same three pains in different clothes: too many paid apps,
 
 ## The full product: where Quilt goes
 
-Quilt's full vision is one quilt for your whole life. Every need becomes a patch, a tab made to fit you; the stitching between patches is shared data; and Clair is the one who sews, filling patches and reasoning across them. The hackathon demo is the first few patches, and the pitch should show the whole quilt in one slide.
+Quilt's full vision is one quilt for your whole life. Every need becomes a patch, an app made to fit you; the stitching between patches is shared data; and Clair is the one who sews, filling patches and reasoning across them. The hackathon demo is the first few patches, and the pitch should show the whole quilt in one slide.
 
 **The metaphor, end to end** (use it in the pitch and the UI):
 
-- **Patch** = a tab, each one cut to fit your life.
-- **Stitching** = data flowing between tabs: a receipt patch tugs the budget and calendar patches with it.
+- **Patch** = an app on your Home, each one cut to fit your life.
+- **Stitching** = data flowing between apps: a receipt patch tugs the budget and calendar patches with it.
 - **Clair** = the quilter. You say what you need; Clair sews it in.
 - **Patterns** = templates and the marketplace: patches others designed that you can sew into your own quilt.
-- **Quilting circle** = shared tabs, roommates and teams working on one quilt.
+- **Quilting circle** = shared apps, roommates and teams working on one quilt.
 - **Warm, not technical.** A quilt is personal, handmade and grows over time. That is the feel we want, not a cold "system".
 
 **Five product pillars**
@@ -51,56 +54,56 @@ Quilt's full vision is one quilt for your whole life. Every need becomes a patch
 | Pillar | What the user gets | Full-scale features |
 | --- | --- | --- |
 | Build | Any app you can describe, in seconds | Clair builder from plain words, ready-made templates, full styling (fonts, colours, layout), edit, duplicate and link any component |
-| Capture | Logging that takes no effort | Photo, voice and chat entry; Clair fills any tab; later live bank and health feeds and outside AI agents writing in through MCP |
-| Connect | Your life, joined up | Data linked across tabs, a calendar of everything, and questions across all of it ("if I cut entertainment subscriptions, how much do I save this year?"), plus proactive nudges |
+| Capture | Logging that takes no effort | Photo, voice and chat entry; Clair fills any app; later live bank and health feeds and outside AI agents writing in through MCP |
+| Connect | Your life, joined up | Data linked across apps, a calendar of everything, and questions across all of it ("if I cut entertainment subscriptions, how much do I save this year?"), plus proactive nudges |
 | Everywhere | One app on every device | Phone, web and desktop from one codebase; real-time sync with offline use; encryption per account; export and import of all your data; your own data-retention settings |
-| Share and earn | Tabs as a creator economy | A marketplace where anyone publishes a tab, free, one-time or by subscription; live collaboration on shared tabs; team workspaces for companies |
+| Share and earn | Apps as a creator economy | A marketplace where anyone publishes an app, free, one-time or by subscription; live collaboration on shared apps; team workspaces for companies |
 
-**Flywheel.** More users build tabs, the best become marketplace templates, templates bring new users with zero blank-canvas problem, and creators earn, so they build more. Meanwhile each user's data gets more connected, so Clair's answers get better and switching away gets harder.
+**Flywheel.** More users build apps, the best become marketplace templates, templates bring new users with zero blank-canvas problem, and creators earn, so they build more. Meanwhile each user's data gets more connected, so Clair's answers get better and switching away gets harder.
 
 **Roadmap**
 
-1. **Hackathon (Nov 20):** the build-and-connect core, five demo tabs, live photo fill, the same tab live on phone and laptop.
+1. **Hackathon (Nov 20):** the build-and-connect core, five demo apps, live photo fill, the same app live on phone and laptop.
 2. **Private beta (next 3 months):** U of U students; templates first, Clair for customizing; sync and offline; measure whether people still log after 30 days.
-3. **Public launch:** paid tier, styling, voice capture, cross-tab questions and nudges, data export.
-4. **Marketplace:** creators publish and sell tabs; live sharing with friends and roommates.
-5. **Teams:** company workspaces, shared tabs, admin controls, MCP so other AI agents can use Quilt.
+3. **Public launch:** paid tier, styling, voice capture, cross-app questions and nudges, data export.
+4. **Marketplace:** creators publish and sell apps; live sharing with friends and roommates.
+5. **Teams:** company workspaces, shared apps, admin controls, MCP so other AI agents can use Quilt.
 
-**What to measure (north star and guardrails).** North star: tabs with a new entry in the last 7 days per user. Guardrails from the architecture plan: time to first useful tab, share of Clair-built tabs kept without manual fixes, and Clair cost per successful task.
+**What to measure (north star and guardrails).** North star: apps with a new entry in the last 7 days per user. Guardrails from the architecture plan: time to first useful app, share of Clair-built apps kept without manual fixes, and Clair cost per successful task.
 
 **Hard calls a PM would make now.**
 
 - **Win one life area first.** Money (subscriptions, groceries, budget) is the wedge with the most pain and the clearest saving. Gym and to-dos follow.
-- **Templates before blank canvas.** The marketplace is the long-term answer; until then ship 10 strong first-party tabs.
+- **Templates before blank canvas.** The marketplace is the long-term answer; until then ship 10 strong first-party apps.
 - **Don't fight specialists on depth.** Quilt wins on breadth and connection, and lets power users link out where needed.
 - **Be honest on privacy.** Encrypted at rest with per-account keys, never claim end-to-end, and say clearly what goes to the AI provider.
 - **Workspace-level sharing only.** No per-block permissions, which keeps sharing simple and the system fast at scale.
 
 ## Feature catalogue (roadmap, for Q&A)
 
-The full catalogue takes the best feature from each category leader and makes it work across every tab. None of these need building for DevDay; the top eight go on the roadmap slide.
+The full catalogue takes the best feature from each category leader and makes it work across every app. None of these need building for DevDay; the top eight go on the roadmap slide.
 
 | Area | Feature | Seen in | How it looks in Quilt | Tier |
 | --- | --- | --- | --- | --- |
-| Build | Describe a tab, Clair builds it | Notion AI, Taskade | "Track my subscriptions" becomes a working tab | Free |
-| Build | Templates and remix | Notion "Duplicate as template", Wabi | Start from a ready tab, or copy one a friend shared | Free |
+| Build | Describe an app, Clair builds it | Notion AI, Taskade | "Track my subscriptions" becomes a working app | Free |
+| Build | Templates and remix | Notion "Duplicate as template", Wabi | Start from a ready app, or copy one a friend shared | Free |
 | Capture | Photo to rows | Glide AI columns, Notion Autofill | Receipt photo becomes grocery and expense rows | Free with a cap |
-| Capture | Voice brain-dump | Todoist Ramble | Say a messy update; Clair splits it across tabs | Free with a cap |
+| Capture | Voice brain-dump | Todoist Ramble | Say a messy update; Clair splits it across apps | Free with a cap |
 | Capture | Siri, Shortcuts, Control Center | Apple App Intents | "Hey Siri, log 2 coffees in Quilt" | Free |
 | Automate | Scheduled Clair runs | ChatGPT Tasks, Claude scheduled tasks | "Every Sunday 8 pm, review my spending and set next week's budget" | Paid |
 | Automate | Event triggers | Airtable automations, Zapier | "When a workout is logged, update my streak; nudge me after 3 missed days" | Paid |
-| Automate | Buttons that run a saved prompt | Notion buttons with agents | A "Plan meals from pantry" button on the grocery tab | Free |
-| Connect | Bank feed with subscription detection | Plaid, Rocket Money | The subscriptions tab fills itself and flags duplicates | Paid |
+| Automate | Buttons that run a saved prompt | Notion buttons with agents | A "Plan meals from pantry" button on the grocery app | Free |
+| Connect | Bank feed with subscription detection | Plaid, Rocket Money | The subscriptions app fills itself and flags duplicates | Paid |
 | Connect | Health data | Apple Health, Health Connect | Steps and sleep feed progress and chart blocks | Free |
 | Connect | Live sync tables | Coda Packs | A table that mirrors Google Calendar, Strava or GitHub | Power |
-| Connect | Inbound webhooks and MCP | Zapier, Make, Raycast | Any service or outside AI agent can read and write tabs | Power |
+| Connect | Inbound webhooks and MCP | Zapier, Make, Raycast | Any service or outside AI agent can read and write apps | Power |
 | Glance | Widgets and Live Activities | Widgetsmith, Hevy | Rest timer or budget left on the lock screen; widget changes by time of day | Free (basic), Paid (smart) |
 | Insight | Records and anomaly banners | Hevy Live PR | "New bench record" or "spending spike" on any metric | Free |
-| Insight | Questions across all tabs | (Quilt's own) | "If I cut entertainment subscriptions, what do I save this year?" | Paid |
+| Insight | Questions across all apps | (Quilt's own) | "If I cut entertainment subscriptions, what do I save this year?" | Paid |
 | Insight | Forgiving streaks | Streaks, Loop | Streak block with freeze days | Free |
-| Share | Public tab pages and forms | Notion Sites, Notion Forms | RSVP or chore sign-up form that writes into your tab | Free |
-| Share | Marketplace | Wabi, Notion templates | Creators sell tabs once or by subscription | Revenue share |
-| Share | Live collaboration and team workspaces | Notion, Airtable | Roommates share a bills tab; companies share tabs with staff | Teams |
+| Share | Public app pages and forms | Notion Sites, Notion Forms | RSVP or chore sign-up form that writes into your app | Free |
+| Share | Marketplace | Wabi, Notion templates | Creators sell apps once or by subscription | Revenue share |
+| Share | Live collaboration and team workspaces | Notion, Airtable | Roommates share a bills app; companies share apps with staff | Teams |
 
 **Top eight for the roadmap slide:** scheduled and triggered Clair runs; widgets and Live Activities; voice brain-dump; bank feed with subscription detection; Apple Health and Health Connect; marketplace with remix; shareable forms; MCP so outside agents can use Quilt.
 
@@ -129,48 +132,41 @@ What the market teaches: free tiers convert on structural limits (number of proj
 
 | Plan | Price | What you get |
 | --- | --- | --- |
-| Free | $0 | 5 tabs, every block, templates, sync on all your devices, 50 Clair credits a month, button automations, basic widgets |
-| Plus | $6 a month ($48 a year) | Unlimited tabs, 1,000 Clair credits, voice capture, 10 scheduled or triggered automations, smart widgets, questions across tabs, full export |
+| Free | $0 | 5 apps, every block, templates, sync on all your devices, 50 Clair credits a month, button automations, basic widgets |
+| Plus | $6 a month ($48 a year) | Unlimited apps, 1,000 Clair credits, voice capture, 10 scheduled or triggered automations, smart widgets, questions across apps, full export |
 | Pro | $12 a month ($96 a year) | 4,000 credits, unlimited automations, connectors (bank feed, health data, live sync tables), webhooks and MCP, option to bring your own AI key |
 | Teams | $10 per seat a month | Shared workspaces, pooled credits, roles and admin, shared templates |
 
-- **Credits, made simple:** a Clair chat step costs 1, building a tab 10, a photo fill 5, a scheduled run 2. Extra packs are $5 for 500 and never expire.
-- **No surprise bills:** alerts at 80% and 100%, then Clair pauses until next month or a top-up. Tabs, logging, sync and widgets never stop.
-- **Marketplace:** creators keep 80% of what their tabs earn; Quilt takes 20%.
+- **Credits, made simple:** a Clair chat step costs 1, building an app 10, a photo fill 5, a scheduled run 2. Extra packs are $5 for 500 and never expire.
+- **No surprise bills:** alerts at 80% and 100%, then Clair pauses until next month or a top-up. Apps, logging, sync and widgets never stop.
+- **Marketplace:** creators keep 80% of what their apps earn; Quilt takes 20%.
 - **Price anchor:** Plus at $6 costs less than Rocket Money Premium+ ($15) plus Todoist Pro ($5) together, before counting gym or habit apps.
-- **In the pitch, say only:** "Free to start, $6 a month for unlimited tabs and Clair." The marketplace and teams are the expansion line.
+- **In the pitch, say only:** "Free to start, $6 a month for unlimited apps and Clair." The marketplace and teams are the expansion line.
 
 All Quilt prices are a starting proposal to test with the survey and waitlist, not a decision.
 
 ## The MVP: what we build for DevDay
 
-The MVP takes one thin slice of every pillar except Share, so the demo shows the whole idea working end to end: describe, build, capture, connect, and live on two devices. Two people, five days to the event.
+The MVP takes one thin slice of every pillar except Share, so the demo shows the whole idea working end to end: capture, connect, confirm, and live on two devices. Two people. Updated Nov 19 to match the build docs: `docs/backend.md`, `docs/clair-agent.md`, `docs/onboarding.md` and `docs/ui-tech-plan.md`.
 
 | Pillar | Built before Friday | Built live on Nov 20 (judged) | Faked or cut |
 | --- | --- | --- | --- |
-| Build | Clair turns a sentence into a tab spec, which is checked, retried if invalid, and drawn from 9 blocks: page, text, metric, progress, collection, list/table/calendar view, form, chart | Polishing the build animation | Styling controls, editing blocks by hand |
-| Capture | Forms and quick-add on every tab | **Photo fill:** receipt photo becomes rows checked against the tab's fields | Voice, Siri, bank feeds |
-| Connect | Calendar tab reads dates from every tab; budget reads grocery spend | Receipt updates groceries, budget and calendar together | Questions across tabs, nudges, automations |
-| Everywhere | One web app at phone width, data on the server, the same tab live on phone and laptop |  | Offline mode, native apps, encryption, export |
-| Share and earn |  |  | Marketplace, collaboration, teams (roadmap slide only) |
+| Build | App specs drawn from 9 blocks: page, text, metric, progress, collection, list/table/calendar view, form, chart; five starter apps from templates | Clair proposes a new app from a sentence (stretch) | Styling controls, editing blocks by hand |
+| Capture | Quick-add, reorder and lists (Weekly shop, Taco night, Costco run) in every app | **Clair reads any photo or file:** says what it sees, asks a menu question when unsure, and shows one card to OK. Receipt first, then a fridge photo checked against your usual groceries | Bank feeds, Siri |
+| Connect | Calendar shows dates from every app; Budget reads grocery spend | One OK updates Groceries, Budget and Calendar together, with Undo | Questions across apps, nudges, automations |
+| Everywhere | Android app (React + Capacitor) on the phone, the same build as a website on the laptop, data on the server, live sync between them | | Offline edits, iOS, encryption, export |
+| Share and earn | | | Marketplace, collaboration, teams (roadmap slide only) |
 
-**Five demo tabs, pre-seeded with realistic data:** budget and subscriptions, gym logger, to-dos, calendar of everything, grocery from a photo.
+**Demo apps, pre-seeded with realistic data:** Budget, Groceries, Calendar, Classes, Workout, To-dos and Subscriptions. The scripted demo uses Budget, Groceries and Calendar.
 
-**Stack:** Next.js (TypeScript) web app, Postgres or SQLite with one blocks table, Zod for checking specs, Claude with vision for Clair, hosted on one live URL. No rules at DevDay restrict this.
+**Stack:** React + Vite web app wrapped with Capacitor for Android; a Python (FastAPI) API that alone holds the Claude key; Supabase for Postgres, guest sign-in and live updates; Claude (`claude-opus-5-5`, vision and tools) for Clair through the Anthropic Python SDK tool runner. All formulas run in Python on the server. No rules at DevDay restrict this.
 
 **Split for two people**
 
-- **Person A, engine and Clair:** tab spec schema, checker and retry loop, compiler into the blocks table, photo-fill endpoint, seed data.
-- **Person B, app and demo:** block renderer in the mockup's look (warm ground, Hanken Grotesk and DM Mono, tab colours, no red), tab switcher, live refresh across devices, landing page and waitlist, pitch slides.
+- **Person A, API and Clair:** database schema and seed, change sets with confirm and undo, Python formulas, the Clair agent loop and its tools, join codes.
+- **Person B, app and demo:** the app in the design book's look (warm ground, Hanken Grotesk and DM Mono, app dyes, no red), Home, the Clair sheet, the thread pull, live refresh across devices, the Android build, pitch slides.
 
-**Five-day plan**
-
-1. **Sat to Sun:** spec schema and renderer for all 9 blocks, one tab built by hand end to end.
-2. **Mon:** Clair builds tabs from a sentence; checker and retry; landing page and survey go live.
-3. **Tue:** five demo tabs seeded; calendar and budget read across tabs; phone and laptop refresh live.
-4. **Wed:** photo-fill spike so Friday is low-risk; record the backup demo video.
-5. **Thu:** pitch rehearsals, survey and waitlist numbers into slides, slack time.
-6. **Fri, Nov 20:** finish and polish photo fill live, then pitch.
+**Plan.** Tonight: schema, seed, API skeleton, the app shell and the Android build. Nov 20: confirm and undo, the Clair loop (receipt, then fridge), the Clair sheet, two-device sync, onboarding, three rehearsals. Hour by hour: `docs/backend.md` §13.
 
 ## Technical quirks and risks
 
@@ -178,18 +174,18 @@ The biggest technical risk is the AI misbehaving, and Quilt's design answers it:
 
 | Risk | Why it bites | MVP answer | Full-product answer |
 | --- | --- | --- | --- |
-| Clair returns a broken or odd tab | AI output varies | Strict schema check, automatic retry, then a friendly error | A test set of about 100 prompts with expected tabs, run on every change; features ship only when it passes |
+| Clair returns a broken or odd app or change | AI output varies | Clair only proposes; the server checks every change against the app's fields before the card shows; nothing saves before OK, and every OK can be undone | A test set of about 100 prompts with expected apps, run on every change; features ship only when it passes |
 | Builds feel slow | A multi-step AI build takes seconds | Show placeholder blocks filling in as Clair works | Stream each step live as it happens |
-| Photo fill misreads a receipt | Blurry photos, store abbreviations | Show the rows for a one-tap confirm before saving; a known-good photo for the demo | Learn the user's stores and items over time |
+| Clair misreads a photo | Blurry photos, store abbreviations | Clair says what it sees first, then shows items on one card to review before OK; "Use sample" (marked as a sample) if a live read is slow | Learn the user's stores and items over time |
 | AI cost per user | Every Clair action costs money | Small demo, one model | Credits per plan, cheaper models for easy steps, a usage ledger from day one |
 | Malicious text in data | A receipt or shared template could contain instructions aimed at Clair | Treat all data as data, never as instructions | Approval step before deletes or big changes; attack cases in the test set |
-| Two devices edit at once | Phone offline, laptop online | Server-only data, so no conflicts | Server-ordered changes with per-field versions; a two-device conflict test must pass with zero lost edits |
-| Changing a tab breaks linked tabs | The budget reads the grocery tab's fields | Fixed demo schemas | Link checks on every change and versioned block types with migrations |
+| Two devices edit at once | Phone and laptop both open | Writes go to the server, which orders every change; a second confirm of the same card is refused; each device keeps a local copy only for fast loading | Server-ordered changes with per-field versions; a two-device conflict test must pass with zero lost edits |
+| Changing an app breaks linked apps | The budget reads the grocery app's fields | Fixed demo schemas | Link checks on every change and versioned block types with migrations |
 | Generic blocks hit a ceiling | Some needs don't fit 9 blocks | Pick demos that fit | Grow the block library deliberately; every first-party template must be buildable from blocks alone |
 | Encryption limits search | Encrypted data is hard to filter and compute on | Not in MVP | Per-account keys plus a minimal search index; never claim end-to-end encryption |
-| Widgets, Siri, Live Activities need native apps | A web app can't reach the lock screen | Web app at phone width | React Native (Expo) apps sharing the same renderer |
+| Widgets, Siri, Live Activities need native apps | A web app can't reach the lock screen | Android app built with Capacitor around the same React code | Capacitor plugins for widgets and shortcuts; iOS from the same code |
 | Bank data brings compliance work | Security audits, Plaid costs | Not in MVP | Pro tier only, after a security review |
-| Stage demo fails | Wi-Fi, AI outage | Phone hotspot, recorded backup video, cached responses |  |
+| Stage demo fails | Wi-Fi, AI outage | Phone hotspot, functions warmed before the pitch, "Use sample" marked as a sample, recorded backup video |  |
 
 ## Why people can trust Quilt
 
@@ -197,43 +193,43 @@ People will put their money, health and plans into Quilt only if it feels safe a
 
 **Advantages people feel**
 
-- **A new app with no install.** Every tab is a self-contained app. Describe it and it exists: no app store, no download, no new login.
+- **A new app with no install.** Every app in Quilt is self-contained. Describe it and it exists: no app store, no download, no new login.
 - **Everywhere, in real time.** Build on your phone and it's already on your laptop, live, on any platform.
-- **One subscription, not five.** Quilt replaces the budget, gym and to-do apps you pay for separately, and new tabs never cost a new subscription.
+- **One subscription, not five.** Quilt replaces the budget, gym and to-do apps you pay for separately, and new apps never cost a new subscription.
 - **Your life, joined up.** One receipt updates groceries, budget and calendar. No single-purpose app can do that.
-- **It doesn't break.** Clair builds from tested blocks, not generated code, so tabs behave the same every day.
+- **It doesn't break.** Clair builds from tested blocks, not generated code, so apps behave the same every day.
 
 **Promises that build confidence**
 
-- **Your data is yours.** Export any tab, or everything, at any time; delete your account and your data and keys are destroyed.
+- **Your data is yours.** Export any app, or everything, at any time; delete your account and your data and keys are destroyed.
 - **Encrypted with your own account key.** Stored encrypted with a key per account. We never claim end-to-end encryption, because Clair has to read data to help you.
 - **Clear about AI.** We say plainly what goes to the AI provider, and you choose: full help, field names only, or none.
-- **Clair asks before big changes.** Deleting a tab or editing many records shows a preview and waits for your yes. Every change can be undone.
+- **Clair asks before big changes.** Deleting an app or editing many records shows a preview and waits for your yes. Every change can be undone.
 - **No bank login needed.** Receipts and manual entries work out of the box; bank linking is optional and comes later.
-- **No surprise bills.** Credits pause, they never auto-charge, and your tabs keep working at zero credits.
-- **No lock-in to us.** Tabs export as a readable spec plus data, the same format the marketplace uses.
+- **No surprise bills.** Credits pause, they never auto-charge, and your apps keep working at zero credits.
+- **No lock-in to us.** Apps export as a readable spec plus data, the same format the marketplace uses.
 
 ## What makes or breaks Quilt
 
-Quilt's strength is not "AI builds an app". Notion, Airtable and Taskade already do that. Its strength is that your tabs are joined up and fill themselves: one receipt photo updates groceries, budget and calendar at once. Pitch that, and lead the demo with it.
+Quilt's strength is not "AI builds an app". Notion, Airtable and Taskade already do that. Its strength is that your apps are joined up and fill themselves: one receipt photo updates groceries, budget and calendar at once. Pitch that, and lead the demo with it.
 
-**Hero line (YC two-sentence test):** Quilt is one app for your money, workouts and to-dos that builds the tabs you describe and stitches them together. Snap a grocery receipt and your grocery list, budget and calendar all update.
+**Hero line (YC two-sentence test):** Quilt is one app for your money, workouts and to-dos that builds the apps you describe and stitches them together. Photograph a grocery receipt and your grocery list, budget and calendar all update.
 
-**Our insight (what others miss):** personal tracking fails at the logging, not the building. Day-30 retention for productivity and fitness apps is around 8 to 9%. Quilt wins on capture (photo, chat) and on data that flows between tabs, which single-purpose apps can't do and Notion only does with manual setup.
+**Our insight (what others miss):** personal tracking fails at the logging, not the building. Day-30 retention for productivity and fitness apps is around 8 to 9%. Quilt wins on capture (photo, chat) and on data that flows between apps, which single-purpose apps can't do and Notion only does with manual setup.
 
 | Competitor | What it does | Why Quilt is different |
 | --- | --- | --- |
-| [Notion AI](https://news.lavx.hu/article/notion-s-ai-agents-now-build-over-half-of-databases-as-custom-tools-launch) | AI agents build databases in a desktop workspace | Quilt is phone-first, quick to log into, and tabs share data without manual relations |
+| [Notion AI](https://news.lavx.hu/article/notion-s-ai-agents-now-build-over-half-of-databases-as-custom-tools-launch) | AI agents build databases in a desktop workspace | Quilt is phone-first, quick to log into, and apps share data without manual relations |
 | [Airtable Omni](https://www.maginative.com/article/airtable-bets-big-on-ai-agents-with-omni-reboots-as-an-ai-native-app-platform/) | Chat builds apps from tested components | Same safe-block idea, but for teams and business. Quilt is for one person's life |
-| [Taskade AI Trackers](https://www.taskade.com/ai/trackers) | Prompt becomes a tracker with list, calendar and chart views | Closest on features. Each tracker stands alone; Quilt's tabs feed each other |
+| [Taskade AI Trackers](https://www.taskade.com/ai/trackers) | Prompt becomes a tracker with list, calendar and chart views | Closest on features. Each tracker stands alone; Quilt's apps feed each other |
 | [Wabi](https://techcrunch.com/2025/11/05/replika-founder-raises-20m-pre-seed-for-wabi-the-youtube-of-apps) | $20M pre-seed; prompt-made mini-apps you share and remix | Social discovery. Quilt is private and connected |
 | [Emergent](https://techcrunch.com/2025/09/24/emergent-raises-23m-from-lightspeed-to-let-consumers-build-apps/), Lovable, Bolt | Generate code for whole apps | Can build anything but breaks easily. Quilt's validated blocks don't break and keep your data stable |
 | Rocket Money, Hevy, Todoist | Best-in-class single-purpose apps | Better at their one job, but they don't talk to each other. Quilt shouldn't fight them on depth |
 
 **What could break it, and our answer:**
 
-- **"Notion already does this."** Name it first, as YC advises. Answer: Notion is a desktop doc you set up; Quilt is a phone app that fills itself and joins your tabs.
-- **Blank canvas.** "What do you want to track?" stalls people. Start every user with 3 to 4 ready tabs and use Clair to customize them.
+- **"Notion already does this."** Name it first, as YC advises. Answer: Notion is a desktop doc you set up; Quilt is a phone app that fills itself and joins your apps.
+- **Blank canvas.** "What do you want to track?" stalls people. Start every user with 3 to 4 ready apps and use Clair to customize them.
 - **Generic blocks feel worse than Hevy mid-set.** Don't claim to beat specialists. Claim the connections.
 - **Logging is a chore.** Photo and chat capture is the answer, which is why the photo fill is the live feature.
 - **Trust with money data.** No bank logins in the MVP; receipts and manual entries only. That is also a selling point for privacy-minded students.
@@ -245,7 +241,7 @@ Quilt's strength is not "AI builds an app". Notion, Airtable and Taskade already
 
 1. Say what Quilt does in the first breath, in plain words. The hook can come before it, but within 20 seconds.
 2. Show progress over genius: a working demo, survey numbers and waitlist sign-ups (Seibel).
-3. One business model only: free for a few tabs, then a monthly plan.
+3. One business model only: free for a few apps, then a monthly plan.
 4. Slides of 7 words or fewer, one idea each, one presenter speaking slowly (Ralston, Hale).
 5. Avoid "platform", "AI-powered" and "better UX". Say what it does (Graham).
 
@@ -257,14 +253,14 @@ One problem, one user, one magic moment, real numbers. Open with a show of hands
 
 1. **Hook, 10 s.** "Hands up if you pay for more than three apps to manage your money, workouts or to-dos. Keep it up if they don't talk to each other."
 2. **Problem with our numbers, 10 s.** "We surveyed \[N\] U students this week. They pay for \[X\] apps, about $\[Y\] a month, and none of them share data."
-3. **What it is, then who we are, 10 s.** "Quilt is one app that builds the tabs you describe and stitches them together. I'm \[name\], this is \[name\]."
-4. **The magic moment, 25 s.** Photograph a grocery receipt. Clair fills the grocery tab, the budget drops, the shopping trip lands on the calendar, and the laptop beside us updates live.
+3. **What it is, then who we are, 10 s.** "Quilt is one app that builds the apps you describe and stitches them together. I'm \[name\], this is \[name\]."
+4. **The magic moment, 25 s.** Photograph a grocery receipt. Clair says what it sees and shows one card: "Add to 3 apps". One tap: 8 items leave the grocery list, the budget drops from $412 to $376, the trip lands on the calendar, and the laptop beside us updates live. Undo puts it all back. If there is time, point it at the fridge: Clair asks which of your usuals you're out of and adds them to the list.
 5. **Why not Notion, 10 s.** "Notion makes you build it and type into it. Quilt builds itself from a sentence and fills itself from a photo."
-6. **Traction and model, 10 s.** "\[N\] students joined our waitlist in \[D\] days. Free to start, $6 a month for unlimited tabs and Clair."
+6. **Traction and model, 10 s.** "\[N\] students joined our waitlist in \[D\] days. Free to start, $6 a month for unlimited apps and Clair."
 7. **Bigger vision, 10 s.** "Students first. But parents, caregivers, athletes and freelancers all pay for apps that don't talk, or need one nobody built."
 8. **Close, 5 s.** "Quilt: your life, stitched together."
 
-Demo safety: pre-seed every tab with realistic data, keep a recorded backup video, and cache one known-good receipt photo in case Clair or the Wi-Fi is slow.
+Demo safety: pre-seed every app with realistic data, warm the server before going on, keep a recorded backup video, and use "Use sample" (it says "sample" on screen) if Clair or the Wi-Fi is slow. Checklist: `docs/demo-readiness.md`.
 
 **Before Friday, to earn steps 2 and 7:** put up a one-page landing site with a waitlist, and run a 2-minute survey in U of U student groups (how many tracking apps, what they pay, what they wish they could track). Even 50 sign-ups is a credible number for a pitch.
 
@@ -278,23 +274,23 @@ These cover the questions hackathon applications usually ask; the real form's qu
 
 **Project name.** Quilt
 
-**One-line description.** Quilt is one app for your money, workouts and to-dos that builds the tabs you describe and stitches them together. Snap a grocery receipt and your grocery list, budget and calendar all update.
+**One-line description.** Quilt is one app for your money, workouts and to-dos that builds the apps you describe and stitches them together. Photograph a grocery receipt and your grocery list, budget and calendar all update.
 
 **What problem are you solving?** People pay for five apps that don't talk to each other: a budget app, a gym tracker, a to-do list, a calendar, and a notes file for everything else. Each has its own login and subscription, some don't exist on every platform, and the one tracker you actually need often doesn't exist at all.
 
-**What does it do?** You tell Clair "track my subscriptions and warn me before renewals" or "log my lifts and show my bench progress", and Quilt builds a working tab: lists, tables, forms, metrics, progress bars and charts, wired to your data. Every tab is made from the same small set of blocks, so tabs can see each other. The calendar tab shows dates from every other tab, and Clair can fill a tab from a photo, such as turning a grocery receipt into logged items.
+**What does it do?** You tell Clair "track my subscriptions and warn me before renewals" or "log my lifts and show my bench progress", and Quilt builds a working app: lists, tables, forms, metrics, progress bars and charts, wired to your data. Every app is made from the same small set of blocks, so apps can see each other. The calendar app shows dates from every other app, and Clair can fill an app from a photo, such as turning a grocery receipt into logged items.
 
 **Who is it for?** First, University of Utah students juggling paid apps for budgeting, fitness and tasks that don't share data. The same problem hits parents running a household, caregivers tracking someone's medication, athletes and hobbyists, and freelancers, so each becomes a next set of templates.
 
-**What will you build during DevDay?** Clair's photo fill. You snap a grocery receipt or a fridge shelf, Clair reads it, and the items land as rows in your grocery tab, checked against that tab's fields before they are saved. We arrive with Quilt's block engine and demo tabs working, so the day goes into this one feature and a polished demo.
+**What will you build during DevDay?** Clair, the agent that turns a photo of anything into changes across your apps. You photograph a grocery receipt and Clair says what it sees, then shows one card: tick off 8 items, take $35.83 off the budget, put the trip on the calendar. Nothing saves until you tap OK, and Undo puts it back. Point it at your fridge and it compares what it sees with what you usually buy, asks which ones you're out of with a quick menu, and remembers your answer. We arrive with the apps, the data model and the two-device sync working, so the day goes into Clair and a polished demo.
 
-**How does it work?** Clair (Claude, with vision) never writes code. It writes a small structured description of the tab, which Quilt validates, retries if needed, and turns into blocks stored in one table. One renderer draws every tab. That is why it is reliable enough to demo live, and why a new kind of tab takes one sentence, not a sprint.
+**How does it work?** Clair (Claude, with vision and tools) never writes code and never saves on its own. It reads your apps through tools, then proposes a small structured change that Quilt checks against each app's fields and holds until you OK it. Every app is a spec made from the same 9 blocks, stored in one table, and one renderer draws every app. That is why it is reliable enough to demo live, and why a new kind of app takes one sentence, not a sprint.
 
-**Business model.** Free for a few tabs, then a low monthly plan for unlimited tabs and photo fills, priced below the stack of single-purpose apps it replaces. Next, a marketplace where anyone can publish tabs for free or for sale (we take a cut), then team workspaces billed per seat.
+**Business model.** Free for a few apps, then a low monthly plan for unlimited apps and photo fills, priced below the stack of single-purpose apps it replaces. Next, a marketplace where anyone can publish apps for free or for sale (we take a cut), then team workspaces billed per seat.
 
-**Tech stack.** TypeScript web app at phone width, a JSON schema for tab specs, Claude for Clair, SQLite or Postgres for blocks. \[Adjust if your team prefers another stack.\]
+**Tech stack.** React + Vite, wrapped with Capacitor as an Android app (the same build is the website); Python FastAPI API; Supabase (Postgres, sign-in, live updates); Claude Opus through the Anthropic Python SDK tool runner for Clair.
 
-**Prior work.** Architecture design and a 26-screen mobile design already exist; the core engine will be built before the event, and the photo-fill feature during it.
+**Prior work.** Architecture and backend design, and a clickable design canvas of every screen, already exist; the apps and data model will be built before the event, and Clair during it.
 
 **Experience level.** \[Yours and your teammates'.\]
 
@@ -322,14 +318,14 @@ Not published: schedule, tracks or sponsor challenges, submission format (video,
 
 ## What this means for Quilt
 
-The best play is to arrive with Quilt's core already working (describe a need, Clair writes a TabSpec, blocks render) and build one showpiece feature live on the day: Clair filling a tab from a photo, starting with a grocery receipt.
+The best play is to arrive with Quilt's core already working (describe a need, Clair writes an AppSpec, blocks render) and build one showpiece feature live on the day: Clair filling an app from a photo, starting with a grocery receipt.
 
-- **Pre-existing work is fine, but only the event-day feature is judged.** So the core engine (validator, compiler, block renderer, the five demo tabs) should be built before Nov 20, and the application should name the one feature we will build there.
-- **Why the photo feature.** It is visual, takes under 10 seconds to show, and proves Clair's real promise: you never fill in forms. It also reuses everything else, because the photo becomes rows checked against the tab's own schema. Backup live feature if the photo path is done early: the calendar tab that pulls dates from every other tab.
+- **Pre-existing work is fine, but only the event-day feature is judged.** So the core engine (validator, compiler, block renderer, the five demo apps) should be built before Nov 20, and the application should name the one feature we will build there.
+- **Why the photo feature.** It is visual, takes under 10 seconds to show, and proves Clair's real promise: you never fill in forms. It also reuses everything else, because the photo becomes rows checked against the app's own schema. Backup live feature if the photo path is done early: the calendar app that pulls dates from every other app.
 - **Pitch counts as much as code.** Judging includes a fast business pitch, so the application and the demo need a one-line market, a user, and a way to make money, not only the tech.
 - **Deadline.** Nov 10 has passed and the event is in 5 days. Email the organizers today; there is a Request Information form on the site.
 - **Team size.** We are a team of 2 (the limit is 4). The team lead must be an enrolled University of Utah student (or recent U of U grad); teammates can be from anywhere.
-- **Stack.** No rules, and AI coding tools are encouraged (Lovable is a sponsor). That fits the plan we already had: one TypeScript web app at phone width with Claude for Clair. Set up accounts and any student verification now, since the organizers warn it can take days.
+- **Stack.** No rules, and AI coding tools are encouraged (Lovable is a sponsor). Our stack: React + Capacitor (Android), a Python API, Supabase and Claude (see the MVP section). Set up accounts and any student verification now, since the organizers warn it can take days.
 
 ## Open items for you
 
@@ -339,5 +335,5 @@ Nothing gets submitted until you approve the final answers.
 - [ ] Ask the organizers whether late applications are accepted (deadline was Nov 10)
 - [ ] Open the application form in your browser and paste its questions here or in the thread
 - [ ] Send team names, schools, emails and roles (up to 4 people)
-- [ ] Confirm the stack (TypeScript web app plus Claude) or name another
+- [x] Stack confirmed Nov 19: React + Capacitor, Python API, Supabase, Claude (`docs/backend.md`)
 - [ ] Set up AI tool accounts and student verification this week
