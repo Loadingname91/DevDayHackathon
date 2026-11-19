@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Decision records (2 of 2)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 5275px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<h2>Consequences</h2>
+<ul>
+<li>The prototype code ports as-is; the design book is the reference implementation.</li>
+<li>iOS is a later Capacitor target (needs a Mac and signing); share-into-Quilt and push arrive with native targets.</li>
+<li>WebView quirks replace React Native quirks: test touch, safe areas and the keyboard on the real Android phone at D3.</li>
+<li>v3's own reversal path already allowed a native-web renderer; blocks over the wire keep the backend unchanged either way.</li>
+<li>Reversal trigger: WebView performance or native feel measurably hurting retention; then a React Native renderer reads the same API.</li>
+</ul>
+<h2>Alternatives considered</h2>
+<ul>
+<li><strong>Expo per v3:</strong> better native feel and a local SQLite store; every animation rebuilt first.</li>
+<li><strong>Web only (PWA):</strong> fastest, but no Android share sheet, weaker camera and speech access.</li>
+</ul>
+<h2>References</h2>
+<p><code>spec/ui-tech-plan.md</code> §1, TabOS v3 §12.</p>
+<hr />
+<p class="src">spec/adr/006-supabase-blocks-table.md</p>
+<h1>ADR-006: Supabase Postgres with the v3 blocks table, layout kept whole</h1>
+<h2>Status</h2>
+<p>Accepted · 2026-11-19 · Deciders: Quilt team · Adapts TabOS v3 ADR-3 and §3.1; defers v3 ADR-1 (encryption)</p>
+<h2>Context</h2>
+<p>Apps are made by Clair at run time, so there is no fixed table per app. v3 stores everything as blocks in one table: every record is its own block under its collection, which gives per-record order, versioning, undo and sync. The earlier plan (ADR-002) kept each app as one JSON spec plus a rows map in memory. We also need accounts, live updates between devices and file storage, with no time to run those ourselves.</p>
+<h2>Decision</h2>
+<p>Supabase: Postgres, anonymous auth that can later link Google or email, Realtime and Storage. One <code>blocks</code> table in v3's shape (<code>workspace_id</code>, <code>parent_id</code>, <code>position</code>, <code>block_type</code>, <code>collection_id</code>, <code>properties jsonb</code>, <code>version</code>, <code>deleted_at</code>). App (page), collection and record blocks are real blocks. For DevDay the app's layout stays one AppSpec JSON on the page block instead of a tree of layout blocks. Properties are plain JSONB protected by row-level security on <code>workspace_id</code>; v3's envelope encryption and query index are deferred.</p>
+<h2>Consequences</h2>
+<ul>
+<li>Records get per-record order, versions, soft delete and undo now; splitting the layout into child blocks later does not touch records.</li>
+<li>No encryption at rest beyond Supabase's own; the settings screen must not claim more.</li>
+<li>Queries filter JSONB directly; fine at personal scale, revisit with the v3 query index if a collection passes ~10k records.</li>
+<li>Reversal trigger: per-block sharing or encryption becomes a requirement.</li>
+</ul>
+<h2>Alternatives considered</h2>
+<ul>
+<li><strong>Full v3 block tree now:</strong> most faithful; the renderer and Clair's spec compiler get much bigger.</li>
+<li><strong>Spec document + rows table:</strong> simplest; diverges from v3's invariant and needs a migration later.</li>
+<li><strong>Railway Postgres:</strong> we would build auth, pairing and live updates ourselves.</li>
+</ul>
+<h2>References</h2>
+<p><code>spec/backend.md</code> §2, TabOS v3 §3, §7.</p>
+<hr />
+<p class="src">spec/adr/007-clair-agent-loop.md</p>
+<h1>ADR-007: One Clair agent loop on the Anthropic SDK tool runner</h1>
+<h2>Status</h2>
+<p>Accepted · 2026-11-19 · Deciders: Quilt team · Replaces the "structured call per request" design in <code>ui-tech-plan.md</code> §4; cuts down TabOS v3 §9.3</p>
+<h2>Context</h2>
+<p>Clair must handle any input (words, voice, a live photo of a fridge or a schedule, a screenshot, a PDF), work out what it is, read Sam's apps, ask when unsure and propose changes across apps. A single structured call can only see what we pack into it and cannot ask a question. Anthropic's agent guidance: start simple, give actions their own tools when the harness must gate, show or audit them (Claude Code shows question-asking as a tool that blocks the loop), keep a stable cached prefix and an append-only history.</p>
+<h2>Decision</h2>
+<p>Every input goes through one loop built on the Anthropic Python SDK tool runner (<code>@beta_tool</code>, <code>client.beta.messages.tool_runner</code>), model <code>claude-opus-5-5</code>, with our own typed tools: perceive (<code>report_understanding</code>), read (<code>list_apps</code>, <code>get_app</code>, <code>query_records</code>, <code>search_records</code>, <code>get_usuals</code>, <code>get_faces</code>, <code>get_notes</code>), ask (<code>ask_user</code>), remember (<code>save_note</code>) and propose (<code>propose_changes</code>, <code>propose_app</code>). Clair never writes app data: <code>propose_changes</code> only creates a basted change set (ADR-003). Because a Vercel request cannot wait for the user, <code>ask_user</code> ends the request and the answer resumes the saved, unchanged transcript. A context snapshot (apps, lists, open items, usuals, notes) is packed into each turn so most inputs need one or two model turns; there is no separate fast path for receipts.</p>
+<h2>Consequences</h2>
+<ul>
+<li>One code path to build, test and evaluate; any photo works, not only receipts.</li>
+<li>A receipt costs about as much as the old one-shot call because the snapshot is pre-packed; a fridge needs two or three turns.</li>
+<li>Pause and resume rely on restarting the runner from saved messages; confirm at the T1 spike, otherwise use a short manual loop with the same tools.</li>
+<li>Stage latency depends on the model; "Use sample" and recorded fixture runs are the fallback.</li>
+</ul>
+<h2>Alternatives considered</h2>
+<ul>
+<li><strong>Claude Managed Agents:</strong> Anthropic runs the loop and keeps sessions, and a question waits natively; beta, a container per session, user data held in sessions, less predictable stage latency.</li>
+<li><strong>Claude Agent SDK:</strong> the Claude Code harness, built for coding agents with file and shell tools; needs the CLI process, a poor fit for Vercel functions.</li>
+<li><strong>Pydantic AI, LangGraph:</strong> another layer over what the SDK already does, with no gain for this tool set.</li>
+<li><strong>Structured call for receipts plus an agent for the rest:</strong> two paths to build and test.</li>
+</ul>
+<h2>References</h2>
+<p><code>spec/clair-agent.md</code>, TabOS v3 §9.3–9.4.</p>
+<hr />
+<p class="src">spec/adr/008-online-writes-read-cache.md</p>
+<h1>ADR-008: Online writes with a local read cache</h1>
+<h2>Status</h2>
+<p>Accepted · 2026-11-19 · Deciders: Quilt team · Defers TabOS v3 §5 (offline-first sync) and ADR-4 (WASM formulas)</p>
+<h2>Context</h2>
+<p>v3 is local-first: a durable op queue on every device, device-suffixed positions, conflict events and a formula engine compiled to WASM so totals update offline. That is weeks of work. For DevDay the need is narrower: screens must open instantly, the laptop must update within a couple of seconds of a confirm on the phone, and every number must be right.</p>
+<h2>Decision</h2>
+<p>Writes go to the server and only succeed online. Each device keeps a read cache in IndexedDB (blocks, faces, <code>last_server_seq</code>) per workspace, paints from it at once, then catches up with <code>GET /sync?since=seq</code>. Supabase Realtime on the <code>events</code> table tells devices when to catch up. Simple gestures (tick, swipe, reorder) update the screen at once and roll back if the server rejects them; Clair confirms wait for the server. All formulas and faces are computed in Python on the server and returned with every change.</p>
+<h2>Consequences</h2>
+<ul>
+<li>Fast opens and live two-device updates with little code; nothing is lost because nothing is queued.</li>
+<li>No offline editing: without a connection the app is read-only and says so.</li>
+<li>Totals change after the server answers (a few hundred milliseconds), not instantly on device.</li>
+<li>The cache is per workspace and cleared on sign-out and on a schema version change, so a shared device never shows another person's data.</li>
+<li>Reversal trigger: users editing offline (class, subway) or formula lag noticed in testing; then add v3's op queue and a client evaluator.</li>
+</ul>
+<h2>Alternatives considered</h2>
+<ul>
+<li><strong>v3 offline-first now:</strong> right long term, far too large for the event.</li>
+<li><strong>No cache, always fetch:</strong> simplest, but every open waits on the network and a cold Vercel function.</li>
+</ul>
+<h2>References</h2>
+<p><code>spec/backend.md</code> §6–7, TabOS v3 §5, §6, §11.</p>
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":5275}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

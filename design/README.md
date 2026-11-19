@@ -28,6 +28,19 @@ python3 design/tools/layout_canvas.py design/canvas
 
 The boards load a runtime file, `support.js`, that belongs to the canvas artifact type and isn't ours to publish, so it is git-ignored. To view boards or run the tests locally, ask Claude Code to fetch `support.js` from the canvas artifact into `design/canvas/`. To update the live canvas, ask Claude Code to publish `design/canvas/canvas.json` and the changed boards to the canvas URL above.
 
+## Docs on the canvas
+
+The canvas has three pages: Screens, Docs and Specs. The Docs and Specs pages are the markdown files in `docs/` and `spec/`, rendered as page artboards (long docs are split into parts, because a canvas frame is at most 8,000 px tall). After editing a doc, rebuild them:
+
+```bash
+pip install markdown
+python3 design/tools/gen_docs.py . design/canvas            # writes Doc*/Spec* boards and previews
+node design/tests/measure_docs.js /path/to/node_modules/playwright design/docs-preview heights.json
+python3 design/tools/gen_docs.py . design/canvas heights.json   # again, with measured heights and splits
+```
+
+If a doc gains or loses parts, its entries in `canvas.json` need updating too. The Screens page also ends with link cards to every other Quilt artifact (the prototypes, motion pages, design book, studies and the Nov 15 brief).
+
 ## Running the tests
 
 Each test takes the path to an installed `playwright` module, the page or folder URL, and an output folder for screenshots:

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pitch: product, MVP and DevDay (3 of 3)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 2250px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<h2>DevDay: the event</h2>
+<p>DevDay is a one-day vibe-code hackathon plus business pitch on Nov 20, 2026. The posted application deadline was Nov 10, so we need to ask the organizers whether they accept late applications.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>What the site says</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Date and place</td>
+<td>Fri Nov 20, 2026, Lassonde Studios, 1710 Student Life Way, Salt Lake City. No start or end times posted</td>
+</tr>
+<tr>
+<td>Application deadline</td>
+<td>Nov 10, 2026 (passed). Apply link is a Qualtrics form</td>
+</tr>
+<tr>
+<td>Hosts and sponsors</td>
+<td>Lassonde Entrepreneur Institute and Lassonde DevLab; sponsors Samir Patel, Eccles School of Business, Lovable</td>
+</tr>
+<tr>
+<td>Eligibility</td>
+<td>University of Utah students only (undergrad, master's, PhD) and recent U of U grads. Team lead must be an enrolled U of U student; other members may be from other schools. No high school students</td>
+</tr>
+<tr>
+<td>Team size</td>
+<td>Solo or up to 4</td>
+</tr>
+<tr>
+<td>Existing projects</td>
+<td>Allowed, but you must build a new, constrained feature during the event, and that feature is what gets judged</td>
+</tr>
+<tr>
+<td>Tools</td>
+<td>Any AI tool or traditional coding. Judged on quality of results, not method. No stack rules</td>
+</tr>
+<tr>
+<td>Judging</td>
+<td>Two parts: a high-speed pitch of the business and software, plus the technical work done during the event. Exact format announced on the day; no published rubric or weights</td>
+</tr>
+<tr>
+<td>Prizes</td>
+<td>Cash (amounts not listed), recognition, and admission to the Lassonde DevLab student software incubator</td>
+</tr>
+<tr>
+<td>Bring</td>
+<td>Laptop, charger, notebook. Breakfast and lunch provided, free entry</td>
+</tr>
+<tr>
+<td>Organizer tips</td>
+<td>Set up AI coding accounts and student verification early (can take days), do one practice run prompt to GitHub to live URL, have a backup tool if free credits run out</td>
+</tr>
+</tbody>
+</table></div>
+<p>Not published: schedule, tracks or sponsor challenges, submission format (video, Devpost, repo), and the application questions themselves (the form only loads in a browser and could not be opened when this was written). Sources: <a href="https://lassonde.utah.edu/devday/">DevDay page</a>, <a href="https://eccles.qualtrics.com/jfe/form/SV_0voa2jlZwVBqpP8">application form</a>.</p>
+<h2>What this means for Quilt</h2>
+<p>The best play is to arrive with Quilt's core already working (describe a need, Clair writes an AppSpec, blocks render) and build one showpiece feature live on the day: Clair filling an app from a photo, starting with a grocery receipt.</p>
+<ul>
+<li><strong>Pre-existing work is fine, but only the event-day feature is judged.</strong> So the core engine (validator, compiler, block renderer, the seven demo apps) should be built before Nov 20, and the application should name the one feature we will build there.</li>
+<li><strong>Why the photo feature.</strong> It is visual, takes under 10 seconds to show, and proves Clair's main promise, that you never fill in forms. It also reuses everything else, because the photo becomes rows checked against the app's own schema. Backup live feature if the photo path is done early: the calendar app that pulls dates from every other app.</li>
+<li><strong>Pitch counts as much as code.</strong> Judging includes a fast business pitch, so the application and the demo need a one-line market, a user and a way to make money alongside the tech.</li>
+<li><strong>Deadline.</strong> The posted deadline was Nov 10. Email the organizers about a late application; the site has a Request Information form.</li>
+<li><strong>Team size.</strong> We are a team of 2 (the limit is 4). The team lead must be an enrolled University of Utah student (or recent U of U grad); teammates can be from anywhere.</li>
+<li><strong>Stack.</strong> DevDay has no stack rules, and AI coding tools are encouraged (Lovable is a sponsor). Our stack: React + Capacitor (Android), a Python API, Supabase and Claude (see the MVP section). Set up accounts and any student verification now, since the organizers warn it can take days.</li>
+</ul>
+<h2>Open items for you</h2>
+<p>Nothing gets submitted until you approve the final answers.</p>
+<ul>
+<li>[ ] Confirm you (or a teammate) are an enrolled University of Utah student or recent U of U grad, since the team lead must be</li>
+<li>[ ] Ask the organizers whether late applications are accepted (deadline was Nov 10)</li>
+<li>[ ] Open the application form in your browser and paste its questions here or in the thread</li>
+<li>[ ] Send team names, schools, emails and roles (up to 4 people)</li>
+<li>[x] Stack confirmed Nov 19: React + Capacitor, Python API, Supabase, Claude (<code>spec/backend.md</code>)</li>
+<li>[ ] Set up AI tool accounts and student verification this week</li>
+</ul>
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2250}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

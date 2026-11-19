@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glossary</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 3025px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<p class="src">GLOSSARY.md</p>
+<h1>Quilt</h1>
+<p>Quilt is a phone-first workspace where Clair, an AI, builds small personal apps from a fixed set of blocks and stitches them together so one capture updates every app it touches. This glossary fixes the words we use for that, in the product and in the docs. The reference architecture (TabOS v3) uses some different words; they are listed under <em>Avoid</em>.</p>
+<h2>Language</h2>
+<h3>Apps and their parts</h3>
+<p><strong>App</strong>:
+One thing Sam keeps track of (Budget, Groceries, Workout), made from blocks and shown as one patch on Home.
+<em>Avoid</em>: Tab (TabOS v3 and the pitch doc), widget, mini-app</p>
+<p><strong>Block</strong>:
+One piece of an app, from a fixed set: page, text, metric, progress, collection, list, table, calendar, form or chart.
+<em>Avoid</em>: Component, module, primitive (in product copy)</p>
+<p><strong>Collection</strong>:
+The kind of record an app holds, with named fields (Groceries has items and trips).
+<em>Avoid</em>: Table, schema, database</p>
+<p><strong>Record</strong>:
+One entry in a collection: one grocery item, one set, one due date. The app shows it as a row.
+<em>Avoid</em>: Item (except in Groceries copy), entry, object</p>
+<p><strong>Field</strong>:
+One named value on every record of a collection (name, amount, due date, list).
+<em>Avoid</em>: Property (in product copy), column, attribute</p>
+<p><strong>List</strong>:
+A named group of records inside one collection, picked with chips (Weekly shop, Taco night). It is a value of the record's list field, not a separate collection.
+<em>Avoid</em>: Using "list" for the list block's layout (call that the list view)</p>
+<p><strong>View</strong>:
+How a block shows a collection: as a list, a table or a calendar.
+<em>Avoid</em>: Layout, mode</p>
+<p><strong>Face</strong>:
+The one headline value an app shows on its patch and in the status line ("$376 left", "4 to buy").
+<em>Avoid</em>: Summary, badge, KPI</p>
+<p><strong>Usual</strong>:
+A grocery item Sam buys again and again, marked on the item itself (yes, no or worked out by Clair).
+<em>Avoid</em>: Staple, favourite, regular</p>
+<h3>Dates and repeats</h3>
+<p><strong>Due date</strong>:
+The one main date a record sits on in Calendar and Next up. A thing with several dates becomes several records.
+<em>Avoid</em>: Deadline (in copy), timestamp</p>
+<p><strong>Repeat rule</strong>:
+How often a record comes back (every Saturday, every month on the 22nd), stored on the record.
+<em>Avoid</em>: Recurrence, schedule, cron</p>
+<p><strong>Occurrence</strong>:
+One date produced by a repeat rule. Completing it moves the record to the next occurrence.
+<em>Avoid</em>: Instance, copy</p>
+<h3>Clair and changes</h3>
+<p><strong>Clair</strong>:
+Quilt's AI. It reads what Sam gives it (words, voice, photos, files) and Sam's apps, then answers, asks or proposes changes.
+<em>Avoid</em>: Assistant, bot, the AI, agent (in product copy)</p>
+<p><strong>Proposal</strong>:
+A set of changes Clair wants to make, shown as a card and saved only when Sam says OK.
+<em>Avoid</em>: Suggestion, draft, recommendation</p>
+<p><strong>Basted</strong>:
+The state of a proposal that is shown but not saved; nothing in any app has changed yet.
+<em>Avoid</em>: Pending, draft, unconfirmed</p>
+<p><strong>Stitched</strong>:
+The state of a change set that is saved into every app it touches.
+<em>Avoid</em>: Applied, committed, confirmed</p>
+<p><strong>Change set</strong>:
+Everything one gesture, one confirm or one undo changes, saved or undone together.
+<em>Avoid</em>: Command group (TabOS v3), transaction, batch</p>
+<p><strong>Stitch</strong>:
+A link that carries records from one app into another (a grocery trip becomes Budget spending).
+<em>Avoid</em>: Connection, integration, sync, relation</p>
+<p><strong>Clair note</strong>:
+Something Clair keeps about how Sam likes things done ("stopped buying Greek yogurt"), listed in Settings and deletable. Facts about Sam's things live in the apps, not in notes.
+<em>Avoid</em>: Memory, preference, profile</p>
+<p><strong>Menu question</strong>:
+A question Clair asks with tap-to-pick options before it proposes anything.
+<em>Avoid</em>: Prompt, survey, clarification</p>
+<p><strong>Check-in</strong>:
+Clair's short evening card listing what to log or decide today.
+<em>Avoid</em>: Notification, digest, reminder</p>
+<h3>Home and the bar</h3>
+<p><strong>Home</strong>:
+The first screen: status line, Needs your OK, Next up, Clair noticed and Your apps.
+<em>Avoid</em>: Dashboard, feed</p>
+<p><strong>Patch</strong>:
+An app's tile on Home, in its dye, showing its face.
+<em>Avoid</em>: Card, tile, icon</p>
+<p><strong>Bar</strong>:
+The strip at the bottom of every screen with four pinned apps and the Clair button.
+<em>Avoid</em>: Dock, tab bar, nav bar</p>
+<p><strong>Pin</strong>:
+An app's place on the bar.
+<em>Avoid</em>: Shortcut, favourite</p>
+<h3>Accounts</h3>
+<p><strong>Workspace</strong>:
+Everything one person owns in Quilt: their apps, records, notes and history.
+<em>Avoid</em>: Account (for the data), space, quilt (in technical docs)</p>
+<p><strong>Guest account</strong>:
+The account made the moment someone first opens Quilt, before they add an email or Google. It lives on that device until they keep their quilt.
+<em>Avoid</em>: Anonymous user, trial</p>
+<p><strong>Join code</strong>:
+A six-digit code that opens the same workspace on a second device.
+<em>Avoid</em>: Pairing code, PIN</p>
+<h2>Flagged ambiguities</h2>
+<ul>
+<li>The pitch doc says "tab" where the product now says <strong>app</strong>. TabOS v3 also says "Tab". Use <strong>app</strong> everywhere a person reads it.</li>
+<li>"Row" is how a <strong>record</strong> looks in a list; use "record" in docs and "row" only when describing the UI.</li>
+<li>"List" means a group of records (Weekly shop). The list-shaped layout is the <strong>list view</strong>.</li>
+<li>"Memory" was used for both Clair notes and data in apps. Facts about Sam's things are <strong>records</strong> (or the usual mark); how Sam likes Clair to behave is a <strong>Clair note</strong>.</li>
+</ul>
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3025}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Decision records (1 of 2)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 7740px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<p class="src">spec/adr/001-spec-driven-renderer.md</p>
+<h1>ADR-001: Spec-driven renderer over generated UI code</h1>
+<h2>Status</h2>
+<p>Accepted · 2026-11-19 · Deciders: Quilt team (A, B)</p>
+<p>Update (Nov 19): the AppSpec is now stored on the app's page block in Supabase (<a href="SpecADRs1.dc.html">ADR-006</a>), and the spec schema is a Pydantic model whose TypeScript types are generated (<a href="SpecADRs1.dc.html">ADR-004</a>). The renderer contract is unchanged.</p>
+<h2>Context</h2>
+<p>Clair has to turn a sentence into a working app in seconds, live on stage, and the app must keep working the next day. Code generators (Lovable, Bolt, Emergent) can build anything but output varies run to run, needs a build step and breaks in ways a user cannot fix. Quilt's pitch promise is "Clair builds from tested blocks, not generated code". Home also needs every app to emit the same signals (face, pending, dated rows, changes), which only works if every app has the same typed shape.</p>
+<h2>Decision</h2>
+<p>We will have Clair write only an <code>AppSpec</code> (JSON, Zod schema in <code>lib/spec.ts</code>) drawn from a closed union of 9 blocks over typed collections. One <code>AppView</code> renderer draws every app; blocks are pure views that read rows and evaluate values, and cannot fetch, run code or style themselves. Invalid specs get one retry with the Zod errors, then a friendly error.</p>
+<h2>Consequences</h2>
+<h3>Positive</h3>
+<ul>
+<li>Builds are fast and deterministic to render; a spec that parses always draws.</li>
+<li>Home, search filters, stitches and the calendar of everything work for any app, because fields and dates are typed.</li>
+<li>Specs export cleanly (the marketplace format later) and can be diffed for History and undo.</li>
+</ul>
+<h3>Negative</h3>
+<ul>
+<li>Needs that don't fit 9 blocks can't be built; the demo must pick apps that fit.</li>
+<li>Every new capability is a schema change plus a component, not a prompt tweak.</li>
+</ul>
+<h3>Neutral</h3>
+<ul>
+<li>The same renderer serves the Build preview, so preview and result never differ.</li>
+</ul>
+<h3>Model choice</h3>
+<p>Prompting a general model (Claude Opus 5.5) with structured output; building or fine-tuning was ruled out by time. Coupled to it: the system prompt and the Zod schema. Reversal cost is low because the schema, not the model, is the contract; any model that fills the schema works. Reopen if more than 1 in 10 build prompts in the test set need a retry.</p>
+<h2>Alternatives considered</h2>
+<ul>
+<li><strong>Generated React per app:</strong> unlimited range, but slow, fragile and unsafe to run live. Rejected.</li>
+<li><strong>Spec plus escape-hatch custom code blocks:</strong> reintroduces the fragility for a minority of apps. Deferred until the block library shows a real ceiling.</li>
+</ul>
+<h2>References</h2>
+<p><code>spec/ui-tech-plan.md</code> sections 2–3; pitch doc "Technical quirks and risks".</p>
+<hr />
+<p class="src">spec/adr/002-mock-api-route-handlers.md</p>
+<h1>ADR-002: Mock API as Next route handlers over an in-memory store</h1>
+<h2>Status</h2>
+<p>Superseded by <a href="SpecADRs1.dc.html">ADR-004</a> and <a href="SpecADRs1.dc.html">ADR-008</a> · 2026-11-19. The API is FastAPI on Vercel over Supabase; fixtures survive only as Clair's recorded "sample" runs.</p>
+<p>Originally: Proposed · 2026-11-19 · Deciders: Quilt team (A, B)</p>
+<h2>Context</h2>
+<p>The UI must run against a backend on day one, before Clair or a database is ready, and the demo's key moment is the same data updating live on a phone and a laptop. The pitch doc names Postgres or SQLite with one table. A database server, migrations and hosted credentials cost hours we do not have.</p>
+<h2>Decision</h2>
+<p>We will implement the API as Next.js route handlers backed by <code>lib/db.ts</code>, an in-memory store (specs, rows, proposals, change log) seeded from fixtures, running in one long-running Node process on Railway. Clair sits behind one module with two adapters, <code>fixture</code> and <code>live</code> (Claude), chosen per call kind: photo parse is live by default (the judged feature), the rest default to fixture, and every fixture result is visibly marked "sample". The store lives on <code>globalThis</code> so Next never makes a second copy; reset and live calls need a demo key. Devices sync by polling <code>GET /api/changes?since=</code> every second.</p>
+<h2>Consequences</h2>
+<h3>Positive</h3>
+<ul>
+<li>Real HTTP, real shared state: the two-device moment can be tested on the day's third hour.</li>
+<li>Fixtures make every flow work with zero AI calls while the live photo path is built; a failed live call offers the marked sample instead of hiding the failure.</li>
+<li><code>db.ts</code> has a small interface, so SQLite can replace the map later without touching callers.</li>
+</ul>
+<h3>Negative</h3>
+<ul>
+<li>State is lost on restart (acceptable: we reseed with <code>POST /api/dev/reset</code> before each run).</li>
+<li>Cannot run on serverless hosting; one process (replicas 1) is a hard limit, and no redeploys during the demo window.</li>
+<li>Polling adds up to a second of lag on the second device.</li>
+</ul>
+<h3>Neutral</h3>
+<ul>
+<li>Server-Sent Events can replace polling later behind the same <code>/api/changes</code> data.</li>
+</ul>
+<h2>Alternatives considered</h2>
+<ul>
+<li><strong>MSW in the browser:</strong> fast to set up but each device has its own mock state, so the phone and laptop cannot share an update. Rejected.</li>
+<li><strong>SQLite or Postgres now:</strong> right for beta; setup and hosting time is not worth it for one day.</li>
+<li><strong>Vercel + KV store:</strong> works, but adds a service and keys for no demo gain.</li>
+</ul>
+<h2>References</h2>
+<p><code>spec/ui-tech-plan.md</code> sections 1, 5, 9.</p>
+<hr />
+<p class="src">spec/adr/003-basted-proposals.md</p>
+<h1>ADR-003: Clair writes through basted proposals; the UI animates optimistically</h1>
+<h2>Status</h2>
+<p>Accepted · 2026-11-19 · Deciders: Quilt team (A, B)</p>
+<p>Update (Nov 19): a proposal is stored as a change set with status <code>basted</code> (the same <code>change_sets</code> and <code>events</code> tables every user gesture uses, <a href="SpecBackend1.dc.html">spec/backend.md</a>); Clair creates it only through its <code>propose_changes</code> tool (<a href="SpecADRs1.dc.html">ADR-007</a>).</p>
+<h2>Context</h2>
+<p>Product principle 3: Clair proposes, you approve; nothing big changes without a visible preview and undo. The design makes this visible as stitch states (basted = waiting for OK, running stitch = saved) and one focal motion, the thread pull on confirm. The pull must start on tap, not after a server round trip, and Home must show exact before/after numbers ("$412 → $376") before anything is saved.</p>
+<h2>Decision</h2>
+<p>We will route every Clair write through a <code>Proposal</code> holding row operations. The server, not Clair, expands stitches, computes target apps and face deltas by dry run, and stores inverses on apply so undo is exact. User edits inside an app write directly with an undo toast. On confirm the client animates immediately using the precomputed deltas, sends confirm in parallel, and reverses the animation if the request fails.</p>
+<h2>Consequences</h2>
+<h3>Positive</h3>
+<ul>
+<li>One card style and one confirm flow serve receipts, captures, check-ins, insights and shares.</li>
+<li>Thread targets and numbers are always true to the data, whatever Clair claimed.</li>
+<li>Undo is a single endpoint and a single reverse animation.</li>
+</ul>
+<h3>Negative</h3>
+<ul>
+<li>A rare failed confirm shows threads then retracts them; acceptable and honest.</li>
+<li>Proposals must be re-expanded after every Review items edit.</li>
+</ul>
+<h3>Neutral</h3>
+<ul>
+<li>Other devices see results through the change log as "just changed" tags, never the pull.</li>
+</ul>
+<h2>Alternatives considered</h2>
+<ul>
+<li><strong>Write first, then offer undo:</strong> faster to build, breaks "nothing saves before OK". Rejected.</li>
+<li><strong>Wait for the server, then animate:</strong> simpler failure handling, but adds a visible pause before the signature motion.</li>
+</ul>
+<h2>References</h2>
+<p><code>spec/ui-tech-plan.md</code> section 4; <code>.impeccable/surfaces/app.md</code> (stitch states, signature motion).</p>
+<hr />
+<p class="src">spec/adr/004-python-backend-on-vercel.md</p>
+<h1>ADR-004: Python (FastAPI) backend on Vercel</h1>
+<h2>Status</h2>
+<p>Accepted · 2026-11-19 · Deciders: Quilt team · Supersedes ADR-002 · Reverses TabOS v3 ADR-6 (Go, agent in-process)</p>
+<h2>Context</h2>
+<p>TabOS v3 puts the command service and the agent loop in one Go monolith and rejects a separate Python agent service: a second runtime, tool types defined twice. Its own reversal trigger is "a Python-native agent team". That is us: the team writes Python, Anthropic's Python SDK has a tool runner, and the build is one day. The pitch needs one public URL for the laptop and an API the Android app can call without holding the Claude key.</p>
+<h2>Decision</h2>
+<p>The whole backend is one FastAPI app on Vercel (Python functions): the command service, the Python formula engine, sync, auth helpers and Clair's agent loop. It reads and writes Supabase Postgres with psycopg through the Supabase pooler so a change set is one real transaction. The one Anthropic key lives only in Vercel's environment. Types cross to the React app as Pydantic models → OpenAPI → <code>openapi-typescript</code>, generated, never hand-copied.</p>
+<h2>Consequences</h2>
+<ul>
+<li>One runtime for API and agent, as v3 wanted; the language is Python instead of Go.</li>
+<li>Request-scoped functions: nothing can wait for the user between requests. Clair's menu questions therefore end the request and resume on the answer (ADR-007).</li>
+<li>Cold starts and the function duration limit apply to every agent run. Check <code>maxDuration</code> and SSE streaming for Python functions on our plan at T1; warm the functions before the pitch.</li>
+<li>No in-memory shared state; all state is in Supabase, which also removes ADR-002's single-process limit.</li>
+<li>Reversal trigger: agent runs regularly exceeding the function time limit, or a need for long-lived connections; then move the same FastAPI app to a container host.</li>
+</ul>
+<h2>Alternatives considered</h2>
+<ul>
+<li><strong>Go per v3:</strong> matches the long-term doc; a new language and toolchain for a one-day build.</li>
+<li><strong>TypeScript (Node):</strong> shares Zod schemas with the client; not the team's choice of agent stack.</li>
+<li><strong>Supabase Edge Functions:</strong> no extra host, but Deno and tighter run limits for agent loops.</li>
+</ul>
+<h2>References</h2>
+<p><code>spec/backend.md</code>, <code>spec/clair-agent.md</code>, TabOS v3 §9.4.</p>
+<hr />
+<p class="src">spec/adr/005-react-capacitor-client.md</p>
+<h1>ADR-005: React (DOM) with Capacitor, Android first</h1>
+<h2>Status</h2>
+<p>Accepted · 2026-11-19 · Deciders: Quilt team · Reverses TabOS v3 ADR-5 (Expo / React Native)</p>
+<h2>Context</h2>
+<p>TabOS v3 picks Expo mobile-first with react-native-web and rejects a web-first app. Quilt's whole look and motion already exist as DOM prototypes: CSS tokens, WAAPI, a critically damped spring, an SVG thread pull. Rebuilding them in React Native before the demo is not possible. The demo needs an installed-feeling phone app plus the same app on a laptop.</p>
+<h2>Decision</h2>
+<p>One React app built with Vite. Capacitor wraps it as an Android app (APK, sideloaded for DevDay); the same build is served as a website for the laptop and any browser. Native needs go through Capacitor plugins: Camera, speech recognition, text-to-speech, App (deep links, later). The app holds no secrets; it calls our API (ADR-004).</p>
+
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":7740}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pitch: product, MVP and DevDay (1 of 3)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 7318px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<p class="src">docs/pitch.md</p>
+<h1>Quilt: full product, MVP and DevDay pitch</h1>
+<p>Nov 15, 2026 · @VendorSpace</p>
+<p>Quilt stitches your life together: describe any need and Clair sews a new patch, an app made to fit you, into one quilt where every patch connects. This doc starts with everything Quilt can become, then picks the slice we build for Lassonde DevDay on Nov 20. After that come the business model, the technical risks, why people can trust it, the pitch and the application.</p>
+<p>Taglines to pick from: "Your life, stitched together." · "Every app you need, stitched into one." · "Say what you need. Clair stitches it in."</p>
+<p>Mock app from Claude Design: https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P (the design system and every screen in the Quilter's Workbench style, clickable; updated Nov 19)
+Design book, with all screens, decisions and prototypes in one place: https://claude.ai/artifact/N37FhQVVYTNoeDf4rJFyjq</p>
+<h2>Focus: what wins the pitch</h2>
+<p>Judged the way YC judges, the pitch wins on one painful problem, one starting user, one demo moment that never fails, and proof that people want it. The rest of this doc is backup for questions and stays out of the pitch itself.</p>
+<ol>
+<li>The problem everyone feels: "You pay for five apps that don't talk to each other." Subscription overload plus scattered data.</li>
+<li>Who it's for first: U of U students, because we can survey them and get sign-ups before Friday.</li>
+<li>One magic moment, rehearsed until it can't fail: a receipt photo becomes grocery rows, the budget drops and the calendar updates, live on phone and laptop.</li>
+<li>Proof of demand: 20 or more survey answers and a real waitlist number by Thursday. "40 students signed up in 3 days" beats any roadmap slide.</li>
+<li>Say the hard thing first: "Why not Notion? Notion makes you build it. Quilt fills itself from a photo."</li>
+<li>The bigger vision in one line: students first, but parents, caregivers, athletes and freelancers have the same problem (next section).</li>
+</ol>
+<p>Cut from the pitch but kept in this doc for Q&amp;A: the marketplace, teams, MCP, pricing tiers and most of the 19 catalogue features.</p>
+<h2>Who Quilt is for</h2>
+<p>Every persona has the same three pains in different clothes: too many paid apps, data that doesn't connect, and the one app they need that nobody built. Quilt starts with students and adds one persona at a time, each with its own set of patches.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Persona</th>
+<th>Their pain</th>
+<th>First apps</th>
+<th>How the stitching helps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Student (first user)</td>
+<td>Forgotten subscriptions, tight budget, gym, classes and deadlines in separate apps</td>
+<td>Budget and subscriptions, grocery from photo, gym log, assignments</td>
+<td>A receipt updates groceries and budget; renewals, workouts and due dates share one calendar</td>
+</tr>
+<tr>
+<td>Busy parent or household</td>
+<td>Bills, chores, meals, kids' schedules spread across apps and group chats</td>
+<td>Bills, chore rota, meal plan and pantry, family calendar</td>
+<td>The pantry feeds the shopping list, bills land on the family calendar, a chore form roommates or kids can fill</td>
+</tr>
+<tr>
+<td>Caregiver</td>
+<td>Tracking someone else's medication, appointments and symptoms, often on paper</td>
+<td>Medication log, appointments, symptom diary, contacts</td>
+<td>Doses and symptoms line up on one timeline to show a doctor; reminders from the same data</td>
+</tr>
+<tr>
+<td>Athlete or hobbyist</td>
+<td>Specialist apps for training, diet and gear that never share data, some only on one platform</td>
+<td>Training log, meals, gear or collection tracker, race calendar</td>
+<td>Training load and meals in one chart; works on any device with a browser</td>
+</tr>
+<tr>
+<td>Side hustler or freelancer</td>
+<td>Clients, invoices, hours and expenses across spreadsheets and paid tools</td>
+<td>Clients, hours, invoices, expenses from receipt photos</td>
+<td>Hours flow into invoices; receipts flow into expenses and a monthly profit metric</td>
+</tr>
+</tbody>
+</table></div>
+<p>One vision line covers all of them: "Everyone has a life no app was built for. Quilt lets you describe the apps you need and stitches them into one." Quilt grows beyond students because of platform gaps (an app that's iOS-only or has no web version) and the long tail of niche needs.</p>
+<h2>The full product: where Quilt goes</h2>
+<p>The full vision is one quilt for your whole life. Every need becomes a patch (an app made to fit you), the stitching between patches is shared data, and Clair does the sewing, filling patches and reasoning across them. The hackathon demo is the first few patches. The pitch should show the whole quilt on one slide.</p>
+<p>The metaphor, for use in both the pitch and the UI:</p>
+<ul>
+<li><strong>Patch</strong> = an app's tile on your Home, each app cut to fit your life.</li>
+<li><strong>Stitching</strong> = data flowing between apps: a receipt patch tugs the budget and calendar patches with it.</li>
+<li><strong>Clair</strong> = the quilter. You say what you need; Clair sews it in.</li>
+<li><strong>Patterns</strong> = templates and the marketplace: patches others designed that you can sew into your own quilt.</li>
+<li><strong>Quilting circle</strong> = shared apps, roommates and teams working on one quilt.</li>
+</ul>
+<p>The tone is warm rather than technical. A quilt is personal and handmade, and it grows over time; Quilt should feel the same way, never like a cold "system".</p>
+<p><strong>Five product pillars</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Pillar</th>
+<th>What the user gets</th>
+<th>Full-scale features</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Build</td>
+<td>Any app you can describe, in seconds</td>
+<td>Clair builder from plain words, ready-made templates, full styling (fonts, colours, layout), edit, duplicate and link any component</td>
+</tr>
+<tr>
+<td>Capture</td>
+<td>Logging that takes no effort</td>
+<td>Photo, voice and chat entry; Clair fills any app; later live bank and health feeds and outside AI agents writing in through MCP</td>
+</tr>
+<tr>
+<td>Connect</td>
+<td>Your life, joined up</td>
+<td>Data linked across apps, a calendar of everything, and questions across all of it ("if I cut entertainment subscriptions, how much do I save this year?"), plus proactive nudges</td>
+</tr>
+<tr>
+<td>Everywhere</td>
+<td>One app on every device</td>
+<td>Phone, web and desktop from one codebase; real-time sync with offline use; encryption per account; export and import of all your data; your own data-retention settings</td>
+</tr>
+<tr>
+<td>Share and earn</td>
+<td>Apps as a creator economy</td>
+<td>A marketplace where anyone publishes an app, free, one-time or by subscription; live collaboration on shared apps; team workspaces for companies</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Flywheel.</strong> More users build apps, the best become marketplace templates, templates bring new users with zero blank-canvas problem, and creators earn, so they build more. Meanwhile each user's data gets more connected, so Clair's answers get better and switching away gets harder.</p>
+<p><strong>Roadmap</strong></p>
+<ol>
+<li><strong>Hackathon (Nov 20):</strong> the build-and-connect core, seven seeded demo apps, live photo fill, the same app live on phone and laptop.</li>
+<li><strong>Private beta (next 3 months):</strong> U of U students; templates first, Clair for customizing; sync and offline; measure whether people still log after 30 days.</li>
+<li><strong>Public launch:</strong> paid tier, styling, voice capture, cross-app questions and nudges, data export.</li>
+<li><strong>Marketplace:</strong> creators publish and sell apps; live sharing with friends and roommates.</li>
+<li><strong>Teams:</strong> company workspaces, shared apps, admin controls, MCP so other AI agents can use Quilt.</li>
+</ol>
+<p><strong>What to measure (north star and guardrails).</strong> North star: apps with a new entry in the last 7 days per user. Guardrails from the architecture plan: time to first useful app, share of Clair-built apps kept without manual fixes, and Clair cost per successful task.</p>
+<p><strong>Hard calls a PM would make now.</strong></p>
+<ul>
+<li><strong>Win one life area first.</strong> Money (subscriptions, groceries, budget) is the wedge with the most pain and the clearest saving. Gym and to-dos follow.</li>
+<li><strong>Templates before blank canvas.</strong> The marketplace is the long-term answer; until then ship 10 strong first-party apps.</li>
+<li><strong>Don't fight specialists on depth.</strong> Quilt wins on breadth and connection, and lets power users link out where needed.</li>
+<li><strong>Be honest on privacy.</strong> Encrypted at rest with per-account keys, never claim end-to-end, and say clearly what goes to the AI provider.</li>
+<li><strong>Workspace-level sharing only.</strong> No per-block permissions, which keeps sharing simple and the system fast at scale.</li>
+</ul>
+<h2>Feature catalogue (roadmap, for Q&amp;A)</h2>
+<p>The full catalogue takes the best feature from each category leader and makes it work across every app. None of these need building for DevDay; the top eight go on the roadmap slide.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Feature</th>
+<th>Seen in</th>
+<th>How it looks in Quilt</th>
+<th>Tier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Build</td>
+<td>Describe an app, Clair builds it</td>
+<td>Notion AI, Taskade</td>
+<td>"Track my subscriptions" becomes a working app</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Build</td>
+<td>Templates and remix</td>
+<td>Notion "Duplicate as template", Wabi</td>
+<td>Start from a ready app, or copy one a friend shared</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Capture</td>
+<td>Photo to rows</td>
+<td>Glide AI columns, Notion Autofill</td>
+<td>Receipt photo becomes grocery and expense rows</td>
+<td>Free with a cap</td>
+</tr>
+<tr>
+<td>Capture</td>
+<td>Voice brain-dump</td>
+<td>Todoist Ramble</td>
+<td>Say a messy update; Clair splits it across apps</td>
+<td>Free with a cap</td>
+</tr>
+<tr>
+<td>Capture</td>
+<td>Siri, Shortcuts, Control Center</td>
+<td>Apple App Intents</td>
+<td>"Hey Siri, log 2 coffees in Quilt"</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Automate</td>
+<td>Scheduled Clair runs</td>
+<td>ChatGPT Tasks, Claude scheduled tasks</td>
+<td>"Every Sunday 8 pm, review my spending and set next week's budget"</td>
+<td>Paid</td>
+</tr>
+<tr>
+<td>Automate</td>
+<td>Event triggers</td>
+<td>Airtable automations, Zapier</td>
+<td>"When a workout is logged, update my streak; nudge me after 3 missed days"</td>
+<td>Paid</td>
+</tr>
+<tr>
+<td>Automate</td>
+<td>Buttons that run a saved prompt</td>
+<td>Notion buttons with agents</td>
+<td>A "Plan meals from pantry" button on the grocery app</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Connect</td>
+<td>Bank feed with subscription detection</td>
+<td>Plaid, Rocket Money</td>
+<td>The subscriptions app fills itself and flags duplicates</td>
+<td>Paid</td>
+</tr>
+<tr>
+<td>Connect</td>
+<td>Health data</td>
+<td>Apple Health, Health Connect</td>
+<td>Steps and sleep feed progress and chart blocks</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Connect</td>
+<td>Live sync tables</td>
+<td>Coda Packs</td>
+<td>A table that mirrors Google Calendar, Strava or GitHub</td>
+<td>Power</td>
+</tr>
+<tr>
+<td>Connect</td>
+<td>Inbound webhooks and MCP</td>
+<td>Zapier, Make, Raycast</td>
+<td>Any service or outside AI agent can read and write apps</td>
+<td>Power</td>
+</tr>
+<tr>
+<td>Glance</td>
+<td>Widgets and Live Activities</td>
+<td>Widgetsmith, Hevy</td>
+<td>Rest timer or budget left on the lock screen; widget changes by time of day</td>
+<td>Free (basic), Paid (smart)</td>
+</tr>
+<tr>
+<td>Insight</td>
+<td>Records and anomaly banners</td>
+<td>Hevy Live PR</td>
+<td>"New bench record" or "spending spike" on any metric</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Insight</td>
+<td>Questions across all apps</td>
+<td>(Quilt's own)</td>
+<td>"If I cut entertainment subscriptions, what do I save this year?"</td>
+<td>Paid</td>
+</tr>
+<tr>
+<td>Insight</td>
+<td>Forgiving streaks</td>
+<td>Streaks, Loop</td>
+<td>Streak block with freeze days</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Share</td>
+<td>Public app pages and forms</td>
+<td>Notion Sites, Notion Forms</td>
+<td>RSVP or chore sign-up form that writes into your app</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Share</td>
+<td>Marketplace</td>
+<td>Wabi, Notion templates</td>
+<td>Creators sell apps once or by subscription</td>
+<td>Revenue share</td>
+</tr>
+<tr>
+<td>Share</td>
+<td>Live collaboration and team workspaces</td>
+<td>Notion, Airtable</td>
+<td>Roommates share a bills app; companies share apps with staff</td>
+<td>Teams</td>
+</tr>
+</tbody>
+</table></div>
+<p>Top eight for the roadmap slide: scheduled and triggered Clair runs; widgets and Live Activities; voice brain-dump; bank feed with subscription detection; Apple Health and Health Connect; marketplace with remix; shareable forms; MCP so outside agents can use Quilt.</p>
+<p>Sources: <a href="https://www.notion.com/releases/2026-04-14">Notion releases</a>, <a href="https://support.airtable.com/docs/creating-an-automation">Airtable automations</a>, <a href="https://coda.io/packs/build/latest/guides/overview">Coda Packs</a>, <a href="https://www.todoist.com/help/articles/use-ramble-to-add-tasks-by-voice-P1Raq7vVF">Todoist Ramble</a>, <a href="https://www.hevyapp.com/features/live-activity/">Hevy Live Activity</a>, <a href="https://www.hevyapp.com/features/live-pr/">Hevy Live PR</a>, <a href="https://plaid.com/docs/transactions/">Plaid Transactions</a>, <a href="https://rocketmoney.com/feature/manage-subscriptions">Rocket Money subscriptions</a>, <a href="https://manual.raycast.com/ai/ai-extensions">Raycast AI extensions</a>, <a href="https://www.notion.com/en-gb/help/public-pages-and-web-publishing">Notion Sites</a>.</p>
+<h2>Business model and pricing</h2>
+<p>Quilt should charge one simple subscription with a monthly allowance of Clair credits, because AI is what each user really costs us. Everything you build keeps working when the credits run out. The market has settled on the same pattern: seats or plans, plus metered AI and automation.</p>
+<p><strong>How others charge (Nov 2026)</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>App</th>
+<th>Plans</th>
+<th>What's metered</th>
+<th>What makes people upgrade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://www.notion.com/pricing">Notion</a></td>
+<td>Free, Plus $10, Business $20 per member</td>
+<td>AI credits on Business; Custom Agents at $10 per 1,000 credits; database automations need Plus; premium connectors need Business</td>
+<td>AI is only a trial below Business; free has button-only automations</td>
+</tr>
+<tr>
+<td><a href="https://zapier.com/pricing">Zapier</a></td>
+<td>Free 100 tasks, Pro from $19.99 for 750 tasks</td>
+<td>Tasks (each action); AI steps cost 1 to 5 tasks; faster polling on paid</td>
+<td>Free allows only two-step Zaps; going over switches to pay-per-task</td>
+</tr>
+<tr>
+<td><a href="https://www.make.com/en/pricing">Make</a></td>
+<td>Free 1,000 credits, paid from about $9</td>
+<td>Credits per action; extra credits cost 25% more</td>
+<td>Free allows 2 scenarios and a 15-minute interval</td>
+</tr>
+<tr>
+<td><a href="https://www.airtable.com/pricing">Airtable</a></td>
+<td>Free, Team $20, Business $45 per seat</td>
+<td>Automation runs (100 a month on free), records per base, AI credits with $20 packs</td>
+<td>Hitting record or automation caps</td>
+</tr>
+<tr>
+<td><a href="https://www.taskade.com/pricing">Taskade</a></td>
+<td>Free to Max $100</td>
+<td>AI credits, automation runs, agents, storage</td>
+<td>Credit packs never expire; published apps keep running at zero credits</td>
+</tr>
+<tr>
+<td><a href="https://www.todoist.com/pricing">Todoist</a></td>
+<td>Free, Pro $5</td>
+<td>Counts: 5 projects, 3 filters; limited AI voice sessions</td>
+<td>Running out of projects or AI sessions</td>
+</tr>
+<tr>
+<td><a href="https://help.rocketmoney.com/en/articles/2217739-how-much-does-rocket-money-cost">Rocket Money</a></td>
+<td>Free, Premium pay-what-you-want, Premium+ $15</td>
+<td>Features, not usage; dropped its 35 to 60% bill-negotiation fee for a flat tier</td>
+<td>Budgets, live sync, bill negotiation</td>
+</tr>
+<tr>
+<td><a href="https://www.glideapps.com/os/pricing">Glide</a></td>
+<td>Free to Pro $125</td>
+<td>Credits as standard LLM tokens; number of published apps and workflows</td>
+<td>Publishing an app at all</td>
+</tr>
+</tbody>
+</table></div>
+<p>What the market shows: free tiers convert on structural limits (number of projects, scenarios or automations) as well as on volume. AI is usually only a trial on free plans. Plan credits don't roll over, but bought packs often do. Yearly billing gets 15 to 50% off. The Make and Zapier prices come partly from third-party breakdowns.</p>
+<p><strong>Quilt's plans (proposal)</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Plan</th>
+<th>Price</th>
+<th>What you get</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Free</td>
+<td>$0</td>
+<td>5 apps, every block, templates, sync on all your devices, 50 Clair credits a month, button automations, basic widgets</td>
+</tr>
+<tr>
+<td>Plus</td>
+<td>$6 a month ($48 a year)</td>
+<td>Unlimited apps, 1,000 Clair credits, voice capture, 10 scheduled or triggered automations, smart widgets, questions across apps, full export</td>
+</tr>
+<tr>
+<td>Pro</td>
+<td>$12 a month ($96 a year)</td>
+<td>4,000 credits, unlimited automations, connectors (bank feed, health data, live sync tables), webhooks and MCP, option to bring your own AI key</td>
+</tr>
+<tr>
+<td>Teams</td>
+<td>$10 per seat a month</td>
+<td>Shared workspaces, pooled credits, roles and admin, shared templates</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>Credits: a Clair chat step costs 1, building an app 10, a photo fill 5 and a scheduled run 2. Extra packs are $5 for 500 and never expire.</li>
+<li>No surprise bills: alerts go out at 80% and 100%, then Clair pauses until next month or a top-up. Apps, logging, sync and widgets never stop.</li>
+<li>Marketplace: creators keep 80% of what their apps earn, and Quilt takes 20%.</li>
+<li>Price anchor: Plus at $6 costs less than Rocket Money Premium+ ($15) and Todoist Pro ($5) together, before counting gym or habit apps.</li>
+<li>In the pitch, say only "Free to start, $6 a month for unlimited apps and Clair." The marketplace and teams are the expansion line.</li>
+</ul>
+<p>All Quilt prices are a starting proposal to test with the survey and waitlist. None of them is decided.</p>
+
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":7318}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

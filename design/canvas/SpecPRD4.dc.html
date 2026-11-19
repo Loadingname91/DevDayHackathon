@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PRD (4 of 4)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 5573px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<h3>Authoritative Sources</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Path or link</th>
+<th>Definitive for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>This PRD</td>
+<td><code>spec/prd.md</code></td>
+<td>Scope, cut tags, requirements, AI pass rules</td>
+</tr>
+<tr>
+<td>Surface brief</td>
+<td><code>.impeccable/surfaces/app.md</code></td>
+<td>UI behaviour and visual rules; the latest-dated section wins inside it</td>
+</tr>
+<tr>
+<td>Fix spec, section D</td>
+<td><code>design/notes/fixspec.md</code> §D</td>
+<td>Clair button and Clair sheet details; wins over earlier Snap/Ask wording anywhere</td>
+</tr>
+<tr>
+<td>UI tech plan</td>
+<td><code>spec/ui-tech-plan.md</code></td>
+<td>Client architecture and implementation</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td><code>spec/backend.md</code></td>
+<td>Data model, API, sync, auth, server edge cases</td>
+</tr>
+<tr>
+<td>Clair agent</td>
+<td><code>spec/clair-agent.md</code></td>
+<td>Clair's loop, tools, prompts, limits and evals</td>
+</tr>
+<tr>
+<td>Onboarding</td>
+<td><code>docs/onboarding.md</code></td>
+<td>First-run journey and its copy</td>
+</tr>
+<tr>
+<td>PRODUCT.md</td>
+<td><code>PRODUCT.md</code></td>
+<td>Brand, principles, stack</td>
+</tr>
+<tr>
+<td>Pitch doc</td>
+<td><code>docs/pitch.md</code></td>
+<td>Business model, pitch, roadmap</td>
+</tr>
+</tbody>
+</table></div>
+<p>When two disagree: this PRD wins on scope and cut; the surface brief wins on UI behaviour; the tech plan, <code>backend.md</code> and <code>clair-agent.md</code> win on implementation in their own areas. Anything else, stop and escalate.</p>
+<h3>Do Not Touch</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Path or system</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pitch placeholders [N], [X], [Y], [D]</td>
+<td>Only real survey and waitlist numbers go there</td>
+</tr>
+<tr>
+<td>Demo app schemas after Nov 19</td>
+<td>The demo path depends on them; changing one can break the apps that read it</td>
+</tr>
+<tr>
+<td>The demo receipt photo and its expected rows</td>
+<td>It is the stage fixture and the AB-2 demo-critical case</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Requirement Verification</h3>
+<p>Each FR above lists its verification. Automated checks (unit, E2E, eval set) are run by the engineer who builds the requirement; Rehearsal and copy review are signed off by the presenter.</p>
+<h3>Stop and Escalate</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Escalate to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A "Must run on stage" row isn't working at the go/no-go or the freeze</td>
+<td>Person B decides whether to cut to Proto or video</td>
+</tr>
+<tr>
+<td>An AB demo-critical case fails any run</td>
+<td>Person A; the demo may switch to the cached response or recorded video, and the presenter says so on stage ("this is a recorded run")</td>
+</tr>
+<tr>
+<td>Anything would save Clair's output without an explicit OK</td>
+<td>Both founders; do not ship it</td>
+</tr>
+<tr>
+<td>A copy or pitch line would state a number not from real data</td>
+<td>Pitch owner</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Dependencies &amp; Risks</h2>
+<h3>Dependencies</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Owner</th>
+<th>Status</th>
+<th>Impact if delayed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Engine: spec schema, checker, compiler, photo-fill endpoint, seed data</td>
+<td>Person A</td>
+<td>Not visible in this repo (docs only); confirm by the 22:00 go/no-go</td>
+<td>No live demo; recorded video</td>
+</tr>
+<tr>
+<td>App: block renderer, app switcher, live refresh across devices</td>
+<td>Person B</td>
+<td>Not visible in this repo; confirm by the 22:00 go/no-go</td>
+<td>No laptop moment</td>
+</tr>
+<tr>
+<td>Survey and waitlist live</td>
+<td>Pitch owner</td>
+<td>Survey targeted to close Nov 19</td>
+<td>Pitch steps 2 and 6 have no numbers</td>
+</tr>
+<tr>
+<td>Late-application acceptance by DevDay organisers</td>
+<td>Team lead</td>
+<td>Deadline was Nov 10; status unknown here</td>
+<td>No entry</td>
+</tr>
+<tr>
+<td>Claude API access and credits on the day</td>
+<td>Person A</td>
+<td>Assumed ready</td>
+<td>Use cached responses</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Risks</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Likelihood</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Photo read fails on stage (Wi-Fi, model)</td>
+<td>M</td>
+<td>H</td>
+<td>Phone hotspot; "Use sample" replays a recorded run marked "sample"; recorded backup video, labelled as such if used</td>
+</tr>
+<tr>
+<td>Vercel cold start or function time limit stalls a Clair run on stage</td>
+<td>M</td>
+<td>H</td>
+<td>Warm the functions before the pitch; 45 s run budget checked against the plan's <code>maxDuration</code>; "Use sample" after 12 s</td>
+</tr>
+<tr>
+<td>The APK won't install or start on the demo phone</td>
+<td>L</td>
+<td>H</td>
+<td>Sideload and rehearse the night before; the website on the phone's browser is the backup</td>
+</tr>
+<tr>
+<td>Scope creep from Nov 19 design decisions (Clair sheet, search, settings) into the build</td>
+<td>H</td>
+<td>H</td>
+<td>"Must run on stage" table; base rows by the 22:00 go/no-go, judged rows on the day, Live+ only after both</td>
+</tr>
+<tr>
+<td>The pitch says "the receipt is one example of the dump" but only the receipt works live</td>
+<td>L</td>
+<td>M</td>
+<td>Any photo now runs live (must-run row 12) and the fridge is a second live beat; say "next: anything you type, say or share", and show files and sharing from the prototype</td>
+</tr>
+<tr>
+<td>Warm, handmade style lowers trust for money data</td>
+<td>M</td>
+<td>M</td>
+<td>Numbers in clean, high-contrast type; test in the survey (persona open question 3)</td>
+</tr>
+<tr>
+<td>Students mostly pay by card and rarely get paper receipts</td>
+<td>M</td>
+<td>H</td>
+<td>Ask in the survey before the pitch (persona open question 2); File, screenshots and quick dump cover card payments in Beta</td>
+</tr>
+<tr>
+<td>Evening check-in content needs data Quilt doesn't have (the design example "Lunch $12 from Apple Pay" implies wallet access)</td>
+<td>H</td>
+<td>M</td>
+<td>Resolved Nov 19: the check-in lists only items already in Quilt ("Pull day was at 6 pm. Log it?", "Return library books", "Spotify renews Sun 22 Nov · $11.99")</td>
+</tr>
+<tr>
+<td>Clair cost per user exceeds the plan price</td>
+<td>M</td>
+<td>M</td>
+<td>Credit ledger from day one in Beta; cheaper models for easy steps</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Assumptions (unvalidated)</h3>
+<ul>
+<li>Students lose money to forgetting (persona PU-001, Proto). Survey questions planned.</li>
+<li>Students get paper receipts often enough, and would photograph one to log it (threatens the judged feature if false).</li>
+<li>Capture effort is why tracking apps lose users; the 8 to 9% day-30 benchmark is a category figure, not ours.</li>
+<li>Pricing ($6 Plus, credit costs) is a proposal to test, not a decision.</li>
+</ul>
+<h2>Timeline &amp; Milestones</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Description</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cut frozen</td>
+<td>"Must run on stage" agreed</td>
+<td>Nov 19</td>
+</tr>
+<tr>
+<td>Go / no-go</td>
+<td>Base rows run on a phone; else recorded video</td>
+<td>22:00 Nov 19 <em>(proposed)</em></td>
+</tr>
+<tr>
+<td>Survey closes</td>
+<td>20+ answers or keep the Proto label</td>
+<td>Nov 19</td>
+</tr>
+<tr>
+<td>Rehearsal</td>
+<td>5 clean demo runs in a row on a hotspot; backup video recorded</td>
+<td>Nov 19 night / Nov 20 morning</td>
+</tr>
+<tr>
+<td>DevDay</td>
+<td>Judged rows 5 to 8 built on the day; freeze 2 h before the pitch; 90-second pitch</td>
+<td>Nov 20</td>
+</tr>
+<tr>
+<td>Private beta</td>
+<td>U of U students; Beta items; measure the north star and day-30 retention</td>
+<td>3 months after DevDay</td>
+</tr>
+<tr>
+<td>Public launch</td>
+<td>Paid plan, ask across apps (if not in Beta), export</td>
+<td>After beta</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Open Questions</h2>
+<ul>
+<li>[ ] Does the judged event-day feature stay photo fill, or become "Clair capture" (photo + typed dump)? Recommendation: keep photo fill; ship typed dump only as Live+. - Owner: both founders</li>
+<li>[ ] The surface brief says the "DevDay rebuild includes" laptop split view, search, row edit, Activity and Settings. This PRD reads that as design-canvas scope, not code. Confirm. - Owner: Person B</li>
+<li>[x] Until Talk ships, hold on the Clair button behaves like a tap (decided in this PRD, FR-C1). Talk moved to Live+ on Nov 19 (FR-C17).</li>
+<li>[ ] Fridge beat after the receipt: the receipt marks Eggs, Spinach, Greek yogurt and Bananas bought today, so usuals would no longer flag them as missing. Run the fridge before the receipt, reset between beats, or seed fridge usuals that aren't on the receipt. - Owner: Person A</li>
+<li>[ ] How long are unused guest workspaces kept on the server, and do guests get fewer credits than kept accounts (anonymous accounts can be made freely)? - Owner: both founders</li>
+<li>[ ] Photo retention changed from "not kept" to 30 days in a private bucket (Privacy and trust). Confirm. - Owner: both founders</li>
+<li>[ ] Pitch script and slides still say "tabs" ("$6 a month for unlimited tabs and Clair"); read them aloud with "apps" and update tonight. - Owner: pitch owner</li>
+<li>[x] Gym date resolved Nov 19: the demo's today is Fri 20 Nov, so "gym tomorrow 6 pm" is Sat 21 Nov, 6 pm (boards and prototypes use this).</li>
+<li>[ ] Ask across apps: Beta or public launch (the roadmap said launch; the Nov 19 decision makes it a core loop)? Free or paid? - Owner: both founders</li>
+<li>[ ] Default for "What Clair can read": Full or Field names? - Owner: both founders</li>
+<li>[ ] Which numbers from the survey go into pitch steps 2 and 6? - Owner: pitch owner, Nov 19</li>
+</ul>
+<h2>Appendix</h2>
+<h3>Related Documents</h3>
+<ul>
+<li>Persona: <code>docs/research/persona-sam-student.md</code></li>
+<li>Home jobs: <code>docs/research/home-jtbd.md</code></li>
+<li>Product and brand: <code>PRODUCT.md</code> · Pitch and business model: <code>docs/pitch.md</code></li>
+<li>Design: <code>.impeccable/surfaces/app.md</code> and the artifact links under User Experience</li>
+<li>Technical design: <code>spec/ui-tech-plan.md</code>, <code>spec/backend.md</code>, <code>spec/clair-agent.md</code>, ADRs in <code>spec/adr/</code></li>
+<li>Onboarding journey: <code>docs/onboarding.md</code></li>
+<li>Stories: <code>spec/prd-stories.md</code></li>
+</ul>
+<h3>Revision History</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Author</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>2026-11-19</td>
+<td>Quilt founding team (drafted with Claude)</td>
+<td>First draft, with the DevDay cut</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>2026-11-19</td>
+<td>Quilt founding team (drafted with Claude)</td>
+<td>Must-run table: Undo (row 10), fridge beat (row 11), any photo with "Use sample" (row 12), Android APK + laptop website. FR-X1 guest first + join code; FR-X2 reworded; new FR-O1 to FR-O5 (onboarding), FR-A7 (order), FR-C12 to FR-C18 (one loop, understanding line, menu questions, Clair notes, usuals, voice, threads); FR-S6 to Live; Talk (FR-C7, FR-C2c) to Live+; FR-H8 replaced by FR-O. AB-8 to AB-10 and loop budgets. Stack (React + Capacitor, FastAPI on Vercel, Supabase), deferred list, data requirements (order, repeats, dated records, lists). Demo receipt items listed in AB-2. Photo retention changed to 30 days. US-9 to US-11 added</td>
+</tr>
+</tbody>
+</table></div>
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":5573}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

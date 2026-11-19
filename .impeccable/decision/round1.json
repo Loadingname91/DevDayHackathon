@@ -1,0 +1,130 @@
+{
+  "title": "Choose Quilt's new look",
+  "question": "Replacing the cream background, warm palette and fonts. The quilt idea, the spool, each app's own colour and the no-red rule stay. Keep the rolled direction, take another, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Letterman Patches",
+      "kicker": "THE ROLL",
+      "lineage": "Varsity letter jackets: chenille patches sewn on with thick overlocked edges",
+      "thesis": "Every app is a felt patch sewn onto your jacket, and confirming a change stitches it from patch to patch.",
+      "palette": ["#E3E5E8", "#FBFBFA", "#1A2232", "#1F7A4D", "#F2B705", "#2F55C4", "#6B3FA0", "#E07A1F"],
+      "materials": ["flat felt patches with overlocked edges", "tackle-twill numerals", "ribbed knit hem with two stripes", "brass snap pins"],
+      "viewport": "Status line set in big tackle-twill numerals ($376 left), the waiting receipt as a safety-pinned dotted patch, the apps as felt patches, and the bar as a striped knit hem holding four pins. Light mode is heather-grey fleece; dark mode is navy wool.",
+      "risk": "Can tip into costume or high-school nostalgia if the numerals and stripes appear everywhere; the felt has to stay flat.",
+      "raised": [
+        {"from": "challenger-crouwel", "raise": "Patches snap to a visible stitch grid, and every size is a whole number of grid cells."},
+        {"from": "challenger-acetate", "raise": "One text size does most of the work; the tackle-twill numerals are the only display type."},
+        {"from": "challenger-saville", "raise": "Each app's felt colour works as a code, used the same way on its patch, its source dot, its thread and its pin."},
+        {"from": "challenger-darkroom", "raise": "All neutrals come from one heather ramp shared by the light and dark themes, and conflicts stay cross-hatched, never red."}
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "Cross-stitch Chart",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Counted cross-stitch charts and DMC floss cards",
+      "thesis": "Each app is a floss colour with its own number; records are stitched squares on a chart grid.",
+      "palette": ["#F6F7F5", "#C9CED6", "#20242C", "#2F55C4", "#2E8B57", "#E8A317", "#7A4FB0", "#16181D"],
+      "materials": ["aida cloth grid", "floss colour key with numbers", "x-stitch symbols", "backstitch outlines"],
+      "viewport": "Home as a chart: the status line over a grid of app squares, each in its floss colour with its number; waiting changes shown as un-stitched outlines; dark mode is black aida.",
+      "risk": "The most expected reading of 'stitched', and the closest to the old quilt look; the grid can drift toward a spreadsheet."
+    },
+    {
+      "id": "challenger-gateboard",
+      "label": "Boarding Pass and Gate Board",
+      "verdict": "competitive",
+      "lineage": "Airline boarding passes and live departure boards",
+      "thesis": "Home is a departures board ranked by time, and every change holds its colour until you've seen it.",
+      "palette": ["#F7F8F8", "#111418", "#FFB000", "#5A6270"],
+      "materials": ["segmented pass panels", "tabular mono figures", "fixed board columns"],
+      "viewport": "Next up as a gate board of dated items from every app, a changed row lit amber until seen, the receipt as a torn-off pass stub.",
+      "case": "Strong on clarity because next-up ranking is the core of Home, but it loses the quilt and stitching identity you asked to keep.",
+      "risk": "Reads like a travel app, so the per-app colours become secondary.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board.webp"
+    },
+    {
+      "id": "challenger-crouwel",
+      "label": "Crouwel Grid Specimen",
+      "verdict": "declined",
+      "lineage": "Wim Crouwel grid-built type posters",
+      "thesis": "Numbers are built cell by cell on a visible grid.",
+      "palette": ["#FFFFFF", "#1C2BD9", "#C7CEF5"],
+      "materials": ["visible construction grid", "grid-built letterforms"],
+      "viewport": "Faces drawn on graph-paper cells.",
+      "case": "Students don't identify with Dutch type posters, and the grid fights the quilt.",
+      "kept": "A visible grid that every patch size snaps to.",
+      "risk": "Cold and academic.",
+      "hero": "https://impeccable.style/worlds/cards/crouwel-grid-specimen-hero.webp"
+    },
+    {
+      "id": "challenger-acetate",
+      "label": "Software Manual Tab Board",
+      "verdict": "declined",
+      "lineage": "Boxed-software manuals with coloured dividers",
+      "thesis": "Apps as coloured tab dividers down the edge.",
+      "palette": ["#F2A900", "#1B6E5A", "#2C3E9E", "#F4F2EC"],
+      "materials": ["acetate leaves", "tab rail"],
+      "viewport": "A stepped tab rail of apps beside one open section.",
+      "case": "Loses both: unfamiliar to students and noisier than one Home screen.",
+      "kept": "One text size doing most of the work.",
+      "risk": "Retro-office.",
+      "hero": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board-hero.webp"
+    },
+    {
+      "id": "challenger-saville",
+      "label": "Factory Records Catalog",
+      "verdict": "declined",
+      "lineage": "Peter Saville sleeves and catalog numbers",
+      "thesis": "Colour codes stand in for names.",
+      "palette": ["#0E0E0E", "#FFFFFF", "#3FA7D6"],
+      "materials": ["matte black", "white hairline plots"],
+      "viewport": "A black field with one data plot.",
+      "case": "It's the dark look you ruled out, and coded colour hides meaning.",
+      "kept": "Each app's colour as a strict code used the same way everywhere.",
+      "risk": "Dark and cryptic.",
+      "hero": "https://impeccable.style/worlds/cards/brand-identity-canon-saville-catalog-sleeve-hero.webp"
+    },
+    {
+      "id": "challenger-emigre",
+      "label": "Emigre Bitmap Specimen",
+      "verdict": "declined",
+      "lineage": "Emigre magazine bitmap faces",
+      "thesis": "Pixel type at poster scale.",
+      "palette": ["#FFFFFF", "#111111", "#00A86B"],
+      "materials": ["bitmap type", "halftone"],
+      "viewport": "Pixel numerals over dense columns.",
+      "case": "Loses both: it reads as a type experiment, not a daily tool.",
+      "kept": "One display face repeated at a few fixed steps.",
+      "risk": "Novelty.",
+      "hero": "https://impeccable.style/worlds/cards/emigre-bitmap-specimen-hero.webp"
+    },
+    {
+      "id": "challenger-darkroom",
+      "label": "Darkroom Exposure Record",
+      "verdict": "declined",
+      "lineage": "Darkroom printing records and zone ramps",
+      "thesis": "Tone steps and hatch density carry all state.",
+      "palette": ["#EDEDEA", "#2B2B2B", "#C2187A"],
+      "materials": ["eleven-step tone ramp", "hatch overlays"],
+      "viewport": "Overlapping translucent sheets with hatched regions.",
+      "case": "Too technical for a phone glance, and the student doesn't know the darkroom.",
+      "kept": "One shared neutral ramp for both themes; conflicts as cross-hatch.",
+      "risk": "Fussy.",
+      "hero": "https://impeccable.style/worlds/cards/operate-b-exposure-record-zone-sheets-hero.webp"
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "buildPath": {"value": "code", "toggle": false},
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "A clean productivity app: white cards, one blue accent, a workhorse sans.",
+    "palette": ["#FFFFFF", "#111827", "#2563EB"],
+    "materials": ["clean cards", "system type"],
+    "viewport": "Status line, a card list and a tab bar, the way Todoist or Notion lay it out.",
+    "risk": "Indistinguishable from the competition by design."
+  },
+  "steer": true
+}

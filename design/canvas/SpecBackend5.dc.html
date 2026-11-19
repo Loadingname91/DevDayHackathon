@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Backend (5 of 7)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 7428px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<h2>9. Clair</h2>
+<p>Full design: <a href="SpecClair1.dc.html"><code>clair-agent.md</code></a> and <a href="SpecADRs1.dc.html">ADR-007</a>. Summary:</p>
+<ul>
+<li><strong>One entry point</strong>, <code>POST /clair/turns</code>, for every input: text, a voice transcript, a live photo, an image, a PDF or a text file (up to 5 attachments), or an answer to a menu question. The response is SSE with the events <code>status</code>, <code>understood</code>, <code>question</code>, <code>note</code>, <code>proposal</code>, <code>text_delta</code> and <code>done</code>. Every event is also appended to <code>agent_runs.events</code>, so a client that can't read the stream polls <code>GET /clair/runs/{id}/events?after=n</code> instead. How Vercel handles SSE decides only which of the two the client uses; the server side is the same.</li>
+<li><strong>Uploads don't go through the API.</strong> The client uploads each photo or file straight to Storage <code>clair-uploads</code> at <code>{workspace_id}/{uuid}.{ext}</code> with supabase-js (Storage RLS checks the workspace folder), then sends only the paths to <code>/clair/turns</code>. The API never receives a file body, which keeps requests under the Vercel request body limit (about 4.5 MB; <strong>spike (T1)</strong>: confirm on our plan).</li>
+<li><strong>Use sample.</strong> <code>POST /clair/turns {fixture: "receipt" | "fridge"}</code> replays a recorded draft (<code>api/fixtures/receipt.json</code>, <code>fridge.json</code>) through the same <code>propose_changes</code> pipeline: validation, <code>expand</code>, <code>dry_run</code>, one basted change set with <code>source.mode: fixture</code>, and the card shows "sample". Fixtures name apps and collections by key and records by name ("Eggs" on the default list), resolved to ids at replay, never stored UUIDs, so they survive a reseed. No model call, no credits.</li>
+<li><strong>One loop</strong> on the Anthropic Python SDK tool runner. Tools: <code>report_understanding</code>; reads <code>list_apps</code>, <code>get_app</code>, <code>query_records</code>, <code>search_records</code>, <code>get_usuals</code>, <code>get_faces</code>, <code>get_notes</code>; <code>ask_user</code>; <code>save_note</code>; <code>propose_changes</code>; <code>propose_app</code>.</li>
+<li><strong>Clair never writes app data.</strong> <code>propose_changes</code> goes through this doc's validation, <code>expand</code> and <code>dry_run</code> and is stored as one <code>basted</code> change set (section 5). Only <code>save_note</code> writes directly, to <code>clair_notes</code>. <code>propose_app</code> stores a basted change set holding the new app; the Build preview shows it and "Add to my apps" confirms it.</li>
+<li><strong>Pausing for a question.</strong> <code>ask_user</code> stores a <code>clair_questions</code> row and ends the stream with <code>done {status: awaiting_input}</code>; the answer comes back as a new <code>POST /clair/turns</code> and the loop resumes from the saved messages (pause and resume is a <strong>spike (T1)</strong> in <code>clair-agent.md</code>).</li>
+<li><strong>Memory.</strong> Facts about Sam's stuff live in app data (a Groceries item's <code>usual</code>: <code>yes</code>, <code>no</code> or <code>auto</code>). How Sam likes Clair to work lives in <code>clair_notes</code>, shown in Settings and deletable.</li>
+<li><strong>Limits.</strong> Credits per run (chat 1, photo 5, build 10) from <code>usage_ledger</code>; per-user and global rate limits counted from <code>agent_runs</code>; read level from <code>workspaces.read_level</code>.</li>
+</ul>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Table or bucket</th>
+<th>Used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>clair_threads</code></td>
+<td>One per sheet session; the latest can be resumed within 24 hours</td>
+</tr>
+<tr>
+<td><code>clair_messages</code></td>
+<td>Append-only transcript: full content blocks, thinking blocks unchanged. Images are stored as a Storage path in place of base64 and re-read on resume</td>
+</tr>
+<tr>
+<td><code>clair_questions</code></td>
+<td>Open menu questions, the other tools' results from the paused message, answers, 24-hour expiry</td>
+</tr>
+<tr>
+<td><code>clair_notes</code></td>
+<td>"What Clair remembers": up to 50 per workspace, deduped on lower-cased text</td>
+</tr>
+<tr>
+<td><code>agent_runs</code></td>
+<td>One per turn: status, model, effort, iterations, tokens, credits, stop reason, timings, the change set it proposed, and its SSE events (for polling)</td>
+</tr>
+<tr>
+<td><code>llm_calls</code></td>
+<td>One per model request: tokens, cache reads and writes, stop reason, whether the fallback model served it, latency. No bodies; the transcript is <code>clair_messages</code></td>
+</tr>
+<tr>
+<td><code>tool_calls</code></td>
+<td>One per tool use: name, input, error flag, result (truncated), change set</td>
+</tr>
+<tr>
+<td><code>usage_ledger</code></td>
+<td>Credits: monthly grant, spend per run, refund on error</td>
+</tr>
+<tr>
+<td>Storage <code>clair-uploads</code></td>
+<td>Private bucket; the client uploads to <code>{workspace_id}/{uuid}.{ext}</code> (RLS on the folder); deleted after 30 days by the daily sweep</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Charging.</strong> At the start of a run the API takes the workspace lock, sums <code>usage_ledger</code> for the period and inserts the spend row; a balance below the run's cost returns <code>402</code> before any model call. A run that ends in <code>error</code> gets a <code>refund</code> row for the full cost, less 1 credit if the model had already read an attachment (the same rule as <code>clair-agent.md</code> §14).</p>
+<p><strong>Rate limits.</strong> Counted from <code>agent_runs.started_at</code>: 10 runs a minute and 200 a day per user, and at most 30 runs in flight across all users (starting values, the same as <code>clair-agent.md</code> §14; set in env). Over the limit: <code>429</code> with a friendly line. One running run per thread (the <code>agent_runs_one_live</code> index): a second turn while one runs gets <code>409</code>.</p>
+<hr>
+<h2>10. API endpoints</h2>
+<p>All paths are under <code>/api</code> on the Vercel deployment. All bodies are Pydantic models; FastAPI publishes them as OpenAPI and the client generates its types with <code>openapi-typescript</code> (ADR-004). Every authenticated endpoint takes <code>Authorization: Bearer &lt;Supabase access token&gt;</code>. Writes return the command result <code>{change_set_id, server_seq, blocks[], faces{}, warnings[]}</code> unless noted.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Method and path</th>
+<th>Request</th>
+<th>Response</th>
+<th>Was (<code>ui-tech-plan.md</code> §5)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /health</code></td>
+<td></td>
+<td><code>{ok, db, version}</code> (also used to warm functions)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>POST /me/bootstrap</code></td>
+<td><code>{tz?}</code></td>
+<td><code>{user, is_anonymous, workspace, credits}</code>; creates the workspace on first call</td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>GET /me</code></td>
+<td></td>
+<td><code>{user, is_anonymous, workspace, credits, server_now}</code></td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>PATCH /settings</code></td>
+<td><code>{tz?, read_level?, pins?}</code></td>
+<td><code>{workspace}</code></td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>POST /templates/apply</code></td>
+<td><code>{templates: string[]}</code></td>
+<td>command result (one <code>template</code> change set)</td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>GET /home</code></td>
+<td></td>
+<td><code>{greeting, status, needsOk: Card[], nextUp: Dated[], noticed?, apps: Patch[], seq}</code></td>
+<td><code>GET /api/home</code></td>
+</tr>
+<tr>
+<td><code>GET /apps</code></td>
+<td></td>
+<td><code>Patch[]</code> with faces</td>
+<td><code>GET /api/apps</code></td>
+</tr>
+<tr>
+<td><code>GET /apps/{id}</code></td>
+<td></td>
+<td><code>{spec: AppSpec, data: {CollectionRef: Record[]}, faces, seq}</code> (every collection its blocks read, <code>*dated</code> included)</td>
+<td><code>GET /api/apps/:id</code></td>
+</tr>
+<tr>
+<td><code>POST /apps</code></td>
+<td><code>{spec}</code></td>
+<td>command result, <code>201</code></td>
+<td><code>POST /api/apps</code></td>
+</tr>
+<tr>
+<td><code>PATCH /apps/{id}</code></td>
+<td><code>{spec, base_version}</code> (Arrange, stitch toggles, field edits)</td>
+<td>command result</td>
+<td><code>PATCH /api/apps/:id</code></td>
+</tr>
+<tr>
+<td><code>DELETE /apps/{id}</code></td>
+<td><code>?confirm=true</code></td>
+<td>without <code>confirm</code>: <code>409 {dependents}</code> preview; with it: command result</td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>POST /collections/{id}/options</code></td>
+<td><code>{field, label}</code> (New list)</td>
+<td>command result</td>
+<td>new (FR-A4b)</td>
+</tr>
+<tr>
+<td><code>PATCH /collections/{id}/options/{option_id}</code></td>
+<td><code>{field, label}</code> (rename)</td>
+<td>command result</td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>DELETE /collections/{id}/options/{option_id}</code></td>
+<td><code>{field, items: "move:&lt;option_id&gt;" \| "delete"}</code></td>
+<td>command result, or <code>409 {count}</code> if items remain and <code>items</code> is missing</td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>POST /records</code></td>
+<td><code>{collection_id, fields, before_id?, after_id?}</code></td>
+<td>command result, <code>201</code></td>
+<td><code>POST /api/rows</code></td>
+</tr>
+<tr>
+<td><code>PATCH /records/{id}</code></td>
+<td><code>{fields, base_version}</code></td>
+<td>command result</td>
+<td><code>PATCH /api/rows/:id</code></td>
+</tr>
+<tr>
+<td><code>POST /records/{id}/move</code></td>
+<td><code>{before_id?, after_id?, list?}</code></td>
+<td>command result</td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>POST /records/{id}/complete</code></td>
+<td><code>{occurrence?}</code></td>
+<td>command result</td>
+<td>was <code>PATCH {done}</code></td>
+</tr>
+<tr>
+<td><code>POST /records/{id}/skip</code></td>
+<td><code>{occurrence}</code></td>
+<td>command result</td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>DELETE /records/{id}</code></td>
+<td></td>
+<td>command result (Undo via the change set)</td>
+<td><code>DELETE /api/rows/:id</code></td>
+</tr>
+<tr>
+<td><code>GET /change-sets</code></td>
+<td><code>?status=basted</code></td>
+<td><code>ChangeSet[]</code> with fresh <code>lines</code>, <code>targets</code>, <code>deltas</code>, <code>actions</code></td>
+<td><code>GET /api/proposals</code></td>
+</tr>
+<tr>
+<td><code>PATCH /change-sets/{id}</code></td>
+<td><code>{ops, version}</code> (Review items)</td>
+<td><code>ChangeSet</code> re-expanded, or <code>409</code></td>
+<td><code>PATCH /api/proposals/:id</code></td>
+</tr>
+<tr>
+<td><code>POST /change-sets/{id}/confirm</code></td>
+<td></td>
+<td>command result with final <code>faces</code>, or <code>409 {status}</code></td>
+<td><code>POST /api/proposals/:id/confirm</code></td>
+</tr>
+<tr>
+<td><code>POST /change-sets/{id}/undo</code></td>
+<td></td>
+<td>command result with <code>warnings[{changed_since}]</code> (DevDay), or <code>409 {status}</code>. Post-demo: <code>{force?}</code> and <code>409 {conflicts}</code></td>
+<td><code>POST /api/proposals/:id/undo</code></td>
+</tr>
+<tr>
+<td><code>POST /change-sets/{id}/dismiss</code></td>
+<td></td>
+<td><code>204</code>, or <code>409</code></td>
+<td><code>POST /api/proposals/:id/dismiss</code></td>
+</tr>
+<tr>
+<td><code>POST /clair/turns</code></td>
+<td><code>{thread_id?, text?, images[], files[], transcript?, voice?}</code> (images and files are Storage paths, never file bodies) or <code>{thread_id, answer: {question_id, choices[], other?&#125;}</code> or <code>{fixture: "receipt" \| "fridge"}</code> (Use sample)</td>
+<td>SSE: <code>status</code>, <code>understood</code>, <code>question</code>, <code>note</code>, <code>proposal</code>, <code>text_delta</code>, <code>done</code></td>
+<td><code>/api/clair/parse</code>, <code>/ask</code>, <code>/build</code></td>
+</tr>
+<tr>
+<td><code>GET /clair/threads/latest</code></td>
+<td></td>
+<td><code>{thread, messages}</code> if active within 24 h, else <code>204</code></td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>GET /clair/runs/{id}/events</code></td>
+<td><code>?after=&lt;n&gt;</code></td>
+<td>the run's SSE events as JSON after event <code>n</code> (fallback if Vercel buffers SSE; the client polls every 500 ms)</td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>GET /clair/notes</code></td>
+<td></td>
+<td><code>Note[]</code></td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>DELETE /clair/notes/{id}</code></td>
+<td></td>
+<td><code>204</code></td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>GET /search</code></td>
+<td><code>?q=&amp;app=</code></td>
+<td><code>{hits: {app, record, field, snippet}[], elsewhere, ask}</code></td>
+<td><code>GET /api/search</code></td>
+</tr>
+<tr>
+<td><code>GET /sync</code></td>
+<td><code>?since=&lt;seq&gt;</code></td>
+<td>section 7</td>
+<td><code>GET /api/changes</code></td>
+</tr>
+<tr>
+<td><code>GET /usage</code></td>
+<td></td>
+<td><code>{period, granted, spent, left}</code></td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>POST /join-codes</code></td>
+<td></td>
+<td><code>{code, expires_at}</code> (5 minutes), or <code>403</code> for a guest-only or unconfirmed account</td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>POST /join-codes/redeem</code></td>
+<td><code>{code}</code> (no auth)</td>
+<td><code>{email, token_hash}</code>, or <code>404</code> / <code>410</code> / <code>429</code></td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>POST /cron/sweep</code></td>
+<td>header from Vercel Cron</td>
+<td><code>204</code>; expires questions, deletes uploads older than 30 days</td>
+<td>new</td>
+</tr>
+<tr>
+<td><code>POST /dev/reset</code></td>
+<td>header <code>X-Demo-Key</code></td>
+<td><code>204</code>; reseeds the workspace <code>DEMO_WORKSPACE_ID</code> (env) and bumps its <code>epoch</code>; never touches another workspace or the demo auth user</td>
+<td><code>POST /api/dev/reset</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>ChangeSet</code> is <code>ui-tech-plan.md</code> §4's <code>Proposal</code> with these names: <code>{id, status, source, title, summary, ops, lines, expanded, targets, deltas, actions, flagged, version}</code>.</p>
+<p><code>Card</code> (Home's Needs your OK) is a union by <code>kind</code>:</p>
+<pre><code class="language-ts">type Card =
+  | { kind: 'change_set'; change_set: ChangeSet }                 // receipts, captures, Clair drafts (Live)
+  | { kind: 'checkin'; id: string; title: string; items: { text: string; app: string }[];
+      change_set?: ChangeSet }                                     // evening check-in (Proto / Beta)
+  | { kind: 'keep' };                                              // Keep your quilt (Beta; built from is_anonymous)
+</code></pre>
+<p>On DevDay <code>/home</code> returns only <code>change_set</code> cards; the other kinds are in the type so the client renders them when they ship.</p>
+<p><strong>Starter templates</strong> (<code>api/templates/*.json</code>, applied by <code>POST /templates/apply</code>; the demo seed uses the same specs plus rows):</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Template (chip)</th>
+<th>Collections (<code>calendar: true</code> marked ●)</th>
+<th>Stitches (declared here)</th>
+<th>Face</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>budget</code> Budget &amp; subscriptions (Money, Subscriptions)</td>
+<td><code>spend {note, amount money, category select[Groceries, Eating out, Rent, Fun, Transport], at datetime}</code>; <code>subscriptions {name, amount money, renews date, repeat}</code> ● (the renewals tab only with the Subscriptions chip)</td>
+<td><code>groceries/trips → budget/spend</code> (amount ← total, at ← at, note ← store, category ← Groceries); fires only when Groceries exists</td>
+<td><code>{minus: [{setting: "limit"}, sum(spend.amount, month)]}</code> "left", <code>status: true</code>. <code>settings.limit</code> starts unset (face: "Set a monthly amount"); the demo seed sets 120000</td>
+</tr>
+<tr>
+<td><code>groceries</code> Groceries</td>
+<td><code>items {name, list select[Weekly shop], status select[to buy, bought], qty, price money, bought_on date, trip relation, usual select[auto, yes, no]}</code>; <code>trips {store, total money, at datetime}</code> ● label "Grocery trip"</td>
+<td>none</td>
+<td>count of <code>items</code> where status = to buy and list = default, "to buy"</td>
+</tr>
+<tr>
+<td><code>classes</code> Classes</td>
+<td><code>classes {name, title, room, time datetime, repeat}</code> ●; <code>due {title, kind select[assignment, exam], at date or datetime, class relation, done bool}</code> ●</td>
+<td>none</td>
+<td>count of <code>due</code> where done = false and <code>at</code> within 7 d, "due this week"</td>
+</tr>
+<tr>
+<td><code>workout</code> Workout</td>
+<td><code>sessions {name, at datetime, repeat, done bool}</code> ●</td>
+<td>none</td>
+<td>count of <code>sessions</code> this week where done, "this week"</td>
+</tr>
+<tr>
+<td><code>todos</code> To-dos</td>
+<td><code>todos {title, due datetime, done bool, repeat}</code> ●</td>
+<td>none</td>
+<td>count where done = false, "open"</td>
+</tr>
+<tr>
+<td><code>calendar</code> Calendar (always added)</td>
+<td><code>events {title, at datetime, ends datetime, repeat}</code> ●; its blocks read <code>*dated</code></td>
+<td>none</td>
+<td>count of <code>*dated</code> today, "today"</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Status codes.</strong> <code>401</code> no or bad token; <code>402</code> out of credits; <code>403</code> read level <code>none</code>, or a guest or unconfirmed account making a join code; <code>404</code> not found or not yours; <code>409</code> state conflict (transition, version, undo precondition, list still has items, thread busy); <code>410</code> join code or menu question expired; <code>413</code> attachment too large; <code>422</code> validation with <code>{error, issues[]}</code>; <code>429</code> rate limit.</p>
+<p><strong>Vercel.</strong> One Python function (<code>api/index.py</code> exports the FastAPI app) behind a rewrite of <code>/api/(.*)</code>. <strong>Spike (T1):</strong> that a FastAPI <code>StreamingResponse</code> streams SSE from a Vercel Python function without buffering, and what <code>maxDuration</code> the team's plan allows (Clair's budget is 45 s). Fallback if streaming buffers: the client keeps the <code>POST /clair/turns</code> request open (its response is then one JSON array at the end) and polls <code>GET /clair/runs/{id}/events?after=n</code> every 500 ms for the live events; to poll before that response arrives, the client sends a <code>run_id</code> (a UUID it makes) with the turn and the server uses it as <code>agent_runs.id</code>. The SSE result decides only the client's transport; the server writes the same events either way. Also <strong>spike (T1)</strong>: the request body limit (about 4.5 MB on Vercel); uploads go to Storage directly, so only paths cross it.</p>
+<hr>
+
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":7428}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

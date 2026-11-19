@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Backend (1 of 7)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 3271px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<p class="src">spec/backend.md</p>
+<h1>Quilt backend</h1>
+<p>Nov 19, 2026 · for the DevDay build (Nov 20) and the beta after it · reads with <a href="SpecClair1.dc.html"><code>clair-agent.md</code></a>, <a href="SpecUI1.dc.html"><code>ui-tech-plan.md</code></a>, <a href="SpecPRD1.dc.html"><code>prd.md</code></a> and the TabOS architecture v3 ("v3")</p>
+<p>This doc fixes how Quilt stores data, the one write path, formulas, sync, accounts, the API and the edge cases. Clair's agent loop has its own doc (<a href="SpecClair1.dc.html"><code>clair-agent.md</code></a>); section 9 here is a summary plus the tables it uses.</p>
+<p>Decisions with trade-offs are ADRs: <a href="SpecADRs1.dc.html">004 Python backend on Vercel</a>, <a href="SpecADRs1.dc.html">005 React + Capacitor client</a>, <a href="SpecADRs1.dc.html">006 Supabase blocks table</a>, <a href="SpecADRs1.dc.html">007 Clair agent loop</a>, <a href="SpecADRs1.dc.html">008 online writes and a read cache</a>. <a href="SpecADRs1.dc.html">ADR-002</a> (mock API on Next route handlers) is superseded by 004 and 008; <a href="SpecADRs1.dc.html">ADR-001</a> and <a href="SpecADRs1.dc.html">ADR-003</a> still hold, with the AppSpec now stored on the page block and a proposal now being a change set with status <code>basted</code>.</p>
+<p><strong>Spikes.</strong> Anything marked <strong>spike (T1)</strong> is a platform behaviour we have not tested. It gets checked in the first hour tonight; the fallback is written next to it. No platform limit in this doc is stated as fact.</p>
+<hr>
+<h2>1. Overview</h2>
+<pre><code class="language-mermaid">flowchart LR
+  subgraph Devices
+    APK[&quot;Android APK&lt;br/&gt;React + Capacitor&quot;]
+    WEB[&quot;Laptop website&lt;br/&gt;same Vite build&quot;]
+    IDB[(&quot;IndexedDB&lt;br/&gt;read cache&quot;)]
+  end
+  APK --&gt;|HTTPS JSON + SSE| API
+  WEB --&gt;|HTTPS JSON + SSE| API
+  APK --- IDB
+  WEB --- IDB
+  API[&quot;FastAPI on Vercel&lt;br/&gt;command service · formulas · sync · Clair loop&quot;]
+  API --&gt;|psycopg via Supabase pooler, real transactions| PG[(&quot;Supabase Postgres&lt;br/&gt;blocks · change_sets · events · clair_*&quot;)]
+  API --&gt;|Anthropic Python SDK| CLAUDE[&quot;Claude API&quot;]
+  API --&gt;|service key| ST[(&quot;Storage&lt;br/&gt;clair-uploads, private&quot;)]
+  API --&gt;|admin API: generate_link| AUTH[&quot;Supabase Auth&quot;]
+  APK --&gt;|anonymous sign-in, linkIdentity| AUTH
+  WEB --&gt;|verifyOtp with join code token| AUTH
+  PG --&gt;|inserts on events| RT[&quot;Supabase Realtime&quot;]
+  RT --&gt;|nudge, filtered by RLS| APK
+  RT --&gt;|nudge, filtered by RLS| WEB
+</code></pre>
+<ul>
+<li><strong>Client.</strong> React (Vite, DOM) wrapped by Capacitor. The Android APK is the phone; the same build, served by Vercel, is the laptop website. The client never computes a number: faces, totals and row formulas come from the API (section 6).</li>
+<li><strong>API.</strong> One FastAPI app deployed as a Vercel Python function. It owns every write (the command service, section 5), every formula, sync, join codes and the Clair loop. The one Anthropic key lives only here.</li>
+<li><strong>Database.</strong> Supabase Postgres, reached by psycopg through the Supabase pooler in transaction mode, so each command is a real Postgres transaction. Supabase also gives anonymous auth, Realtime and Storage.</li>
+<li><strong>Live updates.</strong> Clients subscribe to Supabase Realtime <code>postgres_changes</code> on the <code>events</code> table. RLS decides which rows a user sees. A Realtime message is only a nudge; the client then calls <code>GET /sync?since=seq</code> (section 7).</li>
+<li><strong>Writes are online only.</strong> No offline write queue (ADR-008). The IndexedDB cache makes reads instant and lets the app open offline in read-only mode.</li>
+</ul>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>v3 part</th>
+<th>Here</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§1.2 Go monolith</td>
+<td>FastAPI on Vercel</td>
+<td><strong>Reversed</strong> (ADR-004; v3 ADR-6's trigger "Python-native team" applies)</td>
+</tr>
+<tr>
+<td>§1.2 Expo / React Native, Tauri</td>
+<td>React + Capacitor; the laptop uses the website</td>
+<td><strong>Reversed</strong> (ADR-005)</td>
+</tr>
+<tr>
+<td>§1.2 Redis pub/sub + SSE fan-out</td>
+<td>Supabase Realtime on <code>events</code></td>
+<td>Adapted</td>
+</tr>
+<tr>
+<td>§4 command service</td>
+<td>Same pipeline, Python</td>
+<td>Adopted</td>
+</tr>
+<tr>
+<td>§7 encryption</td>
+<td>Plain JSONB + RLS</td>
+<td>Deferred (section 12)</td>
+</tr>
+<tr>
+<td>§6 WASM formulas</td>
+<td>Python on the server only</td>
+<td>Deferred</td>
+</tr>
+</tbody>
+</table></div>
+<hr>
+<h2>2. Data model</h2>
+<p>A subset of v3 §3.1 and §10. Three block types are stored: <code>page</code> (an app), <code>collection</code> and <code>record</code>. The app's layout (tabs, blocks, face, stitches) stays one JSON AppSpec on the page block, as ADR-001 wants; v3's other primitives (<code>view</code>, <code>metric</code>, <code>chart</code> and so on) live inside that JSON instead of as rows (v3 §3.2 adapted; reason in ADR-006).</p>
+<p><strong>Where each part of an AppSpec lives.</strong> The AppSpec contract in <code>ui-tech-plan.md</code> §3 is unchanged on the wire. On disk it is split in two:</p>
+<ul>
+<li>The page block's <code>properties</code> hold the spec minus <code>collections</code>: <code>v</code>, <code>key</code>, <code>name</code>, <code>icon</code>, <code>dye</code>, <code>print</code>, <code>tabs</code>, <code>face</code>, <code>stitches</code>, <code>settings</code>.</li>
+<li>Each entry of <code>collections</code> is a collection block (child of the page) whose <code>properties</code> hold <code>{key, name, fields, titleField, dateField?, amountField?, calendar?, label?}</code>.</li>
+</ul>
+<p><code>GET /apps/{id}</code> joins them back into one AppSpec. <code>propose_app</code> and <code>POST /apps</code> split them. Each fact has one home, so a field rename can't disagree with the layout.</p>
+<p><strong>Contract changes from <code>ui-tech-plan.md</code> §3</strong> (that doc should pick these up):</p>
+<ul>
+<li>Select options are <code>{id, label}</code> objects, not strings. Records store the option <code>id</code>, so renaming a list only changes a label. An option may carry an optional <code>hint</code> ("Sat 21 Nov", "Once a month") that the list chip shows; it is display text, not data.</li>
+<li>New field types: <code>relation</code> (<code>target: CollectionRef</code>; value is an array of record UUIDs, v3 §3.4), <code>formula</code> (a row formula, section 6) and <code>repeat</code> (section 3).</li>
+<li><code>ViewBase</code> gains <code>addAt: 'start' | 'end'</code> (section 4).</li>
+<li>A collection opts into Calendar with <code>calendar: true</code> (plus a <code>dateField</code>); only those collections feed <code>*dated</code>, Calendar and Next up (section 3). <code>label</code> is the singular name the Calendar row shows ("Grocery trip · Corner Market 5:41 pm").</li>
+<li>An app has <code>settings</code> the user can change without editing the layout (Budget's monthly <code>limit</code>, in cents). A face reads one with the term <code>{setting: "limit"}</code> (section 6).</li>
+<li><code>needsOk</code> on Home is a list of cards, a union by <code>kind</code> (section 10).</li>
+<li>The app's slug is <code>key</code> (was <code>id</code>). <code>CollectionRef</code> stays <code>"&lt;app key&gt;/&lt;collection key&gt;"</code>; the API's app id is the page block's UUID.</li>
+<li><code>Row</code> is a record block. <code>done</code>, <code>proposalId</code> and <code>via</code> become: a <code>done</code> or <code>status</code> field declared in the collection; the <code>events.change_set_id</code> of the write; a reserved <code>_via</code> property (below).</li>
+</ul>
+<p><strong>Reserved record keys.</strong> Properties starting with <code>_</code> are system data, never fields: <code>_via: {app, record_id}</code> marks a record written by a stitch ("from Groceries ›", FR-S4).</p>
+<p><strong>Money</strong> is integer cents. <strong>Datetimes</strong> are ISO 8601 with offset; <strong>dates</strong> are <code>YYYY-MM-DD</code> (section 3).</p>
+
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3271}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

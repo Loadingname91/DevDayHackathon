@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PRD (1 of 4)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 6891px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<p class="src">spec/prd.md</p>
+<h1>PRD: Quilt, with the DevDay cut</h1>
+<p>Nov 19, 2026 · Quilt founding team (drafted with Claude) · Stories: <code>spec/prd-stories.md</code> · Onboarding: <code>docs/onboarding.md</code> · Technical detail: <code>spec/ui-tech-plan.md</code>, <code>spec/backend.md</code>, <code>spec/clair-agent.md</code></p>
+<p><strong>How to read the cut.</strong> Every requirement carries one tag:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Live</strong></td>
+<td>Working code on stage at DevDay, Fri Nov 20. The demo path breaks without it.</td>
+</tr>
+<tr>
+<td><strong>Live+</strong></td>
+<td>Working code on Nov 20 only if time allows. Otherwise it is shown in a design prototype.</td>
+</tr>
+<tr>
+<td><strong>Proto</strong></td>
+<td>Shown on Nov 20 from the clickable design prototypes only (Q&amp;A, laptop screen). Not working code.</td>
+</tr>
+<tr>
+<td><strong>Beta</strong></td>
+<td>Built for the private beta in the 3 months after DevDay.</td>
+</tr>
+<tr>
+<td><strong>Later</strong></td>
+<td>Public launch or after.</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Must run on stage (read this first)</h3>
+<p>The only things built and rehearsed for Nov 20. Everything else in this PRD is Live+, Proto, Beta or Later. Owners follow the pitch doc's split: Person A = engine and Clair, Person B = app, sync and demo.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Must run</th>
+<th>FRs</th>
+<th>Built</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>One seeded demo account: the Android APK on the phone, the website on the laptop joined with a 6-digit code</td>
+<td>FR-X1</td>
+<td>Base</td>
+<td>B</td>
+</tr>
+<tr>
+<td>2</td>
+<td>5 seeded apps render from specs</td>
+<td>FR-A1, FR-A2</td>
+<td>Base</td>
+<td>A (specs), B (renderer)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Home: status line, Needs your OK card, Next up, Your apps patches, pinned bar</td>
+<td>FR-H1, FR-H2, FR-H3, FR-H5, FR-H7, FR-P1</td>
+<td>Base</td>
+<td>B</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Clair button → sheet → Photo</td>
+<td>FR-C1, FR-C2</td>
+<td>Base</td>
+<td>B</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Photo → checked rows → basted proposal card with "Add to 3 apps"</td>
+<td>FR-C3</td>
+<td><strong>Event day (judged)</strong></td>
+<td>A</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Review items: fix or delete a row before OK</td>
+<td>FR-C3a</td>
+<td><strong>Event day (judged)</strong></td>
+<td>B</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Nothing saved before OK; confirm writes one change set</td>
+<td>FR-S1, FR-S3</td>
+<td><strong>Event day (judged)</strong></td>
+<td>A</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Thread pull from the card to the pins, "just changed", status line rolls</td>
+<td>FR-S2, FR-S4</td>
+<td><strong>Event day (judged)</strong></td>
+<td>B</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Laptop shows the change live</td>
+<td>FR-L1, FR-L2, FR-S5</td>
+<td>Base</td>
+<td>B</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Undo on the phone reverses all 3 apps; the laptop follows</td>
+<td>FR-S6</td>
+<td><strong>Event day (judged)</strong></td>
+<td>A (undo), B (laptop)</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>Second beat, fridge:</strong> fridge photo → understanding line → Clair spots missing usuals and asks with a menu → Sam picks → basted "Add 2 to Weekly shop" → confirm → the choice is remembered (Clair note, <code>usual</code> mark). Built only after rows 1 to 10 run; cut first</td>
+<td>FR-C12 to FR-C16</td>
+<td><strong>Event day (judged)</strong></td>
+<td>A (loop, tools), B (menu card, Noted chip)</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Any photo works live (a judge's photo gets an understanding line and a proposal or "Nothing to add"). "Use sample" appears after 12 s and replays a recorded run marked "sample"</td>
+<td>FR-C12, FR-C13</td>
+<td><strong>Event day (judged)</strong></td>
+<td>A</td>
+</tr>
+</tbody>
+</table></div>
+<p>The must-run path is rows 1 to 10: receipt → Add to 3 apps → laptop updates → Undo. Rows 11 and 12 come second, in that order.</p>
+<p><strong>Demo devices.</strong> Phone: the Android APK (Capacitor) signed in to the demo account. Laptop: the same build as a website in Chrome, joined with a join code. Backup: the website on the phone's browser.</p>
+<p><strong>Event boundary.</strong> The DevDay rule (pitch doc, "DevDay: the event"): existing projects are allowed, "but you must build a new, constrained feature during the event, and that feature is what gets judged." Base rows (1 to 4, 9) are built before the event. Rows 5 to 8 and 10 to 12 are the judged feature: a photo becomes checked proposals for every app it touches, confirmed once and undoable; the fridge and any-photo rows are the same feature on other inputs. This is wider than the application's wording ("items land as rows in your grocery tab"); say so if asked, and keep the git history as the record of what was built on the day.</p>
+<p><strong>Go / no-go</strong> <em>(times proposed; the event schedule is not published)</em>: if rows 1 to 4 and 9 don't run on a phone by 22:00 Nov 19, the demo becomes the recorded video plus the prototypes, labelled as such. Feature freeze 2 hours before the pitch slot; after that, rehearsal only. Person B decides any cut.</p>
+<p><strong>Reading in a hurry:</strong> this table, Scope and AI Behavior cover what gets built for Nov 20. The FR tables below are the reference for every phase.</p>
+<p><strong>Terminology (decided Nov 19).</strong> The thing Clair builds is an <strong>app</strong>, and the sections inside an app are <strong>tabs</strong> (the Workout app has 5 tabs). "Patch" is the visual and brand word for an app in your quilt. The pitch doc, the persona and the gap audit say "tab" where this PRD says "app".</p>
+<h2>Overview</h2>
+<h3>Problem Statement</h3>
+<p>Students pay a "forgetting tax": renewals they forgot to cancel, late fees, groceries that go off, deadlines that sneak up. Their money, workouts, classes and to-dos sit in separate paid apps that don't share data. Logging into each one takes longer than the purchase or the set, so they stop logging, and the apps go stale. The pitch doc's insight is that personal tracking fails at the logging, not the building. The category benchmark it cites puts day-30 retention for productivity and fitness apps at about 8 to 9%.</p>
+<p>Evidence status: the problem framing comes from the founders' pitch doc and a Proto persona. Nothing is validated with users yet (see Assumptions).</p>
+<p><strong>Why now.</strong> DevDay is tomorrow (Nov 20, 2026). Only the feature built during the event is judged, and the pitch is half the score. This PRD fixes what is demoed live, what is shown from prototypes, and what waits for the beta, so nobody builds the wrong thing tonight.</p>
+<h3>Solution Summary</h3>
+<p>Quilt is one app for your money, workouts and to-dos. You describe the app you need and Clair builds it from a fixed set of 9 blocks. Every app is joined to the others, so one capture updates several apps at once. Clair never writes code. It writes a small spec that Quilt checks before anything changes. Nothing Clair proposes is saved until you say OK, and every change can be undone.</p>
+<p>The one magic moment for DevDay: Sam taps Clair, adds a photo of a grocery receipt, sees the rows proposed as drafts, taps "Add to 3 apps", and Groceries, Budget and Calendar update together, on the phone and on the laptop beside it.</p>
+<h3>Target Users</h3>
+<p><strong>First user: Sam, the forgetting-tax student</strong> (<code>docs/research/persona-sam-student.md</code>, persona PU-001, Proto confidence). A U of U undergrad, phone-first, managing money alone for the first time, who won't hand a bank login to a finance app. Sam logs in 10 to 60 second gaps (checkout line, between sets) and plans on a laptop on Sunday night. If capture fails twice, Sam goes back to the Notes app.</p>
+<p>Later personas (not designed for in this PRD): busy parents and households, caregivers, athletes and hobbyists, freelancers. The student gig worker is held as the answer to "who pays most" (founder judgement).</p>
+<h2>Goals &amp; Success Metrics</h2>
+<h3>Goals</h3>
+<ol>
+<li><strong>Win DevDay (Nov 20):</strong> a flawless live demo of capture across apps, plus real survey and waitlist numbers.</li>
+<li><strong>Prove capture beats building (beta):</strong> students keep logging after 30 days because capture takes no effort.</li>
+<li><strong>Earn trust with money data:</strong> no surprise saves, no surprise bills, nothing changed without a yes.</li>
+</ol>
+<h3>Success Metrics</h3>
+<p>No user baselines exist yet. Targets marked <em>proposed</em> are founder proposals to confirm. The pitch placeholders [N], [X], [Y] and [D] are never filled with invented numbers.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Baseline</th>
+<th>Target</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Demo path runs clean on stage (Home → Clair → Photo → review → Add to 3 apps → laptop updates → Undo)</td>
+<td>Not yet rehearsed in code</td>
+<td>1 of 1 on stage; 5 clean runs in a row in rehearsal on a phone hotspot <em>(proposed)</em></td>
+<td>Nov 20</td>
+</tr>
+<tr>
+<td>Survey answers from U of U students</td>
+<td>0</td>
+<td>20 or more (pitch doc bar). If below 20 at close, the pitch states the real N and the persona keeps its Proto label</td>
+<td>Nov 19</td>
+</tr>
+<tr>
+<td>Waitlist sign-ups</td>
+<td>0</td>
+<td>A real number, whatever it is. The pitch doc says even 50 is credible; no target is set</td>
+<td>Nov 20</td>
+</tr>
+<tr>
+<td><strong>North star:</strong> apps with a new entry in the last 7 days, per active user</td>
+<td>None</td>
+<td>Set after the first 2 weeks of beta data <em>(not invented here)</em></td>
+<td>Beta</td>
+</tr>
+</tbody>
+</table></div>
+<p>Beta guardrails, each tracked from day one with targets set after 2 weeks of data (none invented here): day-30 retention (the category figure of ~8 to 9% is context, not a target); time from first open to first stitched moment (onboarding metrics per stage: <code>docs/onboarding.md</code>); share of Clair proposals confirmed without edits; share of Clair-built apps kept without manual fixes; Clair cost per successful task (must stay below that task's credit price).</p>
+<h3>Non-Goals</h3>
+<ul>
+<li>Beating Hevy, Rocket Money or Todoist on depth. Quilt wins on breadth and connection.</li>
+<li>Bank feeds, health data or any account linking. "No bank login" is a selling point.</li>
+<li>Sharing, roommates, marketplace or teams.</li>
+<li>Fully native builds (Swift, Kotlin), widgets, offline writes. The Android app is the same React build in a Capacitor shell.</li>
+<li>Billing. Credits are shown, never charged, until the paid plan ships.</li>
+</ul>
+<h2>User Stories</h2>
+<p>MVP-slice stories with acceptance criteria are in <code>spec/prd-stories.md</code>.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Story</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>US-1</td>
+<td>As Sam, I want to add a receipt photo through Clair and confirm the rows once so every app it touches updates without typing</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>US-2</td>
+<td>As Sam, I want to see exactly what Clair will add before it is saved so nothing lands that I didn't approve</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>US-3</td>
+<td>As Sam, I want to see which apps changed after I confirm so I trust the connection</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>US-4</td>
+<td>As Sam, I want the same change on my laptop without refreshing so Sunday planning matches my phone</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>US-5</td>
+<td>As Sam, I want Home to tell me money left and the next thing in one line so I know how I'm doing in seconds</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>US-6</td>
+<td>As Sam, I want to describe an app in a sentence and get a working, connected app so I never start from a blank canvas</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>US-7</td>
+<td>As Sam, I want to undo what I just confirmed so a wrong add costs nothing</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>US-8</td>
+<td>As Sam, I want to type a quick note ("spent $12 on lunch, gym tomorrow 6 pm") and have Clair file it to the right apps so I don't pick apps myself</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>US-9</td>
+<td>As Sam opening Quilt for the first time, I want useful apps without signing up or building anything so I can capture something in my first minute</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>US-10</td>
+<td>As Sam, I want to drag my list into the order I shop in and see the same order on my laptop so the list matches how I walk the store</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>US-11</td>
+<td>As Sam, I want to photograph my fridge and have Clair ask which missing usuals to add, and remember what I said, so restocking takes one photo and a tap</td>
+<td>P1</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Scope</h2>
+<h3>The DevDay cut (Nov 20)</h3>
+<p><strong>Demo path, working code, rehearsed until it can't fail.</strong>
+1. Home, pre-seeded with 5 demo apps (Budget &amp; subscriptions, Workout, To-dos, Calendar, Groceries) and realistic data.
+2. Tap the Clair button → Clair sheet → Photo → take or pick the receipt.
+3. The sheet shows one basted proposal card: "Adding updates 3 apps" with the three dye dots, the effect ("$412 → $376"), primary "Add to 3 apps", secondary "Review items". "Review items" opens the full-screen review (bar hidden, own Done) to fix a row, then returns to the card.
+4. "Add to 3 apps" on the card (bar visible under the sheet) → thread pull from the card's dye dots into the Groceries, Budget and Calendar pins → status line rolls to "$376 left this month".
+5. The laptop beside the phone shows the same apps with the "just changed" tag.
+6. Undo on the phone: all three apps return to $412 and the seeded rows, on both devices.
+7. Second beat, if rows 1 to 10 of the must-run table are solid: a fridge photo → "I see your fridge" → a menu of missing usuals → "Add 2 to Weekly shop" (Butter, Cheddar; Weekly shop 4 → 6) → confirm, with "Noted: you stopped buying orange juice". The fridge uses usuals not on today's receipt, so it follows the receipt beat without a reset.
+8. Live+ only, if built and time on stage allows: "Track my plants" builds a new app from one sentence.</p>
+<p><strong>The judged event-day feature</strong> stays Clair's photo fill (any photo → checked rows → proposals for every app it touches), with the receipt as the must-run case and the fridge as the second. Engine, renderer, demo apps and live sync are built before the event, as the DevDay rules allow.</p>
+<p><strong>Shown from prototypes, not code:</strong> the full Clair sheet (File, ask across apps, share into Quilt, evening check-in), search, row edit and swipe actions, Arrange, Activity, Settings with privacy and credits, laptop split view. These answer judge questions; they are not claimed as working.</p>
+<h3>Out of Scope (all phases covered by this PRD)</h3>
+<p>Marketplace, sharing and teams; bank feeds, health data, MCP and webhooks; fully native builds, widgets, Siri and Live Activities; offline writes (a read cache only); encryption claims of any kind in the MVP (the full product promises per-account keys and never end-to-end); dark theme (tokens only); styling controls and editing blocks by hand; streaks, badges and counts (except "just changed").</p>
+<h3>Future Considerations</h3>
+<ul>
+<li><strong>Talk (voice)</strong> - moved to Live+ on Nov 19 (FR-C17): the phone's own speech recognition in, the phone's text-to-speech out, Claude as the only brain. No realtime voice model. PRODUCT.md still lists voice as out of MVP and needs the same update.</li>
+<li><strong>Share into Quilt from the OS share sheet</strong> - Later. A web app can only be a share target as an installed PWA on browsers that support it; File upload covers the same job in Beta.</li>
+<li><strong>Scheduled and triggered Clair runs, nudges</strong> - Later, paid plan.</li>
+<li><strong>Folding forgotten apps (21+ apps)</strong> - Beta, after launch data shows how many apps users keep <em>(assumption: few will reach 21 in month one)</em>.</li>
+</ul>
+<h2>Solution Design</h2>
+
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":6891}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

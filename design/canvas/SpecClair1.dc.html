@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Clair agent loop (1 of 5)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 7357px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<p class="src">spec/clair-agent.md</p>
+<h1>Clair: the agent loop and its harness</h1>
+<p>Status: draft for DevDay (Fri 20 Nov 2026) · Owner: Quilt team · Decision record: <a href="SpecADRs1.dc.html">ADR-007</a> · Data model, endpoints and edge cases: <a href="SpecBackend1.dc.html">backend.md</a></p>
+<p>Clair is one agent loop. Every input (typed text, a voice transcript, a live photo, a screenshot, a PDF or text file) goes into the same loop, with the same tools, on the same model. Clair works out what the input is, reads Sam's apps, asks through a menu when it can't decide, saves notes about how Sam likes things done, and proposes changes. It never writes app data itself: the only write tool, <code>propose_changes</code>, creates a <strong>basted</strong> change set that Sam confirms on the card (<a href="SpecADRs1.dc.html">ADR-003</a>).</p>
+<p>Anything marked <strong>spike at T1</strong> has not been run against the SDK or Vercel yet and must be confirmed in the first hour of the build.</p>
+<p>Contents</p>
+<ol>
+<li><a href="#1-how-a-turn-works">How a turn works</a></li>
+<li><a href="#2-entry-point-and-sse-events">Entry point and SSE events</a></li>
+<li><a href="#3-inputs">Inputs</a></li>
+<li><a href="#4-voice">Voice</a></li>
+<li><a href="#5-threads">Threads</a></li>
+<li><a href="#6-context-packing-and-caching">Context packing and caching</a></li>
+<li><a href="#7-system-prompt-stable-part">System prompt (stable part)</a></li>
+<li><a href="#8-per-turn-snapshot">Per-turn snapshot</a></li>
+<li><a href="#9-loop-settings">Loop settings</a></li>
+<li><a href="#10-tool-registry">Tool registry</a></li>
+<li><a href="#11-pausing-for-a-menu-question">Pausing for a menu question</a></li>
+<li><a href="#12-worked-examples">Worked examples</a></li>
+<li><a href="#13-safety-and-limits">Safety and limits</a></li>
+<li><a href="#14-credits-rate-limits-and-logging">Credits, rate limits and logging</a></li>
+<li><a href="#15-latency-targets">Latency targets</a></li>
+<li><a href="#16-evals">Evals</a></li>
+<li><a href="#17-library-choice-adr-007-summary">Library choice (ADR-007 summary)</a></li>
+<li><a href="#18-what-we-took-from-tabos-v3-9-and-what-we-cut">What we took from TabOS v3 §9, and what we cut</a></li>
+</ol>
+<hr>
+<h2>1. How a turn works</h2>
+<pre><code class="language-mermaid">sequenceDiagram
+    autonumber
+    participant P as Phone (Clair sheet)
+    participant A as FastAPI POST /clair/turns
+    participant C as Claude (claude-opus-5-5)
+    participant T as Tools (in FastAPI)
+    participant S as Supabase
+
+    P-&gt;&gt;A: text / transcript / images / files (JWT)
+    A-&gt;&gt;S: verify JWT, read level, credits, rate limit, load thread
+    A--&gt;&gt;P: SSE status &quot;Looking at your photo…&quot;
+    A-&gt;&gt;S: build per-turn snapshot (apps, open items, usuals, notes)
+    A-&gt;&gt;C: tools + system (cached) + history + snapshot + turn
+    C--&gt;&gt;A: tool_use report_understanding, propose_changes
+    A-&gt;&gt;T: validate inputs (Pydantic), run tools
+    T--&gt;&gt;P: SSE understood
+    T-&gt;&gt;S: read blocks, expand stitches, dry-run, store basted change_set
+    T--&gt;&gt;P: SSE proposal (basted card)
+    A-&gt;&gt;C: tool_result blocks (one user message)
+    C--&gt;&gt;A: end_turn
+    A-&gt;&gt;S: clair_messages, agent_runs, llm_calls, tool_calls, usage_ledger
+    A--&gt;&gt;P: SSE done {status: complete}
+    Note over P,S: Confirm and Undo go through the command service (backend.md §5), not through Clair.
+</code></pre>
+<p>A receipt usually takes one model call with tools and one short closing call. A fridge takes three or four, plus one pause for a menu question.</p>
+<hr>
+<h2>2. Entry point and SSE events</h2>
+<p>One endpoint: <code>POST /clair/turns</code>.</p>
+<p>New turn:</p>
+<pre><code class="language-json">{ &quot;thread_id&quot;: &quot;optional&quot;, &quot;run_id&quot;: &quot;optional client-made UUID&quot;, &quot;text&quot;: &quot;optional&quot;,
+  &quot;transcript&quot;: &quot;optional&quot;, &quot;voice&quot;: false,
+  &quot;images&quot;: [&quot;storage path&quot;], &quot;files&quot;: [&quot;storage path&quot;] }
+</code></pre>
+<p><code>images</code> and <code>files</code> are Storage paths only. The client has already uploaded each file straight to <code>clair-uploads</code> with supabase-js (backend.md §9); the request never carries a file body, so it stays under the Vercel request body limit (about 4.5 MB, spike at T1).</p>
+<p>Use sample (stage fallback, §15):</p>
+<pre><code class="language-json">{ &quot;fixture&quot;: &quot;receipt&quot; }
+</code></pre>
+<p>Answer to a menu question:</p>
+<pre><code class="language-json">{ &quot;answer&quot;: { &quot;question_id&quot;: &quot;q_…&quot;, &quot;choices&quot;: [&quot;Butter&quot;, &quot;Cheddar&quot;], &quot;other&quot;: &quot;stopped buying orange juice&quot; } }
+</code></pre>
+<p>The response is <code>text/event-stream</code>. Events, in the order they usually arrive:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Payload</th>
+<th>Sent when</th>
+<th>Client shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td><code>{text}</code></td>
+<td>At once on receipt of the request, when a tool starts, and again past 6 s ("Still reading the receipt…", FR-C10)</td>
+<td>The status line under the spool. The only loading UI</td>
+</tr>
+<tr>
+<td><code>understood</code></td>
+<td><code>{kind, summary, items?}</code></td>
+<td><code>report_understanding</code> ran</td>
+<td>"I see your fridge: 14 items" with the photo thumbnail</td>
+</tr>
+<tr>
+<td><code>question</code></td>
+<td><code>{id, text, options[], multi}</code></td>
+<td><code>ask_user</code> paused the run</td>
+<td>Menu card: chips with descriptions, multi-select, "Other" field</td>
+</tr>
+<tr>
+<td><code>note</code></td>
+<td><code>{text}</code></td>
+<td><code>save_note</code> saved a note</td>
+<td>"Noted: …" chip with Undo</td>
+</tr>
+<tr>
+<td><code>proposal</code></td>
+<td><code>{change_set}</code></td>
+<td><code>propose_changes</code> or <code>propose_app</code> stored a draft</td>
+<td>Basted card. A second <code>proposal</code> with the same <code>change_set.id</code> replaces the card</td>
+</tr>
+<tr>
+<td><code>text_delta</code></td>
+<td><code>{text}</code></td>
+<td>Clair is answering in words</td>
+<td>Answer text, streamed</td>
+</tr>
+<tr>
+<td><code>done</code></td>
+<td><code>{status: complete \| awaiting_input \| error, sources[], spoken?}</code></td>
+<td>Last event, always</td>
+<td>Source chips (app dye dot + name); <code>spoken</code> is read aloud on voice turns; <code>error</code> shows the frayed card with a plain message</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>change_set</code> is the <code>Proposal</code> shape from <a href="SpecUI1.dc.html">ui-tech-plan §4</a> (<code>id</code>, <code>status: basted</code>, <code>source</code>, <code>mode: live | fixture</code>, <code>title</code>, <code>summary</code>, <code>ops</code>, <code>lines</code>, <code>targets</code>, <code>deltas</code>, <code>actions</code>). The server computes <code>lines</code>, <code>targets</code>, <code>deltas</code> and the button labels; Clair supplies only title, summary and ops.</p>
+<p>The stream always ends with <code>done</code>. If the function dies before <code>done</code>, the client treats a closed stream as <code>error</code> and shows "Use sample" (§15).</p>
+<hr>
+<h2>3. Inputs</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Input</th>
+<th>How it gets to Claude</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Live photo</td>
+<td>Capacitor Camera on the phone; file input on the laptop</td>
+</tr>
+<tr>
+<td>Image or screenshot</td>
+<td>Downscaled on the device to at most 1568 px on the long side, JPEG. The client uploads it straight to the private Supabase Storage bucket <code>clair-uploads</code> at <code>{workspace_id}/{uuid}.jpg</code> with supabase-js (Storage RLS checks the workspace folder; 30-day retention) and sends only the path. The server reads it from Storage and sends Claude a base64 <code>image</code> block; <code>clair_messages</code> stores the Storage path in place of the base64 and re-reads it on resume</td>
+</tr>
+<tr>
+<td>PDF</td>
+<td>Uploaded by the client to Storage the same way; the server reads it and sends a base64 <code>document</code> block (<code>media_type: application/pdf</code>). Limit for DevDay: 10 MB and 20 pages (spike at T1 for the real token cost of a 4-page syllabus)</td>
+</tr>
+<tr>
+<td>Text, CSV, ICS</td>
+<td>Uploaded to Storage the same way; read on the server as UTF-8 and sent as a <code>text</code> block wrapped in <code>&lt;attached_file name="…" untrusted="true"&gt;…&lt;/attached_file&gt;</code>. ICS is not parsed by us; Claude reads it as text</td>
+</tr>
+<tr>
+<td>Typed text</td>
+<td>A <code>text</code> block</td>
+</tr>
+<tr>
+<td>Voice</td>
+<td>The on-device transcript as a <code>text</code> block, with <code>voice: true</code> on the request (§4)</td>
+</tr>
+<tr>
+<td>Anything else (docx, xlsx, audio, video)</td>
+<td>Not sent. The sheet says "Can't read this yet. A photo or PDF works." If the turn also has text or other attachments, those still go</td>
+</tr>
+</tbody>
+</table></div>
+<p>At most 5 attachments per turn; the sixth is refused on the device. Each attachment is preceded by a one-line <code>text</code> block naming it ("Attachment 1: photo taken in the app at 5:45 pm") so Clair can refer to them.</p>
+<hr>
+<h2>4. Voice</h2>
+<p>The phone's own speech in and out. Claude is the only brain: no realtime voice model and no second vendor.</p>
+<p><strong>Speech in.</strong> Hold the Clair button 450 ms to start on-device speech recognition: the Capacitor speech-recognition plugin on Android, Web Speech <code>SpeechRecognition</code> in Chrome on the laptop. Partial results show live in the talk state. Release sends; sliding up 60 px cancels (the existing Clair button spec in <code>.impeccable/surfaces/app.md</code> and FR-C7). The final transcript goes to <code>POST /clair/turns</code> as <code>transcript</code> with <code>voice: true</code>. To Clair it is just text from Sam, with a note in the snapshot that it was spoken (so "add it to the thing" style phrasing and recognition slips are expected).</p>
+<p><strong>Waveform.</strong> The running-stitch line is driven by the plugin's partial-result and sound-level events where the plugin emits them. Where it doesn't, the line uses the scripted stitch rhythm. We never open <code>getUserMedia</code> alongside the recognizer, because Android lets only one owner hold the microphone.</p>
+<p><strong>Speech out.</strong> Clair speaks only when Sam talked first. On a voice turn the per-turn snapshot asks Clair to end its turn with one line:</p>
+<pre><code>Spoken: &lt;15 words or fewer&gt;
+</code></pre>
+<p>The harness strips that line from the streamed text (it is never sent as <code>text_delta</code>) and puts it in <code>done.spoken</code>. Rules for the line, stated in the system prompt and enforced by the harness:</p>
+<ul>
+<li>15 words or fewer. The harness cuts at the last full word under the limit if Clair overruns.</li>
+<li>Never reads a list or amounts in full. "Corner Market, 8 items. Add to 3 apps?" is fine; reading eight prices is not. The card stays on screen and carries the detail.</li>
+<li>If the line is missing, the harness uses the card title plus the primary button ("Corner Market. Add to 3 apps?"), or no speech for a plain answer.</li>
+<li>On a pause, the line is the question in short form ("Low on 4 things. Add some to Weekly shop?").</li>
+</ul>
+<p>The client says it with the Capacitor text-to-speech plugin (<code>speechSynthesis</code> on the web). Speech stops when Sam taps anywhere in the sheet or starts holding the Clair button again. A mute toggle sits in the sheet header and is remembered per device (local storage; it is a device preference, not account data).</p>
+<p><strong>Edge cases</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mic permission denied</td>
+<td>The talk state explains in one line ("Quilt needs the microphone to listen. You can type instead.") and opens the text field. Asked again only from Settings</td>
+</tr>
+<tr>
+<td>No speech heard</td>
+<td>"Didn't catch that." No request is sent</td>
+</tr>
+<tr>
+<td>Noisy room or a bad transcript</td>
+<td>The transcript stays in the field after release for 1.5 s with Edit; tapping Edit holds it for correction before sending. A transcript the recognizer marks low-confidence is always held for Edit</td>
+</tr>
+<tr>
+<td>Offline speech recognition unavailable (no language pack, recognizer error)</td>
+<td>Fall back to typing with the same one-line explanation</td>
+</tr>
+<tr>
+<td>Voice answer to a menu question</td>
+<td>The transcript goes as <code>answer.other</code>; chips are still tappable</td>
+</tr>
+<tr>
+<td>Sam starts talking while Clair speaks</td>
+<td>Speech stops at once; the new hold starts recognition</td>
+</tr>
+<tr>
+<td>Muted</td>
+<td><code>done.spoken</code> is ignored; the card is unchanged</td>
+</tr>
+<tr>
+<td>On stage</td>
+<td>A hidden fallback toggle (long-press the sheet header) replays a scripted transcript with the scripted waveform, in case the hall is too loud. It is marked in the rehearsal checklist, not in the UI</td>
+</tr>
+</tbody>
+</table></div>
+<p>Language: English (en-US) only for DevDay.</p>
+<hr>
+<h2>5. Threads</h2>
+<p>Clair keeps a conversation so follow-ups work ("put those on Taco night instead").</p>
+<ul>
+<li><code>clair_threads</code>: one per sheet session. Each new sheet session starts a thread; the last thread can be resumed within 24 h (the sheet offers "Continue").</li>
+<li><code>clair_messages</code>: append-only. One row per message, in order, holding the full content blocks exactly as sent or received, thinking blocks included and unchanged. Images are stored as a reference to the Storage object and re-inlined with the same bytes on load, so the replayed history is byte-identical and the cached prefix still matches.</li>
+<li>Nothing is ever edited or deleted in a live thread. Thinking blocks in replayed history must match their signatures, so an edited history is rejected by the API. Corrections are new messages.</li>
+</ul>
+<p>A thread older than 24 h is closed. A new thread starts with only the stable prefix and a fresh snapshot; Clair notes (§10, <code>save_note</code>) carry what should outlive a thread.</p>
+<hr>
+<h2>6. Context packing and caching</h2>
+<p>Prompt caching is a prefix match over tools, then system, then messages. The order below keeps the expensive, stable part cached and puts everything that changes after it.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Content</th>
+<th>Changes</th>
+<th>Cache</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Tool definitions (§10)</td>
+<td>Only on deploy</td>
+<td>Prefix</td>
+</tr>
+<tr>
+<td>2</td>
+<td>System prompt (§7)</td>
+<td>Only on deploy</td>
+<td>Breakpoint 1 at its end</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Thread history from <code>clair_messages</code></td>
+<td>Grows, never edited</td>
+<td>Read from cache on follow-ups</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Per-turn snapshot as a <code>{"role": "system"}</code> message (§8)</td>
+<td>Every turn</td>
+<td>Not cached on the first call</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Sam's turn (text, transcript, attachments)</td>
+<td>Every turn</td>
+<td>Breakpoint 2 on its last block, so calls 2..8 in the same run read the images and snapshot from cache</td>
+</tr>
+</tbody>
+</table></div>
+<p>The snapshot goes in a mid-conversation system message, not in the top-level <code>system</code>, so editing it never breaks the cached prefix. Opus 5.5 accepts mid-conversation system messages without a beta header. Placing it directly before the user message (rather than after it) is spike at T1; the documented example places it after.</p>
+<p>Effort is a cache key: changing <code>output_config.effort</code> between requests starts the cache over. We pick effort once per run (§9) and keep it for every call in that run, including the resume after a question.</p>
+<p>The snapshot pre-packs what most inputs need (apps, open items, usuals, notes), which is why a receipt usually needs no read tool call at all.</p>
+<hr>
+
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":7357}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

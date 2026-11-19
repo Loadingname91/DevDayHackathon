@@ -3,3 +3,5 @@ design/canvas/dc-runtime.js
 node_modules/
 .venv/
 __pycache__/
+design/docs-preview/
+heights.json

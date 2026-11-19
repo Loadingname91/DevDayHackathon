@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>User stories (2 of 2)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1254px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<h2>US-11: Restock from a fridge photo (Live, second beat)</h2>
+<p><strong>As</strong> Sam standing at an open fridge, <strong>I want</strong> to photograph it and have Clair ask which of my usual things to add to the shop <strong>so that</strong> I restock without writing a list, and Clair learns what I've stopped buying.</p>
+<p><strong>Context.</strong> The second demo beat (PRD must-run row 11), after the receipt path works. Worked example: <code>spec/clair-agent.md</code> §12. Seed: 6 weeks of trips, so usuals are real. The fridge uses usuals that are not on today's receipt (Eggs, Spinach, Greek yogurt and Bananas were bought at 5:41 pm), so it runs after the receipt beat with no reset.</p>
+<p><strong>Acceptance criteria</strong>
+- <strong>AC-1 Understanding line.</strong> Given the demo fridge photo, when Clair reads it, then the sheet shows the thumbnail and "I see your fridge: 14 items" before any proposal, and nothing is saved.
+- <strong>AC-2 Menu of missing usuals.</strong> Given butter was last bought 15 days ago (bought about every 2 weeks), cheddar 9 days ago (weekly), orange juice 6 days ago (every 10 days) and the hummus in the photo is almost empty, and none of them is on any list, when Clair compares, then a menu card asks "Looks like you're low on these. Add to Weekly shop?" with Butter ("you buy every 2 weeks · last 15 days ago"), Cheddar ("usually every week"), Orange juice ("every 10 days") and Hummus ("almost empty"), multi-select, plus an "Other" field.
+- <strong>AC-3 Nothing already listed.</strong> Given an item is already on Weekly shop, when the menu shows, then that item is not offered.
+- <strong>AC-4 Answer.</strong> Given the menu, when Sam picks Butter and Cheddar and types "stopped buying orange juice" under Other, then the sheet shows "Noted: you stopped buying orange juice" with Undo, and one basted card "Add 2 to Weekly shop · mark orange juice not usual".
+- <strong>AC-5 Nothing saved before OK.</strong> Given the basted card, when Sam has not confirmed, then Weekly shop's items and count (4 to buy) are unchanged and orange juice's <code>usual</code> mark is unchanged.
+- <strong>AC-6 Confirm.</strong> Given the card, when Sam taps Add, then Butter and Cheddar appear at the end of Weekly shop (4 → 6 to buy), orange juice's <code>usual</code> is set to no, a thread lands on the Groceries pin, and Undo reverses both changes.
+- <strong>AC-7 Remembered.</strong> Given the note and the mark exist, when Sam photographs the same fridge again, then orange juice is not offered.
+- <strong>AC-8 Note can be removed.</strong> Given Settings → What Clair remembers lists the note, when Sam deletes it, then the next run no longer uses it (the item's <code>usual = no</code> mark stays until Sam changes it).
+- <strong>AC-9 At most two questions.</strong> Given any fridge photo, when Clair runs, then it asks no more than 2 menu questions.
+- <strong>AC-10 Stage fallback.</strong> Given no proposal after 12 s on stage (threshold set from the T1 timing), when "Use sample" appears and is tapped, then the recorded fridge draft is replayed through the same pipeline (<code>POST /clair/turns {fixture: "fridge"}</code>) and the card carries a "sample" mark.</p>
+<p><strong>Design.</strong> Boards ClairFridge, ClairNotes and the Groceries usual mark (being added to the canvas).
+<strong>Dependencies.</strong> US-1 to US-3 (sheet, card, confirm); the usuals seed.
+<strong>Out of scope.</strong> Pantry and freezer photos, quantities beyond "low", adding to lists other than Weekly shop unless Sam picks one under Other.</p>
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1254}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

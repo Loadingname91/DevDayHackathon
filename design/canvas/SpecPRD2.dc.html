@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PRD (2 of 4)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 8000px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<h3>Functional Requirements</h3>
+<p>Each requirement lists its cut and how it is verified. "E2E" means a scripted browser run at 390×844 with touch; "Rehearsal" means a timed run of the demo on the venue-like network.</p>
+<h4>Account</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-X1</td>
+<td><strong>Guest first, join by code.</strong> First open makes an anonymous account (Supabase anonymous sign-in) with no sign-up screen (FR-O1). A second device joins the same account with a 6-digit join code made on the first device (Settings → Add a device); the code works once and expires (lifetime set in <code>spec/backend.md</code>). Only an account with Google or email linked can make a code (FR-O5). For DevDay the seed script creates the demo account with a confirmed email and a password (from env); the APK on the phone signs in to it with "I have a quilt · Sign in" (email and password, Live) and the laptop website joins with a code, with the same email and password sign-in as the fallback.</td>
+<td>Live (demo account + join code) / Live+ (guest first open)</td>
+<td>Two-device rehearsal; E2E: expired or reused code is refused</td>
+</tr>
+<tr>
+<td>FR-X2</td>
+<td>Sign in on a returning or new device with the linked Google account or an email link.</td>
+<td>Beta</td>
+<td>E2E</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Onboarding (journey: <code>docs/onboarding.md</code>; boards "Welcome" and "Empty" on the canvas)</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-O1</td>
+<td><strong>First open, no wall.</strong> Opening the APK or the web link shows Welcome within 3 s <em>(proposed)</em> with no sign-up, no email and no permission prompt; the anonymous account and an empty workspace (in the device's time zone) are made in the background. Welcome carries "I have a quilt · Sign in" (email and password; <strong>Live</strong> for the demo account, Google later) and "Enter a code from your phone". On the website, joining by code leaves the laptop's own empty guest workspace orphaned; it is purged later. No network: "Quilt needs a connection to set up. Try again."</td>
+<td>Live+</td>
+<td>E2E on a fresh install and a fresh browser profile</td>
+</tr>
+<tr>
+<td>FR-O2</td>
+<td><strong>What slips?</strong> Welcome (spool hello, "Hi. I'm Clair. I keep track of the stuff that slips.") asks one question with six multi-select chips: Money, Groceries, Classes, Workouts, Subscriptions, To-dos. Buttons "Make my apps" and "Skip". Nothing preselected.</td>
+<td>Live+</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-O3</td>
+<td><strong>Starter apps, instantly.</strong> Picked chips map to template specs copied into the workspace in one request, with no Claude call; Home shows them within 1 s of "Make my apps" <em>(proposed)</em>. Money and Subscriptions share one Budget &amp; subscriptions app; Calendar is always added. The starter apps fill the pinned bar (up to 4) so the first thread has pins to land on; Clair re-seeds pins after the first week (FR-P2). Starters hold no rows. Skip makes no apps and shows the day-one Home with 4 starter tiles.</td>
+<td>Live+</td>
+<td>E2E: chips → apps match the mapping; no LLM call logged</td>
+</tr>
+<tr>
+<td>FR-O4</td>
+<td><strong>First prompt, permissions when needed.</strong> With no data, the status line reads "Nothing logged yet. Add a receipt or tell Clair something." Camera permission is asked on the first Photo tap, the microphone on the first hold of the Clair button, notifications only after Sam reviews the first evening check-in and taps "Remind me" (local notifications on the device). Every denial leaves a working path: pick a photo, type, or no reminder.</td>
+<td>Live+ (camera, mic) / Beta (notifications)</td>
+<td>E2E with each permission denied</td>
+</tr>
+<tr>
+<td>FR-O5</td>
+<td><strong>Keep your quilt.</strong> After the first confirmed change set, the next Home visit shows one card in Needs your OK: "Keep your quilt. Right now your apps live only on this phone." with "Continue with Google", "Use email", "Not now". Linking keeps the same account and data. "Not now" asks once more after 3 more confirms, then only from Settings. Making a join code requires it. An email that already has a quilt is never merged.</td>
+<td>Beta (Live: demo account already has an email)</td>
+<td>E2E: link keeps all rows; guest can't make a join code</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Home (<code>docs/research/home-jtbd.md</code>; prototype https://claude.ai/artifact/Wr2p4rLD6Zgow3uxmSykRV)</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-H1</td>
+<td>Home shows, in order: greeting + status line → Needs your OK → Next up → Clair noticed → Your apps → pinned bar. Empty sections disappear.</td>
+<td>Live (Clair noticed excepted)</td>
+<td>E2E screenshot vs prototype</td>
+</tr>
+<tr>
+<td>FR-H2</td>
+<td>The status line is 1 to 2 clauses from live data and always carries money left this month and the next dated thing ("$412 left this month. Pull day at 6 pm."). No exclamation marks, no judgement, no "it looks like".</td>
+<td>Live</td>
+<td>Unit test on the composer with seeded data</td>
+</tr>
+<tr>
+<td>FR-H3</td>
+<td>Needs your OK shows one basted card at a time plus "N more", primary action in the bottom third. When empty it is replaced by a caught-up line.</td>
+<td>Live</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-H3b</td>
+<td>Clair suggestions, insights and check-ins use the same card.</td>
+<td>Beta</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-H4</td>
+<td>Nothing in a pending card is counted in any number, list, calendar or tag until Sam confirms. The card previews the effect ("$412 → $376").</td>
+<td>Live</td>
+<td>E2E: values unchanged before OK</td>
+</tr>
+<tr>
+<td>FR-H5</td>
+<td>Next up is a running-stitch thread of the next dated items in the coming 24 h from every app, each dot in its app's dye.</td>
+<td>Live</td>
+<td>E2E with seeded dates</td>
+</tr>
+<tr>
+<td>FR-H6</td>
+<td>Clair noticed shows at most one cross-app pattern with "Not useful" to dismiss.</td>
+<td>Proto / Beta</td>
+<td>Beta E2E</td>
+</tr>
+<tr>
+<td>FR-H7</td>
+<td>Your apps lists every app sized by use, with the app's face number on every patch. No pile chips.</td>
+<td>Live</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-H7b</td>
+<td>A find box, and "not opened in N wk" on apps unopened 14+ days.</td>
+<td>Beta</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-H7c</td>
+<td>A "New app" patch at the end of Your apps opens Build.</td>
+<td>Live+ (with US-6)</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-H8</td>
+<td>Day one: replaced by FR-O1 to FR-O4 (Nov 19). With no apps (Skip), Home shows spool hello, the first prompt, 4 starter tiles and the bar note "Your most-used apps get pinned here".</td>
+<td>Live+ (with FR-O3)</td>
+<td>E2E on empty account</td>
+</tr>
+<tr>
+<td>FR-H9</td>
+<td>A profile button top right opens Settings.</td>
+<td>Proto / Beta</td>
+<td>E2E</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Apps, tabs and blocks</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-A1</td>
+<td>Every app is a spec built only from the 9 blocks: page, text, metric, progress, collection, list/table/calendar view, form, chart. One renderer draws every app.</td>
+<td>Live</td>
+<td>Schema tests; all 5 demo apps render from specs</td>
+</tr>
+<tr>
+<td>FR-A2</td>
+<td>Every app spec declares a <strong>face</strong> (headline value + label), its dated rows and its pending items, so Home and Calendar can read any app.</td>
+<td>Live</td>
+<td>Schema rejects a spec with no face</td>
+</tr>
+<tr>
+<td>FR-A3</td>
+<td>Each app has a name, icon and one of 32 dye × print identities; neighbouring patches never share a dye.</td>
+<td>Live (5 fixed demo dyes) / Beta (assignment rule)</td>
+<td>Screenshot; Beta unit test</td>
+</tr>
+<tr>
+<td>FR-A4</td>
+<td>Rows: tap opens an edit sheet with delete; swipe right completes, swipe left deletes, both with undo; long-press starts multi-select. Delete is ink, never red. Every swipe action is also reachable from the edit sheet.</td>
+<td>Proto / Beta</td>
+<td>Beta E2E with touch</td>
+</tr>
+<tr>
+<td>FR-A5</td>
+<td>Switching apps or tabs paints cached content in under 100 ms with no loader.</td>
+<td>Live</td>
+<td>Performance trace</td>
+</tr>
+<tr>
+<td>FR-A5b</td>
+<td>A first visit on slow data shows the layout with basted placeholders; revisits show cached values with "updated N min ago".</td>
+<td>Beta</td>
+<td>Throttled E2E</td>
+</tr>
+<tr>
+<td>FR-A4b</td>
+<td><strong>Several lists in one app.</strong> A list view can switch on a select field (Groceries: Weekly shop, Taco night, Costco run). The app shows one chip per list with its open count, plus "New list"; a new list is an empty option Sam names, no Clair call. The app's face counts the default list (first chip).</td>
+<td>Live (3 seeded Groceries lists) / Beta (rename, reorder, delete a list)</td>
+<td>E2E: switch lists, counts match; Home face unchanged by other lists</td>
+</tr>
+<tr>
+<td>FR-A6</td>
+<td>The app menu holds Stitches (incoming and outgoing links, each toggleable), History and Arrange.</td>
+<td>Proto / Beta</td>
+<td>Beta E2E</td>
+</tr>
+<tr>
+<td>FR-A7</td>
+<td><strong>Sam's order is kept.</strong> Rows in a list stay in the order Sam puts them; dragging a row by its grip moves it and the order shows the same on every device. New rows go to the end (or the start, per the view). Done rows sink to the bottom by the view's sort, without losing their place if un-done. Screen readers get "Move up" and "Move down" actions on each row. Moving a row to another list (Beta) changes its list and puts it at the end.</td>
+<td>Live+ (drag within a list) / Beta (move between lists)</td>
+<td>Two-device E2E: reorder on phone, laptop shows the same order within 3 s, and after reload</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Clair button and Clair sheet (decision Nov 19; spec: fixspec section D)</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-C1</td>
+<td>The pinned bar's right cell is the Clair button: a faceless spool mark labelled "Clair". Tap opens the Clair sheet above the bar; the bar stays visible. Until Talk ships, its aria-label is "Clair: add a photo" ("Clair: type or add a photo" once FR-C2b ships) and a hold behaves like a tap. Once FR-C17 ships, a 450 ms hold starts Talk and the label gains "…Hold to talk" (fixspec §D).</td>
+<td>Live (Talk: Live+)</td>
+<td>E2E; axe check</td>
+</tr>
+<tr>
+<td>FR-C2</td>
+<td>Sheet start state: the screen's one spool (hello), "Tell Clair anything" and the Photo chip.</td>
+<td>Live</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-C2b</td>
+<td>The text field (not auto-focused on touch) appears only when FR-C4 ships; until then the sheet shows Photo, plus "Build an app" if US-6 ships.</td>
+<td>Live+</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-C2c</td>
+<td>File and Talk chips, three time-of-day suggestions (one capture, one ask, one build), "Open chat ›".</td>
+<td>Live+ (Talk, with FR-C17) / Beta (File chip, suggestions, chat)</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-C3</td>
+<td><strong>Photo:</strong> opens the camera or photo picker (Capacitor Camera on Android, the file input on the website); the photo is resized on the device (at most 1568 px JPEG) before upload; Clair reads it and the sheet shows one basted proposal card ("Adding updates 3 apps", dye dots, "$412 → $376", "Add to 3 apps", "Review items"). Rows Clair is unsure of are marked with text, never guessed silently.</td>
+<td><strong>Live (judged)</strong></td>
+<td>Eval set (AB-2); Rehearsal</td>
+</tr>
+<tr>
+<td>FR-C3a</td>
+<td><strong>Review items:</strong> a full-screen list of the basted rows (bar hidden, own Done). Tap a row to edit its name or amount inline or delete it; the card's preview updates. Done returns to the card; nothing is saved.</td>
+<td><strong>Live (judged)</strong></td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-C4</td>
+<td><strong>Quick dump (type):</strong> any sentence ("spent $12 on lunch, gym tomorrow 6 pm") becomes one basted proposal card per destination app, with a primary button naming the count ("Add to 3 apps") and a secondary "Edit".</td>
+<td>Live+</td>
+<td>Eval set (AB-3)</td>
+</tr>
+<tr>
+<td>FR-C5</td>
+<td><strong>Ask across apps:</strong> a question gets an answer card that cites its source apps as chips (dye dot + name) and may offer one action ("Add to Budget as planned"). Answers state figures from Sam's data. A leading "Yes" or "No" is allowed only as a plain comparison of Sam's own figures ("Yes. $376 left until 1 Dec; after $60 you'd have $316"), never as a recommendation to spend.</td>
+<td>Proto / Beta <em>(roadmap had public launch; confirm)</em></td>
+<td>Eval set (AB-4, AB-6, AB-7)</td>
+</tr>
+<tr>
+<td>FR-C6</td>
+<td><strong>File:</strong> attach a PDF, screenshot or image; Clair reads it and proposes rows ("Found 6 due dates and 2 exams. Add to Classes and Calendar?") with a basted list preview (3 rows + "N more"). Runs through the same loop as photos (FR-C12).</td>
+<td>Live+ (through FR-C12) / Beta (File chip)</td>
+<td>Eval set (AB-5)</td>
+</tr>
+<tr>
+<td>FR-C7</td>
+<td><strong>Talk:</strong> hold the Clair button 450 ms to talk while held; release sends; slide up 60 px cancels. The waveform is a running-stitch line. Tapping the Talk chip is the non-hold alternative. Speech in and out rules: FR-C17.</td>
+<td>Live+</td>
+<td>E2E on the Android APK; Rehearsal</td>
+</tr>
+<tr>
+<td>FR-C8</td>
+<td><strong>Share into Quilt:</strong> from the OS share sheet, the Clair sheet opens with the item attached and continues as FR-C6.</td>
+<td>Proto / Later</td>
+<td>Later</td>
+</tr>
+<tr>
+<td>FR-C9</td>
+<td><strong>Clair asks first:</strong> an evening check-in card in Needs your OK ("3 things from today") with "Review". It only lists things built from data already in Quilt.</td>
+<td>Proto / Beta</td>
+<td>Beta E2E</td>
+</tr>
+<tr>
+<td>FR-C10</td>
+<td>Clair's status line is the only loading UI; past 6 s it says what it is still doing. No spinners.</td>
+<td>Live</td>
+<td>Rehearsal with throttled network</td>
+</tr>
+<tr>
+<td>FR-C11</td>
+<td>Copy never uses a pronoun for Clair, except Clair's own first-person lines. Buttons are plain verbs ("Add to 3 apps", "Review items").</td>
+<td>Live</td>
+<td>Copy review</td>
+</tr>
+<tr>
+<td>FR-C12</td>
+<td><strong>One loop for every input</strong> (<code>spec/clair-agent.md</code>). Text, a voice transcript, a live photo, an image or screenshot, a PDF, or a text, CSV or ICS file all go through the same Clair agent loop, up to 5 attachments per turn. Clair works out what the input is, reads Sam's apps, and ends in one of: a proposal, an answer, an app to build, a question (FR-C14), or nothing. Other file types get "Can't read this yet." Clair changes app data only through a basted proposal (FR-S1).</td>
+<td>Live (photo, text) / Live+ (PDF, text, CSV, ICS)</td>
+<td>Eval set (AB-8 to AB-10); Rehearsal with a judge's photo</td>
+</tr>
+<tr>
+<td>FR-C13</td>
+<td><strong>Understanding line.</strong> Before any proposal, the sheet shows one line saying what Clair thinks the input is, with the photo thumbnail ("Corner Market receipt · 8 items · $35.83", "I see your fridge: 14 items"). It writes nothing. A photo with nothing to add ends there: "Nothing to add."</td>
+<td>Live</td>
+<td>E2E; eval kind accuracy</td>
+</tr>
+<tr>
+<td>FR-C14</td>
+<td><strong>Menu questions.</strong> When Clair is unsure, it asks with a menu card in the sheet: 2 to 8 options, each a label with an optional description ("Eggs · you buy every ~6 days"), multi-select where it fits, and an "Other" field for free text. At most 2 questions per run. The run pauses until Sam answers; an unanswered question expires after 24 h ("Still want to add these?").</td>
+<td>Live (fridge beat)</td>
+<td>E2E by touch; eval: asks only when ambiguous</td>
+</tr>
+<tr>
+<td>FR-C15</td>
+<td><strong>Clair notes.</strong> How Sam likes Clair to work, and facts Sam tells it ("stopped buying orange juice"), are saved as Clair notes: shown in the sheet as "Noted: …" with Undo, read on every later run, and listed in Settings → What Clair remembers, where each can be deleted. Deduped; at most 50. Facts about Sam's stuff live in the apps, not in notes.</td>
+<td>Live (Noted + Undo) / Live+ (Settings list)</td>
+<td>E2E: a deleted note is not used on the next run</td>
+</tr>
+<tr>
+<td>FR-C16</td>
+<td><strong>Usuals.</strong> Each Groceries item has a <code>usual</code> mark: yes, no or auto (default auto, worked out from the last 60 days of trips). Sam can set it on the item. Clair uses usuals to spot what is missing or low ("Eggs: you buy every ~6 days; last bought 8 days ago"), never suggests an item marked no, and changes a mark only inside a basted proposal.</td>
+<td>Live (fridge beat; seed has 6 weeks of trips)</td>
+<td>Unit test on usuals; eval AB-9</td>
+</tr>
+<tr>
+<td>FR-C17</td>
+<td><strong>Voice in and out.</strong> Hold the Clair button: the phone's on-device speech recognition (the browser speech API on the laptop) shows a live transcript; release sends it into the same loop. Clair speaks only when Sam talked first: one line of 15 words or fewer through the phone's text-to-speech, never reading lists or amounts in full; the card stays on screen. Speech stops when Sam taps or talks again. A mute toggle in the sheet header is remembered per device. Mic permission is asked on the first hold; denied or no speech recognition offers typing; nothing heard says "Didn't catch that". A scripted transcript exists only as a hidden stage fallback.</td>
+<td>Live+</td>
+<td>E2E on the APK; Rehearsal in a noisy room</td>
+</tr>
+<tr>
+<td>FR-C18</td>
+<td><strong>Follow-ups in a thread.</strong> Each sheet session is a thread that keeps the conversation, so a follow-up changes the draft ("put those on Taco night instead") instead of starting over; a new proposal in the same thread replaces the draft. The last thread can be resumed within 24 h.</td>
+<td>Live+</td>
+<td>E2E: follow-up edits the same basted card</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Stitching, confirm and undo</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-S1</td>
+<td><strong>Nothing is written to any app before OK.</strong> Clair's output lives as a pending draft (basted) that changes no value, count, calendar entry or tag. Confirming writes all of it as one change set with its own ID; the server applies a change set once only, so a double tap, a retry or a confirm from the second device never writes twice.</td>
+<td>Live</td>
+<td>E2E + DB check: no app rows before confirm; same ID confirmed twice writes once</td>
+</tr>
+<tr>
+<td>FR-S2</td>
+<td>Confirm happens on the proposal card, where the pinned bar is visible (never on the full-screen review). On confirm: the basting tightens, a thread runs from the card's dye dots to each target app's pin, each target gets a "just changed" tag when its thread lands, numbers roll, and a polite live region announces "Added to Groceries, Budget and Calendar".</td>
+<td>Live</td>
+<td>E2E frame capture; screen reader check</td>
+</tr>
+<tr>
+<td>FR-S3</td>
+<td>If the save fails, nothing is partly saved: the card shows a frayed edge and "Couldn't add. Try again." The rows stay basted.</td>
+<td>Live</td>
+<td>Fault-injection test</td>
+</tr>
+<tr>
+<td>FR-S4</td>
+<td>Stitched rows in receiving apps carry a source dot in the source dye and "from <app> ›".</td>
+<td>Live</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-S5</td>
+<td>"Just changed" is held until Sam has seen it on that device. Other devices get the tag, never the thread pull.</td>
+<td>Live</td>
+<td>Two-device E2E</td>
+</tr>
+<tr>
+<td>FR-S6</td>
+<td>Undo reverses a whole change set across every app it touched, from a toast shown for at least 8 s after confirm. Undoing a change set that is already undone does nothing.</td>
+<td>Live (must-run row 10)</td>
+<td>E2E: values return exactly</td>
+</tr>
+<tr>
+<td>FR-S7</td>
+<td>Activity in Settings lists every Clair change with undo per change; each app has its own History.</td>
+<td>Proto / Beta</td>
+<td>Beta E2E</td>
+</tr>
+<tr>
+<td>FR-S8</td>
+<td>Deleting an app, or editing or deleting many rows at once, shows a preview and waits for a yes.</td>
+<td>Beta</td>
+<td>E2E</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Build an app (Flows prototype https://claude.ai/artifact/HrLSUSPiXKCLphYfHVFxne)</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-B1</td>
+<td><strong>Describe:</strong> a sentence first, suggestion chips, and 4 to 6 patterns that skip straight to Preview.</td>
+<td>Live+ (sentence) / Beta (patterns)</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-B2</td>
+<td><strong>Build:</strong> blocks appear as chalk then basted while Clair works; at most 2 quick-choice questions, only when the sentence is truly ambiguous.</td>
+<td>Live+</td>
+<td>Eval set (AB-1)</td>
+</tr>
+<tr>
+<td>FR-B3</td>
+<td>Clair's spec is validated against the schema; an invalid spec is retried automatically, then shown as a friendly error with "Try again". A broken app is never shown.</td>
+<td>Base (the checker exists before the event)</td>
+<td>Unit tests with invalid specs</td>
+</tr>
+<tr>
+<td>FR-B4</td>
+<td><strong>Preview:</strong> the full app with labelled example rows; swipe between 3 layouts (List first / Calendar first / Summary first).</td>
+<td>Live+ (one layout) / Beta (3)</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-B5</td>
+<td><strong>Arrange (optional):</strong> reorder, remove, add from the 9 blocks, flip list/table/calendar, or tell Clair.</td>
+<td>Proto / Beta</td>
+<td>Beta E2E</td>
+</tr>
+<tr>
+<td>FR-B6</td>
+<td><strong>Stitch:</strong> name, dye and icon pre-filled; Clair's suggested connections pre-ticked with what flows; examples not kept by default. Then land on the new app with spool hello and a prompt for the first row.</td>
+<td>Live+ (name + connections)</td>
+<td>E2E</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Search</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-F1</td>
+<td>Pull down from the top of any screen opens search (with a visible "Pull down to search" fallback). Search is not on the Clair button hold.</td>
+<td>Proto / Beta</td>
+<td>Beta E2E with touch</td>
+</tr>
+<tr>
+<td>FR-F2</td>
+<td>Inside an app, search opens scoped ("in Budget ×") with filter chips from that app's own fields, plus "everywhere else (N)" and an Ask Clair row.</td>
+<td>Proto / Beta</td>
+<td>Beta E2E</td>
+</tr>
+<tr>
+<td>FR-F3</td>
+<td>⌘K opens search on a laptop.</td>
+<td>Beta</td>
+<td>E2E</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Pinned bar</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-P1</td>
+<td>Every screen has the bar: 4 pinned apps sewn into one strip + the Clair button. It never swipes sideways and never moves on scroll.</td>
+<td>Live (fixed demo pins: Groceries, Budget, Calendar, Workout)</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-P2</td>
+<td>Clair seeds the pins from the first week's use; after that they change only when Sam long-presses to pin or unpin.</td>
+<td>Beta</td>
+<td>Unit + E2E</td>
+</tr>
+<tr>
+<td>FR-P3</td>
+<td>Swiping up on the bar shows "Just used" (recent apps in order); keep going shows Home's quilt.</td>
+<td>Proto / Beta</td>
+<td>Beta E2E</td>
+</tr>
+<tr>
+<td>FR-P4</td>
+<td>The bar hides only for focused tasks (keyboard up, camera, logging a set, reviewing a receipt, building an app); those screens carry their own Done or Back. The Clair sheet keeps the bar visible so threads land on the pins; that is why confirm lives on the sheet's card (FR-S2).</td>
+<td>Live</td>
+<td>E2E</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Settings, privacy and credits</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-T1</td>
+<td>Settings opens on Activity, then "What Clair can read", "What Clair remembers" (FR-C15), Add a device (FR-X1), export, delete account and the credits meter (also shown in Clair's chat header).</td>
+<td>Proto / Beta</td>
+<td>Beta E2E</td>
+</tr>
+<tr>
+<td>FR-T2</td>
+<td>"What Clair can read" has three levels, applied to every Clair request: <strong>Full</strong> (Clair sees app specs and row values), <strong>Field names</strong> (specs and field names, no row values; Clair still reads whatever Sam adds in the sheet), <strong>None</strong> (Clair sees nothing from Sam's apps; capture and build are off and the sheet says so). Default: Full <em>(proposed; confirm)</em>.</td>
+<td>Beta</td>
+<td>Request-log audit per level</td>
+</tr>
+<tr>
+<td>FR-T3</td>
+<td>The settings screen says in plain words what goes to the AI provider (the photo, text or file Sam adds, plus whatever the level above allows) and never claims encryption the MVP doesn't have.</td>
+<td>Beta</td>
+<td>Copy review</td>
+</tr>
+<tr>
+<td>FR-T4</td>
+<td>Export everything as a readable spec plus data; delete account removes all data.</td>
+<td>Beta</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>FR-T5</td>
+<td>Credits: alerts at 80% and 100%; at zero, Clair pauses until next month or a top-up, and apps, logging and sync keep working. No auto-charge. Credit costs per action are a proposal (pitch doc: chat step 1, build 10, photo fill 5).</td>
+<td>Beta (meter) / Later (billing)</td>
+<td>Unit test on ledger</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Laptop</h4>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Cut</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-L1</td>
+<td>The same apps, live on phone and laptop: a confirm on one shows on the other without refresh, with the "just changed" tag.</td>
+<td><strong>Live</strong></td>
+<td>Two-device rehearsal</td>
+</tr>
+<tr>
+<td>FR-L2</td>
+<td>Laptop layout uses the same components as a 2 to 3 column quilt grid.</td>
+<td>Live</td>
+<td>Screenshot at 1440</td>
+</tr>
+<tr>
+<td>FR-L3</td>
+<td>Split view: app list</td>
+<td>app</td>
+<td>row detail; while building, Clair conversation</td>
+</tr>
+</tbody>
+</table></div>
+
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":8000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

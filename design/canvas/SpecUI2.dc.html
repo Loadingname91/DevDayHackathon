@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UI tech plan (2 of 2)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F55C4}a:hover{color:#1A2232}
+.doc{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;color:#1A2232}
+.doc h1{font-size:40px;line-height:1.15;margin:0 0 24px;letter-spacing:-0.02em}
+.doc h2{font-size:28px;line-height:1.2;margin:48px 0 12px;letter-spacing:-0.01em}
+.doc h3{font-size:21px;margin:32px 0 8px}
+.doc h4{font-size:18px;margin:24px 0 8px}
+.doc p,.doc ul,.doc ol{margin:0 0 14px}
+.doc li{margin:4px 0}
+.doc code{font-family:'DM Mono',ui-monospace,monospace;font-size:0.88em;background:#EEF0F3;padding:1px 5px;border-radius:4px}
+.doc pre{background:#EEF0F3;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5}
+.doc pre code{background:none;padding:0}
+.doc .tbl{overflow-x:auto;margin:0 0 18px}
+.doc table{border-collapse:collapse;font-size:15px;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid #D5D9E0;padding:8px 10px;text-align:left;vertical-align:top}
+.doc th{font-weight:700}
+.doc blockquote{margin:0 0 14px;padding-left:16px;border-left:3px solid #D5D9E0;color:#4A5366}
+.doc hr{border:0;border-top:1px solid #D5D9E0;margin:32px 0}
+.doc .src{font-family:'DM Mono',ui-monospace,monospace;font-size:13px;color:#4A5366;margin:0 0 8px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 5704px; background: #FFFFFF; box-sizing: border-box;">
+<article class="doc" style="box-sizing: border-box; max-width: 920px; margin: 0 auto; padding: 72px 40px 96px;">
+<h2>5. API (summary)</h2>
+<p>The API is FastAPI on Vercel; the full endpoint table, status codes and the old-to-new path map are in <code>backend.md</code> §10. What the client uses most: <code>GET /api/home</code>, <code>GET /api/apps/:id</code>, <code>POST /api/records</code> (+ <code>PATCH</code>, <code>move</code>, <code>complete</code>, <code>skip</code>, <code>DELETE</code>), <code>POST /api/change-sets/:id/confirm | undo | dismiss</code>, <code>POST /api/clair/turns</code> (SSE), <code>GET /api/sync?since=</code>, <code>POST /api/join-codes</code> and <code>/redeem</code>. Every write returns the new <code>seq</code> and the faces it changed, so the client rolls numbers without recomputing.</p>
+<p>Fixtures survive only as Clair's recorded runs, replayed on "Use sample" and marked "sample" (<code>clair-agent.md</code> §15).</p>
+<p><strong>Seed (<code>api/seed/</code>, SQL + Python; details in <code>backend.md</code> §2.2).</strong> Sam, evening of Fri 20 Nov 2026. Apps: Budget, Groceries, Calendar, To-dos, Workout, Subscriptions, Classes (+ filler patches for the "many apps" state).</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Budget</td>
+<td>$1,200 for November; spending rows so the face reads <strong>$412 left</strong>; face has <code>status: true</code></td>
+</tr>
+<tr>
+<td>Groceries</td>
+<td><code>items</code> with status to buy / bought and a <code>list</code> select field (Weekly shop, Taco night, Costco run; the list view has <code>switch: 'list'</code>). Weekly shop, the default, has 12 to buy (all 8 receipt items among them, plus Coffee filters, Tortillas, Olive oil, Dish soap); Taco night and Costco run have 5 each. Canonical item lists, usuals history and the Budget <code>limit</code> are in <code>backend.md</code> §2.2. The face counts the default list only, so Home still reads 12 → 4; <code>trips</code>; stitch <code>groceries/trips → budget/spend</code> (category Groceries)</td>
+</tr>
+<tr>
+<td>Calendar</td>
+<td>one calendar block over <code>*dated</code> (every app's dated rows)</td>
+</tr>
+<tr>
+<td>Next up</td>
+<td>Pull day 6 pm (Workout), Return library books 9 pm (To-dos), Spotify renews Sun $11.99 (Subscriptions)</td>
+</tr>
+<tr>
+<td>Queue</td>
+<td>Corner Market receipt, evening check-in, Hulu suggestion ($120 a year), scan insight ($41 less eating out)</td>
+</tr>
+<tr>
+<td>Receipt (the demo photo and its sample fallback)</td>
+<td>Corner Market, 5:41 pm, <strong>$35.83</strong>, 8 items: Oat milk 3.49, Eggs dozen 4.29, Bananas 1.87, Chicken thighs 8.62, Rice 5 lb 6.99, Spinach 3.29, Greek yogurt 4.29, Coffee beans 2.99 (the Receipt board's lines). Draft: 8 bought items + 1 trip. Server closes the 8 matching items on the to-buy list, stitches the trip to Budget spend and finds Calendar via <code>*dated</code>: targets Budget, Groceries, Calendar; deltas Budget <strong>$412 → $376</strong>, Groceries 12 → 4 to buy, Groceries spend $142 → $177.83 of $200</td>
+</tr>
+<tr>
+<td>Receipt test set</td>
+<td>3 real receipt photos from team shopping (photographed at T3) plus the printed demo receipt, run through live parse before the event</td>
+</tr>
+<tr>
+<td>Capture fixture</td>
+<td>"Spent $12 on lunch, gym tomorrow 6 pm" → Budget · Eating out · $12; Calendar + Workout · Gym · Sat 21 Nov, 6 pm; "Add to 3 apps"</td>
+</tr>
+<tr>
+<td>Ask fixture</td>
+<td>"Can I afford $60 concert tickets?" → template (days counted from today to the 1 Dec reset, 11 days) giving, after the receipt, "Yes. $376 left until 1 Dec; after $60 you'd have $316, about $29 a day." Sources Budget, Calendar; proposal "Add to Budget as planned"</td>
+</tr>
+<tr>
+<td>Demo order (pinned)</td>
+<td>receipt photo → Add to 3 apps → laptop updates → Undo and redo → ask → (stretch) capture by text</td>
+</tr>
+<tr>
+<td>Build fixture</td>
+<td>"Track my plants" → Plants app spec (list + calendar of waterings, face "2 to water")</td>
+</tr>
+<tr>
+<td>Share fixture</td>
+<td>"Syllabus · ECON 1010.pdf, 4 pages" → 6 due dates and 2 exams into Classes and Calendar, "Add to 2 apps"</td>
+</tr>
+</tbody>
+</table></div>
+<p>The fixture values above are the single source for the demo script and the slides.</p>
+<h2>6. Files</h2>
+<pre><code>web/                       React + Vite + Capacitor (this doc)
+  src/main.tsx  src/App.tsx       routes: Home, /a/:key (an app), /build, /settings, /join
+  src/api/types.ts                generated from the API's OpenAPI (never edited by hand)
+  src/api/client.ts               fetch helpers, SSE reader for /clair/turns
+  src/lib/store.ts                module store + IndexedDB cache + Realtime → /sync catch-up
+  src/lib/motion.ts               T, EASE, RM, spring, project, rubberband, tracker, threadPull, roll, flip
+  src/lib/native.ts               Capacitor Camera, speech recognition, text-to-speech, with web fallbacks
+  src/components/blocks/          Page Text Metric Progress List Table Calendar Form Chart + index.ts
+  src/components/                 AppView ProposalCard ClairSheet MenuQuestion Sheet SwipeRow Bar Spool Roll Toast SearchPull
+  src/styles/tokens.css  base.css
+  android/                        Capacitor Android project (debug APK)
+api/                       FastAPI on Vercel (spec/backend.md, spec/clair-agent.md)
+  index.py  routes/  commands.py  formulas.py  sync.py  auth.py  clair/ (loop, tools, prompts)  seed/  evals/
+</code></pre>
+<p><strong>Demo files vs after the cut line.</strong> Needed for the demo: blocks Page, Text, Metric, Progress, List, Calendar; <code>AppView</code>, <code>ProposalCard</code>, <code>ClairSheet</code> (start, understood, menu question, result, ask), <code>MenuQuestion</code>, <code>Sheet</code>, <code>Bar</code>, <code>Spool</code>, <code>Roll</code>, <code>Toast</code>; <code>src/lib/</code> and <code>src/api/</code>. After the cut: Table, Form, Chart, <code>SwipeRow</code>, <code>SearchPull</code>, the Build route, Settings, <code>GET /api/search</code>, <code>PATCH /api/apps/:id</code>. Filler apps on Home are patch stubs with a hardcoded face, not full specs.</p>
+<h2>7. Tokens and motion in code</h2>
+<p><strong><code>styles/tokens.css</code></strong> holds every value from fixspec section A as CSS variables on <code>:root</code>: colours (muslin ground, ink, ink2 <code>#665847</code>, denim <code>#22396F</code>, mustard <code>#E3A72F</code>, the 8 dyes by name), type (three families, the 13 px floor, Bricolage tracking steps), radii 4/8/12/16/22, spacing on 4 px, motion durations and easings:</p>
+<pre><code class="language-css">:root{
+  --ease: cubic-bezier(.16,1,.3,1); --ease-thread: cubic-bezier(.45,0,.15,1);
+  --t-fb:120ms; --t-state:220ms; --t-layout:350ms; --t-focal:600ms;
+  --t-state-out:140ms; --t-layout-out:220ms; --t-focal-out:360ms;
+}
+@media (prefers-reduced-motion: reduce){
+  :root{ --t-state:120ms; --t-layout:120ms; }
+  .sheet,.toast{ transform:none !important; }        /* opacity only, per fixspec A */
+}
+</code></pre>
+<p>Under reduced motion there is no movement anywhere: sheets and toasts fade, <code>flip()</code> and <code>roll()</code> swap values without translating, springs jump to the end, threads are skipped, the spool shows its face only.</p>
+<p>Dark theme is out for DevDay; because every colour is a variable, the indigo theme is one later <code>[data-theme=dark]</code> block. <code>base.css</code> carries the mobile baseline (tap highlight, <code>overscroll-behavior</code>, 16 px inputs, <code>touch-action</code>, safe-area insets, hover gated behind <code>(hover:hover) and (pointer:fine)</code>, <code>:active</code> press feedback, scroller mask).</p>
+<p><strong><code>src/lib/motion.ts</code></strong> ports the prototype functions with their signatures unchanged, so the prototype code is the reference implementation:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Export</th>
+<th>Source</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>T</code>, <code>EASE</code>, <code>EASE_THREAD</code></td>
+<td>fixspec A</td>
+<td>every WAAPI call (CSS uses the variables)</td>
+</tr>
+<tr>
+<td><code>RM</code> (live, <code>matchMedia</code> change listener)</td>
+<td>fixspec A</td>
+<td>every function below short-circuits on it</td>
+</tr>
+<tr>
+<td><code>spring(from, to, v0, response, onUpdate, onDone)</code>, <code>project</code>, <code>rubberband</code>, <code>tracker</code></td>
+<td><code>design/prototypes/quilt-flows.html</code></td>
+<td><code>Sheet</code> (drag to dismiss, response .35), <code>SwipeRow</code> (.25 out / .3 back), <code>SearchPull</code> (.35), build layout pager (.3), Arrange drop (.3)</td>
+</tr>
+<tr>
+<td><code>threadPull</code>, <code>retractThreads</code></td>
+<td><code>design/prototypes/quilt-flows.html</code> <code>threadPull()</code></td>
+<td><code>ProposalCard</code> only</td>
+</tr>
+<tr>
+<td><code>roll(el, text, down)</code></td>
+<td><code>design/prototypes/quilt-home.html</code> <code>roll()</code></td>
+<td><code>Roll</code> component (faces, status money)</td>
+</tr>
+<tr>
+<td><code>flip(container, mutate)</code></td>
+<td><code>design/prototypes/quilt-home.html</code> <code>syncQueue()</code></td>
+<td>Home queue, row delete collapse</td>
+</tr>
+</tbody>
+</table></div>
+<p>React rules: animations run on refs, never through React state per frame; gesture handlers write <code>style.transform</code> directly and hand off to <code>spring</code>; a pointerdown cancels the running spring and starts from the live transform. One spool per screen, sizes 30/44/96, one-shot hop or shake only when the expression is newly entered (<code>Spool</code> tracks the last face per screen).</p>
+<h2>8. Build order</h2>
+<p>The hour-by-hour plan for both people now lives in <code>backend.md</code> §13 (tonight T1–T3, the day D1–D7, the T1 spikes). The client's share, person B:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>When</th>
+<th>B: client</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td>Vite + React scaffold, <code>tokens.css</code>, <code>base.css</code>, <code>motion.ts</code> port, <code>Bar</code>, <code>Spool</code>; Capacitor Android project builds a debug APK on the demo phone</td>
+</tr>
+<tr>
+<td>T2</td>
+<td><code>AppView</code> + 6 blocks (page, text, metric, progress, list, calendar) rendering seed data from <code>GET /api/apps/:id</code>; IndexedDB cache</td>
+</tr>
+<tr>
+<td>T3</td>
+<td>Home (status line, Needs your OK, Next up, Your apps); generated types wired; Realtime → <code>/sync</code> catch-up</td>
+</tr>
+<tr>
+<td>D1–D2</td>
+<td><code>ProposalCard</code> (basted, <code>threadPull</code>, <code>roll</code>, tags), confirm and undo against the API, toast, <code>busy</code> hold</td>
+</tr>
+<tr>
+<td>D3</td>
+<td>Real phone + laptop: confirm on the phone, laptop updates; join code screens; Android fixes (gestures, safe area, keyboard)</td>
+</tr>
+<tr>
+<td>D4</td>
+<td><code>ClairSheet</code>: start, photo (Capacitor Camera, 1568 px JPEG), SSE states (<code>understood</code>, <code>question</code> menu card, <code>note</code>, <code>proposal</code>)</td>
+</tr>
+<tr>
+<td>D5</td>
+<td>Talk: speech recognition in, text-to-speech out when Sam talked first; Review items</td>
+</tr>
+<tr>
+<td>D6</td>
+<td>Onboarding (Welcome, "What slips?", starter apps); then SwipeRow, pull-down search, Build on Clair</td>
+</tr>
+<tr>
+<td>D7</td>
+<td>Polish against the design book; rehearse three times on the APK and the laptop</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Never cut</strong> D3's two-device check and the live receipt through Clair; they are the pitch. Below the line, cut from the bottom of D6 up.</p>
+<p><strong>What we fake for DevDay:</strong> Clair noticed and the evening check-in are seeded; Clair runs live for every input, with recorded runs behind "Use sample"; voice is live (on-device speech), with a hidden scripted-transcript toggle for the stage; Workout, To-dos, Subscriptions and Classes render from seed specs but are not in the scripted demo; filler apps on Home are patch stubs; laptop split view is a stretch.</p>
+<h2>9. Risks</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Why it bites</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cold start or slow function</td>
+<td>Vercel Python functions start cold; an agent run can approach the duration limit</td>
+<td>Warm both devices 5 minutes before; <code>maxDuration</code> and SSE streaming checked at T1; "Use sample" after 12 s (<code>backend.md</code> §10, §13)</td>
+</tr>
+<tr>
+<td>APK on the demo phone</td>
+<td>Install, signing or WebView quirks found on stage</td>
+<td>Sideload the debug APK the night before; the website in Chrome on the same phone is the backup</td>
+</tr>
+<tr>
+<td>Judging rule</td>
+<td>Only the feature built on Nov 20 is judged; a recorded run passed off as live would be dishonest</td>
+<td>Clair loop and receipt path built on the day; every recorded run visibly marked "sample"; no silent fallback</td>
+</tr>
+<tr>
+<td>Model output corrupts data</td>
+<td>Wrong refs, fields or types</td>
+<td>Clair only proposes; the server validates every op against the spec and the records it read (<code>backend.md</code> §5); nothing saves before OK</td>
+</tr>
+<tr>
+<td>Vision latency or a misread</td>
+<td>Several seconds per photo; blurry receipts</td>
+<td>Downscale on device, effort <code>low</code>, the understanding line early, Review items before OK, the receipt eval set, "Use sample"</td>
+</tr>
+<tr>
+<td>Stale numbers</td>
+<td>Confirming one proposal changes another's deltas</td>
+<td>Deltas recomputed on every read and at confirm; confirm returns final faces; pinned demo order</td>
+</tr>
+<tr>
+<td>Clock and timezone</td>
+<td>"Today", "this month", Next up shift with server time and rehearsal hour</td>
+<td><code>DEMO_NOW</code> and the workspace time zone on the server; the client never computes dates</td>
+</tr>
+<tr>
+<td>Cross-device races</td>
+<td>Laptop confirms an already-confirmed card; undo races confirm; own changes echo back</td>
+<td>Guarded transitions (<code>409</code>), per-workspace lock, <code>seq</code> dedupe on the client</td>
+</tr>
+<tr>
+<td>Public demo URL</td>
+<td>Anyone can spend API credit</td>
+<td>Supabase auth on every call, per-user and global rate limits, credits (<code>clair-agent.md</code> §14)</td>
+</tr>
+<tr>
+<td>Re-render mid-animation</td>
+<td>A Realtime catch-up repaints the card while threads draw</td>
+<td>Store holds catch-up results while <code>busy</code>; animations run on refs with stable keys</td>
+</tr>
+<tr>
+<td>Touch bugs in the Android WebView</td>
+<td>Gestures, <code>100dvh</code>, safe areas, keyboard resize</td>
+<td>Port the prototypes' gesture code as-is; real-phone check at D3</td>
+</tr>
+<tr>
+<td>Money rounding</td>
+<td>Floats drift ("$376.17" vs "$376")</td>
+<td>Integer cents everywhere; one <code>format()</code></td>
+</tr>
+<tr>
+<td>Prompt injection through photo or file text</td>
+<td>Data could carry instructions for Clair</td>
+<td>Untrusted-data rule in the system prompt, propose-only writes, server validation, injection cases in the evals (<code>clair-agent.md</code> §13, §16)</td>
+</tr>
+<tr>
+<td>"9 blocks" count</td>
+<td>Docs list 8 names and say 9</td>
+<td>Section 3's reading; confirm before T2</td>
+</tr>
+<tr>
+<td>Venue Wi-Fi</td>
+<td>Live calls and two-device sync need network</td>
+<td>Phone hotspot, "Use sample", recorded backup video</td>
+</tr>
+</tbody>
+</table></div>
+</article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":5704}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
