@@ -210,7 +210,7 @@ export function Home() {
               <PatchTile key={p.key} p={p} place={places[i]} big={p.key === bigKey} tall={p.key === tallKey} sewing={sewing.includes(p.key)} />
             ))}
             <Link to="/build" className="patch newapp" style={area(places[list.length])} aria-label="New app: tell Clair what to track">
-              <Icon name="plus" size={16} sw={1.8} />
+              <Icon name="plus" size={18} sw={2} /><span>New app</span>
             </Link>
           </div>
         </section>

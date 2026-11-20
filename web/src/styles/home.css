@@ -60,4 +60,6 @@
 .home .patch > .pill { position: absolute; top: 8px; right: 8px; min-height: 0; padding: 2px 8px; border-radius: 99px;
   background: var(--ink); color: var(--cta-ink); font-size: 13px; font-weight: 600; line-height: 1.35; }
 .home .patch .notch2 { box-shadow: 0 0 0 2px color-mix(in oklch, var(--card) 90%, transparent); }
-.home .patch.newapp { justify-content: center; align-items: center; background: var(--card); color: var(--ink); }
+.home .patch.newapp { flex-direction: row; justify-content: center; align-items: center; gap: 8px; background: var(--card); color: var(--ink); font-size: 14px; font-weight: 700; }
+.home .patch.newapp:hover { background: color-mix(in oklch, var(--card) 88%, var(--ink)); }
+.home .patch.newapp:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }

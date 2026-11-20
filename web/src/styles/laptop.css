@@ -40,7 +40,7 @@
 .side-app[aria-current='page'] { background: var(--card); box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 600; }
 .side-app:active { background: var(--hair); } /* a pressed row of the sidebar darkens; it never scales */
 .side-none { font-size: 13px; color: var(--sec); padding: 8px; }
-.side-new { flex: none; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 8px; font-size: 14px; font-weight: 600; color: var(--focus); }
+.side-new { flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; margin: 6px 0; padding: 0 12px; border-radius: 16px; font-size: 14px; font-weight: 700; color: var(--ink); background: var(--card); box-shadow: inset 0 0 0 1.5px var(--line), 0 1px 2px color-mix(in oklch, var(--ink) 25%, transparent), 0 8px 14px -8px color-mix(in oklch, var(--ink) 35%, transparent); }
 .side-you { margin-top: 0; flex: none; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 8px; font-size: 13px; }
 .side-you .avatar { width: 28px; height: 28px; }
 .side-logo .logo-mark rect:nth-child(1) { fill: var(--ink); }
@@ -94,7 +94,7 @@
 @media (hover: hover) and (pointer: fine) {
   .side-app:hover:not([aria-current='page']) { background: var(--hair); }
   .side-clair:hover { background: color-mix(in oklch, var(--cta) 88%, var(--card)); }
-  .side-new:hover { color: var(--deep, var(--focus)); }
+  .side-new:hover { background: color-mix(in oklch, var(--card) 88%, var(--ink)); }
   .shell .list > li.row .row-btn:hover:not([aria-pressed='true']) { background: var(--hair); }
 }
 .detail .section { gap: 16px; }
