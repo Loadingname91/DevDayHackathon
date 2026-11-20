@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+:root{--ground:#F4EEE1;--ink:#2A2119;--sec:#665847;--card:#FFFDF8;--line:#DCCFB6;--denim:#3557A6;--gold:#E3A72F}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--ground);font-family:Inter,sans-serif;color:var(--ink)}
+.slide{position:absolute;inset:0;background:var(--ground)}
+.pad{position:absolute;inset:0;padding:100px 140px;display:flex;flex-direction:column;gap:36px}
+.pad.center{justify-content:center}
+.pad.split{flex-direction:row;align-items:center;gap:80px}
+.txt{flex:1;max-width:760px;display:flex;flex-direction:column;gap:36px}
+h1,h2,h3,.price{font-family:Outfit,sans-serif;font-weight:700;letter-spacing:-.02em}
+.huge{font-size:190px;line-height:.98}.big{font-size:150px;line-height:1}
+h2{font-size:84px;line-height:1.05;max-width:1500px}
+h3{font-size:48px}
+.lead{font-size:56px;color:var(--sec)}.lead b{color:var(--ink)}
+.tag{font-family:"Space Mono",monospace;font-size:40px;color:var(--denim);text-transform:uppercase;letter-spacing:.06em}
+.row3{display:flex;gap:40px;margin-top:20px}
+.card{flex:1;background:var(--card);border:3px dashed var(--line);border-radius:36px;padding:44px;display:flex;flex-direction:column;gap:20px}
+.card p{font-size:42px;line-height:1.3;color:var(--sec)}
+.card.hot{border:4px solid var(--ink);border-style:solid}
+.n{font-family:"Space Mono",monospace;font-size:48px;color:var(--gold)}
+.price{font-size:120px}.price em{font-size:48px;font-style:normal;color:var(--sec)}
+.tight .card{padding:36px}
+.chips{display:flex;gap:28px;margin-top:20px}
+.chips span{font-size:44px;background:var(--card);border:3px dashed var(--line);border-radius:999px;padding:20px 40px}
+ul{list-style:none;display:flex;flex-direction:column;gap:24px}
+li{font-size:46px;line-height:1.25;padding-left:44px;position:relative}
+li:before{content:"";position:absolute;left:0;top:18px;width:20px;height:20px;border-radius:6px;background:var(--gold)}
+.shot{flex:1.6;display:flex;flex-direction:column;gap:12px}
+.shot img{width:100%;border-radius:28px;border:3px solid var(--line)}
+small{font-size:40px;color:var(--sec)}
+.phones{display:flex;gap:40px}
+.phone{height:800px;flex:none}.phones{flex:none}.phone.low{margin-top:120px}
+.phone img{height:100%;border-radius:44px;border:4px solid var(--ink)}
+.foot{font-size:42px;color:var(--sec)}
+.patches{position:absolute;right:140px;bottom:100px;display:grid;grid-template-columns:repeat(2,110px);gap:14px}
+.patches i{height:110px;border-radius:26px;display:block}
+
+.scene{position:absolute;inset:0}
+.dev{position:absolute;background:#2A2119;box-shadow:0 40px 60px -30px rgba(42,33,25,.55)}
+.dev img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+.laptop{left:110px;top:420px;width:820px;background:none;box-shadow:none}
+.lscreen{height:515px;border:14px solid #2A2119;border-radius:26px 26px 0 0;overflow:hidden;background:#2A2119;box-shadow:0 40px 60px -30px rgba(42,33,25,.55)}
+.lbase{height:22px;margin:0 -44px;background:#BFAE90;border-radius:0 0 40px 40px}
+.tablet{left:980px;top:380px;width:400px;height:540px;border:14px solid #2A2119;border-radius:36px;overflow:hidden;transform-origin:center}
+.phone{width:240px;height:468px;border:10px solid #2A2119;border-radius:40px;overflow:hidden}
+.p1{left:1440px;top:340px}.p2{left:1620px;top:500px}
+</style>
+  </head>
+  <body>
+    <script type="application/hyperframes-slideshow+json">
+{
+  "slides": [
+    {
+      "sceneId": "s1",
+      "notes": "Pause. Ask: who here pays for more than three apps?"
+    },
+    {
+      "sceneId": "s2",
+      "notes": "Three pains, one beat each. Sam is our student: four subscriptions."
+    },
+    {
+      "sceneId": "s3",
+      "notes": "Say the line, then name one app to build live."
+    },
+    {
+      "sceneId": "s4",
+      "notes": "Point at Home. Clair names the apps it read; the user confirms."
+    },
+    {
+      "sceneId": "s5",
+      "notes": "Same app on phone and laptop, from the browser."
+    },
+    {
+      "sceneId": "s6",
+      "notes": "Free to start, $6 a month, $4 for students. Pricing is a proposal."
+    },
+    {
+      "sceneId": "s7",
+      "notes": "Notion makes you build it. Quilt builds it, and the apps know each other."
+    },
+    {
+      "sceneId": "s8",
+      "notes": "Close on the line. Add your real ask here (waitlist or pilot)."
+    }
+  ]
+}
+    </script>
+
+    <div id="root" data-composition-id="main" data-start="0" data-duration="64" data-width="1920" data-height="1080">
+    <div id="s1" class="slide clip" data-composition-id="s1" data-start="0" data-duration="8" data-label="Hook" data-width="1920" data-height="1080" data-track-index="1" data-track-kind="graphics">
+      <div class="a pad center">
+        <div class="tag">the subscription killer</div>
+        <h1 class="huge">Stop renting<br>five apps.</h1>
+        <p class="lead">Say it. <b>Quilt builds it.</b></p>
+      </div>
+      <div class="patches a"><i style="background:#D3EBE6"></i><i style="background:#F6DCC4"></i><i style="background:#DDE3F4"></i><i style="background:#FAEBC6"></i></div>
+    </div>
+    <div id="s2" class="slide clip" data-composition-id="s2" data-start="8" data-duration="8" data-label="Problem" data-width="1920" data-height="1080" data-track-index="1" data-track-kind="graphics">
+      <div class="pad">
+        <div class="tag a">the problem</div>
+        <h2 class="a">Your life is spread across apps that never meet.</h2>
+        <div class="row3">
+          <div class="card a"><span class="n">1</span><h3>Too many bills</h3><p>A budget app, a gym app, a calorie app, a calendar. Four subscriptions.</p></div>
+          <div class="card a"><span class="n">2</span><h3>None of them talk</h3><p>Each one knows a quarter of your week.</p></div>
+          <div class="card a"><span class="n">3</span><h3>Yours doesn't exist</h3><p>The app you actually need was never built.</p></div>
+        </div>
+      </div>
+    </div>
+    <div id="s3" class="slide clip" data-composition-id="s3" data-start="16" data-duration="8" data-label="Solution" data-width="1920" data-height="1080" data-track-index="1" data-track-kind="graphics">
+      <div class="pad center">
+        <div class="tag a">the solution</div>
+        <h1 class="big a">One install.<br>Infinite apps.</h1>
+        <p class="lead a">Describe an app in a sentence. Clair builds it.</p>
+        <div class="chips a"><span>"Track my calories"</span><span>"Plan my runs"</span><span>"A private cycle log"</span></div>
+      </div>
+    </div>
+    <div id="s4" class="slide clip" data-composition-id="s4" data-start="24" data-duration="8" data-label="It knows you" data-width="1920" data-height="1080" data-track-index="1" data-track-kind="graphics">
+      <div class="pad split">
+        <div class="txt">
+          <div class="tag a">it knows you</div>
+          <h2 class="a">Your money, workouts and week. One place.</h2>
+          <ul class="a"><li>Subscriptions app: see every bill, $38.46 a month</li><li>One entry updates Budget, Groceries and Calendar</li><li>Nothing changes until you say OK</li></ul>
+        </div>
+        <div class="shot a"><img src="assets/shots/laptop-home.png" alt="Quilt Home on a laptop"><small>Demo data</small></div>
+      </div>
+    </div>
+    <div id="s5" class="slide clip" data-composition-id="s5" data-start="32" data-duration="8" data-label="Everywhere" data-width="1920" data-height="1080" data-track-index="1" data-track-kind="graphics">
+      <div class="pad" style="padding-bottom:0">
+        <div class="tag a">everywhere</div>
+        <h2 class="a" style="font-size:96px">One quilt. Every screen.</h2>
+        <p class="lead a" style="font-size:48px;max-width:800px">Add it to your Home screen. No App Store.</p>
+      </div>
+      <div class="scene">
+        <div class="dev tablet a"><img src="assets/shots/tablet-calendar.png" alt="Calendar on a tablet"></div>
+        <div class="dev laptop a"><div class="lscreen"><img src="assets/shots/laptop-home.png" alt="Home on a laptop"></div><div class="lbase"></div></div>
+        <div class="dev phone p1 a"><img src="assets/shots/phone-workout.png" alt="Workout on a phone"></div>
+        <div class="dev phone p2 a"><img src="assets/shots/phone-budget.png" alt="Budget on a phone"></div>
+      </div>
+      <small class="a" style="position:absolute;right:140px;bottom:30px">Demo data</small>
+    </div>
+    <div id="s6" class="slide clip" data-composition-id="s6" data-start="40" data-duration="8" data-label="Business" data-width="1920" data-height="1080" data-track-index="1" data-track-kind="graphics">
+      <div class="pad">
+        <div class="tag a">the business</div>
+        <h2 class="a">One subscription instead of five.</h2>
+        <div class="row3">
+          <div class="card a"><h3>Free</h3><div class="price">$0</div><p>5 apps, every block, 50 Clair credits a month</p></div>
+          <div class="card hot a"><h3>Plus</h3><div class="price">$6<em>/mo</em></div><p>Unlimited apps, 1,000 Clair credits</p></div>
+          <div class="card a"><h3>Student</h3><div class="price">$4<em>/mo</em></div><p>Plus, with a school email</p></div>
+        </div>
+        <p class="foot a">Costs less than Rocket Money Premium+ and Todoist Pro together. Import and export free on every plan.</p>
+      </div>
+    </div>
+    <div id="s7" class="slide clip" data-composition-id="s7" data-start="48" data-duration="8" data-label="Why us" data-width="1920" data-height="1080" data-track-index="1" data-track-kind="graphics">
+      <div class="pad center">
+        <div class="tag a">why it wins</div>
+        <h2 class="a">Notion makes you build it.<br>Quilt builds it for you.</h2>
+        <div class="row3 tight">
+          <div class="card a"><h3>Apps that know each other</h3></div>
+          <div class="card a"><h3>Clair checks with you first</h3></div>
+          <div class="card a"><h3>Students first</h3></div>
+        </div>
+      </div>
+    </div>
+    <div id="s8" class="slide clip" data-composition-id="s8" data-start="56" data-duration="8" data-label="Close" data-width="1920" data-height="1080" data-track-index="1" data-track-kind="graphics">
+      <div class="pad center">
+        <h1 class="big a">Your life,<br>stitched together.</h1>
+        <p class="lead a">Say what you need. Clair stitches it in.</p>
+        <div class="tag a">quilt</div>
+      </div>
+      <div class="patches a"><i style="background:#D3EBE6"></i><i style="background:#F6DCC4"></i><i style="background:#DDE3F4"></i><i style="background:#FAEBC6"></i></div>
+    </div>
+    </div>
+    <script>
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = gsap.timeline({ paused: true });
+    {const t=gsap.timeline({paused:true});t.fromTo("#s1 .a",{opacity:0,y:30},{opacity:1,y:0,duration:.5,ease:"power3.out",stagger:.18},.2);window.__timelines["s1"]=t;}
+    {const t=gsap.timeline({paused:true});t.fromTo("#s2 .a",{opacity:0,y:30},{opacity:1,y:0,duration:.5,ease:"power3.out",stagger:.18},.2);window.__timelines["s2"]=t;}
+    {const t=gsap.timeline({paused:true});t.fromTo("#s3 .a",{opacity:0,y:30},{opacity:1,y:0,duration:.5,ease:"power3.out",stagger:.18},.2);window.__timelines["s3"]=t;}
+    {const t=gsap.timeline({paused:true});t.fromTo("#s4 .a",{opacity:0,y:30},{opacity:1,y:0,duration:.5,ease:"power3.out",stagger:.18},.2);window.__timelines["s4"]=t;}
+    {const t=gsap.timeline({paused:true});t.fromTo("#s5 .a",{opacity:0,y:30},{opacity:1,y:0,duration:.5,ease:"power3.out",stagger:.18},.2);window.__timelines["s5"]=t;}
+    {const t=gsap.timeline({paused:true});t.fromTo("#s6 .a",{opacity:0,y:30},{opacity:1,y:0,duration:.5,ease:"power3.out",stagger:.18},.2);window.__timelines["s6"]=t;}
+    {const t=gsap.timeline({paused:true});t.fromTo("#s7 .a",{opacity:0,y:30},{opacity:1,y:0,duration:.5,ease:"power3.out",stagger:.18},.2);window.__timelines["s7"]=t;}
+    {const t=gsap.timeline({paused:true});t.fromTo("#s8 .a",{opacity:0,y:30},{opacity:1,y:0,duration:.5,ease:"power3.out",stagger:.18},.2);window.__timelines["s8"]=t;}
+    </script>
+  </body>
+</html>
