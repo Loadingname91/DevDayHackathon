@@ -1,0 +1,13 @@
+{
+  "id": "P011",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "I'd grab the free version, snap a couple of receipts, and probably forget about it by week two like every other app I download. There's no way I'm paying $6 a month for something I haven't stuck with yet, and 10 photos is plenty for me.",
+  "objection": "Will the AI actually read my crumpled receipt right, or am I going to sit there fixing every line? If I have to fix it, I might as well just not track it.",
+  "would_change_my_mind": "If I actually kept using the free version for a month and it nailed my receipts and syllabus without me fixing stuff, I'd maybe pay, but only around $3 a month.",
+  "price_too_cheap": 0.99,
+  "price_cheap": 2,
+  "price_expensive": 4,
+  "price_too_expensive": 6
+}

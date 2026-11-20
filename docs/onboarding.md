@@ -55,13 +55,15 @@ The Welcome board ("Day one") on the master canvas needs three copy updates befo
 | Step | What happens | Screen and copy |
 |---|---|---|
 | 2.1 What slips? | One question, six multi-select chips. Nothing preselected. | **"What slips for you?"** Chips: Money · Groceries · Classes · Workouts · Subscriptions · To-dos. Note under the chips: "Pick any. You can add more later." Buttons: **Make my apps** · Skip |
-| 2.2 Starter apps | Each chip maps to a template; the server copies the template specs into the workspace in one request. **No Claude call, no wait.** Money and Subscriptions both map to one Budget & subscriptions app. Calendar is always added, since every starter has dates. | Spool working for under a second, then Home |
+| 2.2 Starter apps | Each chip maps to a template; the server copies the template specs into the workspace in one request. **No Claude call, no wait.** Money and Subscriptions are separate apps; a passed renewal becomes a Budget spend when both exist. Calendar is always added, since every starter has dates. | Spool working for under a second, then Home |
 | 2.3 Pins | The chosen apps fill the pinned bar (up to 4, Calendar last), so the first thread has somewhere to land. Clair re-seeds pins after the first week (FR-P2). | (bar fills) |
 | 2.4 Skip | No apps are made. Home shows the day-one layout from the Welcome board: 4 starter tiles plus the first prompt. A first capture can still make an app (Clair proposes one, `propose_app`). | Bar note: "Your most-used apps get pinned here" |
 
 | Chip | Template |
 |---|---|
-| Money, Subscriptions | Budget & subscriptions (one app; Subscriptions adds the renewals tab) |
+| Class notes | Notes (a folder per class, linked to Classes when both exist) |
+| Money | Budget |
+| Subscriptions | Subscriptions (its renewals become Budget spends when both apps exist) |
 | Groceries | Groceries (Weekly shop list, trips) |
 | Classes | Classes |
 | Workouts | Workout |

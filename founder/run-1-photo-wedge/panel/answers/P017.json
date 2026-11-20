@@ -1,0 +1,13 @@
+{
+  "id": "P017",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "I literally don't have income, so I'm not paying $6 a month for another subscription when a forgotten subscription is what burned me this semester. I'd maybe try the free one, but I'm not upgrading.",
+  "objection": "About 10 photo fills sounds like I'll run out the exact week I need it, like midterms or when a bill is due, and then I'm stuck paying or doing it by hand anyway.",
+  "would_change_my_mind": "If the free tier actually caught a renewal or due date before it hit me and saved me a late fee, I'd think about paying, but only at like $2 or $3 a month with a student price.",
+  "price_too_cheap": 0.5,
+  "price_cheap": 2,
+  "price_expensive": 4,
+  "price_too_expensive": 6
+}

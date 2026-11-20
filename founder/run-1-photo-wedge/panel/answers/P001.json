@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "convenience",
+  "reason": "I'm on an iPhone and it says iPhone later, so I'd be stuck using a website in Safari, and my Notes app already does lists and money stuff fine. Not paying for something I can't even install.",
+  "objection": "It's not on iPhone, and even if it was, I'd have to move all my lists out of Notes for an app I'm not sure I'd keep opening.",
+  "would_change_my_mind": "A real iPhone app where the free tier handles my groceries and budget well enough that I'd actually ditch Notes.",
+  "price_too_cheap": 1,
+  "price_cheap": 2,
+  "price_expensive": 4,
+  "price_too_expensive": 6
+}

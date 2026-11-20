@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "I'd probably download the free one and snap a couple receipts, but I know me, by week two I've forgotten it exists. Paying $6 a month for something I won't open isn't happening on what I make.",
+  "objection": "I don't actually track my money, I only look when something feels off, so I doubt I'd keep photographing receipts. And Notion is free with my student account.",
+  "would_change_my_mind": "If it nudged me at the right moment, like after I shop, and the free tier was enough that I kept using it for a month without thinking about it.",
+  "price_too_cheap": 0.99,
+  "price_cheap": 2,
+  "price_expensive": 4,
+  "price_too_expensive": 7
+}

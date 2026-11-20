@@ -1,0 +1,7 @@
+# Quilt
+
+- What it is: a phone-first app where an AI assistant, Clair (built on Claude), builds small personal apps (Budget, Groceries, Classes, To-dos, Workout, Subscriptions, Calendar) and fills them from a photo, a file or a sentence; every change waits as a draft until the user taps OK, and one confirm updates every app it touches.
+- Who it is for: full-time undergraduates (18 to 24) at the University of Utah, phone-first, managing their own money for the first time, who pay a "forgetting tax" (forgotten renewals, late fees, groceries that go off, missed deadlines) and won't connect a bank account.
+- What it sells, at what price (proposal, not decided): Free (5 apps, 50 Clair credits a month); Plus $6 a month or $48 a year (unlimited apps, 1,000 credits, voice, automations); Pro $12 a month or $96 a year (4,000 credits, connectors, bring your own AI key); Teams $10 per seat a month. Credits: chat step 1, photo fill 5, app build 10, scheduled run 2. Extra packs $5 for 500 credits. Later, a marketplace where creators sell apps and keep 80%.
+- Where and how: online. Android app (APK first) and the same build as a website; first users found through U of U student groups, a survey and a waitlist landing page. Delivered as an app with a hosted API (Vercel) and database (Supabase); the AI runs on Anthropic's API.
+- Budget and constraints: a two-person founding team building for a hackathon demo (Lassonde DevDay, Fri 20 Nov 2026). No funding, budget, survey results or waitlist numbers exist yet. The cost of AI per user is not yet measured.

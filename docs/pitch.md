@@ -64,7 +64,7 @@ The tone is warm rather than technical. A quilt is personal and handmade, and it
 
 **Roadmap**
 
-1. **Hackathon (Nov 20):** the build-and-connect core, seven seeded demo apps, live photo fill, the same app live on phone and laptop.
+1. **Hackathon (Nov 20):** the build-and-connect core, eight seeded demo apps (Notes among them), Clair filling any app from a photo or a sentence, the same app live on phone and laptop.
 2. **Private beta (next 3 months):** U of U students; templates first, Clair for customizing; sync and offline; measure whether people still log after 30 days.
 3. **Public launch:** paid tier, styling, voice capture, cross-app questions and nudges, data export.
 4. **Marketplace:** creators publish and sell apps; live sharing with friends and roommates.
@@ -142,7 +142,9 @@ What the market shows: free tiers convert on structural limits (number of projec
 - No surprise bills: alerts go out at 80% and 100%, then Clair pauses until next month or a top-up. Apps, logging, sync and widgets never stop.
 - Marketplace: creators keep 80% of what their apps earn, and Quilt takes 20%.
 - Price anchor: Plus at $6 costs less than Rocket Money Premium+ ($15) and Todoist Pro ($5) together, before counting gym or habit apps.
-- In the pitch, say only "Free to start, $6 a month for unlimited apps and Clair." The marketplace and teams are the expansion line.
+- Student Plus: $4 a month, or $15 a semester, with a school email (Nov 19, from the founder pack: `founder/pricing.md`).
+- Import from Notion, Apple Notes, Google Docs, Obsidian and Goodnotes, and full export to Markdown and CSV, are free on every plan. Switching cost was the main reason simulated buyers passed.
+- In the pitch, say only "Free to start, $6 a month, $4 for students." The marketplace and teams are the expansion line.
 
 All Quilt prices are a starting proposal to test with the survey and waitlist. None of them is decided.
 
@@ -250,14 +252,14 @@ Sources: [Seibel, How to pitch your company](https://www.ycombinator.com/blog/ho
 
 ## 90-second pitch and demo
 
-The pitch has one problem, one user, one magic moment and real numbers. Open with a show of hands, say what Quilt is within 30 seconds, spend the most time on the receipt demo, and end on the bigger vision in one line.
+The pitch has one problem, one user, one magic moment and real numbers. Open with a show of hands, say what Quilt is within 30 seconds, spend the most time on the demo (a whiteboard into a course note, then a receipt), and end on the bigger vision in one line.
 
 1. **Hook, 10 s.** "Hands up if you pay for more than three apps to manage your money, workouts or to-dos. Keep it up if they don't talk to each other."
 2. **Problem with our numbers, 10 s.** "We surveyed \[N\] U students this week. They pay for \[X\] apps, about $\[Y\] a month, and none of them share data."
-3. **What it is, then who we are, 10 s.** "Quilt is one app that builds the apps you describe and stitches them together. I'm \[name\], this is \[name\]."
-4. **The magic moment, 25 s.** Photograph a grocery receipt. Clair says what it sees and shows one card: "Add to 3 apps". One tap: 8 items leave the grocery list, the budget drops from $412 to $376, the trip lands on the calendar, and the laptop beside us updates live. Undo puts it all back. If there is time, point it at the fridge: Clair asks which of your usuals you're out of and adds them to the list.
-5. **Why not Notion, 10 s.** "Notion makes you build it and type into it. Quilt builds itself from a sentence and fills itself from a photo."
-6. **Traction and model, 10 s.** "\[N\] students joined our waitlist in \[D\] days. Free to start, $6 a month for unlimited apps and Clair."
+3. **What it is, then who we are, 10 s.** "Describe any app and Clair builds it: notes for each class, a workout log, a car tracker. Then fill it from anywhere: type it, say it, snap it, drop a file. It's on your laptop before you sit down. I'm \[name\], this is \[name\]."
+4. **The magic moment, 25 s.** "I have a car; Quilt has no car app." Photograph the car's maintenance card and say "make this an app". Clair builds a Car app with the three services, puts the next oil change on the calendar and wires service costs to the budget. One tap, and it's on the laptop too. Then photograph an oil-change receipt: the service is logged, the budget drops from $412 to $367, and the next oil change moves to May. Any app you can describe, built and connected in seconds.
+5. **Why not Notion, 10 s.** "Notion makes you build it. AI app builders build apps that sit alone. Quilt's apps arrive connected to your calendar, your budget and each other, and nothing changes without your OK."
+6. **Traction and model, 10 s.** "\[N\] students joined our waitlist in \[D\] days. Free to start, $6 a month, $4 for students."
 7. **Bigger vision, 10 s.** "Students first. But parents, caregivers, athletes and freelancers all pay for apps that don't talk, or need one nobody built."
 8. **Close, 5 s.** "Quilt: your life, stitched together."
 

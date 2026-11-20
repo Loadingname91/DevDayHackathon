@@ -225,19 +225,21 @@ The API is FastAPI on Vercel; the full endpoint table, status codes and the old-
 
 Fixtures survive only as Clair's recorded runs, replayed on "Use sample" and marked "sample" (`clair-agent.md` §15).
 
-**Seed (`api/seed/`, SQL + Python; details in `backend.md` §2.2).** Sam, evening of Fri 20 Nov 2026. Apps: Budget, Groceries, Calendar, To-dos, Workout, Subscriptions, Classes (+ filler patches for the "many apps" state).
+**Seed (`api/seed/`, SQL + Python; every row is in `backend.md` §2.2 and §2.3).** Sam, evening of Fri 20 Nov 2026. Apps: Notes, Budget, Groceries, Calendar, To-dos, Workout, Subscriptions, Classes. No filler patches: a face needs rows behind it (`spec/prd-data-provenance.md`).
 
 | Item | Values |
 | --- | --- |
 | Budget | $1,200 for November; spending rows so the face reads **$412 left**; face has `status: true` |
 | Groceries | `items` with status to buy / bought and a `list` select field (Weekly shop, Taco night, Costco run; the list view has `switch: 'list'`). Weekly shop, the default, has 12 to buy (all 8 receipt items among them, plus Coffee filters, Tortillas, Olive oil, Dish soap); Taco night and Costco run have 5 each. Canonical item lists, usuals history and the Budget `limit` are in `backend.md` §2.2. The face counts the default list only, so Home still reads 12 → 4; `trips`; stitch `groceries/trips → budget/spend` (category Groceries) |
 | Calendar | one calendar block over `*dated` (every app's dated rows) |
-| Next up | Pull day 6 pm (Workout), Return library books 9 pm (To-dos), Spotify renews Sun $11.99 (Subscriptions) |
-| Queue | Corner Market receipt, evening check-in, Hulu suggestion ($120 a year), scan insight ($41 less eating out) |
+| Next up | Pull day 6 pm (Workout), Take out recycling 8 pm (To-dos), Return library books 9 pm (To-dos) |
+| Queue | DevDay: the Corner Market receipt only (`/home` returns `change_set` cards). Full product: plus the evening check-in (Pull day, Take out recycling, Return library books) and the Hulu renewal suggestion (renews Wed 2 Dec, $9.99 a month, $119.88 a year) |
+| Build from a photo (demo beat 1) | Clair → Photo of the printed car maintenance card + "make this an app" → `propose_app` Car (services, log), 3 service rows, Oil change on Calendar Sat 5 Dec, Transport stitch on Budget → Make it → 9 apps. Fill: Campus Auto receipt $44.99 → Budget $412 → $367 (`clair-agent.md` §12.0). "Use sample" replays recorded runs of both |
+| Whiteboard (fallback beat and its sample) | Notes → CS 3500 → New note → Clair photo of the CS 3500 design-patterns board: note "Design patterns" in CS 3500, HW 4 due Tue 24 Nov 11:59 pm into Classes, Calendar through `*dated`; "Add to 3 apps"; Notes 3 → 4 this week, Classes 2 → 3 (`clair-agent.md` §12.0a) |
 | Receipt (the demo photo and its sample fallback) | Corner Market, 5:41 pm, **$35.83**, 8 items: Oat milk 3.49, Eggs dozen 4.29, Bananas 1.87, Chicken thighs 8.62, Rice 5 lb 6.99, Spinach 3.29, Greek yogurt 4.29, Coffee beans 2.99 (the Receipt board's lines). Draft: 8 bought items + 1 trip. Server closes the 8 matching items on the to-buy list, stitches the trip to Budget spend and finds Calendar via `*dated`: targets Budget, Groceries, Calendar; deltas Budget **$412 → $376**, Groceries 12 → 4 to buy, Groceries spend $142 → $177.83 of $200 |
 | Receipt test set | 3 real receipt photos from team shopping (photographed at T3) plus the printed demo receipt, run through live parse before the event |
 | Capture fixture | "Spent $12 on lunch, gym tomorrow 6 pm" → Budget · Eating out · $12; Calendar + Workout · Gym · Sat 21 Nov, 6 pm; "Add to 3 apps" |
-| Ask fixture | "Can I afford $60 concert tickets?" → template (days counted from today to the 1 Dec reset, 11 days) giving, after the receipt, "Yes. $376 left until 1 Dec; after $60 you'd have $316, about $29 a day." Sources Budget, Calendar; proposal "Add to Budget as planned" |
+| Ask fixture | "Can I afford $60 concert tickets?" → template (days counted from today to the 1 Dec reset, 11 days) giving, after the receipt, "Yes. $376 left until 1 Dec; after $60 you'd have $316, about $29 a day." Sources Budget, Calendar; no proposal (a question changes nothing) |
 | Demo order (pinned) | receipt photo → Add to 3 apps → laptop updates → Undo and redo → ask → (stretch) capture by text |
 | Build fixture | "Track my plants" → Plants app spec (list + calendar of waterings, face "2 to water") |
 | Share fixture | "Syllabus · ECON 1010.pdf, 4 pages" → 6 due dates and 2 exams into Classes and Calendar, "Add to 2 apps" |
@@ -315,7 +317,7 @@ The hour-by-hour plan for both people now lives in `backend.md` §13 (tonight T1
 
 **Never cut** D3's two-device check and the live receipt through Clair; they are the pitch. Below the line, cut from the bottom of D6 up.
 
-**What we fake for DevDay:** Clair noticed and the evening check-in are seeded; Clair runs live for every input, with recorded runs behind "Use sample"; voice is live (on-device speech), with a hidden scripted-transcript toggle for the stage; Workout, To-dos, Subscriptions and Classes render from seed specs but are not in the scripted demo; filler apps on Home are patch stubs; laptop split view is a stretch.
+**What we fake for DevDay:** nothing on screen is invented (`spec/prd-data-provenance.md`). Clair noticed is off until FR-H6 defines how it's computed, and the evening check-in shows only when FR-D16 ships; Clair runs live for every input, with recorded runs behind "Use sample"; voice is live (on-device speech), with a hidden scripted-transcript toggle for the stage; Workout, To-dos, Subscriptions and Classes render from seed specs but are not in the scripted demo; Home shows the 8 seeded apps and no stubs; laptop split view is a stretch.
 
 ## 9. Risks
 

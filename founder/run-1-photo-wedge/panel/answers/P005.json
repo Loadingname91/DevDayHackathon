@@ -1,0 +1,13 @@
+{
+  "id": "P005",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "I don't pay for apps, period. If the free version with 10 photos a month works I'd maybe use it, but $6 a month is another subscription and that's exactly what I'm trying to cut.",
+  "objection": "It's another subscription, and I barely look at my bank app as it is. I'm not sure I'd keep snapping receipts after the first week, so paying for 200 photo fills makes no sense for me.",
+  "would_change_my_mind": "A free student deal through the U, like a year of Plus free with my uNID email.",
+  "price_too_cheap": 0.5,
+  "price_cheap": 1,
+  "price_expensive": 2,
+  "price_too_expensive": 3
+}

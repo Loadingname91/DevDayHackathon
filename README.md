@@ -10,6 +10,7 @@ Quilt is a phone app for a student's money, groceries, classes, workouts and to-
 | `spec/` | Building it (written for coding agents) | Requirements and stories, the backend design, Clair's agent loop, the UI build plan, and the decision records in `spec/adr/` |
 | `design/` | Design | The design canvas boards and their generator, the clickable prototypes, the design book and the board tests |
 | `docs/open-decisions.md` | Picking up | What is waiting on a decision right now |
+| `founder/` | The business | The founder-pack review: board, competitors, simulated buyer panel, pricing, unit economics and the plan (start with `founder/summary.md`); the first run is in `founder/run-1-photo-wedge/` |
 | `setup/` | New machines | A copy of the Claude Code settings and hook (see `docs/setup-claude-code.md`) |
 
 Start with `docs/pitch.md` for the idea, or `docs/demo-day.md` for the demo.

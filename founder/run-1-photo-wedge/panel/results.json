@@ -1,0 +1,154 @@
+{
+ "business": "Quilt: a phone app where an AI assistant builds and fills small life apps (budget, groceries, classes, to-dos, subscriptions) from a photo or a sentence",
+ "seed": 485390,
+ "dealt": 20,
+ "answered": 20,
+ "skipped": [],
+ "buys": 0,
+ "passes": 20,
+ "buy_rate": 0.0,
+ "by_segment": [
+  [
+   "Part-time job plus some support",
+   9,
+   0.0
+  ],
+  [
+   "Mostly supported by family or aid",
+   8,
+   0.0
+  ],
+  [
+   "Self-funded, working most weeks",
+   3,
+   0.0
+  ]
+ ],
+ "by_behaviour": [
+  [
+   "Notes-app loyalist",
+   4,
+   0.0
+  ],
+  [
+   "Organised planner",
+   2,
+   0.0
+  ],
+  [
+   "Stressed and behind",
+   3,
+   0.0
+  ],
+  [
+   "Free-tier only",
+   4,
+   0.0
+  ],
+  [
+   "Reads every review",
+   2,
+   0.0
+  ],
+  [
+   "Loyal to a finance app",
+   1,
+   0.0
+  ],
+  [
+   "App hopper",
+   4,
+   0.0
+  ]
+ ],
+ "by_income": [
+  [
+   "$4,000 to $15,000",
+   6,
+   0.0
+  ],
+  [
+   "under $4,000",
+   6,
+   0.0
+  ],
+  [
+   "$15,000 and up",
+   8,
+   0.0
+  ]
+ ],
+ "why_not": [
+  [
+   "habit",
+   8,
+   [
+    "I already have my Notion and a spreadsheet set up exactly how I like them, and I don't earn anything, so another $6 a month isn't happening. I might try the free version, but 5 apps and 10 photos is more than I'd actually use.",
+    "My Notes app already does my grocery list and money notes, and it's free and I never have to check anything. I might try the free version once out of curiosity, but I'm not paying $6 a month when I make like $2,000 a year."
+   ],
+   [
+    "P002",
+    "P007"
+   ]
+  ],
+  [
+   "price",
+   7,
+   [
+    "I'm literally trying to cancel subscriptions after getting burned by a renewal this semester, so I'm not adding a $6 one. I'd maybe try the free version to catch due dates, but I'm not paying for Plus.",
+    "I don't pay for apps, period. And it's not even on iPhone yet, so I can't use the free version either. Our house Venmo request and the Notes app already handle groceries fine."
+   ],
+   [
+    "P003",
+    "P004"
+   ]
+  ],
+  [
+   "convenience",
+   4,
+   [
+    "I'm on an iPhone and it says iPhone later, so I'd be stuck using a website in Safari, and my Notes app already does lists and money stuff fine. Not paying for something I can't even install.",
+    "I've got an iPhone, so it's out for now. I'm not saving a website to snap receipts from Smith's. Even if it was on iPhone I'd use the free version for a week and forget about it, and I'm not paying $6 a month for that."
+   ],
+   [
+    "P001",
+    "P012"
+   ]
+  ],
+  [
+   "trust",
+   1,
+   [
+    "It's brand new, so there are no Play ratings or Reddit threads for me to check, and I'm not paying for anything I can't read reviews on first. At most I'd poke at the free tier with a syllabus PDF, and on $4,000 a year the free version would have to fail me before I'd even think about $6."
+   ],
+   [
+    "P010"
+   ]
+  ]
+ ],
+ "why_yes": [],
+ "flip": [
+  "A real iPhone app where the free tier handles my groceries and budget well enough that I'd actually ditch Notes.",
+  "If it could pull in my existing Notion or spreadsheet so I didn't have to start over, and I actually kept using the free version for a full month.",
+  "If the free tier actually caught a renewal or a late fee for me and saved more than it costs, I'd think about Plus around finals.",
+  "An iPhone app with a free student plan that covers what I'd actually use, like unlimited Plus with a uNID.",
+  "A free student deal through the U, like a year of Plus free with my uNID email.",
+  "A free student plan through the U, or the Plus tier bundled with something I already pay for, like a student discount at $1 or $2 a month.",
+  "Seeing it read a crumpled corner-store receipt perfectly on the first try, and the free tier being enough that I never hit a paywall.",
+  "Solid Play Store ratings and Reddit threads from other U of U students saying the free tier actually saves them money, plus a one-time price or a cheap student price around $1-2 a month.",
+  "If the syllabus photo really dropped every due date for the semester into my calendar, I might use the free tier for that. I still wouldn't pay unless it replaced the budgeting app I already have.",
+  "A bunch of real reviews from other U of U students saying it read their receipts and syllabi correctly without much fixing, plus a student price around $2 to $3 a month.",
+  "If I actually kept using the free version for a month and it nailed my receipts and syllabus without me fixing stuff, I'd maybe pay, but only around $3 a month.",
+  "An iPhone app that's still worth opening after the first week, like if it actually stopped me running out of money before payday.",
+  "An iPhone app, and then a free month that actually kept me opening it past week one.",
+  "If it nudged me at the right moment, like after I shop, and the free tier was enough that I kept using it for a month without thinking about it.",
+  "If it actually caught every due date from my syllabi and receipts for a whole semester on the free tier and I stopped missing things, I'd think about a one-time payment, not a subscription.",
+  "If a friend showed me it reading a messy receipt perfectly and it actually caught something I'd missed with my money, I might keep using the free tier, but paying would still need a student price around $2.",
+  "If the free tier actually caught a renewal or due date before it hit me and saved me a late fee, I'd think about paying, but only at like $2 or $3 a month with a student price.",
+  "If it could pull my Notion or spreadsheet data in and keep everything I already have, and the free tier ran out halfway through a semester of syllabi and grocery runs, I'd think about Plus around $3 a month.",
+  "An iPhone app that pings me a few days before a renewal or bill is due, even if I had to add the subscriptions myself once.",
+  "A free student plan through the U, like how I get other stuff free with my uNID."
+ ],
+ "purchases_first_month_per_buyer": null,
+ "price_answers": 20
+}

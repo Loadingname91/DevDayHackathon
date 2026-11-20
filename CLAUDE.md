@@ -27,6 +27,10 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
 - Receipt: Corner Market 5:41 pm, $35.83, 8 items (`spec/backend.md` §2.2).
 - Faces: Budget $412 → $376 (limit $1,200); Groceries 12 → 4 to buy; Calendar 3 → 4 today; Classes 2 → 3 due this week after the ECON 1010 syllabus.
 - Fridge beat: Butter, Cheddar added; Orange juice marked not usual; Weekly shop 4 → 6.
+- Build beat (demo beat 4, first): photo of a car maintenance card + "make this an app" → Clair builds Car (3 services), Oil change on Calendar Sat 5 Dec, Transport stitch on Budget; Make it; 8 → 9 apps. Then the 5-second fill: Campus Auto oil-change receipt $44.99 → Car log, next oil change Thu 20 May 2027, Budget $412 → $367 (Transport $86.99 of $100). Credits 32 → 22 → 17.
+- Fallback beats (go/no-go): the whiteboard (Notes 3 → 4, Classes 2 → 3, HW 4 Tue 24 Nov) and the grocery receipt ($412 → $376), each from the seed.
+- Quilt is an app builder first (describe any app, Clair builds it, data from anywhere, synced). Photos are one input; never frame Quilt as a receipt or photo app.
+- Every value a board shows is a seeded row or a formula over seeded rows. The complete seed is `spec/backend.md` §2.2 + §2.3 (it wins over boards); the rule, its epics and the board fixes are `spec/prd-data-provenance.md`. Other faces at `DEMO_NOW`: Notes 3 this week, To-dos 2 today, Workout 3 this week, Subscriptions $38.46 a month. 8 apps. Pins: Groceries, Budget, Calendar, To-dos.
 
 ## Design canvas
 

@@ -1,0 +1,63 @@
+{
+  "business": "Quilt as pitched (Opus 5.5 for every Clair action, $6 a month)",
+  "unit": "paying student-month",
+  "price": 6.0,
+  "variable": [
+    {
+      "label": "AI for one paying student (30 photo fills, 60 chat steps, 1 build, all on Opus 5.5), estimate",
+      "cost": 4.88
+    },
+    {
+      "label": "Store or card fee (15% Google Play subscription fee)",
+      "cost": 0.9
+    },
+    {
+      "label": "AI for the free users each payer carries (20 x $0.87, Opus 5.5), estimate",
+      "cost": 17.4
+    }
+  ],
+  "fixed_monthly": [
+    {
+      "label": "Vercel Pro, 2 members",
+      "cost": 40
+    },
+    {
+      "label": "Supabase Pro",
+      "cost": 25
+    },
+    {
+      "label": "Apple Developer Program ($99 a year)",
+      "cost": 8.25
+    },
+    {
+      "label": "Domain and email",
+      "cost": 8
+    }
+  ],
+  "startup": [
+    {
+      "label": "Google Play developer account (one-time)",
+      "cost": 25
+    },
+    {
+      "label": "Waitlist page, flyers and campus ads, estimate",
+      "cost": 300
+    }
+  ],
+  "days_per_month": 1,
+  "plan_per_day": 500,
+  "ramp_per_day": [
+    10,
+    25,
+    45,
+    70,
+    100,
+    140,
+    180,
+    230,
+    290,
+    350,
+    420,
+    500
+  ]
+}

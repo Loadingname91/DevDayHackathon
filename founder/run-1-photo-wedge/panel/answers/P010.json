@@ -1,0 +1,13 @@
+{
+  "id": "P010",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "It's brand new, so there are no Play ratings or Reddit threads for me to check, and I'm not paying for anything I can't read reviews on first. At most I'd poke at the free tier with a syllabus PDF, and on $4,000 a year the free version would have to fail me before I'd even think about $6.",
+  "objection": "Will the AI actually read my receipt and syllabus right, or will I spend more time fixing its mistakes than I would just typing it in myself?",
+  "would_change_my_mind": "A bunch of real reviews from other U of U students saying it read their receipts and syllabi correctly without much fixing, plus a student price around $2 to $3 a month.",
+  "price_too_cheap": 0.5,
+  "price_cheap": 1.5,
+  "price_expensive": 3,
+  "price_too_expensive": 5
+}

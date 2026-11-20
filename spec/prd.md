@@ -21,12 +21,14 @@ Nov 19, 2026 · Quilt founding team (drafted with Claude) · Stories: `spec/prd-
 
 ### Must run on stage (read this first)
 
+Demo order (Nov 19 decision): beat 4 opens with **building an app from a photo, connected on arrival** (`spec/clair-agent.md` §12.0: a car maintenance card becomes a Car app wired to Calendar and Budget), then a 5-second fill of the new app from an oil-change receipt. That makes the build path a must-run for this one case, `propose_app` with `rows` and `stitches_into` (FR-B1 to FR-B3 and FR-B6), above its Live+ tier. The judged event-day feature is "Clair builds a connected app from a photo". At the go/no-go, the fallback is the whiteboard beat (§12.0a), then the grocery receipt (§12.1); both use rows 4 to 7.
+
 The only things built and rehearsed for Nov 20. Everything else in this PRD is Live+, Proto, Beta or Later. Owners follow the pitch doc's split: Person A = engine and Clair, Person B = app, sync and demo.
 
 | # | Must run | FRs | Built | Owner |
 | --- | --- | --- | --- | --- |
 | 1 | One seeded demo account: the Android APK on the phone, the website on the laptop joined with a 6-digit code | FR-X1 | Base | B |
-| 2 | 5 seeded apps render from specs | FR-A1, FR-A2 | Base | A (specs), B (renderer) |
+| 2 | 8 seeded apps render from specs (`spec/backend.md` §2.3) | FR-A1, FR-A2 | Base | A (specs), B (renderer) |
 | 3 | Home: status line, Needs your OK card, Next up, Your apps patches, pinned bar | FR-H1, FR-H2, FR-H3, FR-H5, FR-H7, FR-P1 | Base | B |
 | 4 | Clair button → sheet → Photo | FR-C1, FR-C2 | Base | B |
 | 5 | Photo → checked rows → basted proposal card with "Add to 3 apps" | FR-C3 | **Event day (judged)** | A |
@@ -124,7 +126,7 @@ MVP-slice stories with acceptance criteria are in `spec/prd-stories.md`.
 ### The DevDay cut (Nov 20)
 
 **Demo path, working code, rehearsed until it can't fail.**
-1. Home, pre-seeded with 5 demo apps (Budget & subscriptions, Workout, To-dos, Calendar, Groceries) and realistic data.
+1. Home, pre-seeded with 8 demo apps (Notes, Budget, Subscriptions, Groceries, Calendar, Classes, To-dos, Workout) and the complete seed in `spec/backend.md` §2.3, where every row is one Sam could have made.
 2. Tap the Clair button → Clair sheet → Photo → take or pick the receipt.
 3. The sheet shows one basted proposal card: "Adding updates 3 apps" with the three dye dots, the effect ("$412 → $376"), primary "Add to 3 apps", secondary "Review items". "Review items" opens the full-screen review (bar hidden, own Done) to fix a row, then returns to the card.
 4. "Add to 3 apps" on the card (bar visible under the sheet) → thread pull from the card's dye dots into the Groceries, Budget and Calendar pins → status line rolls to "$376 left this month".
@@ -167,7 +169,7 @@ Each requirement lists its cut and how it is verified. "E2E" means a scripted br
 | --- | --- | --- | --- |
 | FR-O1 | **First open, no wall.** Opening the APK or the web link shows Welcome within 3 s *(proposed)* with no sign-up, no email and no permission prompt; the anonymous account and an empty workspace (in the device's time zone) are made in the background. Welcome carries "I have a quilt · Sign in" (email and password; **Live** for the demo account, Google later) and "Enter a code from your phone". On the website, joining by code leaves the laptop's own empty guest workspace orphaned; it is purged later. No network: "Quilt needs a connection to set up. Try again." | Live+ | E2E on a fresh install and a fresh browser profile |
 | FR-O2 | **What slips?** Welcome (spool hello, "Hi. I'm Clair. I keep track of the stuff that slips.") asks one question with six multi-select chips: Money, Groceries, Classes, Workouts, Subscriptions, To-dos. Buttons "Make my apps" and "Skip". Nothing preselected. | Live+ | E2E |
-| FR-O3 | **Starter apps, instantly.** Picked chips map to template specs copied into the workspace in one request, with no Claude call; Home shows them within 1 s of "Make my apps" *(proposed)*. Money and Subscriptions share one Budget & subscriptions app; Calendar is always added. The starter apps fill the pinned bar (up to 4) so the first thread has pins to land on; Clair re-seeds pins after the first week (FR-P2). Starters hold no rows. Skip makes no apps and shows the day-one Home with 4 starter tiles. | Live+ | E2E: chips → apps match the mapping; no LLM call logged |
+| FR-O3 | **Starter apps, instantly.** Picked chips map to template specs copied into the workspace in one request, with no Claude call; Home shows them within 1 s of "Make my apps" *(proposed)*. Money and Subscriptions make separate apps (a passed renewal becomes a Budget spend); Calendar is always added. The starter apps fill the pinned bar (up to 4) so the first thread has pins to land on; Clair re-seeds pins after the first week (FR-P2). Starters hold no rows. Skip makes no apps and shows the day-one Home with 4 starter tiles. | Live+ | E2E: chips → apps match the mapping; no LLM call logged |
 | FR-O4 | **First prompt, permissions when needed.** With no data, the status line reads "Nothing logged yet. Add a receipt or tell Clair something." Camera permission is asked on the first Photo tap, the microphone on the first hold of the Clair button, notifications only after Sam reviews the first evening check-in and taps "Remind me" (local notifications on the device). Every denial leaves a working path: pick a photo, type, or no reminder. | Live+ (camera, mic) / Beta (notifications) | E2E with each permission denied |
 | FR-O5 | **Keep your quilt.** After the first confirmed change set, the next Home visit shows one card in Needs your OK: "Keep your quilt. Right now your apps live only on this phone." with "Continue with Google", "Use email", "Not now". Linking keeps the same account and data. "Not now" asks once more after 3 more confirms, then only from Settings. Making a join code requires it. An email that already has a quilt is never merged. | Beta (Live: demo account already has an email) | E2E: link keeps all rows; guest can't make a join code |
 
@@ -192,7 +194,7 @@ Each requirement lists its cut and how it is verified. "E2E" means a scripted br
 
 | ID | Requirement | Cut | Verify |
 | --- | --- | --- | --- |
-| FR-A1 | Every app is a spec built only from the 9 blocks: page, text, metric, progress, collection, list/table/calendar view, form, chart. One renderer draws every app. | Live | Schema tests; all 5 demo apps render from specs |
+| FR-A1 | Every app is a spec built only from the 9 blocks: page, text, metric, progress, collection, list/table/calendar view, form, chart. One renderer draws every app. | Live | Schema tests; all 8 demo apps render from specs |
 | FR-A2 | Every app spec declares a **face** (headline value + label), its dated rows and its pending items, so Home and Calendar can read any app. | Live | Schema rejects a spec with no face |
 | FR-A3 | Each app has a name, icon and one of 32 dye × print identities; neighbouring patches never share a dye. | Live (5 fixed demo dyes) / Beta (assignment rule) | Screenshot; Beta unit test |
 | FR-A4 | Rows: tap opens an edit sheet with delete; swipe right completes, swipe left deletes, both with undo; long-press starts multi-select. Delete is ink, never red. Every swipe action is also reachable from the edit sheet. | Proto / Beta | Beta E2E with touch |
@@ -264,7 +266,7 @@ Each requirement lists its cut and how it is verified. "E2E" means a scripted br
 
 | ID | Requirement | Cut | Verify |
 | --- | --- | --- | --- |
-| FR-P1 | Every screen has the bar: 4 pinned apps sewn into one strip + the Clair button. It never swipes sideways and never moves on scroll. | Live (fixed demo pins: Groceries, Budget, Calendar, Workout) | E2E |
+| FR-P1 | Every screen has the bar: 4 pinned apps sewn into one strip + the Clair button. It never swipes sideways and never moves on scroll. | Live (fixed demo pins: Groceries, Budget, Calendar, To-dos; `spec/backend.md` §2.3) | E2E |
 | FR-P2 | Clair seeds the pins from the first week's use; after that they change only when Sam long-presses to pin or unpin. | Beta | Unit + E2E |
 | FR-P3 | Swiping up on the bar shows "Just used" (recent apps in order); keep going shows Home's quilt. | Proto / Beta | Beta E2E |
 | FR-P4 | The bar hides only for focused tasks (keyboard up, camera, logging a set, reviewing a receipt, building an app); those screens carry their own Done or Back. The Clair sheet keeps the bar visible so threads land on the pins; that is why confirm lives on the sheet's card (FR-S2). | Live | E2E |

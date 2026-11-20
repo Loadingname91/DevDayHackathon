@@ -91,7 +91,7 @@ create table workspaces (
   tz          text not null default 'America/Denver',      -- IANA zone; all windows use it
   read_level  text not null default 'full'
               check (read_level in ('full', 'field_names', 'none')),
-  settings    jsonb not null default '{}'::jsonb,          -- {pins: [page ids], credits_monthly}
+  settings    jsonb not null default '{}'::jsonb,          -- {pins: [page ids], credits_monthly (default 50), notes_enabled (default true)}
   epoch       int not null default 1,                      -- bumped by reseed; clients wipe their cache
   created_at  timestamptz not null default now()
 );
@@ -100,6 +100,8 @@ create table workspace_members (
   workspace_id uuid not null references workspaces(id) on delete cascade,
   user_id      uuid not null references auth.users(id) on delete cascade,
   role         text not null default 'owner' check (role in ('owner')),
+  display_name text,                                       -- "Sam"; from Keep your quilt or Settings → Name; null for a guest
+  app_opens    jsonb not null default '{}'::jsonb,         -- {page_id: last opened timestamptz}; written by POST /apps/{id}/opened
   created_at   timestamptz not null default now(),
   primary key (workspace_id, user_id)
 );
@@ -387,7 +389,7 @@ Shown as stored rows; only columns that matter are listed. UUIDs are shortened (
 {
   "id": "<groceries>", "block_type": "page", "parent_id": null, "position": "a1",
   "properties": {
-    "v": 1, "key": "groceries", "name": "Groceries", "icon": "basket", "dye": "pear",
+    "v": 1, "key": "groceries", "name": "Groceries", "icon": "basket", "dye": "sage",
     "tabs": [
       { "kind": "page", "id": "t_list", "title": "List", "children": [
         { "kind": "list", "id": "b_items", "source": "groceries/items",
@@ -539,11 +541,145 @@ These match the ClairShare board. Every due date has a printed time, so `at` is 
 | Record | Collection | Properties |
 | --- | --- | --- |
 | c01 ECON 1010 | `classes` | Principles of Microeconomics, Kendall 104, TR 9:10 am from 25 Aug to 10 Dec |
-| c02 MATH 1210 | `classes` | Calculus I, JWB 335, MWF 11:50 am from 24 Aug to 9 Dec |
+| c02 MATH 1210 | `classes` | Calculus I, JWB 335, MW 11:50 am from 24 Aug to 9 Dec |
 | c03 CS 3500 | `classes` | Software Practice, WEB L104, MW 3:00 pm from 24 Aug to 9 Dec |
 | d01 Start CS 3500 project | `due` | assignment, class c03, `2026-11-23T23:59:00-07:00`, done false (Home's "This week" row) |
 | d02 Homework 11 | `due` | assignment, class c02, `2026-11-24T23:59:00-07:00`, done false |
 | d03 Homework 10 | `due` | assignment, class c02, `2026-11-17T23:59:00-07:00`, done true (shows the window ignores done records) |
+
+### 2.3 The complete demo seed (every row a screen shows)
+
+The rows below finish the demo account. Every number, name and date on a board or prototype for the demo account is either one of these rows or a formula over them (`spec/prd-data-provenance.md`, FR-D1). Every row is one Sam could have made: the **Made by** column names the gesture, the confirmed Clair card or the sweep that would have written it in the real app, and the seed script writes it with that `origin`. Dates are 2026, times are America/Denver, and "today" is `DEMO_NOW` (Fri 20 Nov, 5:45 pm). Groceries items, lists and usuals are in §2.2 above; Classes is the table just before this section.
+
+**Workspace and member.**
+
+| Setting | Value | Made by |
+| --- | --- | --- |
+| `workspace_members.display_name` | "Sam" | Keep your quilt (name from Google) or Settings → Name |
+| `settings.pins` | Groceries, Budget, Calendar, To-dos (in that order) | Default pins from the templates; long-press a pin to swap |
+| `settings.credits_monthly` | 50 | Plan default (free plan) |
+| `settings.notes_enabled` | true | Settings → What Clair remembers → Turn off notes |
+| `workspace_members.app_opens` | Groceries 5:41 pm today, Budget 5:30 pm, Calendar 12:10 pm, To-dos 8:05 am, Notes Thu 19 Nov 10:30 am, Workout Thu 19 Nov 6:50 pm, Classes Thu 19 Nov 9:00 am, Subscriptions Sun 15 Nov | The client records an open each time an app opens (FR-D8); "Your apps" sorts by it |
+
+**The 8 apps.** One page block each, from the starter templates (§10): `notes`, `budget`, `subscriptions`, `groceries`, `calendar`, `classes`, `todos`, `workout`. Most come from onboarding chips (`origin template`). Two Sam built with Clair: Notes on Tue 25 Aug, from "notes for each of my classes", and Subscriptions on Sun 1 Nov (`origin clair`, one build run each, 10 credits; August's build isn't in November's ledger).
+
+**Credits.** `usage_ledger` for November: grant +50 (Sun 1 Nov 12:00 am), build −10 (Sun 1 Nov, Subscriptions; one build run, its screenshot included), chat −1 (Sun 8 Nov, "Costco receipts go on Costco run"), chat −1 (Tue 17 Nov, "move leg day to 7 am"), chat −1 (Tue 17 Nov, "don't suggest snacks"), photo −5 (Thu 19 Nov, Union food court receipt). Used 18, so **32 of 50 left, resets Tue 1 Dec**, before the demo beats. The receipt and fridge photos cost 5 each, so it reads 22 after both.
+
+**Budget.** `settings.limit` 120000 ($1,200). The `category` select options carry an optional `limit` (FR-D3): Groceries $200, Eating out $150, Rent (none), Fun (none), Transport $100, Subscriptions $40. November `spend` rows total **$788.00**, so the face reads **$412 left**:
+
+| Category | November total | Limit |
+| --- | --- | --- |
+| Rent | $380.00 | none |
+| Eating out | $165.00 | $150 ($15 over) |
+| Groceries | $142.00 | $200 |
+| Transport | $42.00 | $100 |
+| Fun | $32.53 | none |
+| Subscriptions | $26.47 | $40 |
+| **Total** | **$788.00** | $1,200 |
+
+| at | note | category | amount | Made by |
+| --- | --- | --- | --- | --- |
+| Sun 1 Nov | November rent | Rent | 380.00 | Budget → Add |
+| Sun 1 Nov | Cafe Rio | Eating out | 11.48 | Budget → Add |
+| Mon 2 Nov | Hulu | Subscriptions | 9.99 | Sweep: Hulu renewal (occurrence stitch, FR-D4) |
+| Mon 2 Nov | Lime scooter | Transport | 5.60 | Budget → Add |
+| Tue 3 Nov | Adobe CC, student | Subscriptions | 13.49 | Sweep: Adobe renewal |
+| Tue 3 Nov | Blue Copper | Eating out | 5.25 | Budget → Add |
+| Wed 4 Nov | Chipotle | Eating out | 12.35 | Budget → Add |
+| Thu 5 Nov | Smith's | Groceries | 41.37 | Stitch from the Groceries trip |
+| Fri 6 Nov | Blue Copper | Eating out | 5.25 | Budget → Add |
+| Sat 7 Nov | Costa Vida | Eating out | 13.20 | Budget → Add |
+| Sat 7 Nov | Megaplex movie | Fun | 12.50 | Budget → Add |
+| Mon 9 Nov | Corner Market | Groceries | 8.62 | Stitch from trip |
+| Mon 9 Nov | iCloud 50 GB | Subscriptions | 2.99 | Sweep: iCloud renewal |
+| Tue 10 Nov | Corner Market | Groceries | 4.29 | Stitch from trip |
+| Tue 10 Nov | Blue Copper | Eating out | 5.25 | Budget → Add |
+| Wed 11 Nov | Smith's | Groceries | 27.15 | Stitch from trip |
+| Thu 12 Nov | Corner Market | Groceries | 4.29 | Stitch from trip |
+| Thu 12 Nov | Sushi with Maya | Eating out | 22.40 | Budget → Add |
+| Fri 13 Nov | Corner Market | Groceries | 7.78 | Stitch from trip |
+| Fri 13 Nov | Thai Siam | Eating out | 28.00 | Budget → Add |
+| Sat 14 Nov | Smith's | Groceries | 45.01 | Stitch from trip |
+| Sat 14 Nov | Cafe Rio | Eating out | 11.48 | Budget → Add |
+| Sat 14 Nov | Lime scooter | Transport | 8.40 | Budget → Add |
+| Sat 14 Nov | Thrift shop | Fun | 20.03 | Budget → Add |
+| Sun 15 Nov | Corner Market | Groceries | 3.49 | Stitch from trip |
+| Sun 15 Nov | Bagel Project | Eating out | 14.97 | Budget → Add |
+| Mon 16 Nov | Cafe Rio | Eating out | 9.62 | Budget → Add |
+| Tue 17 Nov | Blue Copper | Eating out | 5.25 | Budget → Add |
+| Tue 17 Nov | Gas | Transport | 28.00 | Budget → Add |
+| Wed 18 Nov | Taco Bell | Eating out | 6.87 | Budget → Add |
+| Thu 19 Nov | Union food court | Eating out | 11.40 | Clair, receipt photo (5 credits), confirmed |
+| Thu 19 Nov | Union vending | Eating out | 2.23 | Budget → Add |
+
+Checks the boards rely on: Blue Copper has 4 November visits. Eating out this week (Mon 16 to Thu 19 Nov) is 5 rows, $35.37; with the Corner Market receipt, food this week is $71.20. October holds three rows that Search finds (Blue Copper Sat 3 Oct $5.25, Blue Copper Sun 11 Oct $5.25, Starbucks Mon 19 Oct $6.10) plus the October grocery trips below. No screen shows an October total.
+
+**Subscriptions.** Its own app (template `subscriptions`). Every row is monthly, so the face `sum(amount)` reads **$38.46 a month**. Each renewal that has passed this month made a Budget spend through the occurrence stitch.
+
+| name | amount | renews (next) | repeat | remind | Made by |
+| --- | --- | --- | --- | --- | --- |
+| Spotify | 11.99 | Sun 22 Nov | monthly on the 22nd | none | Clair build, Sun 1 Nov (from a bank-app screenshot) |
+| Hulu | 9.99 | Wed 2 Dec | monthly on the 2nd | none | Same build |
+| Adobe CC, student | 13.49 | Thu 3 Dec | monthly on the 3rd | none | Same build |
+| iCloud 50 GB | 2.99 | Wed 9 Dec | monthly on the 9th | none | Same build |
+
+No reminder is set yet, so Home can offer "Remind you the night before?" for Spotify and "Remind me before it renews" for Hulu (FR-D5).
+
+**Groceries trips (November).** These are the `trips` rows behind "grocery spend $142 of $200". The bought items link to them and match the usuals in §2.2 (last-bought dates count back from today). Other lines on those receipts weren't on any list, so they count in the trip total but aren't item records.
+
+| at | store | total | Bought items linked |
+| --- | --- | --- | --- |
+| Thu 5 Nov | Smith's | 41.37 | Coffee beans 2.99, Butter 4.79 |
+| Mon 9 Nov | Corner Market | 8.62 | Chicken thighs 8.62 |
+| Tue 10 Nov | Corner Market | 4.29 | Greek yogurt 4.29 |
+| Wed 11 Nov | Smith's | 27.15 | Spinach 3.29, Cheddar 3.99 |
+| Thu 12 Nov | Corner Market | 4.29 | Eggs 4.29 |
+| Fri 13 Nov | Corner Market | 7.78 | Oat milk 3.49, Parmesan 4.29 |
+| Sat 14 Nov | Smith's | 45.01 | Bananas 1.87, Orange juice 3.69 |
+| Sun 15 Nov | Corner Market | 3.49 | Hummus 3.49 |
+
+Total $142.00. October trips (Fri 9 Oct to Sat 31 Oct) come from a fixed rule: each usual is bought every `every_days` counting back from its November date, grouped into one trip per day, at Smith's when the trip has 3 or more items and at Corner Market otherwise, at the prices above. They feed `get_usuals` only. Every trip, October and November, was added with Groceries → Trips → Add (Made by: gesture).
+
+**Calendar.** One event of its own: **Coffee with Maya**, Sat 21 Nov 10:00 am (Calendar → Add). Everything else on Calendar comes from `*dated`. Today at 5:45 pm that is 3 rows: Pull day 6:00 pm (Workout), Take out recycling 8:00 pm (To-dos), Return library books 9:00 pm (To-dos). Nothing else falls today: no class meets on Fridays, and DevDay demo is done. After the receipt, "Grocery trip · Corner Market 5:41 pm" makes 4.
+
+**To-dos.** Template `todos` gains `place` (text). Face: count of open to-dos due today, "today", which reads **2 today**.
+
+| title | due | place | done | Made by |
+| --- | --- | --- | --- | --- |
+| Return library books | Fri 20 Nov 9:00 pm | Marriott Library | false | To-dos → Add |
+| Take out recycling | Fri 20 Nov 8:00 pm, weekly on Fridays (§2.2) | none | false | To-dos → Add, repeat |
+| Call home | Sun 22 Nov (date only) | none | false | Clair, typed note "call home sunday" |
+| Pay Maya back for pizza ($14) | none | none | false | To-dos → Add |
+| DevDay demo | Fri 20 Nov 3:00 pm | Lassonde Studios | true | To-dos → Add; ticked done at 4:10 pm |
+| Book flu shot | none | Student health | true | To-dos → Add; ticked done Wed 18 Nov |
+
+Open: 4. Class work lives in Classes and shows in Home's Next up and Calendar through `*dated`. It isn't copied into To-dos.
+
+**Classes.** As in the table above, with one change: MATH 1210 meets **MW** 11:50 am (not MWF), so no class falls on Friday and Calendar's "3 today" holds.
+
+**Workout.** The template gains routines, exercises, sets and two session fields (§10). Face: count of sessions done this week, which reads **3 this week** (of 4 planned).
+
+| Collection | Rows |
+| --- | --- |
+| `routines` | Pull (about 45 min), Push (about 40 min), Legs (about 35 min). Workout itself came from the onboarding chip on Tue 1 Sep (template); Sam added the routines and exercises with Workout → Routines → Add (gesture) |
+| `exercises` (plan, in order) | Pull: 1 Pull-ups 3×8 bodyweight, 2 Lat pulldown 3×10, 3 Seated cable row 3×12 at 100 lb, 4 Face pulls 3×15 at 40 lb, 5 Hammer curl 3×12 at 25 lb. Push: Push-ups 3×12 bodyweight, Dumbbell bench 3×10 at 40 lb. Legs: Goblet squat 3×10 at 45 lb, Walking lunges 3×12 bodyweight |
+| `sessions` | Three repeating series from Tue 1 Sep: Pull day (Mon and Fri 6:00 pm), Leg day (Tue; 6:00 pm until Clair moved it to 7:00 am on Tue 17 Nov, a confirmed change set), Push day (Wed 6:00 pm). 46 occurrences from 1 Sep to 19 Nov, 5 skipped (Mon 7 Sep Labor Day; Mon 12, Tue 13, Wed 14 and Fri 16 Oct fall break), so **41 done since September**. This week: Mon Pull, Tue Legs and Wed Push done; Fri Pull day at 6 pm open |
+| `sets` | Logged in Workout → Today → Log a set. Lat pulldown starts at 100 lb and goes up 5 lb every two weeks from Mon 21 Sep (105 on 5 Oct, 110 on 19 Oct, 115 on 2 Nov, 120 on 16 Nov), so Progress reads "100 → 120 lb in 8 weeks". This week: Mon Pull (Lat pulldown 3×10 at 120, Seated cable row 3×12 at 100, Face pulls 3×15 at 40, Hammer curl 3×12 at 25, Pull-ups 3×8 at 0), Tue Legs (Goblet squat 3×10 at 45, lunges at 0), Wed Push (Dumbbell bench 3×10 at 40, Push-ups at 0). Volume this week (sum of weight × reps) is **12,450 lb**. Every earlier done session has one set row per planned set of its routine, at the plan's reps and weight, with Lat pulldown at the ramp weight for that date; skipped occurrences have no sets |
+
+**Notes.** The app Sam built for class notes. `notebooks` holds a folder per course, linked to its class, plus Personal. `notes` holds the notes. The face counts notes written this week (Mon to Sun), so it reads **3 this week**.
+
+| Collection | Rows |
+| --- | --- |
+| `notebooks` | nb_econ ECON 1010 (class c01), nb_math MATH 1210 (c02), nb_cs3500 CS 3500 (c03), nb_personal Personal |
+| `notes` | Tue 10 Nov, MATH 1210, "Related rates examples". Sun 15 Nov, Personal, "Gift ideas for mom". **This week:** Mon 16 Nov 3:50 pm, CS 3500, "Unit testing with mocks"; Wed 18 Nov 3:55 pm, CS 3500, "Dependency injection"; Thu 19 Nov 10:30 am, ECON 1010, "Price elasticity". All made by Notes → folder → New note (typed) |
+
+The whiteboard fallback beat adds the fourth this week, from a whiteboard photo (`spec/clair-agent.md` §12.0a): Notes 3 → 4 this week, Classes 2 → 3 due this week (HW 4, CS 3500, due Tue 24 Nov 11:59 pm), and Calendar gains HW 4 on Tue (today's count is unchanged).
+
+**Demo beat 1 adds the Car app.** Nothing about the car is seeded except the $28.00 gas spend. The build (`spec/clair-agent.md` §12.0) adds the 9th app, Car, with 3 service rows from the photo, an Oil change on Calendar for Sat 5 Dec, and the `car/log → budget/spend` stitch on Budget. The 5-second fill then adds a log row (Campus Auto, $44.99, 61,980 mi) and moves the next oil change to Thu 20 May 2027. It also adds a Transport spend, so Budget goes $412 → $367 and Transport reaches $86.99 of $100. Credits go 32 → 22 → 17. `/dev/reset` removes all of it.
+
+**Clair notes.** Two notes before the demo, both in Sam's own words: "Receipts from Costco go on Costco run." (preference, Sun 8 Nov) and "Don't suggest snacks" (preference, Tue 17 Nov). The fridge beat adds the third, "You stopped buying orange juice", so "What Clair remembers" reads 3 only after the fridge beat.
+
+**Change sets (Activity).** Stitched history the You screen lists: Sun 1 Nov build Subscriptions (Clair); Tue 17 Nov Leg day moved to 7 am (Clair); Thu 19 Nov Union food court receipt (Clair). Each row of the tables above also has the change set its **Made by** column implies, so Undo history and Activity are real.
 
 ---
 
@@ -662,6 +798,8 @@ So the card's numbers are always computed from current data, never taken from Cl
 
 **Stitches between template apps.** A stitch is declared on the receiving app (`groceries/trips → budget/spend` lives on Budget). It fires only when both apps exist: a stitch whose `from` app is missing is kept, shown as "waiting for Groceries" in Arrange, and skipped by `expand`. Validation allows a missing `from` only for the template keys in section 10's templates table. So a Groceries-only user's receipt card reads "Adding updates 2 apps" (Groceries: 8 bought, 12 → 4 to buy; Calendar: "Grocery trip · Corner Market 5:41 pm") with **Add to 2 apps**, and no Budget line.
 
+**Occurrence stitches.** A stitch can fire on each passed occurrence of a repeating record instead of on insert (`"on": "occurrence"`). `subscriptions/subscriptions → budget/spend` (declared on Budget; `amount ← amount`, `at ← occurrence date`, `note ← name`, `category ← "c_subscriptions"`) is the only one: when a renewal date passes, `/cron/sweep` writes the spend as an `origin sweep` change set, stitched directly, because it records a charge that already happened. A renewal before the stitch existed isn't back-filled.
+
 **The receipt, end to end.** Clair proposes 1 insert (`trips`) + 8 updates (close Oat milk, Eggs, Bananas, Chicken thighs, Rice, Spinach, Greek yogurt, Coffee beans on Weekly shop with their prices). `expand` adds 1 insert into `budget/spend` through the stitch. `affected` gives Groceries, Budget, Calendar (Calendar because `trips` has `calendar: true`; the spend alone wouldn't make it a target). `dry_run` gives:
 
 | App | Before | After |
@@ -692,9 +830,16 @@ All formulas run on the server in `api/quilt/formula.py` (v3 ADR-4 deferred: no 
 | Setting | `{setting: "limit"}` | A value from the app's `settings` (Budget's monthly limit). Unset is null, so the face shows its empty text ("Set a monthly amount") |
 | Query | `{agg, from, field?, where?, window?}` | `agg`: `sum`, `count`, `avg`, `min`, `max`, `last`. `from`: a `CollectionRef` or `*dated` |
 | Filter (`where`) | `{field, op, value}` | `op`: `eq`, `ne`, `lt`, `gt`, `within` (`value` like `"72h"` or `"7d"`, from now) |
-| Window | `today`, `week`, `month`, `all` | Applied to the collection's `dateField` in the workspace zone (section 3). A window on a collection without `dateField` fails validation |
+| Window | `today`, `week`, `month`, `all`, `{days: N}` | Applied to the collection's `dateField` in the workspace zone (section 3). `{days: N}` is the last N days up to now (Workout Progress uses 56). A window on a collection without `dateField` fails validation. On a collection with a `repeat` field, `count` over a window counts logged occurrences (`repeat.log`) in it, so a weekly series done 3 times this week counts 3 |
+| Option limit | `{limit: {field: "category", option: "c_eating_out"}}` | The `limit` stored on a select option (Budget's per-category limits). Unset is null, so a category row without a limit shows only its total |
 | Difference | `{minus: [Term, Term]}` | One level only (closed, non-recursive) |
 | Row formula | field `{type: "formula", op: add\|sub\|mul\|div, a, b, output}` | `a`, `b` are a field key of the same record or a number. Not stored on the record (v3 §3.4) |
+
+**Derived values outside faces.** Three more values are computed on the server and returned with the rows; nothing stores them:
+
+- `usual_due` on a Groceries item: true when the item is a usual and the days since it was last bought are at least its `every_days` (the same numbers `get_usuals` returns). The list shows it as "running low".
+- Home's greeting band from the workspace clock: "Morning" before 12 pm, "Afternoon" before 5 pm, "Evening" after. The name comes from `workspace_members.display_name`; a guest gets the band alone ("Evening.").
+- The evening check-in (Beta): after 5 pm, up to 3 open records dated today from `*dated`, in time order. Each item offers the action its collection supports (done, log). Nothing else goes in it.
 
 **Where it runs.** On every read that returns faces or rows (`GET /home`, `GET /apps`, `GET /apps/{id}`, `GET /sync`), in every command response, and in `dry_run`. Clair's `query_records` and `get_faces` call the same functions. A request loads the workspace's live blocks in one query (`where workspace_id = $1 and deleted_at is null`) and computes in memory.
 
@@ -751,7 +896,7 @@ It sends current blocks, not raw events, so the client only replaces rows. `touc
 
 **Verification.** The API verifies the Supabase access token on each request with PyJWT: against the project's JWKS if the project uses asymmetric signing keys, otherwise the HS256 JWT secret (**spike (T1)**: check which the project has). `sub` is the user id; `is_anonymous` is read from the claims.
 
-**First open: guest.** The client calls `supabase.auth.signInAnonymously()` and then `POST /me/bootstrap`. Bootstrap is idempotent: if the user has no membership, it creates a workspace (tz from the device, sent once as a hint), the membership row, and this month's credit grant. Onboarding (`docs/onboarding.md`) then calls `POST /templates/apply` with the chosen starter apps (Budget + Subscriptions, Groceries, Classes, Workout, To-dos), which writes them as one `template` change set from JSON specs in `api/templates/`. No Clair call, so it's instant.
+**First open: guest.** The client calls `supabase.auth.signInAnonymously()` and then `POST /me/bootstrap`. Bootstrap is idempotent: if the user has no membership, it creates a workspace (tz from the device, sent once as a hint), the membership row, and this month's credit grant. Onboarding (`docs/onboarding.md`) then calls `POST /templates/apply` with the chosen starter apps (Budget, Subscriptions, Groceries, Classes, Workout, To-dos), which writes them as one `template` change set from JSON specs in `api/templates/`. No Clair call, so it's instant.
 
 **The demo account: email and password.** The seed script creates the demo auth user with supabase-py's admin client (`auth.admin.create_user({email, password, email_confirm: true})`, email and password from env `DEMO_EMAIL` and `DEMO_PASSWORD`), then its workspace and membership. `DEMO_WORKSPACE_ID` in env is that workspace's id; `POST /dev/reset` reseeds only that workspace. Welcome has **"I have a quilt · Sign in"** (email + password, `supabase.auth.signInWithPassword`), which is Live for the demo account: the phone APK signs in with it, and it is the fallback for the laptop if the join code fails. Google sign-in on a returning device is later.
 
@@ -828,6 +973,8 @@ All paths are under `/api` on the Vercel deployment. All bodies are Pydantic mod
 | `GET /home` | | `{greeting, status, needsOk: Card[], nextUp: Dated[], noticed?, apps: Patch[], seq}` | `GET /api/home` |
 | `GET /apps` | | `Patch[]` with faces | `GET /api/apps` |
 | `GET /apps/{id}` | | `{spec: AppSpec, data: {CollectionRef: Record[]}, faces, seq}` (every collection its blocks read, `*dated` included) | `GET /api/apps/:id` |
+| `POST /apps/{id}/opened` | | `204`; sets `workspace_members.app_opens[id]` to now ("Your apps" sorts by it, "Just used" reads it). Not a change set: it has no undo and no event | new |
+| `PATCH /me` | `{display_name?}` | `{user, workspace}` | new |
 | `POST /apps` | `{spec}` | command result, `201` | `POST /api/apps` |
 | `PATCH /apps/{id}` | `{spec, base_version}` (Arrange, stitch toggles, field edits) | command result | `PATCH /api/apps/:id` |
 | `DELETE /apps/{id}` | `?confirm=true` | without `confirm`: `409 {dependents}` preview; with it: command result | new |
@@ -876,11 +1023,13 @@ On DevDay `/home` returns only `change_set` cards; the other kinds are in the ty
 
 | Template (chip) | Collections (`calendar: true` marked ●) | Stitches (declared here) | Face |
 | --- | --- | --- | --- |
-| `budget` Budget & subscriptions (Money, Subscriptions) | `spend {note, amount money, category select[Groceries, Eating out, Rent, Fun, Transport], at datetime}`; `subscriptions {name, amount money, renews date, repeat}` ● (the renewals tab only with the Subscriptions chip) | `groceries/trips → budget/spend` (amount ← total, at ← at, note ← store, category ← Groceries); fires only when Groceries exists | `{minus: [{setting: "limit"}, sum(spend.amount, month)]}` "left", `status: true`. `settings.limit` starts unset (face: "Set a monthly amount"); the demo seed sets 120000 |
+| `notes` Notes (Class notes) | `notebooks {name, class relation}`; `notes {title, body text, notebook relation, at datetime, photo file}` (not in Calendar) | none | count of `notes` this week, "this week" |
+| `budget` Budget (Money) | `spend {note, amount money, category select[Groceries, Eating out, Rent, Fun, Transport, Subscriptions] (each option may carry a `limit`), at datetime}` | `groceries/trips → budget/spend` (amount ← total, at ← at, note ← store, category ← Groceries); `subscriptions/subscriptions → budget/spend` on each occurrence (§5). Each fires only when its app exists | `{minus: [{setting: "limit"}, sum(spend.amount, month)]}` "left", `status: true`. `settings.limit` starts unset (face: "Set a monthly amount"); the demo seed sets 120000 |
+| `subscriptions` Subscriptions (Subscriptions) | `subscriptions {name, amount money, renews date, repeat, remind}` ● | none | `sum(subscriptions.amount)`, "a month" (all monthly in the seed; a yearly row would need a row formula `amount / 12`) |
 | `groceries` Groceries | `items {name, list select[Weekly shop], status select[to buy, bought], qty, price money, bought_on date, trip relation, usual select[auto, yes, no]}`; `trips {store, total money, at datetime}` ● label "Grocery trip" | none | count of `items` where status = to buy and list = default, "to buy" |
 | `classes` Classes | `classes {name, title, room, time datetime, repeat}` ●; `due {title, kind select[assignment, exam], at date or datetime, class relation, done bool}` ● | none | count of `due` where done = false and `at` within 7 d, "due this week" |
-| `workout` Workout | `sessions {name, at datetime, repeat, done bool}` ● | none | count of `sessions` this week where done, "this week" |
-| `todos` To-dos | `todos {title, due datetime, done bool, repeat}` ● | none | count where done = false, "open" |
+| `workout` Workout | `sessions {name, routine relation, at datetime, repeat, done bool, started_at datetime, minutes number}` ●; `routines {name, minutes number}`; `exercises {name, routine relation, sets number, reps number, weight number, order}`; `sets {exercise relation, session relation, reps number, weight number, at datetime}` with row formula `volume = weight × reps` | none | count of done `sessions` occurrences this week, "this week" |
+| `todos` To-dos | `todos {title, due date or datetime, place text, done bool, repeat, remind}` ● | none | count where done = false and `due` today, "today" |
 | `calendar` Calendar (always added) | `events {title, at datetime, ends datetime, repeat}` ●; its blocks read `*dated` | none | count of `*dated` today, "today" |
 
 **Status codes.** `401` no or bad token; `402` out of credits; `403` read level `none`, or a guest or unconfirmed account making a join code; `404` not found or not yours; `409` state conflict (transition, version, undo precondition, list still has items, thread busy); `410` join code or menu question expired; `413` attachment too large; `422` validation with `{error, issues[]}`; `429` rate limit.
@@ -1024,7 +1173,7 @@ Two people: **A** (API, data, Clair) and **B** (client, motion, Capacitor). The 
 | --- | --- | --- |
 | **Tonight (Nov 19)** | | |
 | T1 | Supabase project: schema and RLS from section 2.1, anonymous sign-in on. The "must pass tonight" spikes above | Vite + React shell, `tokens.css`, `base.css`, `motion.ts` port, `Bar`, `Spool`. Capacitor Android project building a debug APK; install it on the demo phone |
-| T2 | Seed script: the demo auth user (`DEMO_EMAIL`, `DEMO_PASSWORD`) and its workspace (`DEMO_WORKSPACE_ID`), Sam's 7 apps from the templates table, the canonical seed (section 2.2: 3 Groceries lists, 6 weeks of trips with the fridge usuals, Budget `limit` 120000, `DEMO_NOW` 5:45 pm), the queued receipt card. `POST /dev/reset` on that workspace. FastAPI skeleton on Vercel: `/health`, JWT check, `GET /apps`, `GET /apps/{id}` with Python faces (`formula.py`) | Welcome with "I have a quilt · Sign in" (email + password); `AppView` + blocks (page, text, metric, progress, list, calendar) rendering Budget, Groceries, Calendar from the API |
+| T2 | Seed script: the demo auth user (`DEMO_EMAIL`, `DEMO_PASSWORD`) and its workspace (`DEMO_WORKSPACE_ID`), Sam's 8 apps from the templates table (§2.3), the canonical seed (section 2.2: 3 Groceries lists, 6 weeks of trips with the fridge usuals, Budget `limit` 120000, `DEMO_NOW` 5:45 pm), the queued receipt card. `POST /dev/reset` on that workspace. FastAPI skeleton on Vercel: `/health`, JWT check, `GET /apps`, `GET /apps/{id}` with Python faces (`formula.py`) | Welcome with "I have a quilt · Sign in" (email + password); `AppView` + blocks (page, text, metric, progress, list, calendar) rendering Budget, Groceries, Calendar from the API |
 | T3 | `GET /home`, `GET /sync`; first deploy; the timed receipt spike | Home; IndexedDB cache (paint, then catch up); APK signed in to the demo account |
 | **Day (Nov 20)** | | |
 | D1 | Command service: validate, apply, events, change sets, `position.py`; confirm, undo, dismiss; `check.py` (below) | `ProposalCard`: basted look, `threadPull`, `roll`, tags; undo toast for at least 8 s (FR-S6); Realtime subscription and catch-up |

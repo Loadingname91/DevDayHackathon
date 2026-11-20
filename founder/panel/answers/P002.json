@@ -1,0 +1,13 @@
+{
+  "id": "P002",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "My notes live in Goodnotes on my iPad and I like writing by hand, and whatever else I track is already in Notion for free. I might poke at the free tier once out of curiosity, but I'm not paying another $6 a month to move my stuff somewhere new.",
+  "objection": "Notion already does folders, journals and trackers and it's free. I don't see why I'd pay to have an assistant build what I can set up myself in twenty minutes, and I don't trust it to read my handwriting right.",
+  "would_change_my_mind": "If I could snap a page of my handwritten Goodnotes notes and it reliably turned them into something searchable and sorted, and that kept working for a month on the free tier.",
+  "price_too_cheap": 1,
+  "price_cheap": 2,
+  "price_expensive": 5,
+  "price_too_expensive": 8
+}

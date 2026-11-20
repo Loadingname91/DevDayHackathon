@@ -1,0 +1,13 @@
+{
+  "id": "P009",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Honestly I'd download it, build like three apps on the free plan, have fun for a week, and then drift back to my notes app like I always do. Five apps and 50 actions is plenty for a week of playing around, so I'd never hit the paywall before I lose interest.",
+  "objection": "I already pay for a budgeting app that works, and I've ditched every productivity app I've ever tried. Paying another $6 a month on my budget for something I'll probably abandon feels dumb.",
+  "would_change_my_mind": "If it actually replaced my budgeting app so I could cancel that subscription, and I was still opening it every day after a month on the free plan.",
+  "price_too_cheap": 1,
+  "price_cheap": 2,
+  "price_expensive": 4,
+  "price_too_expensive": 7
+}

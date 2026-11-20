@@ -1,0 +1,13 @@
+{
+  "id": "P013",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "It's brand new, so there are no Play Store ratings or Reddit threads for me to check, and I don't pay for apps I can't look up first. At most I'd poke at the free tier, and I already know I'd drop it after a week like every other tracker I've set up.",
+  "objection": "I won't keep it up after the first week. Building the app is the easy part, actually logging stuff every day is where I always quit, and an AI setting it up doesn't fix that.",
+  "would_change_my_mind": "A few months of solid 4.5+ ratings and Reddit posts from people my age saying they still use it daily, plus the free tier actually being enough to prove it sticks for me.",
+  "price_too_cheap": 1,
+  "price_cheap": 3,
+  "price_expensive": 7,
+  "price_too_expensive": 11
+}

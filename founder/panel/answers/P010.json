@@ -1,0 +1,13 @@
+{
+  "id": "P010",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Honestly I'd download it the day I saw it and build like four apps on the free tier, but that's my pattern with every productivity app: by week two I'm back in my notes app and the budgeting app I already pay for. Five apps and 50 actions is plenty for my one-week honeymoon, so I'd never hit the paywall.",
+  "objection": "I already pay for a budgeting app that works and has my bank linked, so moving my money stuff into something new feels like a downgrade, and I don't trust myself to still be using Quilt in a month.",
+  "would_change_my_mind": "If I was still opening it every day after a month because the purchase-to-budget thing actually replaced my budgeting app, so I could cancel that and pay for this instead.",
+  "price_too_cheap": 1,
+  "price_cheap": 3,
+  "price_expensive": 8,
+  "price_too_expensive": 12
+}

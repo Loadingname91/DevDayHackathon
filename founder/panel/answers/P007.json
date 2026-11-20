@@ -1,0 +1,13 @@
+{
+  "id": "P007",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "My Notes app and Google Docs already do everything I need, and they're free and already on every device I own. I might poke at the free tier out of curiosity, but I'm not paying $6 a month to move my lists into something new.",
+  "objection": "Who can see my notes, money and client stuff once an assistant is reading everything I snap or type? It says nothing about privacy or whether I can export it all and leave if it shuts down.",
+  "would_change_my_mind": "A clear promise that my data is private and not used for training, plus one-tap export to plain files or Google Docs, so trying it costs me nothing if I leave.",
+  "price_too_cheap": 1,
+  "price_cheap": 2,
+  "price_expensive": 5,
+  "price_too_expensive": 8
+}

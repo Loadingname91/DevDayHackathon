@@ -1,0 +1,95 @@
+{
+ "n": 20,
+ "seed": 485390,
+ "customer": {
+  "business": "Quilt: a phone app where an AI assistant builds and fills small life apps (budget, groceries, classes, to-dos, subscriptions) from a photo or a sentence",
+  "target": "Full-time University of Utah undergrads, 18 to 24, managing their own money for the first time, phone-first",
+  "where": "Salt Lake City, University of Utah campus; online (Android app and website)",
+  "age": [
+   18,
+   24
+  ],
+  "segments": [
+   {
+    "name": "Mostly supported by family or aid",
+    "share": 0.4,
+    "income": [
+     0,
+     6000
+    ]
+   },
+   {
+    "name": "Part-time job plus some support",
+    "share": 0.45,
+    "income": [
+     6000,
+     18000
+    ]
+   },
+   {
+    "name": "Self-funded, working most weeks",
+    "share": 0.15,
+    "income": [
+     18000,
+     32000
+    ]
+   }
+  ],
+  "behaviours": [
+   {
+    "name": "App hopper",
+    "share": 0.22,
+    "how": "Downloads a new app, uses it for a week, forgets it."
+   },
+   {
+    "name": "Notes-app loyalist",
+    "share": 0.2,
+    "how": "Keeps lists and money notes in the phone's Notes app and sees no reason to move."
+   },
+   {
+    "name": "Free-tier only",
+    "share": 0.18,
+    "how": "Never pays for an app; uses free versions and student deals."
+   },
+   {
+    "name": "Organised planner",
+    "share": 0.12,
+    "how": "Already uses a planner, Notion or a spreadsheet and likes control."
+   },
+   {
+    "name": "Stressed and behind",
+    "share": 0.14,
+    "how": "Has been hit by a late fee or a forgotten renewal this semester and wants it to stop."
+   },
+   {
+    "name": "Reads every review",
+    "share": 0.08,
+    "how": "Checks App Store or Play ratings and Reddit before trying anything."
+   },
+   {
+    "name": "Loyal to a finance app",
+    "share": 0.06,
+    "how": "Already uses YNAB, Cleo or Rocket Money with a bank linked."
+   }
+  ],
+  "objections": [
+   "I already use my Notes app and it's free",
+   "Another subscription is the problem I'm trying to fix",
+   "Will the AI read my receipt right, or will I end up fixing it?",
+   "I won't keep it up after the first week",
+   "Is it on iPhone?",
+   "Who sees my spending and my photos?",
+   "Why not just use Notion, it's free for students",
+   "Credits sound like I'll run out at the wrong moment"
+  ],
+  "habits": [
+   "you shop at Smith's or a corner store near campus once or twice a week",
+   "you pay for Spotify and one or two other subscriptions you rarely think about",
+   "you check your bank app only when something feels wrong",
+   "you get syllabi as PDFs at the start of each semester",
+   "you lift at the campus gym a few times a week",
+   "you split takeout and groceries with roommates"
+  ]
+ },
+ "pitch": "Quilt, a new phone app. Android and web now; iPhone later.\nTake a photo of a receipt, a syllabus or your fridge, and Quilt's assistant updates your budget, grocery list and due dates. You check the changes and tap OK; nothing saves without you. No bank login.\nStarter apps for money, groceries, classes, to-dos, workouts and subscriptions, ready in one tap.\nFree: 5 apps and about 10 photo fills a month. Plus: $6 a month ($48 a year) for unlimited apps and about 200 photo fills."
+}

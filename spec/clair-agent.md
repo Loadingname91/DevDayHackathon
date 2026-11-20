@@ -70,8 +70,11 @@ New turn:
 ```json
 { "thread_id": "optional", "run_id": "optional client-made UUID", "text": "optional",
   "transcript": "optional", "voice": false,
-  "images": ["storage path"], "files": ["storage path"] }
+  "images": ["storage path"], "files": ["storage path"],
+  "context": {"app": "notes", "collection": "notebooks", "record_id": "nb_cs3500"} }
 ```
+
+`context` is optional: the app and record Clair was opened from (Notes → CS 3500 → New note). The snapshot names it, and Clair files into it unless the input clearly belongs elsewhere.
 
 `images` and `files` are Storage paths only. The client has already uploaded each file straight to `clair-uploads` with supabase-js (backend.md §9); the request never carries a file body, so it stays under the Vercel request body limit (about 4.5 MB, spike at T1).
 
@@ -229,6 +232,9 @@ How to work
    replaces the old one; send the complete set of ops each time.
 6. To make a new app, call propose_app with a full spec. Only when Sam asks for
    an app, or an input clearly needs one that does not exist; otherwise ask.
+   Connect it on arrival: put the data from Sam's input in rows, give dated
+   collections calendar: true, and add stitches_into for any money or dates that
+   belong in Budget or another existing app. Say on the card what flows where.
 7. Ask with ask_user only when the right action truly depends on Sam: two lists
    could fit, a needed date is not visible, or items are worth checking before
    adding. Offer 2 to 8 short options with a one-line description each. At most
@@ -314,9 +320,9 @@ input: photo (1), typed: none, spoken: no
 
 apps:
 - budget "Budget" · face "$412 left" (status)
-  spend: note text, amount money, category select[Groceries, Eating out, Rent, Fun, Transport], at datetime
-  month: Nov · limit $1,200 (setting) · spent $788.00
-  stitch: groceries/trips → spend (category Groceries)
+  spend: note text, amount money, category select[Groceries ($200), Eating out ($150), Rent, Fun, Transport ($100), Subscriptions ($40)], at datetime
+  month: Nov · limit $1,200 (setting) · spent $788.00 (Rent 380.00 · Eating out 165.00 · Groceries 142.00 · Transport 42.00 · Fun 32.53 · Subscriptions 26.47)
+  stitch: groceries/trips → spend (category Groceries) · subscriptions → spend on each renewal (category Subscriptions)
 - groceries "Groceries" · face "12 to buy" (default list Weekly shop) · grocery spend $142 of $200 this month
   items: name text, list select[Weekly shop, Taco night, Costco run], status select[to buy, bought], qty text, price money, bought_on date, trip relation(trips), usual select[auto, yes, no]
   trips (calendar): store text, total money, at datetime
@@ -325,7 +331,9 @@ apps:
 - classes "Classes" · face "2 due this week"
   classes (calendar): name text, title text, room text, time datetime, repeat
   due (calendar): title text, kind select[assignment, exam], at date or datetime, class relation(classes), done bool
-- todos "To-dos" · workout "Workout" · subscriptions "Subscriptions" (fields on request: get_app)
+- notes "Notes" · face "3 this week" · notebooks: nb_econ ECON 1010, nb_math MATH 1210, nb_cs3500 CS 3500, nb_personal Personal
+  notes: title text, body text, notebook relation(notebooks), at datetime, photo file
+- todos "To-dos" · face "2 today" · workout "Workout" · face "3 this week" · subscriptions "Subscriptions" · face "$38.46 a month" (fields on request: get_app)
 
 open items:
 groceries/items · Weekly shop (12):
@@ -337,7 +345,7 @@ groceries/items · Costco run, once a month (5): i31 Paper towels · i32 Laundry
 classes/classes: c01 ECON 1010 · c02 MATH 1210 · c03 CS 3500
 classes/due (open, next 7 d): d01 Start CS 3500 project Mon 23 Nov 11:59 pm · d02 Homework 11 (MATH 1210) Tue 24 Nov 11:59 pm
 
-next dated: Pull day 6:00 pm today (workout) · Return library books 9:00 pm today (todos) · Spotify renews Sun 22 Nov $11.99 (subscriptions)
+next dated: Pull day 6:00 pm today (workout) · Take out recycling 8:00 pm today (todos) · Return library books 9:00 pm today (todos)
 
 usuals (groceries, 60 days): Eggs every ~6 d, last 8 d ago, on list · Oat milk every ~7 d, last 7 d ago, on list ·
   Bananas every ~5 d, last 6 d ago, on list · Spinach every ~7 d, last 9 d ago, on list · Greek yogurt every ~7 d, last 10 d ago, on list ·
@@ -346,6 +354,7 @@ usuals (groceries, 60 days): Eggs every ~6 d, last 8 d ago, on list · Oat milk 
 
 clair notes:
 - n1 (preference) Receipts from Costco go on Costco run.
+- n2 (preference) Don't suggest snacks.
 </snapshot>
 ```
 
@@ -364,7 +373,7 @@ Read levels change the snapshot ("What Clair can read", FR-T2):
 | Setting | Value |
 |---|---|
 | SDK | `anthropic` Python SDK; tools are `@beta_tool` functions; loop is `client.beta.messages.tool_runner(...)` with `stream=True`, iterated with `for … in runner` |
-| Model | `claude-opus-5-5` |
+| Model | One setting, `CLAIR_MODELS`, maps each kind of run (`capture`, `chat`, `build`) to a model. For DevDay all three are `claude-opus-5-5`, for accuracy on stage. After DevDay, capture and chat move to `claude-haiku-5-5` and build to `claude-sonnet-5-5`, once the evals in §16 pass on them; the cost case is `founder/cfo.md`. Check each model's API differences (thinking, effort) in the claude-api skill before switching |
 | Thinking | Adaptive; it cannot be turned off on this model. We omit `thinking` (same as `{"type": "adaptive"}`) |
 | Effort | `output_config={"effort": "low"}` for capture, answer and ask; `"medium"` for build. Set explicitly on every call (the model's default is medium). Chosen once per run: `medium` when the turn starts in the Build flow or its text matches the build check ("make", "build", "track", "an app for"), otherwise `low` |
 | `max_tokens` | 16000 per call |
@@ -491,9 +500,14 @@ class Op(Closed):
 def propose_changes(title: str, summary: str, ops: list[Op]) -> str: ...
 # → {change_set_id, lines, targets, deltas, warnings}
 
-def propose_app(name: str, purpose: str, spec: AppSpec) -> str: ...
+def propose_app(name: str, purpose: str, spec: AppSpec,
+                rows: list[RowInsert] = [], stitches_into: list[Stitch] = []) -> str: ...
 # AppSpec: the shared contract (ui-tech-plan §3), Pydantic on the server
-# → {change_set_id, preview: "build"}
+# rows: real records taken from Sam's input (a photo, a file, a sentence), saved on
+#   confirm with the app. Unlike spec examples, they are Sam's data, not samples.
+# stitches_into: stitches the new app needs on an existing app (a stitch lives on the
+#   receiving app, backend §5), added to that app's page block by the same change set.
+# → {change_set_id, preview: "build", targets}
 ```
 
 `fields` is a list of key/value pairs rather than an object because strict schemas need closed objects (the same reason ui-tech-plan's `ProposalDraft` uses pairs). `get_usuals` returns `record_id` (the latest record for that name, which holds the `usual` mark) so Clair can update the mark.
@@ -642,7 +656,56 @@ def run(ctx: RunContext, messages: list[dict]) -> None:
 
 Traces use the demo account (§8). `→` is an SSE event sent to the phone. Ids are shortened.
 
-### 12.1 Receipt (the judged path)
+### 12.0 Build an app from a photo, connected on arrival (demo beat 1)
+
+Input: Sam taps Clair, takes a photo of a printed car maintenance card and types (or says) "make this an app". The card reads: "Maintenance schedule. Oil and filter: every 5,000 mi or 6 months. Tire rotation: every 7,500 mi. Engine air filter: every 15,000 mi. Last service: 06/05/2026 at 57,500 mi. Next oil change: 12/05/2026 or 62,500 mi." The text matches the build check, so the run uses effort medium and the `build` model.
+
+1. → `status {text: "Looking at your photo…"}`. Call 1: `report_understanding(kind="document", summary="Car maintenance card: 3 services, next oil change Sat 5 Dec or 62,500 mi")` → `understood`.
+2. Budget, Calendar and their fields are in the snapshot, so there's no read call. `propose_app(name="Car", purpose="Keep up with car maintenance", spec, rows, stitches_into)`:
+   - `spec`: collections `services {name, every_miles number, every_months number, last_done date, next_due date}` (calendar on `next_due`) and `log {at date, service relation(services), cost money, miles number, shop text}`. Tabs Services and Log. Face `{agg: min, from: car/services, field: next_due}`, label "next service".
+   - `rows`: Oil and filter (5,000 mi, 6 months, last done 2026-06-05, next due 2026-12-05), Tire rotation (7,500 mi), Engine air filter (15,000 mi).
+   - `stitches_into`: on Budget, `car/log → budget/spend` (amount ← cost, at ← at, note ← shop, category ← Transport).
+3. Validation passes (one face, at least 3 fields, the stitch target exists). Dry run: a new app; Calendar gains "Oil change" on Sat 5 Dec (today stays 3); Budget gains the stitch, with no money moving yet. → `proposal`. Card:
+   ```
+   Make a Car app?                                  (basted)
+   From your maintenance card: 3 services.
+   ● Car        new app · Services and Log · next: Oil and filter, Sat 5 Dec
+   ● Calendar   Oil change · Sat 5 Dec
+   ● Budget     service costs go to Transport
+   [ Make it ]   Preview
+   ```
+4. Sam taps **Make it**. One change set writes the page, the two collections, the 3 service rows and Budget's new stitch. The Car patch appears on Home (8 → 9 apps), and on the laptop's Home without a refresh. Credits: 10.
+
+**The 5-second fill.** Sam photographs an oil-change receipt: "Campus Auto, Fri 11/20/2026 4:30 pm, oil and filter change $44.99, mileage 61,980". Clair calls `propose_changes`: insert `car/log {at: 2026-11-20, service: Oil and filter, cost: 44.99, miles: 61980, shop: "Campus Auto"}` and update Oil and filter `{last_done: 2026-11-20, next_due: 2027-05-20}`. The new stitch adds a Budget spend. Card: **Add to 3 apps**:
+- Car: logged, next oil change Thu 20 May 2027.
+- Budget: Transport $44.99, $412 → $367.
+- Calendar: Oil change moves from Sat 5 Dec to Thu 20 May 2027.
+
+On confirm, Transport reads $86.99 of $100. Credits: 5.
+
+Target: build proposal in 15 s or less; the fill in 10 s or less. "Use sample" replays a recorded run of each.
+
+### 12.0a Whiteboard into a course note (fallback beat)
+
+Input: Sam opens Notes → CS 3500 → New note, taps Clair and takes a photo of a whiteboard (a clean printed board for the stage, also the "Use sample" fixture). It reads: "CS 3500 · Design patterns. Observer: the subject keeps a list of listeners and notifies them on change. Strategy: swap an algorithm behind one interface. Factory: one place decides which class to build. HW 4 (Observer) due Tue 11/24 11:59 pm". The turn carries `context {app: notes, record_id: nb_cs3500}`.
+
+1. → `status {text: "Looking at your photo…"}`. Call 1 (effort low) returns two tool calls:
+   - `report_understanding(kind="note", summary="CS 3500 whiteboard: design patterns, and HW 4 due Tue 24 Nov", confidence=0.95)` → `understood`.
+   - `propose_changes(title="CS 3500 notes", summary="A note and a due date.", ops=[insert notes/notes {title:"Design patterns", body:"<the three patterns as a short list>", notebook:"nb_cs3500", at:"2026-11-20T17:45:00-07:00", photo:"<storage path>"}, insert classes/due {title:"HW 4 (Observer)", kind:"assignment", class:"c03", at:"2026-11-24T23:59:00-07:00", done:false}])`.
+2. Validation passes; `due` is a calendar collection, so Calendar is a target through `*dated`. Dry run: Notes 3 → 4 this week; Classes 2 → 3 due this week; Calendar gains HW 4 on Tue (today stays 3). → `proposal`. Card:
+   ```
+   CS 3500 notes                                     (basted)
+   A note and a due date. Adding updates 3 apps:
+   ● Notes       CS 3500 · Design patterns
+   ● Classes     HW 4 (Observer) · due Tue 24 Nov · 2 → 3 due this week
+   ● Calendar    HW 4 · Tue 24 Nov, 11:59 pm
+   [ Add to 3 apps ]   Review items
+   ```
+3. → `done {status: complete}`. Sam taps "Add to 3 apps"; the laptop, open on Notes → CS 3500, shows the new note with its "just changed" tag.
+
+Without `context`, Clair picks the notebook from the board's heading ("CS 3500") and asks with `ask_user` only when nothing on the photo names a course. Target: proposal in 10 s or less.
+
+### 12.1 Receipt (demo beat 2)
 
 Input: photo of the Corner Market receipt. 5:41 pm, total $35.83: Oat milk 3.49, Eggs dozen 4.29, Bananas 1.87, Chicken thighs 8.62, Rice 5 lb 6.99, Spinach 3.29, Greek yogurt 4.29, Coffee beans 2.99.
 
@@ -837,6 +900,9 @@ How we hold them:
 
 | Set | Cases |
 |---|---|
+| Build from a photo | 3 (the demo maintenance card: expect a Car app with 3 service rows, `next_due` in Calendar and the Transport stitch on Budget, and no other app changed; a club schedule flyer: an app whose events land in Calendar; a photo that isn't app-shaped, like a dog: no `propose_app`) |
+| Fill the app just built | 2 (the Campus Auto receipt after the Car app exists: a log row, the Oil and filter update and a Transport spend; the same receipt before the Car app exists: a Budget spend plus an offer to make the app, never a write into a missing app) |
+| Course notes | 3 (the CS 3500 demo whiteboard: expect a note in nb_cs3500 plus HW 4 in Classes; a lecture slide with no due date: a note only, 1 app; a board that names no course, opened without `context`: one `ask_user` for the course) |
 | Receipts | 5 (the Corner Market demo receipt, 3 real team receipts, 1 crumpled or blurry) |
 | Fridges | 3 (the demo fridge after the receipt: expect Butter, Cheddar, Orange juice, Hummus offered and none of the receipt items; a full fridge with nothing low; a dark photo) |
 | Schedules | 2 (with and without an end date) |
@@ -860,7 +926,7 @@ Graded checks, each pass or fail per run:
 | Citations | Answers name every app their figures come from (AB-7) |
 | Latency | `understood` and `proposal` times recorded; reported, not gated, except the demo receipt (proposal ≤ 10 s on 4 of 5 runs) |
 
-Gates: the demo receipt passes 5 of 5 runs; injection and no-write checks pass on every run; everything else at least 4 of 5. Run the whole set before the demo and again whenever the system prompt, a tool description or the snapshot format changes.
+Gates: the demo build, its fill, the demo whiteboard and the demo receipt each pass 5 of 5 runs; injection and no-write checks pass on every run; everything else at least 4 of 5. Run the whole set before the demo and again whenever the system prompt, a tool description or the snapshot format changes.
 
 ---
 

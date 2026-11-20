@@ -1,0 +1,13 @@
+{
+  "id": "P003",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "I'd download it the day I saw it and play with the free tier, snap a few whiteboards, build a notes app. By week two I'd be back in Obsidian like every other time. Five apps and 50 actions is more than enough for a week of poking around, so I'd never hit the paywall.",
+  "objection": "My notes already live in Obsidian and Notion and they cost me next to nothing. Moving years of notes into a new app that might be gone in a year isn't worth it, and I already know I quit these things.",
+  "would_change_my_mind": "If it imported my whole Obsidian vault or Notion workspace and the whiteboard-to-organized-notes thing was so good I kept reaching for it after the first week, without me having to rebuild everything.",
+  "price_too_cheap": 1,
+  "price_cheap": 3,
+  "price_expensive": 8,
+  "price_too_expensive": 15
+}

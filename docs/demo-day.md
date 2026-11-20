@@ -12,33 +12,30 @@ The pitch is 90 seconds in eight beats. Only beat 4 is screen work, and the rest
 | --- | --- | --- | --- |
 | 1 | 0:00-0:10 | Hook | "Hands up if you pay for more than three apps to manage your money, workouts or to-dos. Keep it up if they don't talk to each other." |
 | 2 | 0:10-0:20 | Problem with our numbers | "We surveyed [N] U students this week. They pay for [X] apps, about $[Y] a month, and none of them share data." Use real numbers only; PRODUCT.md says none exist yet. |
-| 3 | 0:20-0:30 | What it is, who we are | *"Quilt is one app that builds the apps you describe and stitches them together. Tell Clair anything, and every app it touches updates."* (Was: "builds the tabs you describe".) |
+| 3 | 0:20-0:30 | What it is, who we are | *"Describe any app and Clair builds it: notes for each class, a workout log, a car tracker. Fill it from anywhere: type it, say it, snap it, drop a file. It's on your laptop before you sit down."* |
 | 4 | 0:30-0:55 | Magic moment | See 4a to 4j below. |
-| 5 | 0:55-1:05 | Why not Notion | *"Notion makes you build it and type into it. Quilt builds an app from a sentence and fills it from whatever you tell Clair."* (Was: "fills itself from a photo".) |
-| 6 | 1:05-1:15 | Traction and model | "[N] students joined our waitlist in [D] days. Free to start, $6 a month for unlimited apps and Clair." |
+| 5 | 0:55-1:05 | Why not Notion | *"Notion makes you build it. AI app builders build apps that sit alone. Quilt's apps arrive connected to your calendar, your budget and each other, and nothing changes without your OK."* |
+| 6 | 1:05-1:15 | Traction and model | "[N] students joined our waitlist in [D] days. Free to start, $6 a month, $4 for students." |
 | 7 | 1:15-1:25 | Bigger vision | "Students first. But parents, caregivers, athletes and freelancers all pay for apps that don't talk, or need one nobody built." |
 | 8 | 1:25-1:30 | Close | "Quilt: your life, stitched together." |
 
-### Beat 4, the receipt (25 s, must work)
+### Beat 4, build an app from a photo, then fill it (25 s, must work)
 
-With the Clair button, the receipt is one example of telling Clair something. The receipt is Corner Market, $35.83, 5:41 pm.
+The unique part is the build: one photo becomes a working app that's already connected to your other apps. **Plan (Nov 19):** record a clean run of Clair doing the build (steps 4b to 4d) and show it during the pitch. Say on stage that it's a recording ("here's a run we recorded this morning"), as `spec/prd.md`'s escalation rule asks, then do the 5-second fill live if the app is up. Capture follows in 5 seconds to show the new app fills like any other. If the build isn't solid at the go/no-go, run the whiteboard beat or the grocery receipt instead (`spec/clair-agent.md` §12.0a and §12.1).
 
 | Step | ~Time | Action on the phone | What the room sees |
 | --- | --- | --- | --- |
-| 4a | 0:30 | Home | "Evening, Sam. $412 left this month. Pull day at 6 pm." |
-| 4b | 0:32 | Tap **Clair** (right cell of the pinned bar) | Sheet: "Tell Clair anything", with chips for Talk, Photo and File. Say: *"Type it, say it, or show it. Tonight, a receipt."* |
-| 4c | 0:35 | Tap **Photo** and shoot the known-good receipt | Viewfinder, then the shutter |
-| 4d | 0:37 | Clair reads it | Spool "working" and "Reading the receipt…". With real AI this can take 4-10 s; past 6 s the status line says what it is still doing. |
-| 4e | 0:45 | Review card: Corner Market, $35.83, 8 items, "Adding updates 3 apps", "Budget $412 → $376" | Nothing is saved yet (basted edge) |
-| 4f | 0:47 | Tap **Add to 3 apps** | Thread pull from the card to the Budget, Groceries and Calendar pins; the status line rolls to $376 |
-| 4g | 0:49 | Open Budget | "$376 left of $1,200 · just changed · Was $412" |
-| 4h | 0:51 | (Groceries) | Groceries 12 → 4 to buy |
-| 4i | 0:52 | Open Calendar | Calendar 3 → 4 today: "Grocery trip, Corner Market 5:41 pm · just changed", plus "Use the chicken and spinach" on Tue 24 Nov |
-| 4j | 0:53 | Point at the laptop | Budget shows $376 with the "just changed" tag. No thread pull on the other device, by decision. |
+| 4a | 0:30 | Home | "Evening, Sam. $412 left this month." 8 apps. Say: *"I have a car. Quilt doesn't have a car app. Watch."* |
+| 4b | 0:32 | Tap **Clair → Photo**, shoot the printed maintenance card, type or say *"make this an app"* | Viewfinder, shutter, "Looking at your photo…", then the build in chalk |
+| 4c | 0:40 | Clair's card | "Make a Car app? 3 services. Calendar: Oil change Sat 5 Dec. Budget: service costs go to Transport." Say: *"It's already wired to my calendar and budget."* |
+| 4d | 0:43 | Tap **Make it** | The Car patch sews onto Home; point at the laptop, where it has appeared too |
+| 4e | 0:46 | Tap **Clair → Photo**, shoot the oil-change receipt | Card: Add to 3 apps: Car log, Budget $412 → $367, Calendar oil change moves to 20 May |
+| 4f | 0:51 | Tap **Add to 3 apps** | Thread pull to the pins; the status line rolls to $367 |
+| 4g | 0:53 | Undo on the toast | It goes back. Say: *"Any app you can describe, built and connected in seconds."* |
 
 The must-work path ends with Undo on the toast. The Budget limit is $1,200 for November, so $412 before the receipt and $376 after.
 
-If Clair hasn't proposed anything after 12 s, "Use sample" appears. Any photo works live, so a judge's photo is fine too.
+If Clair hasn't proposed anything after 12 s, "Use sample" appears (a recorded build run, or the stored oil-change receipt). Any photo works live, so a judge's photo is fine too.
 
 Voice is real. Speech goes in through on-device speech recognition, and Clair speaks a one-line reply only when Sam talked first. A hidden toggle keeps the scripted transcript as the stage fallback.
 
@@ -103,8 +100,9 @@ Checked against the files in `design/` on the evening of Nov 19. The Groceries n
 ### Must fix before the pitch
 
 1. **Run the receipt beat end to end in the real app** on the Android phone and the laptop, on the hotspot, including "Use sample". Until it does, the live demo is a no-go. If it can't be made to work, decide early to demo the prototypes and say so, because DevDay judges only the feature built on the day.
-2. **Record the backup video** of beat 4. None exists yet. The one in `~/workfiles/ProjectWork/demovideo` is about Lassonde DevLab, not Quilt.
-3. **Make the deck** for the slide beats (1, 2, 6, 7, 8), with real survey and waitlist numbers for beats 2 and 6.
+2. **Make the build beat work:** `propose_app` with `rows` and `stitches_into`, the Make it confirm, and the new patch appearing on the laptop. Print the maintenance card and the Campus Auto receipt, record a good run of each for "Use sample", and pass their test cases (`spec/clair-agent.md` §16). Seed the Notes app too: the whiteboard is the first fallback. Decide at the go/no-go which beat opens.
+3. **Record the backup video** of beat 4. None exists yet. The one in `~/workfiles/ProjectWork/demovideo` is about Lassonde DevLab, not Quilt.
+4. **Make the deck** for the slide beats (1, 2, 6, 7, 8), with real survey and waitlist numbers for beats 2 and 6.
 
 ### Nice to have
 

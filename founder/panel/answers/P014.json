@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Honestly my mess of apps is exactly the problem this says it fixes, so I'd download the free one and mess around with a workout log. But I'm not paying $6 a month on my budget until it's proven it can actually replace stuff I already have for free.",
+  "objection": "All my class notes, my budget spreadsheet and my gym history already live in other apps. Moving all that over sounds like a weekend I don't have, and if I only move half of it I've just got a sixth app.",
+  "would_change_my_mind": "If it could pull in my existing notes and workout history from the apps I already use, for free, in a few minutes, so switching costs me nothing.",
+  "price_too_cheap": 1,
+  "price_cheap": 2,
+  "price_expensive": 5,
+  "price_too_expensive": 9
+}

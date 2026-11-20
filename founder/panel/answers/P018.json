@@ -1,0 +1,13 @@
+{
+  "id": "P018",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "I already built my whole system in Notion with databases and templates, and it works on my phone and laptop. I might poke at the free tier, but I'm not paying $6 a month on a $3,000 income to rebuild what I already have.",
+  "objection": "Nothing here says who can see my notes and data or whether I can export everything if I leave. An assistant reading my whiteboard photos and purchases, with no word on export, sounds like a lock-in trap.",
+  "would_change_my_mind": "A clear privacy policy plus one-click full export (CSV or Markdown) and a Notion import that keeps my databases, so switching costs me nothing.",
+  "price_too_cheap": 1,
+  "price_cheap": 2,
+  "price_expensive": 5,
+  "price_too_expensive": 8
+}
