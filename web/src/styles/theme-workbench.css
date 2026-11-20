@@ -68,7 +68,7 @@
 :root[data-look='workbench'] [data-dye='lavender']  { --p-bg: #EADCF0; --p-ac: #6B3F7A; }
 :root[data-look='workbench'] [data-dye='pear']      { --p-bg: #E7EBC2; --p-ac: #5A6418; }
 :root[data-look='workbench'] [data-dye='blush']     { --p-bg: #F3DCE0; --p-ac: #8A3F55; }
-:root[data-look='workbench'] [data-dye='linen']     { --p-bg: #F3ECDD; --p-ac: #665847; }
+:root[data-look='workbench'] [data-dye='linen']     { --p-bg: #E9DFC9; --p-ac: #665847; }
 
 /* patches: flat cloth with a stitched seam; gold hairline when something is new */
 :root[data-look='workbench'] .patch { background-image: none; box-shadow: none; }

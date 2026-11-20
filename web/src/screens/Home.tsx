@@ -113,10 +113,7 @@ function PatchTile({ p, place, big, tall, sewing }: { p: Patch; place: Place; bi
       <span className="name"><Icon name={p.icon} size={16} sw={1.8} /><span className="nm">{p.name}</span></span>
       {big
         ? <Tag show={p.changed || !!p.isNew} text={p.isNew ? 'new' : 'just changed'} id={p.isNew ? undefined : `patch:${p.key}`} />
-        : <>
-            <Tag show={!!p.isNew} text="new" />
-            <Notch show={p.changed && !p.isNew} id={`patch:${p.key}`} className="notch2" />
-          </>}
+        : <Notch show={!!(p.changed || p.isNew)} id={`patch:${p.key}`} className="notch2" />}
       <span className="face"><span className="fig"><Roll text={p.face.text} className="num" /></span><span className="unit">{p.face.label}</span></span>
     </Link>
   );

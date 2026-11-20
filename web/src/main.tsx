@@ -30,7 +30,8 @@ try {
   if (q.has('look')) localStorage.setItem('quilt-look', q.get('look') ?? 'default');
   const look = localStorage.getItem('quilt-look') ?? (import.meta.env.VITE_LOOK as string | undefined) ?? 'workbench';
   if (look !== 'default') document.documentElement.dataset.look = look;
-  const scheme = q.get('scheme');
+  if (q.has('scheme')) localStorage.setItem('quilt-scheme', q.get('scheme') ?? 'auto');
+  const scheme = localStorage.getItem('quilt-scheme');
   if (scheme === 'dark' || scheme === 'light') document.documentElement.dataset.theme = scheme;
 } catch { /* storage can be blocked: the default look is fine */ }
 
