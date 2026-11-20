@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { errorText, request } from '../api/client';
 import type { Collection, CommandResult, Field, Patch, Rec } from '../api/types';
-import { addDays, dayKey } from '../lib/format';
+import { addDays, dayKey, relIds, singular } from '../lib/format';
 import { afterCommand, toast } from '../lib/store';
 import { Disclosure } from './Disclosure';
 import { Icon } from './Icon';
+import { BodyField, LinkedSection, RelationPicker, SYSTEM_KEYS, useLive } from './Links';
 import { startValues } from './QuickAdd';
 import { Sheet } from './Sheet';
 
-const HIDDEN = new Set(['relation', 'formula', 'repeat', 'bool']);
-const SYSTEM = new Set(['source', 'ext_id', 'bought_on', 'trip', 'usual']);
-/** A row's name for "Add a note" and "New note": the collection's own `label`, else its name made singular. */
-export const singular = (c: Collection) => (c.label ?? c.name.replace(/(ies)$/i, 'y').replace(/(ss|x|ch|sh)es$/i, '$1').replace(/s$/i, '')).toLowerCase();
+const HIDDEN = new Set(['formula', 'repeat', 'bool']);
+const SYSTEM = SYSTEM_KEYS;
+export { singular };
+const NONE: Rec = { id: '', position: '', version: 0, properties: {} };
 
 type Props = {
   app: string; appName: string; collection: Collection; now: string; open: boolean; onClose: () => void; onAdded: () => void;
@@ -39,8 +40,11 @@ function toForm(c: Collection, r: Rec): Record<string, string> {
  * Tomorrow chips; optional fields past the first three wait under "More details". Edit adds
  * where the row came from and Delete | Save (board "Edit an item").
  */
-export function AddSheet({ app, appName, collection: c, defaults = {}, now, open, onClose, onAdded, record, apps = [] }: Props) {
-  const fields = c.fields.filter((f) => !HIDDEN.has(f.type) && !SYSTEM.has(f.key));
+export function AddSheet({ app, appName, collection: c, defaults = {}, now, open, onClose, onAdded, record: opened, apps = [] }: Props) {
+  // the row as the store has it now: a link made from this sheet changes the record under it (its version too)
+  const live = useLive(app, c, opened ?? NONE);
+  const record = opened ? live : undefined;
+  const fields = c.fields.filter((f) => !HIDDEN.has(f.type) && !SYSTEM.has(f.key) && (f.type !== 'relation' || !!f.target));
   const ordered = [...fields.filter((f) => f.key === c.titleField), ...fields.filter((f) => f.key !== c.titleField)];
   const main = record ? ordered : ordered.filter((f, i) => f.required || i < 3 || f.key === c.dateField);
   const extra = ordered.filter((f) => !main.includes(f));
@@ -51,11 +55,15 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
     for (const f of fields) if (f.key === c.dateField && f.required && !v[f.key] && now) v[f.key] = f.type === 'date' ? dayKey(now) : now.slice(0, 16);
     return v;
   };
+  const relKeys = new Set(fields.filter((f) => f.type === 'relation').map((f) => f.key));
+  // relation values are arrays of record ids, held apart from the typed strings
+  const freshRels = (): Record<string, string[]> => Object.fromEntries([...relKeys].map((k) => [k, record ? relIds(record.properties[k]) : defaults[k] ? [defaults[k]] : []]));
   const [vals, setVals] = useState<Record<string, string>>(fresh);
+  const [rels, setRels] = useState<Record<string, string[]>>(freshRels);
   const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  useEffect(() => { if (open) { setVals(fresh()); setMore(false); setErr(null); } }, [open, record?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (open) { setVals(fresh()); setRels(freshRels()); setMore(false); setErr(null); } }, [open, record?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { // a new row asks for its title straight away (a fine pointer only: on a phone the keyboard would cover the form)
     if (!open || record || !matchMedia('(pointer: fine)').matches) return;
     const t = setTimeout(() => document.getElementById(`f_${c.titleField}`)?.focus({ preventScroll: true }), 60);
@@ -66,7 +74,8 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setErr(null);
-    const out = Object.fromEntries(Object.entries(vals).filter(([, v]) => v !== '')); // as typed; the server parses (backend.md §3)
+    const out: Record<string, unknown> = Object.fromEntries(Object.entries(vals).filter(([k, v]) => v !== '' && !relKeys.has(k))); // as typed; the server parses (backend.md §3)
+    for (const k of relKeys) { const ids = rels[k] ?? []; if (record || ids.length) out[k] = ids; } // an edit always says what it holds, so clearing the last one clears it
     try {
       const r = record
         ? await request<CommandResult>('PATCH', `/records/${record.id}`, { fields: out, base_version: record.version })
@@ -92,6 +101,8 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
   const input = (f: Field) => {
     const v = vals[f.key] ?? '';
     const id = `f_${f.key}`;
+    if (f.type === 'relation') return <RelationPicker field={f} app={app} value={rels[f.key] ?? []} onChange={(ids) => setRels((x) => ({ ...x, [f.key]: ids }))} labelId={`${id}_l`} />;
+    if (f.type === 'text' && f.multiline) return <BodyField id={id} value={v} onChange={(x) => set(f.key, x)} placeholder={f.label} app={app} recId={record?.id} />;
     if (f.type === 'select') {
       return (
         <span className="chips" role="radiogroup" aria-labelledby={`${id}_l`}>
@@ -133,7 +144,7 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
   };
   const row = (f: Field) => (
     <div key={f.key} className="add-field">
-      <label id={`f_${f.key}_l`} htmlFor={`f_${f.key}`}>{f.label}</label>
+      {f.type === 'relation' ? <span id={`f_${f.key}_l`} className="lbl">{f.label}</span> : <label id={`f_${f.key}_l`} htmlFor={`f_${f.key}`}>{f.label}</label>}
       {input(f)}
     </div>
   );
@@ -151,6 +162,7 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
             <Disclosure open={more}>{extra.map(row)}</Disclosure>
           </>
         )}
+        {record && <LinkedSection app={app} collection={c} record={record} onNavigate={onClose} />}
         {from && <span className="provenance" data-dye={from.dye}><i className="dyedot" />From {from.name}</span>}
         {via?.workflow && <span className="provenance">Added by a rule</span>}
         {err && <p className="err" role="alert">{err}</p>}

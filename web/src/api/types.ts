@@ -17,6 +17,8 @@ export type Field = {
   options?: Option[];
   required?: boolean;
   target?: CollectionRef; // relation
+  many?: boolean; // relation: more than one target (a note in several notebooks); default one
+  multiline?: boolean; // text: a textarea (Notes' body); `[[Title]]` in it links to that record
   unit?: string; // assumed: display hint for number fields ("mi", "min")
   unitFirst?: boolean; // assumed: "energy 2" rather than "2 energy"
 };
@@ -126,8 +128,24 @@ export type AppSpec = {
   workflows?: Workflow[];
 };
 
+// ---- links (Nov 20, ui-tech-plan.md §3 "Links", backend.md §2, §5, §10)
+/**
+ * One end of a link between two records, in any app. `title` is the other record's title field, filled by the server so the
+ * client needs no other app loaded; a deleted record reads "(deleted)" (strike it through, make it inert). In `_backlinks`,
+ * `via` is the key of the relation field that points here ("notebook"); a hand-made or `[[Title]]` link has no `via`.
+ */
+export type LinkRef = { app: string; ref: CollectionRef; id: string; title: string; via?: string };
+
 // A record as the API sends it: a block (backend.md §2.2).
+// Reserved keys in `properties` start with `_` and are never fields (backend.md §2):
+//   `_via`       {app, record_id}  written by a stitch ("from Groceries ›")
+//   `_links`     LinkRef[]  links made FROM this record to any record in any app: by hand ("Link to…") or by `[[Title]]` in a text field (stored)
+//   `_backlinks` LinkRef[]  read-only, derived by the server: records whose `_links` point here, and rows whose relation field points here (`via`)
+// `_links` and `_backlinks` are always present (possibly empty) on a record sent by GET /apps/{id}; a build-preview `example` row has neither.
 export type Rec = { id: string; position: string; version: number; properties: Record<string, unknown>; example?: boolean /* assumed: build preview rows */ };
+/** GET /search?q=&app=&exclude= : the link picker and the `[[` suggestions. At most 20, titles matched case-insensitively. `snippet`: the row's other text ("Wed 25 Nov · Calculus I"), may be empty. */
+export type SearchHit = { app: string; ref: CollectionRef; id: string; title: string; snippet: string };
+export type SearchResponse = { hits: SearchHit[] };
 // A row of the virtual *dated source (backend.md §3, §8a).
 export type DatedRow = {
   at: string; // date or datetime

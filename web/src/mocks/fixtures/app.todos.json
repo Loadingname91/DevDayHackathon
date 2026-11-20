@@ -171,7 +171,15 @@
      "title": "Return library books",
      "due": "2026-11-20T21:00:00-07:00",
      "place": "Marriott Library",
-     "done": false
+     "done": false,
+     "_links": [
+      {
+       "app": "classes",
+       "ref": "classes/classes",
+       "id": "c01",
+       "title": "ECON 1010"
+      }
+     ]
     }
    },
    {
@@ -203,7 +211,15 @@
     "properties": {
      "title": "Call home",
      "due": "2026-11-22",
-     "done": false
+     "done": false,
+     "_links": [
+      {
+       "app": "notes",
+       "ref": "notes/notes",
+       "id": "n_2",
+       "title": "Gift ideas for mom"
+      }
+     ]
     }
    },
    {

@@ -276,7 +276,15 @@
      "name": "Chicken thighs",
      "list": "l_weekly",
      "status": "to_buy",
-     "usual": "auto"
+     "usual": "auto",
+     "_links": [
+      {
+       "app": "notes",
+       "ref": "notes/notes",
+       "id": "n_8",
+       "title": "Chicken and rice"
+      }
+     ]
     }
    },
    {

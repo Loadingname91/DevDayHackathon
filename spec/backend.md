@@ -68,6 +68,7 @@ A subset of v3 §3.1 and §10. Three block types are stored: `page` (an app), `c
 
 - Select options are `{id, label}` objects, not strings. Records store the option `id`, so renaming a list only changes a label. An option may carry an optional `hint` ("Sat 21 Nov", "Once a month") that the list chip shows; it is display text, not data.
 - New field types: `relation` (`target: CollectionRef`; value is an array of record UUIDs, v3 §3.4), `formula` (a row formula, section 6) and `repeat` (section 3).
+- **Links (Nov 20).** A `relation` field may carry `many: true` (one is the default; the value is an array of record UUIDs either way), and a `text` field may carry `multiline: true` (a textarea). Any record can also be linked to any record in any app, by hand or with `[[Title]]` in a text field (reserved keys below, endpoints in section 10).
 - `ViewBase` gains `addAt: 'start' | 'end'` (section 4).
 - A collection opts into Calendar with `calendar: true` (plus a `dateField`); only those collections feed `*dated`, Calendar and Next up (section 3). `label` is the singular name the Calendar row shows ("Grocery trip · Corner Market 5:41 pm").
 - An app has `settings` the user can change without editing the layout (Budget's monthly `limit`, in cents). A face reads one with the term `{setting: "limit"}` (section 6).
@@ -75,7 +76,16 @@ A subset of v3 §3.1 and §10. Three block types are stored: `page` (an app), `c
 - The app's slug is `key` (was `id`). `CollectionRef` stays `"<app key>/<collection key>"`; the API's app id is the page block's UUID.
 - `Row` is a record block. `done`, `proposalId` and `via` become: a `done` or `status` field declared in the collection; the `events.change_set_id` of the write; a reserved `_via` property (below).
 
-**Reserved record keys.** Properties starting with `_` are system data, never fields: `_via: {app, record_id}` marks a record written by a stitch ("from Groceries ›", FR-S4).
+**Reserved record keys.** Properties starting with `_` are system data, never fields; a client can't write them (`PATCH`/`POST` drop them):
+
+- `_via: {app, record_id}` marks a record written by a stitch ("from Groceries ›", FR-S4).
+- `_links: LinkRef[]` (Nov 20) are the links made **from** this record to any record in any app, by hand ("Link to…") or from `[[Title]]` in a text field. `LinkRef = {app, ref, id, title}`: the target's app key, collection and id, and its title field, filled by the server so a client needs no other app loaded.
+- `_backlinks: LinkRef[]` (Nov 20) are **derived on every read, never stored**: the records whose `_links` point here, and the rows whose relation field points here (`via` is that field's key, "notebook"). A deleted source drops out; a deleted target stays in the source's `_links` with `title: "(deleted)"` (edge case 55).
+
+`GET /apps/{id}` sends both lists on every record it returns (empty arrays when there is none; a build-preview `example` row has neither). The stored half is the `links` table below, not `properties`: `_links` is assembled at read time, so a record's own `version` doesn't move when someone links to it.
+
+**Links storage (Nov 20).** One row per link, workspace-scoped, RLS like `blocks` (read for members, no client writes). `source` says how it was made, so editing a text field can replace the links its `[[Title]]`s made without touching hand-made ones.
+
 
 **Money** is integer cents. **Datetimes** are ISO 8601 with offset; **dates** are `YYYY-MM-DD` (section 3).
 
@@ -170,6 +180,22 @@ create table events (
 create index events_ws_seq    on events (workspace_id, server_seq);
 create index events_block_seq on events (block_id, server_seq);
 create index events_set       on events (change_set_id);
+
+-- ---- links between records (Nov 20): `_links` on the wire; `_backlinks` are derived, never stored ----
+
+create table links (
+  workspace_id  uuid not null references workspaces(id) on delete cascade,
+  from_id       uuid not null,
+  to_id         uuid not null,
+  source        text not null default 'manual' check (source in ('manual', 'text')),   -- 'text': made by [[Title]] in a text field
+  field_key     text,                                          -- for 'text': the field whose [[Title]] made it
+  position      int not null default 0,                        -- order in the record's _links
+  created_at    timestamptz not null default now(),
+  primary key (from_id, to_id),
+  foreign key (workspace_id, from_id) references blocks (workspace_id, id),
+  foreign key (workspace_id, to_id)   references blocks (workspace_id, id)   -- same workspace (v3 §8.2); a deleted target keeps its row
+);
+create index links_to on links (workspace_id, to_id);          -- backlinks
 
 -- ---- Clair (design in clair-agent.md) ----
 
@@ -360,6 +386,7 @@ alter table usage_ledger      enable row level security;
 alter table join_codes        enable row level security;
 alter table join_attempts     enable row level security;
 alter table connections       enable row level security;   -- no policies: the API's service role only
+alter table links             enable row level security;
 
 create policy workspaces_read  on workspaces        for select to authenticated using (is_member(id));
 create policy members_read     on workspace_members for select to authenticated using (user_id = auth.uid());
@@ -367,6 +394,7 @@ create policy blocks_read      on blocks            for select to authenticated 
 create policy change_sets_read on change_sets       for select to authenticated using (is_member(workspace_id));
 create policy events_read      on events            for select to authenticated using (is_member(workspace_id));
 create policy notes_read       on clair_notes       for select to authenticated using (is_member(workspace_id));
+create policy links_read       on links             for select to authenticated using (is_member(workspace_id));
 -- clair_threads, clair_messages, clair_questions, agent_runs, llm_calls, tool_calls,
 -- usage_ledger, join_codes, join_attempts: RLS on, no policy, so clients can't read them at all.
 
@@ -748,12 +776,14 @@ Open: 4. Class work lives in Classes and shows in Home's Next up and Calendar th
 | `sessions` | Three repeating series from Tue 1 Sep: Pull day (Mon and Fri 6:00 pm), Leg day (Tue; 6:00 pm until Clair moved it to 7:00 am on Tue 17 Nov, a confirmed change set), Push day (Wed 6:00 pm). 46 occurrences from 1 Sep to 19 Nov, 5 skipped (Mon 7 Sep Labor Day; Mon 12, Tue 13, Wed 14 and Fri 16 Oct fall break), so **41 done since September**. This week: Mon Pull, Tue Legs and Wed Push done; Fri Pull day at 6 pm open |
 | `sets` | Logged in Workout → Today → Log a set. Lat pulldown starts at 100 lb and goes up 5 lb every two weeks from Mon 21 Sep (105 on 5 Oct, 110 on 19 Oct, 115 on 2 Nov, 120 on 16 Nov), so Progress reads "100 → 120 lb in 8 weeks". This week: Mon Pull (Lat pulldown 3×10 at 120, Seated cable row 3×12 at 100, Face pulls 3×15 at 40, Hammer curl 3×12 at 25, Pull-ups 3×8 at 0), Tue Legs (Goblet squat 3×10 at 45, lunges at 0), Wed Push (Dumbbell bench 3×10 at 40, Push-ups at 0). Volume this week (sum of weight × reps) is **12,450 lb**. Every earlier done session has one set row per planned set of its routine, at the plan's reps and weight, with Lat pulldown at the ramp weight for that date; skipped occurrences have no sets |
 
-**Notes.** The app Sam built for class notes. `notebooks` holds a folder per course, linked to its class, plus Personal. `notes` holds the notes. The face counts notes written this week (Mon to Sun), so it reads **3 this week**.
+**Notes.** The app Sam built for class notes. `notebooks` holds a folder per course, linked to its class, plus Personal. `notes` holds the notes; a note can sit in several notebooks, and some of them link to each other and to rows in other apps (Nov 20, links). The face counts notes written this week (Mon to Sun), so it reads **3 this week**: every note added for the links is dated before Mon 16 Nov.
 
 | Collection | Rows |
 | --- | --- |
 | `notebooks` | nb_econ ECON 1010 (class c01), nb_math MATH 1210 (c02), nb_cs3500 CS 3500 (c03), nb_personal Personal |
-| `notes` | Tue 10 Nov, MATH 1210, "Related rates examples". Sun 15 Nov, Personal, "Gift ideas for mom". **This week:** Mon 16 Nov 3:50 pm, CS 3500, "Unit testing with mocks"; Wed 18 Nov 3:55 pm, CS 3500, "Dependency injection"; Thu 19 Nov 10:30 am, ECON 1010, "Price elasticity". All made by Notes → folder → New note (typed) |
+| `notes` (8) | Mon 9 Nov 11:20 am, MATH 1210, "Chain rule recap" (n_6). Tue 10 Nov 12:40 pm, MATH 1210, "Related rates examples" (n_1). Sat 14 Nov 6:30 pm, Personal, "Chicken and rice" (n_8). Sun 15 Nov 10:30 am, **MATH 1210 and ECON 1010**, "Finals study plan" (n_7); Sun 15 Nov 8:15 pm, Personal, "Gift ideas for mom" (n_2). **This week:** Mon 16 Nov 3:50 pm, CS 3500, "Unit testing with mocks" (n_3); Wed 18 Nov 3:55 pm, CS 3500, "Dependency injection" (n_4); Thu 19 Nov 10:30 am, ECON 1010, "Price elasticity" (n_5). Each has a short body of two or three plain sentences (the exact text is `web/scripts/make-fixtures.mjs`). All made by Notes → folder → New note (typed) |
+
+**Links in the seed (Nov 20).** Notebook counts: MATH 1210 has 3 notes (n_1, n_6, n_7), ECON 1010 has 2 (n_5, n_7), CS 3500 has 2, Personal has 2; n_7 is in two notebooks. `[[Title]]` in note bodies (stored by the server as `source text` links): n_1 → "Chain rule recap" (n_6); n_7 → "Related rates examples" (n_1); n_4 → "Unit testing with mocks" (n_3). Links made by hand (`source manual`): n_7 → Homework 11 (Classes, `d02`); n_2 → the Thrift shop spend, Sat 14 Nov (Budget `sp_24`, $20.03); To-dos "Return library books" → ECON 1010 (`c01`); To-dos "Call home" → "Gift ideas for mom" (n_2); Groceries "Chicken thighs" on Weekly shop → "Chicken and rice" (n_8). So every app that shows the idea shows it from a seeded row, no figure on a face changes (Notes 3, Classes 2, To-dos 2, Groceries 12), and the demo's counts in this section are unaffected. The ids are the fixture's; the backend seed keeps its own ids and matches by title.
 
 The whiteboard example (not built for DevDay) would add the fourth this week, from a whiteboard photo (`spec/clair-agent.md` §12.0a): Notes 3 → 4 this week, Classes 2 → 3 due this week (HW 4, CS 3500, due Tue 24 Nov 11:59 pm), and Calendar gains HW 4 on Tue (today's count is unchanged).
 
@@ -842,13 +872,13 @@ v3 §4, in Python. Every change to `blocks` goes through `api/quilt/commands.py`
 
 The Realtime nudge needs no code: it fires from the inserts on `events`.
 
-**Commands** (closed set, v3 §4 cut down): `insert`, `update` (per field), `move` (reposition and, for a record, change `list` with it), `delete` (sets `deleted_at`), `restore` (clears it). Completing and skipping a repeat are built from `update`. Formula results are never commands; they're computed (section 6).
+**Commands** (closed set, v3 §4 cut down): `insert`, `update` (per field), `move` (reposition and, for a record, change `list` with it), `delete` (sets `deleted_at`), `restore` (clears it), and, since Nov 20, `link` and `unlink` (add or remove one row of `links`; see "Links" below). Completing and skipping a repeat are built from `update`. Formula results are never commands; they're computed (section 6).
 
 **Change sets** are v3's command groups: one user gesture, one Clair proposal, one template, one rebalance. Applied together, undone together.
 
 | Producer | Change set | Status at creation |
 | --- | --- | --- |
-| A gesture in an app (add, edit, tick, swipe, drag, new list) | `actor user`, `origin gesture` | `stitched` (applied at once; the toast offers Undo for at least 8 s, FR-S6) |
+| A gesture in an app (add, edit, tick, swipe, drag, new list, link, unlink) | `actor user`, `origin gesture` | `stitched` (applied at once; the toast offers Undo for at least 8 s, FR-S6) |
 | Clair's `propose_changes` | `actor clair`, `origin clair` | `basted` (nothing written to `blocks`) |
 | Clair's `propose_app` | `actor clair`, `origin clair` | `basted`, holding the new app; "Add to my apps" in the Build preview is its confirm |
 | Onboarding templates (`POST /templates/apply`) | `actor user`, `origin template` | `stitched` |
@@ -879,6 +909,14 @@ So the card's numbers are always computed from current data, never taken from Cl
 **Undo for DevDay: plain inverse, version check as a warning.** Undo writes every event's `old` back (an inserted block is undone by `delete`, a deleted block by `restore`) as one new change set. For each `(block_id, field_path)` it also looks for a later event on the same block and field (`server_seq > stitched_seq`); any it finds come back as `warnings: [{changed_since: {block_id, field, now, was}}]` and the toast says "Undone. 1 row had changed since." It never blocks. **Post-demo** (v3 §10.2): a later edit makes undo return `409 {conflicts}`, the client asks "Changed since. Restore anyway?", and `POST …/undo {force: true}` restores anyway.
 
 **Concurrent field edits.** `PATCH /records/{id}` sends the `base_version` it saw. Different fields changed since: apply. The same field changed since: apply in arrival order and return `warnings: [{superseded: field}]` so the client can toast. v3's conflict event with one-tap restore is deferred (section 12).
+
+**Links (Nov 20): the `link` and `unlink` commands.** A link is a row of `links` (section 2), made and undone like any gesture.
+
+- `link {from, to}`: inserts `(from_id, to_id)` with `source manual`. **Idempotent:** if the link already exists (made by hand or by a `[[Title]]`), nothing is written, the change set has no ops and Undo of it does nothing. Validation: both ids are live records of the caller's workspace (`404` otherwise, so ids from other workspaces don't leak); `from` is not `to` (`422`). The `events` row is `field_path = '_links'`, `old` and `new` the target id lists, so Undo is the plain inverse.
+- `unlink {from, to}`: deletes the row. Absent is a no-op. A link that came from a `[[Title]]` can be unlinked too; it stays unlinked until that field's text is saved again with the `[[Title]]` still in it.
+- **`[[Title]]` in a text field**, on every `insert` and `update` of one: the server reads each `[[Title]]` (trimmed, case-insensitive) and resolves it to a live record by its title field: **the same collection first, then every other collection**, apps in the workspace's app order, **first match wins**; the record itself never matches, and a collection whose title is a relation (Workout's sets) is not searched. A match becomes a `links` row with `source text` and `field_key`; an unresolved `[[Title]]` stays text and makes no link. The text is saved as typed. When the field is saved again, the `source text` rows of that field are recomputed: a `[[Title]]` removed from the text removes its link; hand-made rows are never touched. The same change set carries both the text update and the link changes, so one Undo reverts both.
+- **A deleted record** keeps the links that point at it: they read `title: "(deleted)"`, and restoring the record restores the title. Links *from* a deleted record are not shown as backlinks on their targets.
+- **Private apps (Cycle).** A link from or to a record of a private app is allowed, and its title is shown to the person like any other. What it must never do is reach Clair: the snapshot, the planning brief, `get_app`, `query_records` and `search_records` drop any `_links` or `_backlinks` entry whose target (or source) is in a private app with `settings.clair_read` off, and `GET /search` without `app=` skips private apps (so the picker doesn't offer them; `app=cycle` searches it). Clair reading `_links` at all is not built for DevDay.
 
 **Stitches between template apps.** A stitch is declared on the receiving app (`groceries/trips → budget/spend` lives on Budget). It fires only when both apps exist: a stitch whose `from` app is missing is kept, shown as "waiting for Groceries" in Arrange, and skipped by `expand`. Validation allows a missing `from` only for the template keys in section 10's templates table. So a Groceries-only user's receipt card reads "Adding updates 2 apps" (Groceries: 8 bought, 12 → 4 to buy; Calendar: "Grocery trip · Corner Market 5:41 pm") with **Add to 2 apps**, and no Budget line.
 
@@ -1129,7 +1167,9 @@ All paths are under `/api` on the Railway server; the site on Vercel calls them 
 | `GET /clair/runs/{id}/events` | `?after=<n>` | the run's SSE events as JSON after event `n` (fallback if SSE is buffered on the way to the client; the client polls every 500 ms) | new |
 | `GET /clair/notes` | | `Note[]` | new |
 | `DELETE /clair/notes/{id}` | | `204` | new |
-| `GET /search` | `?q=&app=` | `{hits: {app, record, field, snippet}[], elsewhere, ask}` | `GET /api/search` |
+| `GET /search` | `?q=&app=&exclude=`. Base build since Nov 20 (the link picker and the `[[` suggestions): `q` is matched case-insensitively as a substring of each record's **title field** (prefix matches first, then word starts, then the rest; an empty `q` lists the first 20); `app` limits to one app key; `exclude` is a record id left out (the record being edited). Private apps (Cycle) are searched only when `app` names them | `{hits: {app, ref, id, title, snippet}[]}`, at most 20. `snippet` is the first line of a multiline text field ("Hand a class its dependencies…") or else the collection's name ("Due"); it may be empty. Collections whose title is a relation (Workout's sets) are not searched. (The Beta shape with `elsewhere` and `ask` is dropped.) | `GET /api/search` |
+| `POST /records/{id}/links` | `{to: {ref, id}}`. Base build since Nov 20. Adds the link from this record to any record in any app (`link`, section 5); idempotent; `404` for an unknown record, `422` for itself | command result (a `stitched` gesture change set; `blocks` are the two records with their link lists; Undo via the change set). A repeat is a no-op change set | new |
+| `DELETE /records/{id}/links/{target_id}` | Base build since Nov 20. Removes the link (`unlink`); a link that isn't there is a no-op | command result (Undo via the change set) | new |
 | `GET /sync` | `?since=<seq>` | section 7 | `GET /api/changes` |
 | `GET /usage` | | `{period, granted, spent, left}` | new |
 | `POST /join-codes` | | `{code, expires_at}` (5 minutes), or `403` for a guest-only or unconfirmed account | new |
@@ -1151,11 +1191,13 @@ type Card =
 
 On DevDay `/home` returns only `change_set` cards; the other kinds are in the type so the client renders them when they ship.
 
+**Links on the wire (Nov 20).** Every record in `GET /apps/{id}` carries `properties._links` and `properties._backlinks` (section 2: `LinkRef = {app, ref, id, title, via?}`); `title` is the other record's title field, `"(deleted)"` for a deleted record. A relation's own value stays an array of ids (`notebook: ["nb_math", "nb_cs3500"]`); the row on the other end sees it as a backlink with `via: "notebook"`, so a notebook's note count and a class's notebooks come from `_backlinks` filtered by `via`. Order: `_links` in the order made (hand-made, then text, by position in the text); `_backlinks` by the source's app, collection and position. `PATCH /records/{id}` and `POST /records` accept a relation as an array of ids and a text field with `[[Title]]` (resolved as in section 5); neither accepts `_links` or `_backlinks`. `GET /sync` carries a link change as an event on the source record's `_links`, so a second device updates both ends on its next sync.
+
 **Starter templates** (`api/templates/*.json`, applied by `POST /templates/apply`; the demo seed uses the same specs plus rows):
 
 | Template (chip) | Collections (`calendar: true` marked ●) | Stitches (declared here) | Face |
 | --- | --- | --- | --- |
-| `notes` Notes (Class notes) | `notebooks {name, class relation}`; `notes {title, body text, notebook relation, at datetime, photo file}` (not in Calendar) | none | count of `notes` this week, "this week" |
+| `notes` Notes (Class notes) | `notebooks {name, class relation → classes/classes}`; `notes {title, body text (multiline), notebook relation → notebooks (many), at datetime, photo file}` (not in Calendar). A note can sit in several notebooks and links to any record with `[[Title]]` or Link to… (section 5, "Links") | none | count of `notes` this week, "this week" |
 | `budget` Budget (Money) | `spend {note, amount money, category select[Groceries, Eating out, Rent, Fun, Transport, Subscriptions] (each option may carry a `limit`), at datetime}` | `groceries/trips → budget/spend` (amount ← total, at ← at, note ← store, category ← Groceries); `subscriptions/subscriptions → budget/spend` on each occurrence (§5). Each fires only when its app exists | `{minus: [{setting: "limit"}, sum(spend.amount, month)]}` "left", `status: true`. `settings.limit` starts unset (face: "Set a monthly amount"); the demo seed sets 120000 |
 | `subscriptions` Subscriptions (Subscriptions) | `subscriptions {name, amount money, renews date, repeat, remind}` ● | none | `sum(subscriptions.amount)`, "a month" (all monthly in the seed; a yearly row would need a row formula `amount / 12`) |
 | `groceries` Groceries | `items {name, list select[Weekly shop], status select[to buy, bought], qty, price money, bought_on date, trip relation, usual select[auto, yes, no]}`; `trips {store, total money, at datetime}` ● label "Grocery trip" | none | count of `items` where status = to buy and list = default, "to buy" |
@@ -1177,7 +1219,7 @@ On DevDay `/home` returns only `change_set` cards; the other kinds are in the ty
 - **Calories**: Today (the ring, "Again" picks from Foods, today's meals), Log, Foods; Trends (chart) after DevDay.
 - **Cycle**: Month (the month log), Cycles.
 - **Classes**: This week (a `days` week of Classes' own `*dated` rows), Due (a checklist), Exams.
-- **Notes**: Notebooks, All notes (unchanged).
+- **Notes**: Notebooks (each row shows its class; a notebook's notes are its `_backlinks` with `via: "notebook"`), All notes (each row shows its notebooks). Two tabs, as before. `notes.body` is multiline and `notes.notebook` takes several. The response also carries `classes/classes`, because the notebooks' Class field points into another app and the client names a relation from the rows it was sent.
 
 **What the server computes for instruments** (Nov 20). Every figure on an instrument is formula-engine work (section 6) at `now()` in the workspace zone, sent in `values[block.id]` on `GET /apps/{id}` (and on a build card's `preview`); nothing is stored. The shape is `BlockValue` in `web/src/api/types.ts`; which fields each kind reads is in `ui-tech-plan.md` §3. The server words and rounds the strings as it does faces: cents on rows and bars ("$142.00"), whole dollars on heroes and limits ("$412", "$200"), `pct` a whole number. The middle column is the fixture's value at `DEMO_NOW` (`web/src/mocks/fixtures/app.<key>.json`), and each is checked against the seed in §2.3; use them as the worked example.
 
@@ -1291,7 +1333,7 @@ This table is the **post-demo backlog**, except the rows marked **(demo)**: thos
 | 52 (demo) | Join code reused or guessed | Second redeem, or brute force | Single use (conditional update). Failed tries are rows in `join_attempts` (not function memory): more than 5 per IP hash in 10 min or 30 a minute overall gives `429`. New codes retry on a collision with a live code. Post-demo: the phone must Allow the join | `POST /join-codes/redeem`, `join_attempts` |
 | 53 (demo) | Guest, or an email not yet confirmed, tries to pair a laptop | No confirmed email to sign in with | `403 "Keep your quilt first"`; the app shows "Check your email to finish keeping your quilt" until confirmed | `POST /join-codes` |
 | 54 | Offline write attempt | No network | Write controls disabled with "You're offline"; nothing queued (ADR-008) | client |
-| 55 | Relation target deleted | Assignment points at a deleted class | The relation keeps the id; the row shows "(deleted)"; restoring the class restores the link | `formula.py`, renderer |
+| 55 | Relation target deleted, or the target of a link | Assignment points at a deleted class; a note links to a deleted spend | The relation keeps the id; the row shows "(deleted)"; restoring the class restores the link. Links work the same: the `links` row stays, `_links` reads `title: "(deleted)"` (app and collection intact), the chip is struck through and not tappable, and a deleted *source* stops showing as a backlink | `formula.py`, renderer, `links` |
 | 56 | Money typed with a symbol or comma | "$1,200.50" | Coerced to cents (120050); a value that isn't a number is `422` | `validate` |
 | 57 (demo) | Reseed during rehearsal with devices open | Clients hold old rows | `POST /dev/reset` bumps `epoch`; clients wipe and reload on the next sync | `POST /dev/reset` |
 | 58 | Item names differ in case, spacing or accents | "greek yogurt" vs "Greek Yogurt" | Names compared after Unicode NFKC, case-fold and whitespace trim, for usuals and for dedupe | `get_usuals`, `clair_notes_dedupe` |
@@ -1299,6 +1341,11 @@ This table is the **post-demo backlog**, except the rows marked **(demo)**: thos
 | 60 | Receipt for a user with Groceries but no Budget | The trips → spend stitch has no Budget to fire into | The stitch lives on Budget, so there is none; the card reads "Adding updates 2 apps" (Groceries, Calendar), **Add to 2 apps**. If Budget is added later its stitch shows as active from then on; old trips aren't back-filled | `expand`, templates |
 | 61 | An item is added again after being marked not usual | A new "Orange juice" record would default to `auto` | The server copies the mark from the most recent record of the same normalised name, so `no` stays | `commands.py` insert |
 | 62 (demo) | The demo user is missing or its password is wrong on the day | Phone or laptop can't sign in | `POST /dev/reset` never touches the auth user; the seed script is the only thing that creates it; "I have a quilt · Sign in" shows the Supabase error in plain words. Checked at D3 | seed script, client |
+| 63 | `[[Title]]` matches two records | "Chain rule recap" is a note and a to-do | Same collection first, then other collections in app order, then the first record in position order; case-insensitive after Unicode NFKC and whitespace trim (as edge case 58). The link shows its target's app (dye dot), so a wrong tie is visible, and Sam can unlink it and link the right one with Link to… | `commands.py` (`link`) |
+| 64 | `[[Title]]` matches nothing, or only the record itself | A typo, or a note that names itself | Stays text, no link, no error. A title that matches only a deleted record does not link | `commands.py` |
+| 65 | Link to a record in a private app (Cycle) | A to-do linked to a Cycle day | Allowed, and shown to Sam. Clair never sees it: `_links`/`_backlinks` entries on the private side are dropped from every snapshot, brief and tool result while `clair_read` is off. `GET /search` skips private apps unless `app=` names one | `clair/tools.py`, `GET /search` |
+| 66 | The same link made twice, or both ways | Link by hand a note already linked by `[[Title]]`; A links B and B links A | Idempotent per direction: one row per `(from, to)`; A → B and B → A are two rows and each shows the other as a backlink. Undo of a no-op does nothing | `link` |
+| 67 | A text edit removes a `[[Title]]`, or a relation loses a target | Sam edits a note's body; unticks a notebook | The `source text` row of that field goes with the text; hand-made links stay; a relation's backlink on the old target goes at once (it is read from the field) | `commands.py`, `GET /apps/{id}` |
 
 ---
 
@@ -1344,8 +1391,8 @@ Rewritten late Nov 19 (ADR-010). Two people: **A** (API, data, Clair) and **B** 
 
 | | Base (tonight) | Feature (the day) | Later |
 | --- | --- | --- | --- |
-| Tables | `workspaces`, `workspace_members`, `blocks`, `change_sets`, `events`, `agent_runs`, `usage_ledger`, `join_codes`, `join_attempts`, `clair_threads`, `clair_messages` | `connections` | `clair_questions`, `clair_notes`; `llm_calls`, `tool_calls` (stdout for now); the `clair-uploads` bucket (second beat only) |
-| Endpoints | `/health`, `/me`, `/home`, `/apps`, `/apps/{id}` (with `values` and `status`, section 10), `/sync`, `/change-sets` (list, confirm, undo, dismiss), `/clair/turns` (text), `/clair/runs/{id}/events`, `/join-codes`, `/join-codes/redeem`, `/dev/reset`. Record gestures: `POST /records`, `PATCH` and `DELETE /records/{id}`, `POST /records/{id}/complete` (moved from Later on Nov 20, because the client now ships the add field, the edit sheet, swipe to complete and delete, and the instruments' logs) | `/connect/google/*`, `/connect`, `/apps/{id}/workflows` (create, switch, run), `/clair/turns` with `fixture: "planner"` | `/me/bootstrap`, `/templates/apply`, `/clair/notes`, `/records/{id}/move` and `/skip`, list options, `PATCH /change-sets/{id}`, `/search`, `/usage`, `/settings`, `/cron/sweep`, app create, edit and delete |
+| Tables | `workspaces`, `workspace_members`, `blocks`, `change_sets`, `events`, `agent_runs`, `usage_ledger`, `join_codes`, `join_attempts`, `clair_threads`, `clair_messages`, `links` (Nov 20) | `connections` | `clair_questions`, `clair_notes`; `llm_calls`, `tool_calls` (stdout for now); the `clair-uploads` bucket (second beat only) |
+| Endpoints | `/health`, `/me`, `/home`, `/apps`, `/apps/{id}` (with `values` and `status`, section 10), `/sync`, `/change-sets` (list, confirm, undo, dismiss), `/clair/turns` (text), `/clair/runs/{id}/events`, `/join-codes`, `/join-codes/redeem`, `/dev/reset`. Record gestures: `POST /records`, `PATCH` and `DELETE /records/{id}`, `POST /records/{id}/complete` (moved from Later on Nov 20, because the client now ships the add field, the edit sheet, swipe to complete and delete, and the instruments' logs); `GET /search`, `POST /records/{id}/links` and `DELETE /records/{id}/links/{target_id}` (Nov 20: the client now ships relation pickers, `[[` suggestions and Link to…) | `/connect/google/*`, `/connect`, `/apps/{id}/workflows` (create, switch, run), `/clair/turns` with `fixture: "planner"` | `/me/bootstrap`, `/templates/apply`, `/clair/notes`, `/records/{id}/move` and `/skip`, list options, `PATCH /change-sets/{id}`, `/usage`, `/settings`, `/cron/sweep`, app create, edit and delete |
 | Clair tools | `list_apps`, `query_records`, `report_understanding`, `propose_changes` (insert, update) | `move_occurrence` op, `reason` and `also` on each op, the planning brief (`api/clair/brief.py`), the planning check and its prompt section, the `offer` event, `propose_app` for the three sentences, `get_gaps`, `propose_workflow` (ladder step 4) | `propose_app`, `ask_user`, `save_note`, `get_usuals`, `search` |
 | Behaviour | Undo as a plain inverse with `changed_since` warnings (section 5) | Read-only `source` records; the sync before a planning run | Undo `409` and `force`; most of section 11 |
 

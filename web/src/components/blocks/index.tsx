@@ -2,13 +2,14 @@
 // never calculate (ADR-001). Computed figures arrive in ctx.values, keyed by block id.
 // Styles: design/screens-css.md.
 import { useState } from 'react';
-import type { AppSpec, BlockValue, Collection, DatedRow, LeafBlock, ListBlock, MetricBlock, Patch, ProgressBlock, Rec } from '../../api/types';
+import type { AppSpec, BlockValue, Collection, DatedRow, Field, LeafBlock, ListBlock, MetricBlock, Patch, ProgressBlock, Rec } from '../../api/types';
 import { aNoun, day, dayKey, fieldText, relDue, time, title, type Lookup } from '../../lib/format';
 import { setDetail, useStore } from '../../lib/store';
 import { useWide } from '../../lib/useWide';
 import { AddSheet, singular } from '../AddSheet';
 import { EmptyState, NoData } from '../EmptyState';
 import { Icon } from '../Icon';
+import { backlinksOf, hasRel, linksOf, relFields, RowRel } from '../Links';
 import { Checklist } from './Checklist';
 import { Days } from './Days';
 import { useRowEnter } from '../../lib/enter';
@@ -28,6 +29,8 @@ export type Ctx = {
   preview?: boolean;
   /** the tab shows more than one list or checklist: only the first empty one draws the spool */
   many?: boolean;
+  /** `?filter=<relationField>:<id>`: lists of a collection with that relation field show only the rows that hold that id */
+  filter?: { field: string; id: string };
   reload?: () => void;
 };
 
@@ -84,9 +87,12 @@ function List({ block, ctx }: { block: ListBlock; ctx: Ctx }) {
   const wide = useWide();
   const picked = useStore((s) => s.detail?.id);
   // a row that arrives in a list already on screen grows in (every row the list holds counts, drawn or not; lib/enter.ts)
-  const held = ((ctx.data[block.source] ?? []) as Rec[]).filter((r) => passesAll(r, block.where, ctx.now));
-  useRowEnter(ctx.preview ? null : held.map((r) => r.id), { scope: block.id });
+  const rel = c && ctx.filter && relFields(c).some((f) => f.key === ctx.filter!.field) ? ctx.filter : undefined;
+  const held = ((ctx.data[block.source] ?? []) as Rec[]).filter((r) => passesAll(r, block.where, ctx.now) && (!rel || hasRel(r, rel.field, rel.id)));
+  useRowEnter(ctx.preview ? null : held.map((r) => r.id), { scope: rel ? `${block.id}|${rel.field}:${rel.id}` : block.id }); // a filter is a new list, not rows arriving
   if (!c) return null;
+  const chipKeys = relFields(c).map((f) => f.key); // drawn as chips under the row, so not again in its meta line
+  const only = block.fields?.length ? block.fields : undefined; // a block that lists fields shows those relations; one that lists none, all
   let rows = held;
   if (block.sort) {
     const { field, dir } = block.sort, s = dir === 'asc' ? 1 : -1;
@@ -99,8 +105,9 @@ function List({ block, ctx }: { block: ListBlock; ctx: Ctx }) {
   }
   const total = rows.length;
   const limit = block.limit ?? 30; // a long list shows its first rows and a "Show all N"; a block's own limit wins
-  if (total > limit && !all) rows = rows.slice(0, limit);
-  const shown = (block.fields ?? []).map((k) => c.fields.find((f) => f.key === k)).filter((f) => !!f);
+  const full = all || (!!picked && rows.findIndex((r) => r.id === picked) >= limit); // a row opened from a link (`?row=`) is drawn even past "Show all N"
+  if (total > limit && !full) rows = rows.slice(0, limit);
+  const shown = (block.fields ?? []).map((k) => c.fields.find((f) => f.key === k)).filter((f): f is Field => !!f && !(f.type === 'relation' && chipKeys.includes(f.key)));
   const amount = c.amountField ? c.fields.find((f) => f.key === c.amountField) : undefined;
   const groupField = block.group ? c.fields.find((f) => f.key === block.group) : undefined;
   const groupOf = (r: Rec) => {
@@ -145,6 +152,7 @@ function List({ block, ctx }: { block: ListBlock; ctx: Ctx }) {
       <li className="row" key={r.id} data-dye={ctx.spec.dye} data-row={r.id}>
         {canEdit && !google ? <button className="row-btn" aria-pressed={wide ? picked === r.id : undefined}
           onClick={() => (wide ? setDetail({ app: ctx.spec.key, ref: block.source, id: r.id }) : setEditing(r))}>{inner}</button> : <span className="row-btn">{inner}</span>}
+        {!ctx.preview && !r.example && (chipKeys.length > 0 || linksOf(r).length > 0 || backlinksOf(r).length > 0) && <RowRel rec={r} c={c} app={ctx.spec.key} only={only} />}
       </li>
     );
   };
@@ -155,10 +163,10 @@ function List({ block, ctx }: { block: ListBlock; ctx: Ctx }) {
       <ul className="card list">
         {rows.length === 0 && <li className="empty-li"><EmptyState onAdd={canAdd ? () => setAdding(true) : undefined} actions={!ctx.preview} compact={ctx.many} /></li>}
         {groups.map(([g, rs]) => [g ? <li key={`g-${g}`} className="grp">{g}</li> : null, ...rs.map(row)])}
-        {total > limit && <li><button className="more-rows" onClick={() => setAll(!all)}>{all ? 'Show fewer' : `Show all ${total}`}</button></li>}
+        {total > limit && <li><button className="more-rows" onClick={() => setAll(!full)}>{full ? 'Show fewer' : `Show all ${total}`}</button></li>}
         {canAdd && rows.length > 0 && <li className="add-row-li quick-wrap"><button className="add-row" onClick={() => setAdding(true)}><Icon name="plus" size={16} />Add {aNoun(singular(c))}</button></li>}
       </ul>
-      {canAdd && <AddSheet app={ctx.spec.key} appName={ctx.spec.name} collection={c} now={ctx.now} apps={ctx.apps}
+      {canAdd && <AddSheet app={ctx.spec.key} appName={ctx.spec.name} collection={c} now={ctx.now} apps={ctx.apps} defaults={rel ? { [rel.field]: rel.id } : undefined}
         open={adding} onClose={() => setAdding(false)} onAdded={() => ctx.reload?.()} />}
       {canEdit && <AddSheet app={ctx.spec.key} appName={ctx.spec.name} collection={c} now={ctx.now} apps={ctx.apps} record={editing ?? undefined}
         open={!!editing} onClose={() => setEditing(null)} onAdded={() => ctx.reload?.()} />}

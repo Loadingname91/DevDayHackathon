@@ -44,6 +44,12 @@ export const dowShort = (key: string) => DOW[dow(key)];
 export const dayNum = (key: string) => wall(key)!.d;
 export const monthName = (key: string) => MON[wall(key)!.m - 1];
 
+/** A row's name for "Add a note" and "New note": the collection's own `label`, else its name made singular. */
+export const singular = (c: Collection) => {
+  const n = c.name; // one rule applies: "Classes" is "class" (the last `s` is part of the word), "Notes" is "note", "Entries" is "entry"
+  return (c.label ?? (/ies$/i.test(n) ? n.replace(/ies$/i, 'y') : /(ss|x|ch|sh)es$/i.test(n) ? n.replace(/es$/i, '') : /ss$/i.test(n) ? n : n.replace(/s$/i, ''))).toLowerCase();
+};
+
 /** "a note", "an event": the article for a row's name, for "Add a note". */
 export const aNoun = (word: string) => `${/^[aeiou]/i.test(word) ? 'an' : 'a'} ${word}`;
 
@@ -54,6 +60,9 @@ export const isDone = (r: Rec) => r.properties.done === true || r.properties.sta
 
 export type Lookup = (ref: string, id: string) => string | undefined;
 
+/** A relation's value is an array of record ids; a single id (older rows, a typed value) counts as one. */
+export const relIds = (value: unknown): string[] => (Array.isArray(value) ? value : value === undefined || value === null || value === '' ? [] : [value]).map(String);
+
 /** One field value as the text a row shows. */
 export function fieldText(field: Field, value: unknown, now?: string, lookup?: Lookup): string {
   if (value === undefined || value === null || value === '') return '';
@@ -63,10 +72,8 @@ export function fieldText(field: Field, value: unknown, now?: string, lookup?: L
     case 'datetime': return when(String(value), now);
     case 'bool': return value ? field.label : '';
     case 'select': return field.options?.find((o) => o.id === value)?.label ?? String(value);
-    case 'relation': {
-      const ids = Array.isArray(value) ? value : [value];
-      return ids.map((id) => (field.target && lookup?.(field.target, String(id))) || '').filter(Boolean).join(', ');
-    }
+    case 'relation': // the target's title; an id nothing answers for is left out, never shown raw (rows draw relations as chips: components/Links.tsx)
+      return relIds(value).map((id) => (field.target && lookup?.(field.target, id)) || '').filter(Boolean).join(', ');
     case 'number': {
       const n = Number(value).toLocaleString('en-US');
       if (!field.unit) return n;

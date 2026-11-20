@@ -41,13 +41,15 @@
      {
       "key": "body",
       "label": "Note",
-      "type": "text"
+      "type": "text",
+      "multiline": true
      },
      {
       "key": "notebook",
       "label": "Notebook",
       "type": "relation",
-      "target": "notes/notebooks"
+      "target": "notes/notebooks",
+      "many": true
      },
      {
       "key": "at",
@@ -67,7 +69,10 @@
      {
       "kind": "list",
       "id": "b_notebooks",
-      "source": "notes/notebooks"
+      "source": "notes/notebooks",
+      "fields": [
+       "class"
+      ]
      }
     ]
    },
@@ -156,7 +161,8 @@
      "notebook": [
       "nb_math"
      ],
-     "at": "2026-11-10T12:40:00-07:00"
+     "at": "2026-11-10T12:40:00-07:00",
+     "body": "A ladder sliding down a wall, a balloon filling at 5 cm³ a second. Write the relationship, differentiate with respect to time, then plug in. It leans on the [[Chain rule recap]] every time."
     }
    },
    {
@@ -168,7 +174,16 @@
      "notebook": [
       "nb_personal"
      ],
-     "at": "2026-11-15T20:15:00-07:00"
+     "at": "2026-11-15T20:15:00-07:00",
+     "body": "A scarf (found one at the thrift shop). A tea sampler. A framed photo from the lake trip.",
+     "_links": [
+      {
+       "app": "budget",
+       "ref": "budget/spend",
+       "id": "sp_24",
+       "title": "Thrift shop"
+      }
+     ]
     }
    },
    {
@@ -180,7 +195,8 @@
      "notebook": [
       "nb_cs3500"
      ],
-     "at": "2026-11-16T15:50:00-07:00"
+     "at": "2026-11-16T15:50:00-07:00",
+     "body": "Mock the network call and assert it ran once with the right arguments. Keep one real test per service so the mocks do not drift."
     }
    },
    {
@@ -192,7 +208,8 @@
      "notebook": [
       "nb_cs3500"
      ],
-     "at": "2026-11-18T15:55:00-07:00"
+     "at": "2026-11-18T15:55:00-07:00",
+     "body": "Hand a class its dependencies instead of letting it build them. That is what makes the mocks in [[Unit testing with mocks]] possible. Constructor injection first."
     }
    },
    {
@@ -204,7 +221,114 @@
      "notebook": [
       "nb_econ"
      ],
-     "at": "2026-11-19T10:30:00-07:00"
+     "at": "2026-11-19T10:30:00-07:00",
+     "body": "Elasticity is the percent change in quantity over the percent change in price. Above 1 the good is elastic. Coffee and textbooks are the class examples."
+    }
+   },
+   {
+    "id": "n_6",
+    "position": "b000",
+    "version": 1,
+    "properties": {
+     "title": "Chain rule recap",
+     "notebook": [
+      "nb_math"
+     ],
+     "at": "2026-11-09T11:20:00-07:00",
+     "body": "d/dx f(g(x)) = f'(g(x)) · g'(x). Work from the outside in: differentiate the outer function, keep the inside, then multiply by the derivative of the inside. Example: d/dx sin(3x²) = cos(3x²) · 6x."
+    }
+   },
+   {
+    "id": "n_7",
+    "position": "b001",
+    "version": 1,
+    "properties": {
+     "title": "Finals study plan",
+     "notebook": [
+      "nb_math",
+      "nb_econ"
+     ],
+     "at": "2026-11-15T10:30:00-07:00",
+     "body": "Math: redo [[Related rates examples]], then Homework 11.\nEcon: reread chapter 5 and the elasticity examples.",
+     "_links": [
+      {
+       "app": "classes",
+       "ref": "classes/due",
+       "id": "d02",
+       "title": "Homework 11"
+      }
+     ]
+    }
+   },
+   {
+    "id": "n_8",
+    "position": "b002",
+    "version": 1,
+    "properties": {
+     "title": "Chicken and rice",
+     "notebook": [
+      "nb_personal"
+     ],
+     "at": "2026-11-14T18:30:00-07:00",
+     "body": "Thighs, rice, spinach, garlic. Bake the thighs at 425 for 25 minutes, rice in the cooker. Serves two with leftovers."
+    }
+   }
+  ],
+  "classes/classes": [
+   {
+    "id": "c01",
+    "position": "a089",
+    "version": 1,
+    "properties": {
+     "name": "ECON 1010",
+     "title": "Principles of Microeconomics",
+     "room": "Kendall 104",
+     "time": "2026-11-24T09:10:00-07:00",
+     "meets": "Tue and Thu 9:10 am",
+     "repeat": {
+      "rule": "FREQ=WEEKLY;BYDAY=TU,TH;UNTIL=20261210T235959",
+      "start": "2026-08-25T09:10",
+      "log": [],
+      "skip": [
+       "2026-11-26"
+      ]
+     }
+    }
+   },
+   {
+    "id": "c02",
+    "position": "a090",
+    "version": 1,
+    "properties": {
+     "name": "MATH 1210",
+     "title": "Calculus I",
+     "room": "JWB 335",
+     "time": "2026-11-23T11:50:00-07:00",
+     "meets": "Mon and Wed 11:50 am",
+     "repeat": {
+      "rule": "FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20261209T235959",
+      "start": "2026-08-24T11:50",
+      "log": [],
+      "skip": []
+     }
+    }
+   },
+   {
+    "id": "c03",
+    "position": "a091",
+    "version": 1,
+    "properties": {
+     "name": "CS 3500",
+     "title": "Software Practice",
+     "room": "WEB L104",
+     "time": "2026-11-23T15:00:00-07:00",
+     "meets": "Mon and Wed 3:00 pm",
+     "repeat": {
+      "rule": "FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20261209T235959",
+      "start": "2026-08-24T15:00",
+      "log": [],
+      "skip": []
+     }
     }
    }
   ]

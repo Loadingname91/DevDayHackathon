@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { errorText, request } from '../api/client';
-import type { CommandResult, Rec } from '../api/types';
-import { fieldText, listNames, title } from '../lib/format';
+import type { AppResponse, Collection, CommandResult, Home, Rec } from '../api/types';
+import { fieldText, listNames, relIds, title } from '../lib/format';
 import { afterCommand, loadApp, setDetail, toast, useStore } from '../lib/store';
 import { AddSheet } from './AddSheet';
 import { Bold } from './Bold';
 import { Icon } from './Icon';
+import { BodyText, LinkedSection, linksOf, relFields, RelValue, SYSTEM_KEYS, useLive } from './Links';
 import { NextUp } from './NextUp';
 
 const SKIP = new Set(['relation', 'formula', 'repeat', 'bool']);
-const SYSTEM = new Set(['source', 'ext_id', 'bought_on', 'trip', 'usual']);
+const SYSTEM = SYSTEM_KEYS;
 
 /**
  * What the pane shows while no row is picked: the app itself, in plain words (what the `···` menu holds on a phone).
@@ -53,8 +54,6 @@ export function Detail() {
   const detail = useStore((s) => s.detail);
   const app = useStore((s) => (detail ? s.apps[detail.app] : undefined));
   const now = useStore((s) => s.me?.server_now) ?? '';
-  const [editing, setEditing] = useState(false);
-  const [busy, setBusy] = useState(false);
   useEffect(() => { setDetail(null); }, [pathname]); // a new screen starts with nothing picked
 
   if (pathname === '/') return <aside className="detail" aria-label="Next up">{home && <NextUp home={home} />}</aside>;
@@ -62,11 +61,22 @@ export function Detail() {
   const c = app?.spec.collections.find((x) => `${app.spec.key}/${x.key}` === detail?.ref);
   const rec = c && detail ? (app?.data[detail.ref] as Rec[] | undefined)?.find((r) => r.id === detail.id) : undefined;
   if (!app || !c || !rec) return <AppInfo />;
+  return <Picked key={rec.id} app={app} c={c} rec={rec} now={now} home={home} />;
+}
+
+type PickedProps = { app: AppResponse; c: Collection; rec: Rec; now: string; home: Home | null };
+/** The picked row, big: its text, its other fields and relations, what it links to and what links to it, Edit and Delete. */
+function Picked({ app, c, rec: picked, now, home }: PickedProps) {
+  const rec = useLive(app.spec.key, c, picked);
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const amount = c.amountField ? c.fields.find((f) => f.key === c.amountField) : undefined;
   const date = c.dateField ? c.fields.find((f) => f.key === c.dateField) : undefined;
-  const rest = c.fields.filter((f) => f.key !== c.titleField && f.key !== c.amountField && f.key !== c.dateField && !SKIP.has(f.type) && !SYSTEM.has(f.key)
+  const rest = c.fields.filter((f) => f.key !== c.titleField && f.key !== c.amountField && f.key !== c.dateField && !SKIP.has(f.type) && !SYSTEM.has(f.key) && !f.multiline
     && rec.properties[f.key] !== undefined && rec.properties[f.key] !== '' && rec.properties[f.key] !== null);
+  const bodies = c.fields.filter((f) => f.multiline && f.type === 'text' && typeof rec.properties[f.key] === 'string' && rec.properties[f.key] !== '');
+  const rels = relFields(c).filter((f) => relIds(rec.properties[f.key]).length > 0);
   const via = rec.properties._via as { app?: string } | undefined;
   const from = via?.app ? home?.apps.find((a) => a.key === via.app) : undefined;
   const meta = [date ? fieldText(date, rec.properties[date.key], now) : '', from ? `from ${from.name}` : ''].filter(Boolean).join(' · ');
@@ -89,11 +99,14 @@ export function Detail() {
       <h2 className="d-title">{title(c, rec, now)}</h2>
       {amount && rec.properties[amount.key] !== undefined && <span className="d-amount num">{fieldText(amount, rec.properties[amount.key])}</span>}
       {meta && <span className="d-meta">{meta}</span>}
-      {rest.length > 0 && (
+      {bodies.map((f) => <p key={f.key} className="d-body"><BodyText text={String(rec.properties[f.key])} links={linksOf(rec)} app={app.spec.key} /></p>)}
+      {rest.length + rels.length > 0 && (
         <dl className="card d-fields">
           {rest.map((f) => <div key={f.key}><dt>{f.label}</dt><dd>{fieldText(f, rec.properties[f.key], now)}</dd></div>)}
+          {rels.map((f) => <div key={f.key}><dt>{f.label}</dt><dd><RelValue f={f} c={c} rec={rec} app={app.spec.key} /></dd></div>)}
         </dl>
       )}
+      <LinkedSection app={app.spec.key} collection={c} record={rec} />
       {from && <span className="d-also" data-dye={from.dye}><i className="dyedot" />also in {from.name}</span>}
       <div className="d-actions">
         <button className="ghost" onClick={() => setEditing(true)}>Edit</button>

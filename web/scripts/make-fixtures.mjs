@@ -12,7 +12,9 @@ import { fileURLToPath } from 'node:url';
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '../src/mocks/fixtures');
 mkdirSync(OUT, { recursive: true });
-const write = (name, data) => writeFileSync(join(OUT, name + '.json'), JSON.stringify(data, null, 1) + '\n');
+// Files are buffered and written at the end, so the links pass (bottom of the file) can stamp `_links` on the records it names.
+const OUTBOX = new Map();
+const write = (name, data) => OUTBOX.set(name, data);
 
 const SERVER_NOW = '2026-11-20T17:45:00-07:00';
 // MDT until Sun 1 Nov 2026, MST after
@@ -21,6 +23,8 @@ const dt = (date, time) => `${date}T${time}:00${off(date)}`;
 const cents = (n) => Math.round(n * 100);
 let pos = 0;
 const rec = (id, properties) => ({ id, position: 'a' + String(pos++).padStart(3, '0'), version: 1, properties });
+let posB = 0; // records added after the first seed (Nov 20, links): 'b000', 'b001'… so the positions of the rows above never move
+const recB = (id, properties) => ({ id, position: 'b' + String(posB++).padStart(3, '0'), version: 1, properties });
 const page = (id, title, children) => ({ kind: 'page', id, title, children });
 const f = (key, label, type, extra = {}) => ({ key, label, type, ...extra });
 const opts = (...labels) => labels.map((l) => ({ id: l.toLowerCase().replace(/[^a-z0-9]+/g, '_'), label: l }));
@@ -335,31 +339,47 @@ const classesSpec = {
 write('app.classes', appResp('classes', classesSpec, { 'classes/classes': classRows, 'classes/due': dueRows }));
 
 // ------------------------------------------------------------------ Notes
+// Eight notes in four notebooks (spec/backend.md §2.3). Only Mon 16 to Thu 19 Nov notes count toward the face (3 this week): the three
+// older-than-Monday additions are dated before Mon 16 Nov. A note can sit in several notebooks (`many`). `[[Title]]` in a body is a link
+// (resolved by the server when the note is saved; the mock resolves it on read). Links made by hand are the LINKS table at the bottom.
 const notebookRows = [
   rec('nb_econ', { name: 'ECON 1010', class: ['c01'] }), rec('nb_math', { name: 'MATH 1210', class: ['c02'] }),
   rec('nb_cs3500', { name: 'CS 3500', class: ['c03'] }), rec('nb_personal', { name: 'Personal' }),
 ];
 const noteRows = [
-  rec('n_1', { title: 'Related rates examples', notebook: ['nb_math'], at: dt('2026-11-10', '12:40') }),
-  rec('n_2', { title: 'Gift ideas for mom', notebook: ['nb_personal'], at: dt('2026-11-15', '20:15') }),
-  rec('n_3', { title: 'Unit testing with mocks', notebook: ['nb_cs3500'], at: dt('2026-11-16', '15:50') }),
-  rec('n_4', { title: 'Dependency injection', notebook: ['nb_cs3500'], at: dt('2026-11-18', '15:55') }),
-  rec('n_5', { title: 'Price elasticity', notebook: ['nb_econ'], at: dt('2026-11-19', '10:30') }),
+  rec('n_1', { title: 'Related rates examples', notebook: ['nb_math'], at: dt('2026-11-10', '12:40'),
+    body: 'A ladder sliding down a wall, a balloon filling at 5 cm³ a second. Write the relationship, differentiate with respect to time, then plug in. It leans on the [[Chain rule recap]] every time.' }),
+  rec('n_2', { title: 'Gift ideas for mom', notebook: ['nb_personal'], at: dt('2026-11-15', '20:15'),
+    body: 'A scarf (found one at the thrift shop). A tea sampler. A framed photo from the lake trip.' }),
+  rec('n_3', { title: 'Unit testing with mocks', notebook: ['nb_cs3500'], at: dt('2026-11-16', '15:50'),
+    body: 'Mock the network call and assert it ran once with the right arguments. Keep one real test per service so the mocks do not drift.' }),
+  rec('n_4', { title: 'Dependency injection', notebook: ['nb_cs3500'], at: dt('2026-11-18', '15:55'),
+    body: 'Hand a class its dependencies instead of letting it build them. That is what makes the mocks in [[Unit testing with mocks]] possible. Constructor injection first.' }),
+  rec('n_5', { title: 'Price elasticity', notebook: ['nb_econ'], at: dt('2026-11-19', '10:30'),
+    body: 'Elasticity is the percent change in quantity over the percent change in price. Above 1 the good is elastic. Coffee and textbooks are the class examples.' }),
+  recB('n_6', { title: 'Chain rule recap', notebook: ['nb_math'], at: dt('2026-11-09', '11:20'),
+    body: "d/dx f(g(x)) = f'(g(x)) · g'(x). Work from the outside in: differentiate the outer function, keep the inside, then multiply by the derivative of the inside. Example: d/dx sin(3x²) = cos(3x²) · 6x." }),
+  recB('n_7', { title: 'Finals study plan', notebook: ['nb_math', 'nb_econ'], at: dt('2026-11-15', '10:30'),
+    body: 'Math: redo [[Related rates examples]], then Homework 11.\nEcon: reread chapter 5 and the elasticity examples.' }),
+  recB('n_8', { title: 'Chicken and rice', notebook: ['nb_personal'], at: dt('2026-11-14', '18:30'),
+    body: 'Thighs, rice, spinach, garlic. Bake the thighs at 425 for 25 minutes, rice in the cooker. Serves two with leftovers.' }),
 ];
 const notesSpec = {
   ...meta('notes'),
   collections: [
     { key: 'notebooks', name: 'Notebooks', titleField: 'name', fields: [f('name', 'Notebook', 'text', { required: true }), f('class', 'Class', 'relation', { target: 'classes/classes' })] },
     { key: 'notes', name: 'Notes', titleField: 'title', dateField: 'at',
-      fields: [f('title', 'Title', 'text', { required: true }), f('body', 'Note', 'text'), f('notebook', 'Notebook', 'relation', { target: 'notes/notebooks' }), f('at', 'Written', 'datetime', { required: true })] },
+      fields: [f('title', 'Title', 'text', { required: true }), f('body', 'Note', 'text', { multiline: true }),
+        f('notebook', 'Notebook', 'relation', { target: 'notes/notebooks', many: true }), f('at', 'Written', 'datetime', { required: true })] },
   ],
   tabs: [
-    page('t_notebooks', 'Notebooks', [{ kind: 'list', id: 'b_notebooks', source: 'notes/notebooks' }]),
+    page('t_notebooks', 'Notebooks', [{ kind: 'list', id: 'b_notebooks', source: 'notes/notebooks', fields: ['class'] }]),
     page('t_all', 'All notes', [{ kind: 'list', id: 'b_notes', source: 'notes/notes', fields: ['notebook', 'at'], sort: { field: 'at', dir: 'desc' } }]),
   ],
   face: { value: { agg: 'count', from: 'notes/notes', window: 'week' }, format: 'count', label: 'this week' },
 };
-write('app.notes', appResp('notes', notesSpec, { 'notes/notebooks': notebookRows, 'notes/notes': noteRows }));
+// `classes/classes` rides along: the notebooks' Class field points into another app, and the client names a relation from the rows it was sent
+write('app.notes', appResp('notes', notesSpec, { 'notes/notebooks': notebookRows, 'notes/notes': noteRows, 'classes/classes': classRows }));
 
 // ------------------------------------------------------------------ Subscriptions
 const subRows = [
@@ -1034,4 +1054,43 @@ function instrumented(key, spec, values, variant) {
     default: return { spec, values };
   }
 }
+// ------------------------------------------------------------------ Links (Nov 20, spec/backend.md §2, §10)
+// Links made by hand ("Link to…"), stored on the record as `_links` (LinkRef: app, ref, id, title). Links typed as [[Title]] in a text field are
+// not listed here: the server stores them when the text is saved, and the mock resolves them on read. `_backlinks` are derived, never stored.
+// Titles come from the seed rows themselves, so they cannot drift from the rows.
+const THRIFT = spendRows.find((r) => r.properties.note === 'Thrift shop').id;
+const LINKS = [
+  ['n_7', 'd02'], // Finals study plan → Homework 11 (Classes)
+  ['n_2', THRIFT], // Gift ideas for mom → the thrift shop spend (Budget)
+  ['t_library', 'c01'], // Return library books → ECON 1010 (Classes)
+  ['t_call_home', 'n_2'], // Call home → Gift ideas for mom (Notes)
+  ['i_chicken_thighs', 'n_8'], // Chicken thighs on Weekly shop → the Chicken and rice note (Notes)
+];
+{
+  const idx = new Map(); // record id → {app, ref, title}
+  for (const [key] of APPS) {
+    const r = OUTBOX.get('app.' + key);
+    for (const c of r.spec.collections) {
+      const tf = c.fields.find((x) => x.key === c.titleField);
+      if (tf?.type === 'relation') continue; // a title that is another row's title (Workout sets) is not a title to link by
+      for (const row of r.data[`${key}/${c.key}`] ?? []) {
+        const v = row.properties[c.titleField];
+        idx.set(row.id, { app: key, ref: `${key}/${c.key}`, title: tf?.type === 'select' ? tf.options.find((o) => o.id === v)?.label ?? String(v) : String(v) });
+      }
+    }
+  }
+  const out = new Map(); // from id → LinkRef[]
+  for (const [from, to] of LINKS) {
+    if (!idx.has(from)) throw new Error(`link source ${from} is not a seeded record`);
+    if (!idx.has(to)) throw new Error(`link target ${to} is not a seeded record`);
+    const { app, ref, title } = idx.get(to);
+    out.set(from, [...(out.get(from) ?? []), { app, ref, id: to, title }]);
+  }
+  for (const [name, r] of OUTBOX) {
+    if (!name.startsWith('app.') || !r.data) continue;
+    for (const rows of Object.values(r.data)) for (const row of rows) if (row.properties && out.has(row.id)) row.properties._links = out.get(row.id);
+  }
+}
+
+for (const [name, data] of OUTBOX) writeFileSync(join(OUT, name + '.json'), JSON.stringify(data, null, 1) + '\n');
 console.log('fixtures written to', OUT);

@@ -4,7 +4,7 @@
 import { dyedApp, dyedHome } from './dye';
 import { useSyncExternalStore } from 'react';
 import { isLive, request } from '../api/client';
-import type { AppResponse, ChangeSet, CommandResult, Face, Home, Me, Offer, SyncResponse } from '../api/types';
+import type { AppResponse, ChangeSet, CommandResult, Face, Home, Me, Offer, SearchHit, SearchResponse, SyncResponse } from '../api/types';
 import { authConfigured, supabase } from './auth';
 import { cacheGet, cachePut } from './cache';
 
@@ -102,7 +102,25 @@ export async function afterCommand(result: CommandResult | null) {
   await refresh();
 }
 export async function refresh() {
+  searched.clear(); // a write can change a title or add a record: a search answered before it is stale
   await Promise.all([loadHome(), loadMe(), ...Object.keys(state.apps).map(loadApp)]);
+}
+
+// ---- links (Nov 20): link two records, by hand or by `[[Title]]`; both are writes with an Undo like any other
+/** Link a record to any record in any app. Idempotent on the server; undoable. The caller says it in a toast and calls `afterCommand`. */
+export const linkRecord = (id: string, to: { ref: string; id: string }) => request<CommandResult>('POST', `/records/${id}/links`, { to });
+export const unlinkRecord = (id: string, targetId: string) => request<CommandResult>('DELETE', `/records/${id}/links/${targetId}`);
+const searched = new Map<string, Promise<SearchHit[]>>();
+/** The link picker and the `[[` suggestions: titles across all apps (or one), never `exclude` (the record itself). One answer per question until the next write. */
+export function searchRecords(q: string, o: { app?: string; exclude?: string } = {}): Promise<SearchHit[]> {
+  const path = `/search?q=${encodeURIComponent(q)}${o.app ? `&app=${encodeURIComponent(o.app)}` : ''}${o.exclude ? `&exclude=${encodeURIComponent(o.exclude)}` : ''}`;
+  let hit = searched.get(path);
+  if (!hit) {
+    hit = request<SearchResponse>('GET', path).then((r) => r.hits ?? []);
+    searched.set(path, hit);
+    hit.catch(() => searched.delete(path)); // a failure is not remembered
+  }
+  return hit;
 }
 
 export function setBusy(busy: boolean) {

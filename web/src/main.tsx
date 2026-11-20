@@ -13,6 +13,7 @@ import './styles/laptop.css';
 import './styles/blocks.css';
 import './styles/interaction.css';
 import './styles/theme-cloth.css';
+import './styles/links.css';
 import './styles/demo.css';
 import './styles/voice.css';
 

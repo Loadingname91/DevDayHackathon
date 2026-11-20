@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { errorText, request } from '../../api/client';
-import type { ChecklistBlock, CommandResult, Rec } from '../../api/types';
+import type { ChecklistBlock, CommandResult, Field, Rec } from '../../api/types';
 import { day, dayKey, fieldText, isDone, relDue, time, title } from '../../lib/format';
 import { useRowEnter } from '../../lib/enter';
 import { EASE, RM, sleep, T } from '../../lib/motion';
@@ -9,6 +9,7 @@ import { AddSheet } from '../AddSheet';
 import { useWide } from '../../lib/useWide';
 import { EmptyState } from '../EmptyState';
 import { Icon } from '../Icon';
+import { backlinksOf, hasRel, linksOf, relFields, RowRel } from '../Links';
 import { QuickAdd } from '../QuickAdd';
 import { resetRow, SwipeRow } from '../SwipeRow';
 import { passesAll } from './filter';
@@ -36,15 +37,19 @@ export function Checklist({ block, ctx }: { block: ChecklistBlock; ctx: Ctx }) {
   const [adding, setAdding] = useState(false);
   // a row that arrives after the list is on screen grows in (lib/enter.ts); `scope` keeps a switch between lists from counting as arrivals,
   // `lift`: with no inline add field the empty card shows, and the first row rises as that card fades (EmptyState)
+  const rel = c && ctx.filter && relFields(c).some((f) => f.key === ctx.filter!.field) ? ctx.filter : undefined; // `?filter=`: only the rows that hold that id
+  const inRel = (r: Rec) => !rel || hasRel(r, rel.field, rel.id);
   const held = ctx.data[block.source] as Rec[] | undefined;
-  useRowEnter(held ? held.filter((r) => (!sw || r.properties[sw.key] === picked) && block.groups.some((g) => passesAll(r, g.where, ctx.now))).map((r) => r.id) : null,
-    { scope: picked ?? '', lift: !(block.add && !ctx.preview && !block.add.pinned) });
+  useRowEnter(held ? held.filter((r) => inRel(r) && (!sw || r.properties[sw.key] === picked) && block.groups.some((g) => passesAll(r, g.where, ctx.now))).map((r) => r.id) : null,
+    { scope: `${picked ?? ''}${rel ? `|${rel.field}:${rel.id}` : ''}`, lift: !(block.add && !ctx.preview && !block.add.pinned) });
   if (!c) return null;
-  const all = (ctx.data[block.source] ?? []) as Rec[];
+  const all = ((ctx.data[block.source] ?? []) as Rec[]).filter(inRel);
+  const chipKeys = relFields(c).map((f) => f.key); // drawn as chips under the row, so not again in its meta line
+  const only = block.fields?.length ? block.fields : undefined;
   const inSwitch = (r: Rec) => !sw || r.properties[sw.key] === picked;
   const option = sw?.options?.find((o) => o.id === picked)?.label ?? '';
   const fill = (s: string, n: number) => s.replace('{n}', String(n)).replace('{option}', option).replace('{today}', ctx.now ? day(ctx.now) : '');
-  const shown = (block.fields ?? []).map((k) => c.fields.find((f) => f.key === k)).filter((f) => !!f);
+  const shown = (block.fields ?? []).map((k) => c.fields.find((f) => f.key === k)).filter((f): f is Field => !!f && !(f.type === 'relation' && chipKeys.includes(f.key)));
   const lookup = (ref: string, id: string) => {
     const col = ctx.spec.collections.find((x) => `${appKey}/${x.key}` === ref);
     const r = (ctx.data[ref] as Rec[] | undefined)?.find((x) => x.id === id);
@@ -114,6 +119,7 @@ export function Checklist({ block, ctx }: { block: ChecklistBlock; ctx: Ctx }) {
             {via?.workflow && <span className="from">by rule ›</span>}
           </button>
         </div>
+        {!ctx.preview && !r.example && (chipKeys.length > 0 || linksOf(r).length > 0 || backlinksOf(r).length > 0) && <RowRel rec={r} c={c} app={appKey} only={only} />}
       </SwipeRow>
     );
   };
@@ -147,7 +153,7 @@ export function Checklist({ block, ctx }: { block: ChecklistBlock; ctx: Ctx }) {
               : <div className="sec"><span>{label}</span>{i === firstOpen && sw && <span className="meta">{sw.options?.find((o) => o.id === picked)?.hint ?? (picked === sw.options?.[0]?.id ? 'Default list' : '')}</span>}</div>}
             {!closed && (
               <ul className="card list">
-                {(showAll[i] ? rows : rows.slice(0, CAP)).map((r) => row(r, label))}
+                {(showAll[i] || rows.findIndex((r) => r.id === inPane) >= CAP ? rows : rows.slice(0, CAP)).map((r) => row(r, label))}
                 {rows.length > CAP && <li><button className="more-rows" onClick={() => setShowAll((o) => ({ ...o, [i]: !o[i] }))}>{showAll[i] ? 'Show fewer' : `Show all ${rows.length}`}</button></li>}
                 {addInline && i === firstOpen && (
                   <li><QuickAdd collection={c} app={appKey} defaults={{ ...(sw && picked ? { [sw.key]: picked } : {}), ...Object.fromEntries(Object.entries(add.set ?? {}).map(([k, v]) => [k, String(v)])) }}
@@ -160,7 +166,7 @@ export function Checklist({ block, ctx }: { block: ChecklistBlock; ctx: Ctx }) {
       })}
       {add?.pinned && <AddDock block={block} ctx={ctx} placeholder={fill(add.placeholder, 0)} onMore={() => setAdding(true)} />}
       <AddSheet app={appKey} appName={ctx.spec.name} collection={c} now={ctx.now} apps={ctx.apps}
-        defaults={{ ...(sw && picked ? { [sw.key]: picked } : {}), ...Object.fromEntries(Object.entries(block.add?.set ?? {}).map(([k, v]) => [k, String(v)])) }}
+        defaults={{ ...(sw && picked ? { [sw.key]: picked } : {}), ...(rel ? { [rel.field]: rel.id } : {}), ...Object.fromEntries(Object.entries(block.add?.set ?? {}).map(([k, v]) => [k, String(v)])) }}
         open={adding} onClose={() => setAdding(false)} onAdded={() => ctx.reload?.()} />
       <AddSheet app={appKey} appName={ctx.spec.name} collection={c} now={ctx.now} apps={ctx.apps} record={editing ?? undefined}
         open={!!editing} onClose={() => setEditing(null)} onAdded={() => ctx.reload?.()} />

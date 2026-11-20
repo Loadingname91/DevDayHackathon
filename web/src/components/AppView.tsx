@@ -6,7 +6,7 @@ import { Block, type Ctx } from './blocks';
 
 /** Draws one tab of any app from its spec. Blocks read from `data`; nothing here fetches (ADR-001).
  *  `tabbed` says the app's tablist (AppScreen) is on the page: the panel is then that tab's tabpanel. */
-export function AppView({ app, tab, apps, now, tabbed = false }: { app: AppResponse; tab: string; apps: Patch[]; now: string; tabbed?: boolean }) {
+export function AppView({ app, tab, apps, now, tabbed = false, filter }: { app: AppResponse; tab: string; apps: Patch[]; now: string; tabbed?: boolean; filter?: { field: string; id: string } | null }) {
   const wide = useWide();
   const page = app.spec.tabs.find((t) => t.id === tab) ?? app.spec.tabs[0];
   const preview = app.seq === 0; // a build preview (no server sequence yet)
@@ -16,7 +16,7 @@ export function AppView({ app, tab, apps, now, tabbed = false }: { app: AppRespo
   useLayoutEffect(() => { setPickable(pickable); return () => setPickable(0); }, [pickable]);
   if (!page) return null;
   const values = app.values ?? {};
-  const ctx: Ctx = { spec: app.spec, data: app.data, values, now, apps, preview, many: rowBlocks.length > 1, reload: () => void loadApp(app.spec.key) };
+  const ctx: Ctx = { spec: app.spec, data: app.data, values, now, apps, preview, many: rowBlocks.length > 1, filter: filter ?? undefined, reload: () => void loadApp(app.spec.key) };
   // neighbouring metrics sit side by side
   const groups: LeafBlock[][] = [];
   for (const b of page.children) {

@@ -5,12 +5,15 @@ import { AppView } from '../components/AppView';
 import { Bold } from '../components/Bold';
 import { ConnectGoogle } from '../components/ConnectGoogle';
 import { Icon } from '../components/Icon';
+import { FilterChip, filterTab, parseFilter, tabFor, tabHasField, validFilter } from '../components/Links';
 import { Sheet } from '../components/Sheet';
 import { Spool } from '../components/Spool';
 import { Tag } from '../components/Tag';
 import { listNames } from '../lib/format';
 import { RM } from '../lib/motion';
-import { loadApp, loadHome, markOpened, openClair, useStore } from '../lib/store';
+import { loadApp, loadHome, markOpened, openClair, setDetail, useStore } from '../lib/store';
+import { useWide } from '../lib/useWide';
+import type { Rec } from '../api/types';
 
 /**
  * An app (boards Workout, Groceries, Budget, Calendar, To-dos, Empty): the back chevron
@@ -26,13 +29,42 @@ export function AppScreen() {
   const error = useStore((s) => s.error);
   const [adding, setAdding] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [openRow, setOpenRow] = useState<{ ref: string; id: string; open: boolean } | null>(null);
+  const wide = useWide();
   const tabsRef = useRef<HTMLDivElement>(null);
   const settled = useRef(false);
   const patch = home?.apps.find((a) => a.key === key);
   useEffect(() => { void loadApp(key); if (!home) void loadHome(); markOpened(key); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // `?filter=<relationField>:<id>` shows the rows that hold that id, on the tab that lists them (a tab asked for that lists them too stays)
+  const filter = app ? validFilter(app.spec, parseFilter(q.get('filter'))) : null;
+  const asked = app?.spec.tabs.find((t) => t.id === q.get('tab'))?.id;
+  const filterAt = app && filter ? filterTab(app.spec, filter.field) : undefined;
+  const tab = app && filter && filterAt && !(asked && tabHasField(app.spec, asked, filter.field)) ? filterAt : asked ?? app?.spec.tabs[0]?.id;
+
+  // `?row=<id>` opens that record: the edit sheet on a phone, the pane on a laptop (and its row scrolls into view). Said once, then the query is cleared.
+  const row = q.get('row');
+  useEffect(() => {
+    if (!row || !app) return;
+    const ref = Object.keys(app.data).find((k) => k.startsWith(`${key}/`) && (app.data[k] as Rec[]).some((r) => 'properties' in r && r.id === row));
+    if (!ref) return; // not in this app's data (yet): the effect runs again when the app arrives
+    const next = new URLSearchParams(q);
+    next.delete('row');
+    const here = app.spec.tabs.find((t) => t.id === (next.get('tab') ?? app.spec.tabs[0]?.id));
+    const lists = !!here?.children.some((b) => (b.kind === 'list' || b.kind === 'checklist') && b.source === ref);
+    const at = lists ? undefined : tabFor(app.spec, ref);
+    if (at) next.set('tab', at);
+    setQ(next, { replace: true });
+    if (wide) {
+      setTimeout(() => { // after the pane has cleared its pick for the new screen
+        setDetail({ app: key, ref, id: row });
+        setTimeout(() => document.querySelector(`[data-row="${CSS.escape(row)}"]`)?.scrollIntoView({ block: 'center', behavior: RM() ? 'auto' : 'smooth' }), 120);
+      }, 0);
+    } else setOpenRow({ ref, id: row, open: true });
+  }, [row, app]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // the selected tab scrolls into view when the tabs overflow (a deep link, or a tap on a half-hidden one); the page itself never moves
-  const wanted = q.get('tab');
+  const wanted = tab;
   useEffect(() => {
     const list = tabsRef.current, el = list?.querySelector<HTMLElement>('[aria-selected="true"]');
     if (!list || !el) return;
@@ -43,7 +75,6 @@ export function AppScreen() {
 
   if (!app) return <div className="screen"><div className="top-row"><Link to="/" className="round back" aria-label="Back to Home"><Icon name="back" /></Link></div><p className="muted" role="status">{error ?? ''}</p></div>;
   const { spec } = app;
-  const tab = spec.tabs.find((t) => t.id === q.get('tab'))?.id ?? spec.tabs[0]?.id;
   const first = spec.collections[0];
   const fresh = !!patch?.isNew;
   // board Empty ("Subscriptions is ready"): a new app with no rows yet shows only the ready card; its tabs and empty blocks wait for the first row
@@ -99,10 +130,16 @@ export function AppScreen() {
           ))}
         </div>
       )}
-      {!landing && <AppView key={tab} app={app} tab={tab} apps={home?.apps ?? []} now={now} tabbed={spec.tabs.length > 1} />}
+      {filter && !landing && <FilterChip spec={spec} filter={filter} onClear={() => { const n = new URLSearchParams(q); n.delete('filter'); if (tab) n.set('tab', tab); setQ(n, { replace: true }); }} />}
+      {!landing && <AppView key={tab} app={app} tab={tab!} apps={home?.apps ?? []} now={now} tabbed={spec.tabs.length > 1} filter={filter} />}
       {/* the other tabs' panels are not drawn; an empty hidden one each keeps every tab's aria-controls pointing at a real panel */}
       {!landing && spec.tabs.length > 1 && spec.tabs.filter((t) => t.id !== tab).map((t) => <div key={t.id} id={`panel-${t.id}`} role="tabpanel" aria-labelledby={`tab-${t.id}`} hidden />)}
 
+      {(() => {
+        const c = openRow ? spec.collections.find((x) => `${key}/${x.key}` === openRow.ref) : undefined;
+        const rec = c && openRow ? (app.data[openRow.ref] as Rec[] | undefined)?.find((r) => r.id === openRow.id) : undefined;
+        return c && rec ? <AddSheet app={key} appName={spec.name} collection={c} now={now} apps={home?.apps} record={rec} open={openRow!.open} onClose={() => setOpenRow((r) => r && { ...r, open: false })} onAdded={() => void loadApp(key)} /> : null;
+      })()}
       <Sheet open={menu} onClose={() => setMenu(false)} label={`${spec.name} menu`}>
         <div className="sheet-head"><span className="txt"><h2>{spec.name}</h2><span className="sub">{spec.tabs.length} tab{spec.tabs.length === 1 ? '' : 's'}</span></span></div>
         <ul className="card list">

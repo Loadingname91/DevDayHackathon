@@ -1,0 +1,68 @@
+/* Links (Nov 20): chips for relations and links, the Linked sections, Link to…, the `[[` suggestions, the filter chip.
+   Tokens only; the class prefix is `lc-` (`.lk` is the older text-link class in app.css). design/DESIGN.md "Links". */
+
+/* ---------- the chip: a 28 px pill whose buttons are 44 tall (the reach is the button, like .tick) ---------- */
+.lc { display: inline-flex; align-items: center; max-width: 100%; min-height: 28px; border-radius: var(--r-pill); background: var(--hair); color: var(--ink); font-size: 13px; font-weight: 600; line-height: 1.2; }
+.lc:has(> button.lc-main) { box-shadow: inset 0 0 0 1.5px var(--edge); } /* an edge only when it is a button */
+.lc-main { display: inline-flex; align-items: center; gap: 6px; min-width: 44px; min-height: 44px; margin-block: -8px; padding: 0 10px; border-radius: var(--r-pill); max-width: 100%; min-width: 0; text-align: left; }
+button.lc-main { min-width: 44px; }
+span.lc-main { min-height: 28px; margin-block: 0; }
+button.lc-main:focus-visible, .lc-x:focus-visible { outline-offset: -3px; }
+.lc-t { min-width: 0; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lc-app { flex: none; color: var(--sec); font-weight: 500; white-space: nowrap; }
+.lc-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--fill, var(--hair)); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--ink) 45%, transparent); display: inline-block; }
+.lc.has-x .lc-main { padding-right: 2px; }
+.lc-x { flex: none; width: 44px; min-height: 44px; margin: -8px -10px -8px -10px; display: grid; place-items: center; border-radius: 50%; color: var(--sec); }
+.lc.count .lc-main svg { margin-right: -4px; color: var(--sec); }
+.lc.gone .lc-t { text-decoration: line-through; color: var(--sec); }
+.lc.gone .lc-app { text-decoration: line-through; }
+
+/* a row's relations: under its title, outside its button (a chip is a button; a button can't hold one) */
+.lc-rel { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 2px 16px 12px; }
+.sw-face > .lc-rel { padding-left: 52px; } /* under the title, past the tick */
+li.row:has(> .lc-rel) > .row-btn { min-height: 44px; padding-bottom: 2px; }
+.row-in:has(+ .lc-rel) { min-height: 48px; padding-bottom: 0; }
+.lc-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
+.lc-chips.end { justify-content: flex-end; }
+
+/* ---------- Linked / Linked from (the edit sheet, the laptop pane) ---------- */
+.lc-sec { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 16px; background-image: linear-gradient(90deg, var(--line) 58%, transparent 0); background-size: 8px 1px; background-repeat: repeat-x; background-position: top; }
+.lc-sec > .sec { width: 100%; }
+.lc-sec > .lc-chips { width: 100%; }
+.ghost.lc-add { min-height: 44px; padding: 0 16px; font-size: 15px; }
+.lc-empty { font-size: 14px; color: var(--sec); }
+.lc-hint { font-size: 13px; color: var(--sec); }
+.lc-hint:empty { display: none; }
+.add-field > .lbl { font-size: 13px; color: var(--sec); }
+.d-fields dd .lc-chips { justify-content: flex-end; }
+.d-body { font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.d-body .lc { vertical-align: middle; margin-inline: 2px; }
+
+/* ---------- the filter chip under the tab strip ---------- */
+.lc-filter { align-self: flex-start; min-height: 44px; margin-block: -6px; display: inline-flex; align-items: center; }
+.lc-fpill { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 8px 0 14px; border-radius: var(--r-pill); background: color-mix(in oklch, var(--focus) 12%, var(--card)); box-shadow: inset 0 0 0 1.5px var(--focus); color: var(--focus); font-size: 14px; font-weight: 600; }
+
+/* ---------- a relation in the form ---------- */
+.lc-pick { display: flex; flex-direction: column; gap: 8px; }
+.chip.pick.sel { background: color-mix(in oklch, var(--focus) 12%, var(--card)); box-shadow: inset 0 0 0 1.5px var(--focus); color: var(--focus); }
+.chip.pick .lc-t { max-width: 24ch; }
+
+/* ---------- [[ in a long text ---------- */
+.lc-body { position: relative; }
+.fld-multi { display: block; min-height: 108px; padding: 12px; line-height: 1.4; resize: none; overflow-y: auto; }
+.lc-sug { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 5; max-height: 260px; overflow-y: auto; padding: 4px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--edge), var(--shadow); }
+.lc-sug .lc-hint { padding: 12px; }
+.lc-opt { display: flex; flex-direction: column; justify-content: center; min-height: 48px; padding: 6px 12px; border-radius: 12px; cursor: pointer; }
+.lc-opt[aria-selected='true'] { background: color-mix(in oklch, var(--focus) 12%, var(--card)); }
+.lc-ot { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; min-width: 0; }
+.lc-os { font-size: 13px; color: var(--sec); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Link to… ---------- */
+.lc-picker { display: flex; flex-direction: column; gap: 12px; }
+.lc-group { display: flex; flex-direction: column; gap: 8px; }
+.lc-gh { display: inline-flex; align-items: center; gap: 8px; }
+.lc-res { justify-content: space-between; }
+.lc-done { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--sec); }
+
+/* the browser's own clear button on a search field is off-palette: the field is cleared by its text */
+.lc-picker input::-webkit-search-cancel-button, .lc-pick input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }

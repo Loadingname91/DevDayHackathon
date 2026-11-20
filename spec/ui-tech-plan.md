@@ -71,7 +71,7 @@ flowchart LR
 
 ## 3. Contracts
 
-All types come from Pydantic models on the server and reach the client as generated TypeScript (`openapi-typescript`, ADR-004); shown here as TypeScript for reading. Storage of these shapes (page, collection and record blocks) is in `backend.md` §2. **Contract changes from `backend.md` to fold in when the schemas are written:** select options are `{id, label, hint?}` (hint is display only, e.g. "Sat 21 Nov"); new field types `relation`, `formula` and `repeat`; views gain `addAt` (`start` | `end`) and `switch`; the app slug is `key`; stitched records carry a reserved `_via` property; records have a fractional `position`.
+All types come from Pydantic models on the server and reach the client as generated TypeScript (`openapi-typescript`, ADR-004); shown here as TypeScript for reading. Storage of these shapes (page, collection and record blocks) is in `backend.md` §2. **Contract changes from `backend.md` to fold in when the schemas are written:** select options are `{id, label, hint?}` (hint is display only, e.g. "Sat 21 Nov"); new field types `relation` (with `many`), `formula` and `repeat`, and `multiline` on text; reserved record keys `_links` and `_backlinks` ("Links (Nov 20)" below); views gain `addAt` (`start` | `end`) and `switch`; the app slug is `key`; stitched records carry a reserved `_via` property; records have a fractional `position`.
 
 ```ts
 // ---- AppSpec: what Clair writes and the renderer draws ----
@@ -208,6 +208,32 @@ The owner asked on Fri 20 Nov for each app to open on what it is for, not on a l
 **Writes.** All are gestures (`backend.md` §5: applied at once, Undo toast). Picks, the timer and each guided set send no time and expect the server to stamp the collection's `dateField` with now; which writes get the stamp is open (`split.md` §7, Nov 20). Record gestures are in the base build since Nov 20 (`backend.md` §13).
 
 **Schema note.** `checklist.add.set` and `timer.set` are open records. If `propose_app` is to emit these kinds, its schema needs them as key/value lists (the closed-object rule above).
+
+### Links (Nov 20)
+
+The owner asked on Fri 20 Nov: what is the point of notebooks and notes if they are not linked, and the same for every other app. The answer is one mechanism, generic for every app (including ones Clair builds): relations you can see and set, links between any two records, and a Link to… button on every record. The data side is `backend.md` §2 (reserved keys, the `links` table), §5 (`link` and `unlink`) and §10 (`/search`, the two link endpoints); this is what the client reads and draws.
+
+```ts
+type Field = { …, type: 'relation', target: CollectionRef, many?: boolean }   // many: default false; the value is an array of record ids either way
+type Field = { …, type: 'text', multiline?: boolean }                          // a textarea (Notes' body)
+type LinkRef = { app: string; ref: CollectionRef; id: string; title: string; via?: string }
+// Rec.properties, reserved keys (never fields; shown only by the Links UI):
+//   _links:     LinkRef[]   links made FROM this record to any record in any app (stored)
+//   _backlinks: LinkRef[]   derived by the server, read-only: records whose _links point here, and rows whose relation field points here (via = that field's key)
+type SearchHit = { app: string; ref: CollectionRef; id: string; title: string; snippet: string }
+// GET /search?q=&app=&exclude=  -> { hits: SearchHit[] }          at most 20; the link picker and the [[ suggestions
+// POST /records/{id}/links  {to: {ref, id}}  and  DELETE /records/{id}/links/{target_id}  -> CommandResult (Undo toast, like any gesture)
+```
+
+| Piece | What the client does | What it never does |
+| --- | --- | --- |
+| **Relation field** | A picker in the Add and Edit sheet: chips for the target collection's rows (a search field past 6; one chip or several by `many`). On a row, small tappable chips (the target's title, from `data[field.target]`; a cross-app target's rows ride along in the response). The row on the other end shows a reverse count ("4 notes" from `_backlinks` where `via` is the field's key) that opens the list filtered to those rows | Compute the count from other apps' rows, or write `_backlinks` |
+| **`[[` in a text field** | Typing `[[` opens the same suggestion list as the picker (the app's own rows first, then every app: `/search?app=<this app>` then `/search`); choosing one inserts `[[Title]]`. The text is saved as typed; the server turns each `[[Title]]` into a link when it saves | Resolve a `[[Title]]` or keep a link table on the device |
+| **Linked and Linked from** | Every record's detail view and the laptop detail pane show **Linked** (`_links`) and **Linked from** (`_backlinks`): chips with the target app's dye dot. A tap goes to that record in its app. A `via` chip reads "in Notebook" | Show `_links` or `_backlinks` as fields, in a form or in a list column |
+| **Link to…** | A button in the edit sheet and the laptop detail pane, on every record of every app: a picker with a search field over `/search`, results grouped by app with dye dots; picking one calls `POST /records/{id}/links`. Each chip under Linked has a remove (`DELETE …/links/{id}`). Both give the Undo toast | Offer Link to… on a build-preview `example` row (it has no links) |
+| **A deleted target** | `title` is `"(deleted)"`: the chip is struck through, not tappable | Hide it |
+
+Motion (`design/DESIGN.md` §6): a new chip arrives with opacity and an 8 px rise, 220 ms (`T.state`); removing one fades in 140 ms; the pickers are sheets (`Sheet.tsx`); reduced motion keeps 120 ms fades only. List navigation and filters don't animate. Words: sentence case, "Linked" and "Linked from", "Link to…", "app" never "tab". The mock (`web/src/mocks/handler.ts`) implements all of it: it derives `_backlinks`, fills titles, resolves `[[Title]]` on read and serves `/search` and the two link routes, so every screen can be built without the backend. Clair reading `_links` is not built for DevDay (private-app rule in `backend.md` §5).
 
 ## 4. Basted → stitched: the proposal model
 
