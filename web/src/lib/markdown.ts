@@ -45,11 +45,23 @@ function hook() {
   });
 }
 
+/**
+ * Notes are typed fast, so `#Title` and `##Title` (no space) read as headings too; standard Markdown needs `# Title`.
+ * Fenced code is left alone. A line that starts with `#tag` is therefore a heading too; that is the trade for typing speed.
+ */
+function lenientHeadings(src: string): string {
+  let fence = false;
+  return src.split('\n').map((line) => {
+    if (/^\s{0,3}(```|~~~)/.test(line)) { fence = !fence; return line; }
+    return fence ? line : line.replace(/^(\s{0,3}#{1,6})(?=[^\s#])/, '$1 ');
+  }).join('\n');
+}
+
 /** Markdown to safe HTML. `wiki` says what each `[[Title]]` opens. */
 export function renderMarkdown(src: string, wiki?: WikiLookup): string {
   hook();
   lookup = wiki;
   let html = '';
-  try { html = marked.parse(src, { async: false }) as string; } finally { lookup = undefined; }
+  try { html = marked.parse(lenientHeadings(src), { async: false }) as string; } finally { lookup = undefined; }
   return DOMPurify.sanitize(html, { USE_PROFILES: { html: true }, ADD_ATTR: ['target', 'data-app', 'data-id'], FORBID_TAGS: ['style', 'form', 'iframe', 'object', 'embed'] });
 }

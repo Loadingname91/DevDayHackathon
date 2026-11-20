@@ -135,7 +135,8 @@ export function send(body: TurnRequest, said: string, o: { replace?: number; att
   aborts[cid] = ac;
   const turn = blank(said, voice);
   if (o.replace) turn.id = o.replace;
-  if ('images' in body || 'files' in body) { turn.paths = { images: body.images ?? [], files: body.files ?? [] }; turn.attach = o.attach ?? []; }
+  if ('images' in body || 'files' in body) turn.paths = { images: body.images ?? [], files: body.files ?? [] };
+  if (o.attach) turn.attach = o.attach; // a sample or a retry of a turn with files keeps its tiles and its thumbnail
   updConv(cid, (x) => ({
     ...x, touched: true, last: Date.now(), title: x.title || db.clip(o.attach?.length && said === ATTACH_ONLY_TEXT ? o.attach[0].name : said),
     turns: o.replace

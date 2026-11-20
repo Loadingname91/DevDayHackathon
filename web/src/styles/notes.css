@@ -2,7 +2,8 @@
    Tokens only; prefix `nb-` (the block), `tr-` (components/Tree.tsx), `np-` (a page), `.md` (rendered markdown). design/DESIGN.md §14. */
 
 /* ---------- the room: the detail pane gives way, the page and its preview are the detail ---------- */
-.shell.ws .screen { max-width: 1240px; }
+.shell.ws .screen { max-width: none; margin: 0; padding-inline: 28px; }
+:root[data-look='cloth'] .shell.ws .screen[data-dye] { max-width: none; margin: 0; padding-inline: 28px; } /* the Cloth look centres a 900px column; the workspace takes the whole room */
 
 /* ---------- the tree (components/Tree.tsx) ---------- */
 .tr { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -46,6 +47,11 @@
 .nb-main { min-width: 0; container-type: inline-size; }
 .np-none { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 72px 16px; text-align: center; color: var(--sec); font-size: 16px; }
 
+/* the workspace is the screen: the app's own heading steps back so the page gets the room */
+.shell.ws .ident h1 { font-size: 24px; }
+.shell.ws .ident .tile { width: 36px; height: 36px; }
+.shell.ws .status-s { margin-block: 0 4px; }
+
 /* ---------- a page ---------- */
 .np { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .np-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: var(--hit); }
@@ -76,8 +82,9 @@
   font-size: 16px; line-height: 1.65; caret-color: var(--focus); overflow: hidden; }
 .note-ta::placeholder { color: var(--sec); }
 .lc-body.note .lc-sug { position: sticky; top: auto; bottom: 12px; left: auto; right: auto; margin: 0 12px 12px; } /* a list under a page-long field stays on screen, whatever the scroll */
-.np-read { min-width: 0; padding: 4px 8px; }
-.np-body.preview .np-read { padding-inline: 0; }
+.np-read { min-width: 0; padding: 16px; min-height: max(320px, 52dvh); border-radius: 22px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--card-line); } /* the same card as the writing surface, so Write, Split and Preview never jump */
+.np-body.preview .np-read .md, .np-body.split .np-read .md { max-width: none; }
+.np-body.preview .np-read { padding: 20px 28px; }
 .np-empty { padding: 16px 0; font-size: 15px; color: var(--sec); }
 .np-links { margin-top: 8px; }
 .np ::selection { background: color-mix(in oklch, var(--focus) 24%, transparent); }
@@ -90,6 +97,10 @@
 .md h1 { font-size: 28px; } .md h2 { font-size: 22px; } .md h3 { font-size: 18px; } .md :is(h4, h5, h6) { font-size: 16px; }
 .md :is(p, ul, ol, blockquote, pre, table) { margin: 0 0 .9em; }
 .md :is(ul, ol) { padding-left: 1.4em; }
+.md ul { list-style: disc; }
+.md ol { list-style: decimal; }
+.md ul ul { list-style: circle; }
+.md li::marker { color: var(--sec); }
 .md li + li { margin-top: .25em; }
 .md li:has(> input[type='checkbox']) { list-style: none; margin-left: -1.4em; }
 .md input[type='checkbox'] { appearance: none; width: 20px; height: 20px; margin: 0 8px 0 0; vertical-align: -4px; border-radius: 50%; background: none; box-shadow: inset 0 0 0 1.5px var(--sec); }

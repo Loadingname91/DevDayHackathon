@@ -69,6 +69,10 @@
 .shell .pair { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
 .shell .pair-item > .card, .shell .pair-item > .metrics-row { flex: 1; } /* a short card in a pair takes the height of its neighbour (AppView also pairs only blocks of near height) */
 .shell .metrics-row { gap: 16px; }
+/* Nothing swipes on a laptop: a chip strip that runs past its column (Calories "Again", Groceries lists) hides chips with no way to reach
+   them. In an app's blocks the chips wrap; the phone keeps its swipe row. */
+.shell .blocks .chips.scroll { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; scroll-snap-type: none; -webkit-mask-image: none; mask-image: none; }
+.shell .blocks .chips.scroll > .chip { max-width: 100%; white-space: normal; text-align: left; } /* a chip longer than a narrow column wraps its words, never past the edge */
 /* lists read as tables: title, detail, amount (the board's "Recent") */
 .shell .list > li.row .row-btn:has(.amt) { display: grid; grid-template-columns: minmax(0, 1fr) 210px 90px; gap: 12px; align-items: center; min-height: 48px; padding: 0 12px; }
 .shell .list > li.row .row-btn:has(.amt) .main { display: contents; }
