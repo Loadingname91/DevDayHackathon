@@ -11,6 +11,7 @@ import { EmptyState, NoData } from '../EmptyState';
 import { Icon } from '../Icon';
 import { Checklist } from './Checklist';
 import { Days } from './Days';
+import { useRowEnter } from '../../lib/enter';
 import { passesAll } from './filter';
 import { Bars, Countdown, fill, fit, Gauge, Next, Picks, Ring, Strip } from './instruments';
 import { MonthLog } from './MonthLog';
@@ -82,8 +83,11 @@ function List({ block, ctx }: { block: ListBlock; ctx: Ctx }) {
   const [adding, setAdding] = useState(false);
   const wide = useWide();
   const picked = useStore((s) => s.detail?.id);
+  // a row that arrives in a list already on screen grows in (every row the list holds counts, drawn or not; lib/enter.ts)
+  const held = ((ctx.data[block.source] ?? []) as Rec[]).filter((r) => passesAll(r, block.where, ctx.now));
+  useRowEnter(ctx.preview ? null : held.map((r) => r.id), { scope: block.id });
   if (!c) return null;
-  let rows = ((ctx.data[block.source] ?? []) as Rec[]).filter((r) => passesAll(r, block.where, ctx.now));
+  let rows = held;
   if (block.sort) {
     const { field, dir } = block.sort, s = dir === 'asc' ? 1 : -1;
     rows = [...rows].sort((a, b) => {
@@ -138,7 +142,7 @@ function List({ block, ctx }: { block: ListBlock; ctx: Ctx }) {
       </>
     );
     return (
-      <li className="row" key={r.id} data-dye={ctx.spec.dye}>
+      <li className="row" key={r.id} data-dye={ctx.spec.dye} data-row={r.id}>
         {canEdit && !google ? <button className="row-btn" aria-pressed={wide ? picked === r.id : undefined}
           onClick={() => (wide ? setDetail({ app: ctx.spec.key, ref: block.source, id: r.id }) : setEditing(r))}>{inner}</button> : <span className="row-btn">{inner}</span>}
       </li>

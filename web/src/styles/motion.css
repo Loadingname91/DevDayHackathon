@@ -73,11 +73,11 @@
 .toast .edge .m { stroke: #fff; stroke-width: 8; stroke-dasharray: 100 100; stroke-dashoffset: 0; transition: none; animation: unthread var(--ms, 8s) linear both; }
 @keyframes unthread { to { stroke-dashoffset: 100; } }
 .toast:not(.on) .edge .m, .toast.held .edge .m { animation-play-state: paused; }
-/* Undo: the seam snaps whole (the gaps close, 120) while the thread stops where it is... and is shown complete */
+/* Undo: the seam snaps whole (the gaps close, 120) and the unthreading stops, so the edge is complete while the capsule dissolves */
 .toast.undoing .edge rect:not(.m) { stroke-dasharray: 5 0; }
 .toast.undoing .edge .m { animation: none; stroke-dashoffset: 0; }
 /* an error is a frayed edge (2 / 5, ink), static; a plain note has no edge at all */
-.toast.frayed .edge rect { stroke: var(--ink); stroke-dasharray: 2 5; }
+.toast.frayed .edge rect:not(.m) { stroke: var(--ink); stroke-dasharray: 2 5; }
 .toast.frayed:not(.thread) { padding-right: 16px; }
 
 /* ---------- sheet: rises from the Clair cell (catalogue N1) ----------

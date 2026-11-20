@@ -273,7 +273,7 @@ Each requirement lists its cut and how it is verified. "E2E" means a scripted br
 | ID | Requirement | Cut | Verify |
 | --- | --- | --- | --- |
 | FR-B1 | **Describe:** a sentence first, suggestion chips, and 4 to 6 patterns that skip straight to Preview. | **Live for the three recorded sentences** (`spec/clair-agent.md` §12.11, AB-1b) / Live+ (any sentence) / Beta (patterns) | E2E |
-| FR-B2 | **Build:** blocks appear as chalk then basted while Clair works; at most 2 quick-choice questions, only when the sentence is truly ambiguous. | Live+ | Eval set (AB-1) |
+| FR-B2 | **Build:** before it builds, Clair asks 1 to 3 multiple-choice questions in one card (each with Other; "Skip, use your best guess" answers for you), then shows a plan in plain words and waits for Build it; the pattern tiles of FR-B1 answer for you and go straight to Preview. Then the preview appears: one chalk frame while Clair works, then basted. | Live+ | Eval set (AB-1) |
 | FR-B3 | Clair's spec is validated against the schema; an invalid spec is retried automatically, then shown as a friendly error with "Try again". A broken app is never shown. | Base (the checker exists before the event) | Unit tests with invalid specs |
 | FR-B4 | **Preview:** the full app with labelled example rows; swipe between 3 layouts (List first / Calendar first / Summary first). | Live+ (one layout) / Beta (3) | E2E |
 | FR-B5 | **Arrange (optional):** reorder, remove, add from the 9 blocks, flip list/table/calendar, or tell Clair. | Proto / Beta | Beta E2E |

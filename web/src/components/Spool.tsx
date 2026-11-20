@@ -6,7 +6,7 @@ import { memo, useEffect, useRef } from 'react';
 export type Expr = 'hello' | 'working' | 'thinking' | 'waiting' | 'stitched' | 'proud' | 'oops' | 'sleepy';
 
 function svg(expr: Expr, size: 30 | 44 | 96, play: boolean): string {
-  const W = '#FFFFFF', INKC = '#2A2119', sm = size <= 44;
+  const W = '#FFFFFF', INKC = '#0F241E', sm = size <= 44;
   const o = sm ? 2.6 : 1.6, fw = sm ? 2.6 : 1.8, er = sm ? 3.2 : 2.3; // outline, face stroke, eye radius
   const eyes = (dx = 0, dy = 0) => `<g class="eyes"><circle cx="${23 + dx}" cy="${26 + dy}" r="${er}" fill="${W}"/><circle cx="${33 + dx}" cy="${26 + dy}" r="${er}" fill="${W}"/></g>`;
   const P = (d: string) => `<path d="${d}" fill="none" stroke="${W}" stroke-width="${fw}" stroke-linecap="round" stroke-linejoin="round"/>`;
@@ -25,7 +25,7 @@ function svg(expr: Expr, size: 30 | 44 | 96, play: boolean): string {
   return `<svg class="sp ${cls}" width="${size}" height="${Math.round((size * 70) / 68)}" viewBox="-6 -10 68 70" aria-hidden="true"><g class="body">
     ${tail ? `<path d="${tail}" fill="none" stroke="${INKC}" stroke-width="${o}" stroke-linecap="round" stroke-linejoin="round"/>` : ''}
     <rect x="10" y="6" width="36" height="8" rx="3" fill="#D9B98F" stroke="${INKC}" stroke-width="${o}"/>
-    <rect x="14" y="14" width="28" height="28" fill="#3557A6" stroke="${INKC}" stroke-width="${o}"/>
+    <rect x="14" y="14" width="28" height="28" fill="#00665D" stroke="${INKC}" stroke-width="${o}"/>
     ${sm ? '' : '<path d="M14 18.5h28M14 38h28" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="1.4"/>'}
     <rect x="10" y="42" width="36" height="8" rx="3" fill="#D9B98F" stroke="${INKC}" stroke-width="${o}"/>
     ${over}${face}</g>${extra}</svg>`;

@@ -18,6 +18,7 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
   - `clair-agent.md`: agent loop, tool registry, SSE events, snapshot, pause/resume, evals
   - `ui-tech-plan.md`: client stack, contracts, files, motion
   - `split.md`: owners, the contract, the mock rules, the mock-to-live order, stories by side, the hand-off log
+  - `primitives.md`: how any app is built from a few composable parts (expressions, `flow`, `chart` v2, `regions`, record pages, views, custom blocks) and the plan for them (ADR-014); only T-1 to T-4 are for DevDay
   - `adr/`: decision records. ADRs live here, not in `docs/adr/`.
 - `docs/`: written for people (start here, the product in plain words `docs/product.md`, pitch, demo-day guide, Home research, Claude Code setup). Prose there gets a `humanizer:humanizer` pass after edits.
 - `design/`: the Home, Flows and motion prototypes (the client ports CSS and motion from them), `notes/fixspec.md` (cited as "fixspec"), the Soft Quilt tokens and the canvas generators in `tools/`. See `design/README.md`.

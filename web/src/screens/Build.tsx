@@ -35,10 +35,12 @@ const expired = (c: Card | null) => !!c?.expires_at && Date.parse(c.expires_at) 
 
 /**
  * Build an app from one sentence (US-6; clair-agent.md §7 rule 7, §11, §12.11). Describe →
- * Clair asks a few questions in one card → the plan in plain words → Build it (chalk, then
- * basted pieces) → Make it (the sew finale) → Home, where the new patch sews in. Nothing is
- * saved before Make it. Choreography from design/prototypes/quilt-flows.html b1/b2/b5 and the
- * motion catalogue's "Building an app" rows; steps crossfade (out 140, in 220).
+ * Clair asks a few questions in one card → the plan in plain words → Build it (one chalk frame,
+ * then basted) → Make it (the sew finale) → Home, where the new patch sews in. A pattern tile on
+ * Describe answers the questions for you and goes straight to the preview. Nothing is saved before
+ * Make it. Layout from boards Build and Preview (design/DESIGN.md §5 "New app"); choreography from
+ * design/prototypes/quilt-flows.html b1/b2/b5 and the motion catalogue's "Building an app" rows;
+ * steps crossfade (out 140, in 220).
  */
 export function Build() {
   const draft = useStore((s) => s.buildDraft);

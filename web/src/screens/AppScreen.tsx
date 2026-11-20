@@ -100,6 +100,8 @@ export function AppScreen() {
         </div>
       )}
       {!landing && <AppView key={tab} app={app} tab={tab} apps={home?.apps ?? []} now={now} tabbed={spec.tabs.length > 1} />}
+      {/* the other tabs' panels are not drawn; an empty hidden one each keeps every tab's aria-controls pointing at a real panel */}
+      {!landing && spec.tabs.length > 1 && spec.tabs.filter((t) => t.id !== tab).map((t) => <div key={t.id} id={`panel-${t.id}`} role="tabpanel" aria-labelledby={`tab-${t.id}`} hidden />)}
 
       <Sheet open={menu} onClose={() => setMenu(false)} label={`${spec.name} menu`}>
         <div className="sheet-head"><span className="txt"><h2>{spec.name}</h2><span className="sub">{spec.tabs.length} tab{spec.tabs.length === 1 ? '' : 's'}</span></span></div>

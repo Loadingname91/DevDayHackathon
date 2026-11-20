@@ -3,6 +3,7 @@ import { errorText, request } from '../api/client';
 import type { Collection, CommandResult, Field, Patch, Rec } from '../api/types';
 import { addDays, dayKey } from '../lib/format';
 import { afterCommand, toast } from '../lib/store';
+import { Disclosure } from './Disclosure';
 import { Icon } from './Icon';
 import { startValues } from './QuickAdd';
 import { Sheet } from './Sheet';
@@ -144,7 +145,12 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
       <form className="add-form" onSubmit={save}>
         <div className="sheet-head"><span className="txt"><h2>{record ? `Edit ${singular(c)}` : `New ${singular(c)}`}</h2><span className="sub">{appName}</span></span></div>
         {main.map(row)}
-        {extra.length > 0 && (more ? extra.map(row) : <button type="button" className="link" onClick={() => setMore(true)}>More details ›</button>)}
+        {extra.length > 0 && (
+          <>
+            <Disclosure open={!more}><button type="button" className="link" onClick={() => setMore(true)}>More details ›</button></Disclosure>
+            <Disclosure open={more}>{extra.map(row)}</Disclosure>
+          </>
+        )}
         {from && <span className="provenance" data-dye={from.dye}><i className="dyedot" />From {from.name}</span>}
         {via?.workflow && <span className="provenance">Added by a rule</span>}
         {err && <p className="err" role="alert">{err}</p>}

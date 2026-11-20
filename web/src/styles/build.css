@@ -41,25 +41,28 @@
 .build .ptitle h1 { min-width: 0; font-size: 28px; font-weight: 700; letter-spacing: -.025em; line-height: 1.05; overflow-wrap: anywhere; }
 .build .ptitle .pill { align-self: center; }
 :root[data-look='cloth'] .build .ptitle .dye { color: var(--deep); box-shadow: inset 0 1px 0 var(--hi), inset 0 -6px 8px -6px var(--stitch), 0 6px 10px -8px var(--shade); }
-.pv { min-height: 168px; gap: 12px; }
+.pv { min-height: 168px; padding: 12px 12px 16px; gap: 12px; } /* 12 at the sides: blocks keep nearly the width they have in the app (a month's day cells stay 44 wide) */
+.pv .tabs { margin: 0 -12px; padding: 0 8px; } /* the strip runs edge to edge of the frame; its first tab's text sits 8 in from the card edge, as in the app */
+.pv .m-grid { padding-inline: 4px; }
 .pv .pbody { display: flex; flex-direction: column; gap: 12px; }
 .build .make { display: flex; flex-direction: column; gap: 8px; }
 .build .make .line { display: flex; align-items: center; gap: 12px; font-size: 15px; line-height: 1.3; }
 .build .make .txt { min-width: 0; flex: 1; }
 .bq-dock { position: fixed; left: 0; right: 0; bottom: 0; margin: 0 auto; width: min(100%, 480px); z-index: 30;
-  padding: 32px 16px calc(16px + var(--safe-b)); display: flex; flex-direction: column; gap: 8px;
+  padding: 32px 16px calc(24px + var(--safe-b)); display: flex; flex-direction: column; gap: 8px;
   background: linear-gradient(to top, var(--cloth, var(--ground)) 82%, transparent); pointer-events: none; } /* solid under the words, so a row scrolling beneath never shows through them */
 .bq-dock > * { pointer-events: auto; }
 .bq-meta { text-align: center; font-size: 13px; color: var(--sec); }
 .bq-pair { display: grid; grid-template-columns: auto 1fr; gap: 8px; } /* "Change answers" never wraps; Make it takes the rest */
 .bq-pair .ghost { white-space: nowrap; }
-.screen.build.has-dock { padding-bottom: calc(150px + var(--safe-b)); }
+.screen.build.has-dock { padding-bottom: calc(158px + var(--safe-b)); }
 
 /* ---------- steps: each crossfades in (220); the old one fades out first (140, Build.tsx swap) ---------- */
 .bq-stage { display: flex; flex-direction: column; gap: 16px; animation: bq-in var(--t-state) var(--ease) backwards; }
 @keyframes bq-in { from { opacity: 0; } }
 .bq-line { min-height: 32px; }
 .bq-line > span { min-width: 0; }
+.bq-line > span:first-child { flex: none; } /* the spool keeps its size beside a two-line sentence */
 
 /* ---------- question card: one card, 1 to 3 questions ---------- */
 .bq-card { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
@@ -124,7 +127,7 @@
 
 /* ---------- laptop: one centred column, about 560 wide, so no field stretches ---------- */
 .shell .screen.build > * { width: 100%; max-width: 560px; margin-inline: auto; }
-.shell .screen.build.has-dock { padding-bottom: 150px; }
+.shell .screen.build.has-dock { padding-bottom: 158px; }
 .shell .bq-dock { left: 240px; width: min(calc(100% - 240px), 592px); } /* centred on the main column, past the sidebar */
 
 @media (prefers-reduced-motion: reduce) {
