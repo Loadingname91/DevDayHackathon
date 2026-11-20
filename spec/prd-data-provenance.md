@@ -96,7 +96,7 @@ Stories are expanded with Given/When/Then in the epics below.
 ### Out of Scope
 
 - Third-party data Quilt can't see: app usage, bank feeds, store loyalty data.
-- Any layout, colour or type change (owned by the restyle, `docs/open-decisions.md` §1).
+- Any layout, colour or type change (owned by the restyle, `docs/start-here.md`, Decisions).
 
 ### Future Considerations
 
@@ -302,7 +302,7 @@ Escalate to the owner (the repo owner, who decides product scope) when:
 
 ### Dependencies
 
-- The look decision (`docs/open-decisions.md` §1) gates E5, because boards are regenerated once.
+- The look decision (`docs/start-here.md`, Decisions) gates E5, because boards are regenerated once.
 - The seed script (build task T2) gates E1 and E2.
 
 ### Risks

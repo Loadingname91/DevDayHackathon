@@ -10,7 +10,7 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
   - `clair-agent.md`: agent loop, tool registry, SSE events, snapshot, pause/resume, evals
   - `ui-tech-plan.md`: client stack, contracts, files, motion
   - `adr/`: decision records. ADRs live here, not in `docs/adr/`.
-- `docs/`: written for people (pitch, onboarding journey, demo-day guide, research, Claude Code setup). Prose there gets a `humanizer:humanizer` pass after edits.
+- `docs/`: written for people (start here, pitch, onboarding journey, demo-day guide, research, Claude Code setup). Prose there gets a `humanizer:humanizer` pass after edits.
 - `design/`: canvas boards (generated), prototypes, design book, Playwright tests, `notes/fixspec.md` (cited as "fixspec").
 - `GLOSSARY.md` (terms; say "app", never "tab"), `PRODUCT.md` and `.impeccable/` (design context for the impeccable skill): keep at the root.
 
@@ -38,10 +38,15 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
 - Live canvas: https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P (the artifact serves files at `project/<file>`; publish by mapping each `project/<file>` to `design/canvas/<file>` in `files`). Home and Flows prototypes: see `design/README.md`.
 - Never commit or publish `support.js` / `dc-runtime.js` (git-ignored; fetch from the artifact when needed).
 
-## Current state (Nov 19 evening)
+## Current state (Nov 19 night; human version: `docs/start-here.md`)
 
-- The visual redesign is waiting on the owner's pick: see `docs/open-decisions.md` §1. Until then the Quilter's Workbench look in `.impeccable/surfaces/app.md` is still what the boards use, but it is being replaced. Don't polish it.
-- Look mocks: canvas pages "Look: cross-stitch" and "Look: Gen Z options" (`design/tools/gen_xstitch.py`, `design/tools/gen_looks.py`).
+- Positioning: app builder first, apps connected on arrival, data from anywhere. Never lead with photo capture.
+- Demo beat 4: recorded build of the Car app (`spec/clair-agent.md` §12.0) + live 5 s oil-change fill; fallbacks §12.0a whiteboard, §12.1 grocery receipt. Script: `docs/demo-day.md`.
+- Seed: `spec/backend.md` §2.2 + §2.3 is complete and wins over boards. Rule and fixes: `spec/prd-data-provenance.md` (audit rows in `spec/data-audit/`).
+- Business: `founder/` (founder skill pack; verdict Not yet). Model split (`CLAIR_MODELS`), $4 student price, free import/export are owner decisions.
+- Parked, don't build unless asked: `spec/workflows.md` (workflows/triggers + Internship hunt showcase); board restyle waits on the look pick (`docs/start-here.md`, Decisions); `.impeccable/surfaces/app.md` is the old look, don't polish it.
+- Look mocks: canvas pages "Look: cross-stitch" and "Look: Gen Z options" (`design/tools/gen_xstitch.py`, `design/tools/gen_looks.py`); concept seed 57599b46.
+- Stale for framing (receipt-first): `docs/research/persona-sam-student.md`, `docs/onboarding.md`, the DevDay application answer in `docs/pitch.md`.
 
 ## Working rules
 

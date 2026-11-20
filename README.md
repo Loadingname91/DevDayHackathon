@@ -9,11 +9,11 @@ Quilt is a phone app for a student's money, groceries, classes, workouts and to-
 | `docs/` | People | The pitch, the onboarding journey, the demo-day guide, research on the first user, and how to set up Claude Code on a new machine |
 | `spec/` | Building it (written for coding agents) | Requirements and stories, the backend design, Clair's agent loop, the UI build plan, and the decision records in `spec/adr/` |
 | `design/` | Design | The design canvas boards and their generator, the clickable prototypes, the design book and the board tests |
-| `docs/open-decisions.md` | Picking up | What is waiting on a decision right now |
+| `docs/start-here.md` | Picking up | Read this first: where things stand, what to do before the pitch, decisions waiting on you, and what's parked |
 | `founder/` | The business | The founder-pack review: board, competitors, simulated buyer panel, pricing, unit economics and the plan (start with `founder/summary.md`); the first run is in `founder/run-1-photo-wedge/` |
 | `setup/` | New machines | A copy of the Claude Code settings and hook (see `docs/setup-claude-code.md`) |
 
-Start with `docs/pitch.md` for the idea, or `docs/demo-day.md` for the demo.
+Start with `docs/start-here.md`. Then `docs/pitch.md` for the idea, or `docs/demo-day.md` for the demo.
 
 `GLOSSARY.md` defines the product's words (app, patch, Clair, basted, stitched). `PRODUCT.md` and `.impeccable/` hold the design brief the design tools read. `CLAUDE.md` is the map for Claude Code.
 
