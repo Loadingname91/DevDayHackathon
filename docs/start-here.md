@@ -17,6 +17,16 @@ The plan changed three times tonight; this is the last version (`spec/adr/010-we
 
 The script is `docs/demo-day.md`. The build order is `spec/backend.md` §13.
 
+## Who builds what
+
+Hitesh builds the frontend: everything in `web/`. His teammate builds the backend: the API in `api/`, the database, Google sign-in and Clair.
+
+The frontend doesn't wait for the backend. It is built first against mock data, which is a set of saved answers copied from the demo seed, and each screen is switched over to the real API as that part of the API goes live. A screen that only works on mock data isn't finished, and mock data is never shown on stage.
+
+The two halves meet at the contract: the list of API calls and the shape of each answer. If either side needs to change it, they change the spec and add a line to the log in `spec/split.md`, so the other person's Claude Code sees it on the next pull.
+
+If you're picking this up on a new machine, tell Claude Code which side you're on. `spec/split.md` has the rest.
+
 ## Before the pitch, in order
 
 1. **Tonight: the base.** Steps T1 to T4 in `spec/backend.md` §13. It's done when you can type "spent $12 on lunch" on the phone, tap Add, see $412 become $400 on the laptop, and Undo.
@@ -40,6 +50,8 @@ The script is `docs/demo-day.md`. The build order is `spec/backend.md` §13.
 | The planner | A full week: lifts, runs, recovery and a grocery item, from Calendar, Google Calendar, Classes, To-dos, Running, Calories and Cycle |
 | Scope tomorrow | All of it, in the order above, cutting from the end |
 | Client for DevDay | Website only, on phone and laptop |
+| Where it runs | The website's files on Vercel. The API is one ordinary Python server on Railway, not Vercel functions (`spec/adr/012-api-on-railway-long-running-server.md`) |
+| Who builds what | Hitesh the frontend, on mock data first; his teammate the backend (`spec/split.md`) |
 | Google Calendar | Read-only, through Google sign-in; writing back to Google is later |
 | Encryption | None for the hackathon; planned later |
 | Which AI model does what, after DevDay | Haiku 5.5 for photos and chat, Sonnet 5.5 for building. Opus 5.5 for everything at DevDay |
@@ -86,10 +98,10 @@ These still lean on the receipt, the Car build or the old look. They're fine to 
 
 | Folder | What's in it |
 | --- | --- |
-| `docs/` | Written for people: this page, the product in plain words, the pitch, the demo-day script, the Home research, and setting up Claude Code on a new machine |
+| `docs/` | Written for people: this page, the product in plain words, the pitch, the demo-day script and the Home research |
 | `spec/` | Written for building: requirements, the backend and seed, Clair's agent, the UI plan, the data provenance PRD and its audit, parked workflows, and decision records in `spec/adr/` |
 | `design/` | The Home, Flows and motion prototypes, the design notes and the generators. The boards are on the design canvas: https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P, which links to every other Quilt page |
-| `setup/` | Claude Code settings to copy onto a new machine (`docs/setup-claude-code.md`) |
+| `setup/` | Claude Code settings, hook and skills list to copy onto a new machine |
 
 `README.md` is the repo map, and `CLAUDE.md` is the map Claude Code reads first.
 

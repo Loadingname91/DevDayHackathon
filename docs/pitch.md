@@ -162,7 +162,7 @@ The MVP takes a thin slice of every pillar except Share, so the demo shows the w
 
 Demo apps, pre-seeded with realistic data: Budget, Groceries, Calendar, Classes, Workout, To-dos, Subscriptions, Notes, Calories, Running, Cycle and Meditation.
 
-**Stack:** React + Vite website, on the phone's browser and the laptop for DevDay (no Android app yet; decided late Nov 19); a Python (FastAPI) API on Vercel that alone holds the Claude key; Supabase for Postgres, sign-in and live updates; Claude (`claude-opus-5-5`, tools) for Clair through the Anthropic Python SDK tool runner. All formulas run in Python on the server. DevDay has no stack rules.
+**Stack:** React + Vite website, on the phone's browser and the laptop for DevDay (no Android app yet; decided late Nov 19); a Python (FastAPI) server on Railway that alone holds the Claude key; Supabase for Postgres, sign-in and live updates; Claude (`claude-opus-5-5`, tools) for Clair through the Anthropic Python SDK tool runner. All formulas run in Python on the server. DevDay has no stack rules.
 
 **Split for two people**
 

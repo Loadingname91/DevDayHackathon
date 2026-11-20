@@ -10,7 +10,7 @@ adaptive (one React website for DevDay, on the phone's browser and on laptops; a
 
 ## Stack
 
-React + Vite (TypeScript) served as a website (no Capacitor shell for DevDay); FastAPI (Python) on Vercel; Supabase (Postgres blocks table, anonymous auth, Realtime, Storage); Clair runs on the Anthropic Python SDK tool runner with Claude (vision, tools). See spec/backend.md and spec/clair-agent.md.
+React + Vite (TypeScript) served as a website (no Capacitor shell for DevDay); FastAPI (Python) as one always-on server on Railway, with the website's static files on Vercel; Supabase (Postgres blocks table, anonymous auth, Realtime, Storage); Clair runs on the Anthropic Python SDK tool runner with Claude (vision, tools). See spec/backend.md and spec/clair-agent.md.
 
 ## Users
 

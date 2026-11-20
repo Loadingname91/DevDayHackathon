@@ -4,7 +4,7 @@ Status: draft for DevDay (Fri 20 Nov 2026) · Owner: Quilt team · Decision reco
 
 Clair is one agent loop. Every input (typed text, a voice transcript, a live photo, a screenshot, a PDF or text file) goes into the same loop, with the same tools, on the same model. Clair works out what the input is, reads Sam's apps, asks through a menu when it can't decide, saves notes about how Sam likes things done, and proposes changes. It never writes app data itself: the only write tool, `propose_changes`, creates a **basted** change set that Sam confirms on the card ([ADR-003](adr/003-basted-proposals.md)).
 
-Anything marked **spike at T1** has not been run against the SDK or Vercel yet and must be confirmed in the first hour of the build.
+Anything marked **spike at T1** has not been run against the SDK or the Railway deployment yet and must be confirmed in the first hour of the build.
 
 Contents
 
@@ -76,7 +76,7 @@ New turn:
 
 `context` is optional: the app and record Clair was opened from (Notes → CS 3500 → New note). The snapshot names it, and Clair files into it unless the input clearly belongs elsewhere.
 
-`images` and `files` are Storage paths only. The client has already uploaded each file straight to `clair-uploads` with supabase-js (backend.md §9); the request never carries a file body, so it stays under the Vercel request body limit (about 4.5 MB, spike at T1).
+`images` and `files` are Storage paths only. The client has already uploaded each file straight to `clair-uploads` with supabase-js (backend.md §9); the request never carries a file body, so it stays small.
 
 Use sample (stage fallback, §15):
 
@@ -383,7 +383,7 @@ Read levels change the snapshot ("What Clair can read", FR-T2):
 | Effort | `output_config={"effort": "low"}` for capture, answer and ask; `"medium"` for build. Set explicitly on every call (the model's default is medium). Chosen once per run: `medium` when the turn starts in the Build flow or its text matches the build check ("make", "build", "track", "an app for"), otherwise `low` |
 | `max_tokens` | 16000 per call |
 | `max_iterations` | 8 per run (a resume after a question starts a new count of 8; the run total is capped at 12) |
-| Wall clock | 45 s per request, checked between iterations, and kept under the Vercel function's `maxDuration` (confirm the plan's limit; spike at T1) |
+| Wall clock | 45 s per request, checked between iterations (Clair's own budget; the Railway server has no function time limit, ADR-012) |
 | `tool_choice` | `auto` (the default). Forcing `any` or a named tool returns 400 on this model. The prompt says which tool to call; `strict: true` on every tool keeps inputs schema-valid |
 | Parallel tools | Allowed. Read tools are safe to run together. All `tool_result` blocks for one assistant message go back in one user message |
 | Refusal fallback | `betas=["server-side-fallback-2026-07-01"]`, `fallbacks="default"` |
@@ -551,7 +551,7 @@ def propose_app(name: str, purpose: str, spec: AppSpec,
 
 ## 11. Pausing for a menu question
 
-A Vercel request can't wait for Sam to tap a chip, so `ask_user` ends the request and the answer starts a new one.
+A request shouldn't stay open while Sam decides (the phone may sleep, and a deploy would drop it), so `ask_user` ends the request and the answer starts a new one.
 
 Flow:
 
@@ -1068,7 +1068,7 @@ Each run gets one trace id that the client also logs, so a rehearsal problem can
 | Receipt `proposal` | 10 s or less |
 | Status line says what it's still doing | Past 6 s (FR-C10) |
 | "Use sample" appears | Past 12 s (placeholder; set from the T1 timing of a full receipt run on the deployed stack, backend.md §13) |
-| Hard stop | 45 s wall clock, inside Vercel `maxDuration` |
+| Hard stop | 45 s wall clock |
 
 How we hold them:
 
@@ -1077,7 +1077,7 @@ How we hold them:
 - Warm the functions before the pitch (a `/health` ping that also opens the database pool, then one fixture run).
 - "Use sample" sends `POST /clair/turns {fixture: "receipt" | "fridge"}`. The server replays a recorded draft (`api/fixtures/*.json`) through the same `propose_changes` pipeline: validation, stitches, dry run, one basted change set with `mode: fixture`, and the card shows "sample". Fixtures name apps and collections by key and records by name, resolved to ids at replay, never stored UUIDs, so they survive a reseed. No model call and no credits; nothing fixture passes as live.
 - If the T1 timing is over 6 s: the receipt prompt runs from the snapshot only (no read tools) and makes exactly one `propose_changes` call.
-- Whether Vercel's Python runtime streams SSE without buffering is spike at T1. If it buffers, the fallback is the client polling `GET /clair/runs/{id}/events?after=n` every 500 ms (backend.md §10), using the `run_id` it sent with the turn. The SSE result decides only the client's transport; the server writes every event to `agent_runs.events` either way.
+- Whether SSE from the Railway server reaches the Vercel-hosted site without buffering is spike at T1 (expected to pass, ADR-012). If it buffers, the fallback is the client polling `GET /clair/runs/{id}/events?after=n` every 500 ms (backend.md §10), using the `run_id` it sent with the turn. The SSE result decides only the client's transport; the server writes every event to `agent_runs.events` either way.
 
 ---
 
@@ -1127,7 +1127,7 @@ Gates for DevDay (ADR-010): the planner passes 10 of 10 runs at the rung being d
 **Rejected:**
 
 - **Claude Managed Agents:** beta, a container per session, Sam's data held in Anthropic sessions, and less predictable stage latency. It would make questions wait natively, but our pause is small.
-- **Claude Agent SDK:** a coding harness built around the Claude Code CLI process, file and shell tools; a poor fit for Vercel functions.
+- **Claude Agent SDK:** a coding harness built around the Claude Code CLI process, file and shell tools; a poor fit for a small API server.
 - **Pydantic AI, LangGraph:** another layer over what the SDK already does, with no gain for twelve typed tools.
 
 Full record: [ADR-007](adr/007-clair-agent-loop.md).
@@ -1146,7 +1146,7 @@ Full record: [ADR-007](adr/007-clair-agent-loop.md).
 | §9.3 Injection policy | Adopted as written, plus harness rules (seen-ids for updates and deletes, no notes from attachments) and injection evals |
 | §9.3 Intent events (`clair_planning`, `clair_writing`) and skeleton blocks | Replaced by `status` and `understood`; no skeleton blocks, because nothing is written until confirm |
 | §9.3 Memory: session messages, blocks as long-term data memory, `agent_memories` | Session → `clair_threads` / `clair_messages` (no trimming or summarizing; threads close after 24 h). Data memory → read tools and `get_usuals`. `agent_memories` → `clair_notes`, visible and deletable, plain JSONB (v3's DEK encryption deferred with the rest of §7) |
-| §9.4 ADR-6 Go in-process agent | Reversed: Python on Vercel ([ADR-004](adr/004-python-backend-on-vercel.md)); v3's own trigger "Python-native team" applies |
+| §9.4 ADR-6 Go in-process agent | Reversed: Python, hosted on Railway by ADR-012 ([ADR-004](adr/004-python-backend-on-vercel.md)); v3's own trigger "Python-native team" applies |
 | §9.5 Golden eval suite (~100 cases in CI) | Scaled to ~20 image and file cases plus the PRD text cases, run by hand before the demo and on every prompt change |
 | §9.6 MCP | Stub only. Nothing built for DevDay |
 | §7.4 LLM egress policy | The three read levels |

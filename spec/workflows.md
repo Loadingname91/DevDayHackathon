@@ -41,7 +41,7 @@ Status (late Nov 19, owner decision, ADR-010): the core app is built tonight and
 | 2b | The appointment check as a second scheduled rule: Calendar events get a `kind`, Clair's `get_gaps` read, the prompt section (`spec/clair-agent.md` §12.10). No new engine code | Ask "Am I due for any appointments?" → "Haircut is due. You go about every 5 weeks" → Add to Calendar → Turn on "Every Sunday at 7:00 pm, check for appointments that are due" |
 | 3 | `row_added` and `field_changed` + `write_row` inside `expand`; guards; "by rule ›"; run counts | Add an exam in Classes → the card shows the study to-do it will also add → one OK, both apps, one Undo |
 | 4 | `propose_workflow`: a rule described to Clair in words becomes a basted rule card; Turn on saves it | Type "When I add an exam, add a study to-do two days before" → "Add this rule to Classes?" → Turn on → then step 3's demo |
-| 5 | Scheduled firing: `/cron/sweep` on a Vercel cron reads `schedule` rules that are due; "Next run" on the rule row | "Next run Sun 22 Nov, 7:00 pm"; a rule set a minute ahead fires on stage only if rehearsed |
+| 5 | Scheduled firing: the server's one-minute loop (the same code as `/cron/sweep`, ADR-012) reads `schedule` rules that are due; "Next run" on the rule row | "Next run Sun 22 Nov, 7:00 pm"; a rule set a minute ahead fires on stage only if rehearsed |
 
 Steps 1 and 2 are the must-run (PRD row 12). Step 2b comes next and is cut before the planner is ever touched. Steps 3 to 5 are cut from the top down. "Next run" is shown only when step 5 is deployed.
 

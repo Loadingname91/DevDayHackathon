@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted · 2026-11-19 · Deciders: Quilt team · Supersedes ADR-002 · Reverses TabOS v3 ADR-6 (Go, agent in-process)
+Accepted · 2026-11-19 · Deciders: Quilt team · **Hosting superseded by [ADR-012](012-api-on-railway-long-running-server.md): the same FastAPI app runs as one always-on server on Railway, not as Vercel functions. Python, FastAPI and Supabase stand.** · Supersedes ADR-002 · Reverses TabOS v3 ADR-6 (Go, agent in-process)
 
 ## Context
 

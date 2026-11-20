@@ -346,7 +346,7 @@ Each requirement lists its cut and how it is verified. "E2E" means a scripted br
 | Any Clair wait past 6 s | Status line says what is still happening |
 | Clair input → first status line / understanding line | Under 1 s / 4 s or less *(proposed; `spec/clair-agent.md` §15)* |
 | No proposal after 12 s on stage | "Use sample" appears (demo only; the replay is marked "sample"). 12 s is a placeholder, set from the T1 timing |
-| Clair run budget | At most 8 model turns and 45 s wall clock per run; at most 2 menu questions *(proposed; confirm against the Vercel `maxDuration` on the team's plan)* |
+| Clair run budget | At most 8 model turns and 45 s wall clock per run; at most 2 menu questions *(proposed; Clair's own budget, the Railway server has no function time limit)* |
 | Confirm → all target apps show "just changed" | Within the thread pull (600 ms per thread, 120 ms stagger) on the confirming device; under 3 s on the other device *(proposed)* |
 | Sentence → full app preview | First block on screen within 2 s, preview within 20 s *(proposed)* |
 | Motion | Composite-only properties; no dropped frames on a mid-range phone during the thread pull *(proposed)* |
@@ -449,7 +449,7 @@ Detail lives in `spec/ui-tech-plan.md` (client), `spec/backend.md` (server, data
 | Layer | Choice |
 | --- | --- |
 | Client | React (Vite) website for DevDay, on the phone's browser (added to the Home screen) and the laptop. Native phone app after DevDay, framework undecided (ADR-010; ADR-005 was Capacitor). Tokens and motion unchanged from the prototypes |
-| Backend | Python (FastAPI) on Vercel. Formulas and faces are computed on the server; the client only displays them |
+| Backend | Python (FastAPI), one always-on server on Railway (ADR-012); the website's static files are on Vercel. Formulas and faces are computed on the server; the client only displays them |
 | Data and auth | Supabase: Postgres (one `blocks` table for apps, collections and records, plus change sets and events), anonymous auth with Google or email linked later, Realtime for live updates |
 | Clair | One agent loop on the backend using the Anthropic Python SDK tool runner; one API key, held only by the backend |
 
@@ -457,7 +457,7 @@ Detail lives in `spec/ui-tech-plan.md` (client), `spec/backend.md` (server, data
 - Writes need a connection. Each device keeps a local read cache (IndexedDB) that paints instantly and then catches up with the server; there is no offline write queue. Two devices can still act on the same draft; FR-S1's change-set ID makes a second confirm a no-op.
 - Demo app schemas are fixed for DevDay, so a change to one app can't break the apps reading it.
 - Platform limits: no lock-screen widgets; camera through the browser's file input; the OS share target needs native share-intent work and stays Later.
-- Vercel requests can't wait for Sam, so a menu question ends the request and the answer starts a new one (`spec/clair-agent.md` §11).
+- A request shouldn't stay open while Sam decides, so a menu question ends the request and the answer starts a new one (`spec/clair-agent.md` §11).
 
 ### Deferred (not built for DevDay; trigger to revisit in `spec/backend.md` §12)
 - Encryption at rest per account (plain JSONB plus row-level security for now).
@@ -540,7 +540,7 @@ Each FR above lists its verification. Automated checks (unit, E2E, eval set) are
 | Risk | Likelihood | Impact | Mitigation |
 | --- | --- | --- | --- |
 | Photo read fails on stage (Wi-Fi, model) | M | H | Phone hotspot; "Use sample" replays a recorded run marked "sample"; recorded backup video, labelled as such if used |
-| Vercel cold start or function time limit stalls a Clair run on stage | M | H | Warm the functions before the pitch; 45 s run budget checked against the plan's `maxDuration`; "Use sample" after 12 s |
+| A server restart or a slow model call stalls a Clair run on stage | M | H | No API deploys inside the freeze; warm the server before the pitch; 45 s run budget; "Use sample" after 12 s |
 | Google sign-in or the calendar sync fails on the day | M | M | Create the Google Cloud project and consent screen tonight; add the demo Google account as a test user; the seeded "from Google" events (`DEMO_GCAL_FIXTURE`) stand in |
 | The base isn't finished tonight | M | H | The 10:00 go/no-go; the day finishes the base and the demo shows it with the prototypes |
 | Scope creep from Nov 19 design decisions (Clair sheet, search, settings) into the build | H | H | "Must run on stage" table; base rows by the 22:00 go/no-go, judged rows on the day, Live+ only after both |

@@ -2,9 +2,11 @@
 
 Nov 19, 2026 · for the DevDay build (Nov 20) · reads with `PRODUCT.md`, `.impeccable/surfaces/app.md`, the pitch doc, **`spec/backend.md`** (server, data, sync, auth, edge cases) and **`spec/clair-agent.md`** (Clair's agent loop) · terms in `GLOSSARY.md`
 
-Quilt's UI is one renderer that draws any app from a checked JSON spec, plus a small set of chrome components (Home, bar, Clair sheet, proposal card) ported from the prototypes. Clair never writes UI code. **Revised Nov 19 evening:** the client is one React app built with Vite, wrapped with Capacitor for Android and served as a website for the laptop; the server is FastAPI on Vercel over Supabase, and every Clair input goes through one agent loop. This doc now covers the client: stack, contracts as the client sees them, the confirm animation, files, build order. The server side lives in `backend.md` and `clair-agent.md`.
+Quilt's UI is one renderer that draws any app from a checked JSON spec, plus a small set of chrome components (Home, bar, Clair sheet, proposal card) ported from the prototypes. Clair never writes UI code. **Revised Nov 19 evening:** the client is one React app built with Vite, wrapped with Capacitor for Android and served as a website for the laptop; the server is FastAPI on Railway over Supabase, and every Clair input goes through one agent loop. This doc now covers the client: stack, contracts as the client sees them, the confirm animation, files, build order. The server side lives in `backend.md` and `clair-agent.md`.
 
-Decisions with trade-offs are recorded as ADRs: [ADR-001 spec-driven renderer](adr/001-spec-driven-renderer.md), [ADR-002 mock API on route handlers](adr/002-mock-api-route-handlers.md) (superseded), [ADR-003 basted proposals](adr/003-basted-proposals.md), [ADR-004 Python backend on Vercel](adr/004-python-backend-on-vercel.md), [ADR-005 React + Capacitor](adr/005-react-capacitor-client.md), [ADR-006 Supabase blocks table](adr/006-supabase-blocks-table.md), [ADR-007 Clair agent loop](adr/007-clair-agent-loop.md), [ADR-008 online writes, read cache](adr/008-online-writes-read-cache.md), [ADR-009 Soft Quilt look, user-pickable grounds](adr/009-soft-quilt-look-pickable-grounds.md).
+Decisions with trade-offs are recorded as ADRs: [ADR-001 spec-driven renderer](adr/001-spec-driven-renderer.md), [ADR-002 mock API on route handlers](adr/002-mock-api-route-handlers.md) (superseded), [ADR-003 basted proposals](adr/003-basted-proposals.md), [ADR-004 Python backend on Vercel](adr/004-python-backend-on-vercel.md), [ADR-005 React + Capacitor](adr/005-react-capacitor-client.md), [ADR-006 Supabase blocks table](adr/006-supabase-blocks-table.md), [ADR-007 Clair agent loop](adr/007-clair-agent-loop.md), [ADR-008 online writes, read cache](adr/008-online-writes-read-cache.md), [ADR-009 Soft Quilt look, user-pickable grounds](adr/009-soft-quilt-look-pickable-grounds.md), [ADR-010 web only for DevDay](adr/010-web-only-devday-planner-cut.md), [ADR-011 frontend on mock data, ownership split](adr/011-frontend-on-mocks-ownership-split.md), [ADR-012 API on Railway](adr/012-api-on-railway-long-running-server.md).
+
+**Owner: Hitesh (frontend).** This client is built against mock data first and switched to the live API one route at a time; the rules are in [`split.md`](split.md).
 
 ## 1. Stack
 
@@ -15,9 +17,10 @@ Decisions with trade-offs are recorded as ADRs: [ADR-001 spec-driven renderer](a
 | Styling and tokens | Plain CSS: `tokens.css` (CSS variables) + one stylesheet per component, ported from the prototypes | The prototype CSS already encodes section A (fixspec); copying it is faster and safer than re-expressing it in Tailwind |
 | Motion | CSS transitions + Web Animations API + the 10-line critically damped `spring()` from the prototypes | Everything in the motion system already runs on these; no library |
 | Client state | One module store (`src/lib/store.ts`) read through `useSyncExternalStore`; IndexedDB read cache per workspace; Supabase Realtime subscription on `events` triggers `GET /sync?since=` | Paint from cache at once, then catch up; server holds the truth (ADR-008) |
-| Types | Generated: FastAPI's OpenAPI → `openapi-typescript` → `src/api/types.ts` | Pydantic on the server is the single source; no hand-copied types (ADR-004) |
+| Types | Generated: FastAPI's OpenAPI → `openapi-typescript` → `src/api/types.ts` | Pydantic on the server is the single source (ADR-004). Until `api/openapi.json` exists the file is written by hand from section 3 and `backend.md` §10, then replaced (ADR-011) |
+| Mock data | `src/mocks/`: a mock transport behind `src/api/client.ts`, chosen by `VITE_API` and `VITE_MOCK_ROUTES`; fixtures are finished responses from the seed, and the mock computes nothing | The client is built without waiting for the API (`split.md` §3) |
 | Auth | `@supabase/supabase-js`: anonymous sign-in on first open; join code for a second device | Guest first (`backend.md` §8) |
-| Server | FastAPI (Python) on Vercel; Supabase Postgres, Realtime, Storage | `backend.md` (ADR-004, ADR-006) |
+| Server | FastAPI (Python), one always-on server on Railway (ADR-012), called cross-origin from the Vercel-hosted site at `VITE_API_BASE`; Supabase Postgres, Realtime, Storage | `backend.md` (ADR-004, ADR-006) |
 | AI | Anthropic Python SDK tool runner on the server, model `claude-opus-5-5`; the client only streams SSE events from `POST /clair/turns` | `clair-agent.md` (ADR-007) |
 | Voice | Web Speech in (`SpeechRecognition`), `speechSynthesis` out, only when Sam talked first; Live+ | No second AI vendor; Claude stays the only brain |
 | Demo clock | `DEMO_NOW` on the server (default Fri 20 Nov 2026, 5:45 pm: after the 5:41 pm receipt, before Pull day at 6 pm), workspace time zone America/Denver; the client never computes "today" itself | "Today", "this month" and Next up read the same at rehearsal and at the pitch |
@@ -39,7 +42,7 @@ flowchart LR
     CACHE --> AV
     RT[Supabase Realtime<br/>events nudge] -->|GET /api/sync?since=| API
   end
-  subgraph Server["FastAPI on Vercel (spec/backend.md)"]
+  subgraph Server["FastAPI on Railway (spec/backend.md)"]
     API --> CL[Clair agent loop<br/>tool runner · spec/clair-agent.md]
     API --> CMD[Command service<br/>change sets · undo · Python formulas]
     CL -->|propose_changes → basted| CMD
@@ -221,7 +224,7 @@ The client store holds poll results while `busy` is set and applies them after t
 
 ## 5. API (summary)
 
-The API is FastAPI on Vercel; the full endpoint table, status codes and the old-to-new path map are in `backend.md` §10. What the client uses most: `GET /api/home`, `GET /api/apps/:id`, `POST /api/records` (+ `PATCH`, `move`, `complete`, `skip`, `DELETE`), `POST /api/change-sets/:id/confirm | undo | dismiss`, `POST /api/clair/turns` (SSE), `GET /api/sync?since=`, `POST /api/join-codes` and `/redeem`. Every write returns the new `seq` and the faces it changed, so the client rolls numbers without recomputing.
+The API is FastAPI on Railway; the full endpoint table, status codes and the old-to-new path map are in `backend.md` §10. What the client uses most: `GET /api/home`, `GET /api/apps/:id`, `POST /api/records` (+ `PATCH`, `move`, `complete`, `skip`, `DELETE`), `POST /api/change-sets/:id/confirm | undo | dismiss`, `POST /api/clair/turns` (SSE), `GET /api/sync?since=`, `POST /api/join-codes` and `/redeem`. Every write returns the new `seq` and the faces it changed, so the client rolls numbers without recomputing.
 
 Fixtures survive only as Clair's recorded runs, replayed on "Use sample" and marked "sample" (`clair-agent.md` §15).
 
@@ -254,8 +257,11 @@ The fixture values above are the single source for the demo script and the slide
 ```
 web/                       React + Vite website (this doc; no Capacitor for DevDay, ADR-010)
   src/main.tsx  src/App.tsx       routes: Home, /a/:key (an app), /build, /settings, /join
-  src/api/types.ts                generated from the API's OpenAPI (never edited by hand)
-  src/api/client.ts               fetch helpers, SSE reader for /clair/turns
+  src/api/types.ts                generated from the API's OpenAPI (hand-written only until api/openapi.json exists)
+  src/api/client.ts               one request function and one SSE reader for /clair/turns; routes to live or mock
+  src/mocks/handler.ts            answers the paths of backend.md §10 from fixtures (split.md §3)
+  src/mocks/fixtures/             one JSON file per response or scripted Clair run, values from the seed
+  src/mocks/scenarios.ts          named scenarios: seed, lunch, planner-r1, planner-r4, offer, ...
   src/lib/store.ts                module store + IndexedDB cache + Realtime → /sync catch-up
   src/lib/motion.ts               T, EASE, RM, spring, project, rubberband, tracker, threadPull, roll, flip
   src/lib/native.ts               file input camera, Web Speech in and out (one module, so a native shell can swap in later)
@@ -265,7 +271,7 @@ web/                       React + Vite website (this doc; no Capacitor for DevD
   src/components/ConnectGoogle.tsx      Calendar's "Add Google Calendar" row, connected state, Refresh (FR-G1, FR-G2)
   public/manifest.webmanifest     name, icons, display: standalone, theme colour
   src/styles/tokens.css  base.css
-api/                       FastAPI on Vercel (spec/backend.md, spec/clair-agent.md)
+api/                       FastAPI on Railway (spec/backend.md, spec/clair-agent.md)
   index.py  routes/  commands.py  formulas.py  sync.py  auth.py  clair/ (loop, tools, prompts)  seed/  evals/
 ```
 
@@ -308,7 +314,7 @@ React rules: animations run on refs, never through React state per frame; gestur
 
 ## 8. Build order
 
-The plan for both people lives in `backend.md` §13, rewritten for the third cut late Nov 19 (ADR-010): tonight is the base (T1 to T4), the day is the judged feature (D1 to D10, in that order, with a cut order). The rows below follow that numbering, so they are not in the order they were first written. The client's share, person B:
+The plan for both people lives in `backend.md` §13, rewritten for the third cut late Nov 19 (ADR-010): tonight is the base (T1 to T4), the day is the judged feature (D1 to D10, in that order, with a cut order). The rows below follow that numbering, so they are not in the order they were first written. The client's share, person B (Hitesh). Each row is built on its mock scenario first (`split.md` §3) and is done only once it runs on the live route (`split.md` §5):
 
 | When | B: client |
 | --- | --- |
@@ -332,7 +338,7 @@ The plan for both people lives in `backend.md` §13, rewritten for the third cut
 
 | Risk | Why it bites | Answer |
 | --- | --- | --- |
-| Cold start or slow function | Vercel Python functions start cold; an agent run can approach the duration limit | Warm both devices 5 minutes before; `maxDuration` and SSE streaming checked at T1; "Use sample" after 12 s (`backend.md` §10, §13) |
+| Server restart or slow run | A deploy restarts the one API process and drops open streams; a model call can run long | No API deploys inside the freeze; warm both devices 5 minutes before; SSE streaming to the site checked at T1; "Use sample" after 12 s (`backend.md` §10, §13) |
 | Phone browser on stage | Browser chrome, a lost session or a slow first load found on stage | Open from the Home screen icon (standalone); sign in and warm it 5 minutes before; rehearse on the hotspot |
 | Google sign-in or sync | Consent screen, redirect URI or token problems found on the day | Project and consent screen set up tonight; OAuth round trip is the day's first spike; fallbacks: the secret iCal address, then `DEMO_GCAL_FIXTURE=1` (`backend.md` §8a) |
 | Judging rule | Only the feature built on Nov 20 is judged; a recorded run passed off as live would be dishonest | Google Calendar, the planner and the rule built on the day (the base, including a basic typed proposal, the night before); every recorded run visibly marked "sample"; no silent fallback |

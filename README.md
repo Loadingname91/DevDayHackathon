@@ -6,11 +6,11 @@ Quilt is a personal app builder for a student's money, groceries, classes, worko
 
 | Folder | For | What's in it |
 | --- | --- | --- |
-| `docs/` | People | Where to start, the product in plain words, the pitch, the demo-day guide, the Home research, and how to set up Claude Code on a new machine |
+| `docs/` | People | Where to start, the product in plain words, the pitch, the demo-day guide and the Home research |
 | `spec/` | Building it (written for coding agents) | Requirements and stories, the backend design, Clair's agent loop, the UI build plan, and the decision records in `spec/adr/` |
 | `design/` | Design | The Home, Flows and motion prototypes the app copies its look and motion from, the design notes, and the generators. The boards themselves live on the design canvas (link below) |
 | `docs/start-here.md` | Picking up | Read this first: where things stand, what to do before the pitch, decisions waiting on you, and what's parked |
-| `setup/` | New machines | A copy of the Claude Code settings and hook (see `docs/setup-claude-code.md`) |
+| `setup/` | New machines | A copy of the Claude Code settings, hook and skills list to copy onto a new machine |
 
 Start with `docs/start-here.md`. Then `docs/product.md` for the product in plain words, `docs/pitch.md` for the pitch, or `docs/demo-day.md` for the demo.
 
@@ -18,7 +18,7 @@ Start with `docs/start-here.md`. Then `docs/product.md` for the product in plain
 
 ## Stack
 
-React + Vite, served as a website on the phone and the laptop for DevDay (a native phone app comes after). A Python FastAPI API on Vercel holds the only Claude key. Supabase provides Postgres, sign-in and live updates, and Claude powers Clair. Details are in `spec/backend.md`.
+React + Vite, served as a website on the phone and the laptop for DevDay (a native phone app comes after). The site's files are hosted on Vercel. A Python FastAPI server on Railway holds the only Claude key. Supabase provides Postgres, sign-in and live updates, and Claude powers Clair. Details are in `spec/backend.md`.
 
 ## Live design links
 

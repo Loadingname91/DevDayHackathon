@@ -2,6 +2,14 @@
 
 Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled by Clair (Claude with tools) through basted proposals the user confirms. Lassonde DevDay demo, Fri 20 Nov 2026. Late Nov 19 cut: `spec/adr/010-web-only-devday-planner-cut.md` (read it first).
 
+## Who builds what (ADR-011; read `spec/split.md` before writing code)
+
+- **Frontend: Hitesh** (git user `hiteshbalegar`). `web/`, column B of `spec/backend.md` §13. Built on mock data first, then switched to the live API one route at a time.
+- **Backend: his teammate.** `api/`, Supabase, Google Cloud, Clair; column A of §13. First deliverable: the Pydantic models as `api/openapi.json`.
+- Which side is this session: `git config user.name` is `hiteshbalegar` → frontend; anyone else → backend; what your person says wins.
+- Write code only in your side's folder. The contract between the sides is `spec/backend.md` §10, `spec/clair-agent.md` §2 and `spec/ui-tech-plan.md` §3 and §4. Change it in the spec and add a line to the log in `spec/split.md` §7, in the same commit.
+- Mock data is a build aid, never the demo: it carries a "mock data" mark, and the base cut line, `check.py` and the two-device check count only on the live API.
+
 ## Layout
 
 - `spec/`: source of truth for building. Read these before writing code.
@@ -9,6 +17,7 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
   - `backend.md`: DDL, canonical demo seed (§2.2), dates/repeats (§3), order (§4), command service (§5), formulas (§6), sync (§7), auth (§8), endpoints (§10), edge cases (§11), deferred (§12), build order (§13)
   - `clair-agent.md`: agent loop, tool registry, SSE events, snapshot, pause/resume, evals
   - `ui-tech-plan.md`: client stack, contracts, files, motion
+  - `split.md`: owners, the contract, the mock rules, the mock-to-live order, stories by side, the hand-off log
   - `adr/`: decision records. ADRs live here, not in `docs/adr/`.
 - `docs/`: written for people (start here, the product in plain words `docs/product.md`, pitch, demo-day guide, Home research, Claude Code setup). Prose there gets a `humanizer:humanizer` pass after edits.
 - `design/`: the Home, Flows and motion prototypes (the client ports CSS and motion from them), `notes/fixspec.md` (cited as "fixspec"), the Soft Quilt tokens and the canvas generators in `tools/`. See `design/README.md`.
@@ -18,7 +27,7 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
 ## Fixed decisions
 
 - Client: React + Vite website for DevDay, on the phone's browser (Home screen icon) and the laptop. No Capacitor, no APK, no Next.js, no Expo (ADR-010). Native phone app after DevDay, framework undecided. Older spec sections that say "APK" or "Capacitor" mean the website on the phone.
-- API: Python FastAPI on Vercel only (not Railway). Supabase Postgres + anonymous auth + Realtime + Storage. Claude key only on the server.
+- API: Python FastAPI as one always-on server on Railway (`uvicorn`, one replica; ADR-012 reverses the earlier "Vercel only"). No Vercel Python functions. The website's static files stay on Vercel and call the API at `VITE_API_BASE`. Supabase Postgres + anonymous auth + Realtime + Storage. Claude key only on the server.
 - Model `claude-opus-5-5` via the Anthropic Python SDK tool runner. Clair writes only through `propose_changes` (basted change sets).
 - All formulas in Python on the server. Online writes; IndexedDB read cache. No encryption for DevDay (planned later; this includes the stored Google token).
 - Google Calendar: read-only, Google OAuth run by the API (`spec/backend.md` §8a), not a Quilt sign-in. Imported events are read-only records marked `source: "google"`.
@@ -50,7 +59,7 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
 ## Current state (late Nov 19; human version: `docs/start-here.md`)
 
 - Positioning: app builder first, apps connected on arrival and working together, data from anywhere. Never lead with photo capture.
-- No application code exists in this repo yet. Build order: `spec/backend.md` §13 (T1 to T4 tonight, D1 to D10 on the day, clip recorded by early afternoon). Go/no-go 10:00 Nov 20; freeze 2 hours before the pitch.
+- No application code exists in this repo yet. The two sides build apart (`spec/split.md`). Build order: `spec/backend.md` §13 (T1 to T4 tonight, D1 to D10 on the day, clip recorded by early afternoon). Go/no-go 10:00 Nov 20; freeze 2 hours before the pitch.
 - Demo: a recorded clip of three builds, then the live training planner as the first rule of the workflow engine, with Google Calendar connected before the pitch. Script: `docs/demo-day.md`. The owner asked for all of it (builder, broad planner, Google, full engine ladder); the cut order in `spec/backend.md` §13 keeps a safe point.
 - Seed: `spec/backend.md` §2.2 + §2.3 is complete and wins over boards. Rule and fixes: `spec/prd-data-provenance.md` (audit rows in `spec/data-audit/`, which describe the removed boards). The demo account starts with no rules.
 - Owner decisions made Nov 19 (recorded in `spec/prd.md` Future Considerations and `docs/start-here.md`): model split after DevDay (Haiku 5.5 capture and chat, Sonnet 5.5 builds; Opus 5.5 at DevDay), Student Plus $4, free import and export, Calories as a starter app, appointments as a kind on Calendar events, pattern runs on Plus with a cap, health data on Plus (Android first, after the native app), Cycle app only with its own read switch, starter-app tab names (`spec/backend.md` §10).
