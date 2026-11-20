@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { App } from './App';
+import { CrashScreen } from './components/CrashScreen';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/app.css';
@@ -40,8 +41,10 @@ document.addEventListener('touchstart', () => {}, { passive: true });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <CrashScreen>
     {import.meta.env.VITE_ROUTER === 'memory'
       ? <MemoryRouter><App /></MemoryRouter> /* the artifact build: no URL paths to route on */
       : <BrowserRouter><App /></BrowserRouter>}
+    </CrashScreen>
   </StrictMode>,
 );

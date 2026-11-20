@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import { Link } from 'react-router-dom';
 import type { Patch } from '../api/types';
 import { Bold } from '../components/Bold';
+import { byRecent } from '../lib/recent';
 import { Icon } from '../components/Icon';
 import { ProposalCard } from '../components/ProposalCard';
 import { Roll } from '../components/Roll';
@@ -151,7 +152,7 @@ export function Home() {
   // Your apps: Budget leads as the big patch, then by last opened; Workout is the tall one (Main board).
   // While finding, every match is a plain patch.
   const q = find.trim().toLowerCase();
-  const byUse = [...home.apps].sort((a, b) => b.lastOpened.localeCompare(a.lastOpened));
+  const byUse = [...home.apps].sort(byRecent);
   const budget = byUse.find((a) => a.key === 'budget');
   const ordered = budget ? [budget, ...byUse.filter((a) => a !== budget)] : byUse;
   const list = q ? ordered.filter((a) => a.name.toLowerCase().includes(q)) : ordered;

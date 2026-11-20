@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { useHoldToTalk } from '../lib/voice';
 import { CG } from './clair/Glyph';
+import { byRecent } from '../lib/recent';
 import { Icon } from './Icon';
 import { LogoMark } from './Logo';
 import { useFresh } from '../lib/fresh';
@@ -29,7 +30,7 @@ export function Sidebar() {
   const order = me?.workspace.settings.pins ?? [];
   const apps = home?.apps ?? [];
   const pins = apps.filter((p) => p.pinned).sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
-  const rest = apps.filter((p) => !p.pinned).sort((a, b) => b.lastOpened.localeCompare(a.lastOpened));
+  const rest = apps.filter((p) => !p.pinned).sort(byRecent);
   const needle = q.trim().toLowerCase();
   const list = [...pins, ...rest].filter((a) => a.name.toLowerCase().includes(needle));
   const current = /^\/a\/([^/]+)/.exec(pathname)?.[1];

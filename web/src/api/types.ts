@@ -191,7 +191,7 @@ export type BlockValue = {
   link?: string;
 };
 
-export type Patch = { id: string; key: string; name: string; icon: string; dye: Dye; print?: string; face: Face; changed: boolean; lastOpened: string; pinned: boolean; isNew?: boolean };
+export type Patch = { id: string; key: string; name: string; icon: string; dye: Dye; print?: string; face: Face; changed: boolean; lastOpened: string | null; pinned: boolean; isNew?: boolean };
 export type Connection = { provider: 'google'; account_email: string; last_synced_at: string; needs_reconnect: boolean };
 
 export type RowOp =
