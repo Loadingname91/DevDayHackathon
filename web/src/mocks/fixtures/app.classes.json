@@ -1,0 +1,434 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "classes",
+  "key": "classes",
+  "name": "Classes",
+  "icon": "book",
+  "dye": "chambray",
+  "collections": [
+   {
+    "key": "classes",
+    "name": "Classes",
+    "titleField": "name",
+    "dateField": "time",
+    "calendar": true,
+    "fields": [
+     {
+      "key": "name",
+      "label": "Class",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "title",
+      "label": "Title",
+      "type": "text"
+     },
+     {
+      "key": "room",
+      "label": "Room",
+      "type": "text"
+     },
+     {
+      "key": "meets",
+      "label": "Meets",
+      "type": "text"
+     },
+     {
+      "key": "time",
+      "label": "Next",
+      "type": "datetime"
+     },
+     {
+      "key": "repeat",
+      "label": "Repeat",
+      "type": "repeat"
+     }
+    ]
+   },
+   {
+    "key": "due",
+    "name": "Due",
+    "label": "Due date",
+    "titleField": "title",
+    "dateField": "at",
+    "calendar": true,
+    "fields": [
+     {
+      "key": "title",
+      "label": "Title",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "kind",
+      "label": "Kind",
+      "type": "select",
+      "options": [
+       {
+        "id": "assignment",
+        "label": "Assignment"
+       },
+       {
+        "id": "exam",
+        "label": "Exam"
+       }
+      ]
+     },
+     {
+      "key": "at",
+      "label": "Due",
+      "type": "datetime"
+     },
+     {
+      "key": "class",
+      "label": "Class",
+      "type": "relation",
+      "target": "classes/classes"
+     },
+     {
+      "key": "done",
+      "label": "Done",
+      "type": "bool"
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_week",
+    "title": "This week",
+    "children": [
+     {
+      "kind": "days",
+      "id": "b_week",
+      "source": "*dated",
+      "views": [
+       "week"
+      ],
+      "view": "week",
+      "apps": [
+       "classes"
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_due",
+    "title": "Due",
+    "children": [
+     {
+      "kind": "checklist",
+      "id": "b_due",
+      "source": "classes/due",
+      "fields": [
+       "class",
+       "at"
+      ],
+      "due": "at",
+      "groups": [
+       {
+        "label": "Coming up",
+        "where": [
+         {
+          "field": "done",
+          "op": "eq",
+          "value": false
+         },
+         {
+          "field": "kind",
+          "op": "eq",
+          "value": "assignment"
+         }
+        ]
+       },
+       {
+        "label": "Done · {n}",
+        "where": [
+         {
+          "field": "done",
+          "op": "eq",
+          "value": true
+         }
+        ],
+        "done": true,
+        "collapsed": true
+       }
+      ],
+      "swipe": {
+       "right": "complete"
+      }
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_exams",
+    "title": "Exams",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_exams",
+      "source": "classes/due",
+      "fields": [
+       "class",
+       "at"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "asc"
+      },
+      "where": [
+       {
+        "field": "kind",
+        "op": "eq",
+        "value": "exam"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "count",
+    "from": "classes/due",
+    "where": [
+     {
+      "field": "done",
+      "op": "eq",
+      "value": false
+     },
+     {
+      "field": "at",
+      "op": "within",
+      "value": "7d"
+     }
+    ]
+   },
+   "format": "count",
+   "label": "due this week"
+  }
+ },
+ "data": {
+  "classes/classes": [
+   {
+    "id": "c01",
+    "position": "a089",
+    "version": 1,
+    "properties": {
+     "name": "ECON 1010",
+     "title": "Principles of Microeconomics",
+     "room": "Kendall 104",
+     "time": "2026-11-24T09:10:00-07:00",
+     "meets": "Tue and Thu 9:10 am",
+     "repeat": {
+      "rule": "FREQ=WEEKLY;BYDAY=TU,TH;UNTIL=20261210T235959",
+      "start": "2026-08-25T09:10",
+      "log": [],
+      "skip": [
+       "2026-11-26"
+      ]
+     }
+    }
+   },
+   {
+    "id": "c02",
+    "position": "a090",
+    "version": 1,
+    "properties": {
+     "name": "MATH 1210",
+     "title": "Calculus I",
+     "room": "JWB 335",
+     "time": "2026-11-23T11:50:00-07:00",
+     "meets": "Mon and Wed 11:50 am",
+     "repeat": {
+      "rule": "FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20261209T235959",
+      "start": "2026-08-24T11:50",
+      "log": [],
+      "skip": []
+     }
+    }
+   },
+   {
+    "id": "c03",
+    "position": "a091",
+    "version": 1,
+    "properties": {
+     "name": "CS 3500",
+     "title": "Software Practice",
+     "room": "WEB L104",
+     "time": "2026-11-23T15:00:00-07:00",
+     "meets": "Mon and Wed 3:00 pm",
+     "repeat": {
+      "rule": "FREQ=WEEKLY;BYDAY=MO,WE;UNTIL=20261209T235959",
+      "start": "2026-08-24T15:00",
+      "log": [],
+      "skip": []
+     }
+    }
+   }
+  ],
+  "classes/due": [
+   {
+    "id": "d01",
+    "position": "a092",
+    "version": 1,
+    "properties": {
+     "title": "Start CS 3500 project",
+     "kind": "assignment",
+     "at": "2026-11-23T23:59:00-07:00",
+     "class": [
+      "c03"
+     ],
+     "done": false
+    }
+   },
+   {
+    "id": "d02",
+    "position": "a093",
+    "version": 1,
+    "properties": {
+     "title": "Homework 11",
+     "kind": "assignment",
+     "at": "2026-11-24T23:59:00-07:00",
+     "class": [
+      "c02"
+     ],
+     "done": false
+    }
+   },
+   {
+    "id": "d03",
+    "position": "a094",
+    "version": 1,
+    "properties": {
+     "title": "Homework 10",
+     "kind": "assignment",
+     "at": "2026-11-17T23:59:00-07:00",
+     "class": [
+      "c02"
+     ],
+     "done": true
+    }
+   }
+  ],
+  "*dated": [
+   {
+    "at": "2026-11-16T11:50:00-07:00",
+    "title": "MATH 1210",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c02",
+    "occurrence": "2026-11-16"
+   },
+   {
+    "at": "2026-11-16T15:00:00-07:00",
+    "title": "CS 3500",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c03",
+    "occurrence": "2026-11-16"
+   },
+   {
+    "at": "2026-11-17T09:10:00-07:00",
+    "title": "ECON 1010",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c01",
+    "occurrence": "2026-11-17"
+   },
+   {
+    "at": "2026-11-18T11:50:00-07:00",
+    "title": "MATH 1210",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c02",
+    "occurrence": "2026-11-18"
+   },
+   {
+    "at": "2026-11-18T15:00:00-07:00",
+    "title": "CS 3500",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c03",
+    "occurrence": "2026-11-18"
+   },
+   {
+    "at": "2026-11-19T09:10:00-07:00",
+    "title": "ECON 1010",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c01",
+    "occurrence": "2026-11-19"
+   },
+   {
+    "at": "2026-11-23T11:50:00-07:00",
+    "title": "MATH 1210",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c02",
+    "occurrence": "2026-11-23"
+   },
+   {
+    "at": "2026-11-23T15:00:00-07:00",
+    "title": "CS 3500",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c03",
+    "occurrence": "2026-11-23"
+   },
+   {
+    "at": "2026-11-23T23:59:00-07:00",
+    "title": "Start CS 3500 project",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "d01"
+   },
+   {
+    "at": "2026-11-24T09:10:00-07:00",
+    "title": "ECON 1010",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c01",
+    "occurrence": "2026-11-24"
+   },
+   {
+    "at": "2026-11-24T23:59:00-07:00",
+    "title": "Homework 11",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "d02"
+   },
+   {
+    "at": "2026-11-25T11:50:00-07:00",
+    "title": "MATH 1210",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c02",
+    "occurrence": "2026-11-25"
+   },
+   {
+    "at": "2026-11-25T15:00:00-07:00",
+    "title": "CS 3500",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c03",
+    "occurrence": "2026-11-25"
+   }
+  ]
+ },
+ "values": {},
+ "status": "**2** due this week. Next: Start CS 3500 project, **Mon 23 Nov**.",
+ "faces": {
+  "classes": {
+   "text": "2",
+   "label": "due this week"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

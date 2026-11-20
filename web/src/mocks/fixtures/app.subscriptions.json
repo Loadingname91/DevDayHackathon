@@ -1,0 +1,150 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "subscriptions",
+  "key": "subscriptions",
+  "name": "Subscriptions",
+  "icon": "repeat",
+  "dye": "lavender",
+  "collections": [
+   {
+    "key": "subscriptions",
+    "name": "Subscriptions",
+    "titleField": "name",
+    "dateField": "renews",
+    "amountField": "amount",
+    "calendar": true,
+    "fields": [
+     {
+      "key": "name",
+      "label": "Name",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "amount",
+      "label": "Cost",
+      "type": "money"
+     },
+     {
+      "key": "renews",
+      "label": "Renews",
+      "type": "date"
+     },
+     {
+      "key": "every",
+      "label": "Repeats",
+      "type": "text"
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_subs",
+    "title": "Subscriptions",
+    "children": [
+     {
+      "kind": "gauge",
+      "id": "b_total",
+      "label": "A month",
+      "value": {
+       "agg": "sum",
+       "from": "subscriptions/subscriptions",
+       "field": "amount"
+      },
+      "target": 0,
+      "format": "money"
+     },
+     {
+      "kind": "list",
+      "id": "b_renewals",
+      "label": "Renewals",
+      "source": "subscriptions/subscriptions",
+      "fields": [
+       "every"
+      ],
+      "sort": {
+       "field": "renews",
+       "dir": "asc"
+      },
+      "due": "renews"
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "sum",
+    "from": "subscriptions/subscriptions",
+    "field": "amount"
+   },
+   "format": "money",
+   "label": "a month"
+  }
+ },
+ "data": {
+  "subscriptions/subscriptions": [
+   {
+    "id": "sub_spotify",
+    "position": "a104",
+    "version": 1,
+    "properties": {
+     "name": "Spotify",
+     "amount": 1199,
+     "renews": "2026-11-22",
+     "every": "Monthly on the 22nd"
+    }
+   },
+   {
+    "id": "sub_hulu",
+    "position": "a105",
+    "version": 1,
+    "properties": {
+     "name": "Hulu",
+     "amount": 999,
+     "renews": "2026-12-02",
+     "every": "Monthly on the 2nd"
+    }
+   },
+   {
+    "id": "sub_adobe",
+    "position": "a106",
+    "version": 1,
+    "properties": {
+     "name": "Adobe CC, student",
+     "amount": 1349,
+     "renews": "2026-12-03",
+     "every": "Monthly on the 3rd"
+    }
+   },
+   {
+    "id": "sub_icloud",
+    "position": "a107",
+    "version": 1,
+    "properties": {
+     "name": "iCloud 50 GB",
+     "amount": 299,
+     "renews": "2026-12-09",
+     "every": "Monthly on the 9th"
+    }
+   }
+  ]
+ },
+ "values": {
+  "b_total": {
+   "text": "$38.46",
+   "target": "a month · 4 subscriptions"
+  }
+ },
+ "status": "Next: **Spotify** renews **Sun 22 Nov**, $11.99.",
+ "faces": {
+  "subscriptions": {
+   "text": "$38.46",
+   "label": "a month"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

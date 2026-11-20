@@ -1,0 +1,45 @@
+{
+ "credits": -1,
+ "home": {
+  "changed": [
+   "classes",
+   "calendar"
+  ]
+ },
+ "apps": {
+  "classes": {
+   "add": {
+    "classes/due": [
+     {
+      "id": "d_midterm2",
+      "position": "a182",
+      "version": 1,
+      "properties": {
+       "title": "Midterm 2",
+       "kind": "exam",
+       "at": "2026-12-03T09:10:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     }
+    ]
+   }
+  },
+  "calendar": {
+   "add": {
+    "*dated": [
+     {
+      "at": "2026-12-03T09:10:00-07:00",
+      "title": "Midterm 2",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_midterm2",
+      "changed": true
+     }
+    ]
+   }
+  }
+ }
+}

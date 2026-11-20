@@ -1,0 +1,24 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your rule…"
+  }
+ },
+ {
+  "delay": 1100,
+  "event": "text_delta",
+  "data": {
+   "text": "Rules can't send email yet. They can add rows to your apps, or ask me to plan something on a schedule."
+  }
+ },
+ {
+  "delay": 60,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": []
+  }
+ }
+]

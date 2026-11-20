@@ -1,0 +1,205 @@
+{
+ "credits": -1,
+ "home": {
+  "changed": [
+   "workout",
+   "running",
+   "todos",
+   "groceries",
+   "calendar"
+  ],
+  "faces": {
+   "groceries": {
+    "text": "13"
+   }
+  }
+ },
+ "apps": {
+  "workout": {
+   "add": {
+    "workout/sessions": [
+     {
+      "id": "s_legs_1124",
+      "position": "a174",
+      "version": 1,
+      "properties": {
+       "name": "Leg day",
+       "routine": [
+        "ro_legs"
+       ],
+       "at": "2026-11-24T17:00:00-07:00",
+       "done": false,
+       "_moved_from": {
+        "record_id": "s_legs",
+        "occurrence": "2026-11-24"
+       }
+      }
+     },
+     {
+      "id": "s_push_1125",
+      "position": "a175",
+      "version": 1,
+      "properties": {
+       "name": "Push day",
+       "routine": [
+        "ro_push"
+       ],
+       "at": "2026-11-25T07:00:00-07:00",
+       "done": false,
+       "_moved_from": {
+        "record_id": "s_push",
+        "occurrence": "2026-11-25"
+       }
+      }
+     },
+     {
+      "id": "s_pull_1129",
+      "position": "a176",
+      "version": 1,
+      "properties": {
+       "name": "Pull day",
+       "routine": [
+        "ro_pull"
+       ],
+       "at": "2026-11-29T16:00:00-07:00",
+       "done": false,
+       "_moved_from": {
+        "record_id": "s_pull",
+        "occurrence": "2026-11-27"
+       }
+      }
+     }
+    ]
+   }
+  },
+  "calendar": {
+   "add": {
+    "*dated": [
+     {
+      "at": "2026-11-24T17:00:00-07:00",
+      "title": "Leg day",
+      "sub": "Workout",
+      "app": "workout",
+      "record_id": "s_legs_1124",
+      "changed": true
+     },
+     {
+      "at": "2026-11-25T07:00:00-07:00",
+      "title": "Push day",
+      "sub": "Workout",
+      "app": "workout",
+      "record_id": "s_push_1125",
+      "changed": true
+     },
+     {
+      "at": "2026-11-29T16:00:00-07:00",
+      "title": "Pull day",
+      "sub": "Workout",
+      "app": "workout",
+      "record_id": "s_pull_1129",
+      "changed": true
+     },
+     {
+      "at": "2026-11-24T21:30:00-07:00",
+      "title": "10 min body scan",
+      "sub": "To-dos",
+      "app": "todos",
+      "record_id": "t_bodyscan",
+      "changed": true
+     },
+     {
+      "at": "2026-11-26T08:00:00-07:00",
+      "title": "Run · Easy run",
+      "sub": "Running",
+      "app": "running",
+      "record_id": "run_easy_1126",
+      "changed": true
+     },
+     {
+      "at": "2026-11-28T09:00:00-07:00",
+      "title": "Run · Long run",
+      "sub": "Running",
+      "app": "running",
+      "record_id": "run_long_1128",
+      "changed": true
+     }
+    ]
+   },
+   "remove": {
+    "*dated": [
+     "s_legs@2026-11-24",
+     "s_push@2026-11-25",
+     "s_pull@2026-11-27"
+    ]
+   }
+  },
+  "running": {
+   "add": {
+    "running/runs": [
+     {
+      "id": "run_easy_1126",
+      "position": "a177",
+      "version": 1,
+      "properties": {
+       "name": "Easy run",
+       "kind": "easy",
+       "distance": 3,
+       "at": "2026-11-26T08:00:00-07:00",
+       "done": false
+      }
+     },
+     {
+      "id": "run_long_1128",
+      "position": "a178",
+      "version": 1,
+      "properties": {
+       "name": "Long run",
+       "kind": "long",
+       "distance": 5.5,
+       "at": "2026-11-28T09:00:00-07:00",
+       "done": false
+      }
+     }
+    ]
+   }
+  },
+  "todos": {
+   "add": {
+    "todos/todos": [
+     {
+      "id": "t_bodyscan",
+      "position": "a179",
+      "version": 1,
+      "properties": {
+       "title": "10 min body scan",
+       "due": "2026-11-24T21:30:00-07:00",
+       "done": false
+      }
+     }
+    ]
+   }
+  },
+  "groceries": {
+   "add": {
+    "groceries/items": [
+     {
+      "id": "i_oats",
+      "position": "a180",
+      "version": 1,
+      "properties": {
+       "name": "Oats",
+       "list": "l_weekly",
+       "status": "to_buy",
+       "usual": "auto"
+      }
+     }
+    ]
+   },
+   "face": {
+    "text": "13",
+    "label": "to buy"
+   },
+   "status": "**23** to buy across 3 lists. **$142.00** of $200 spent this month."
+  }
+ }
+}

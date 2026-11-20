@@ -72,7 +72,7 @@ If you're picking this up on a new machine, tell Claude Code which side you're o
 | What to tell the DevDay organisers | The application said the feature built on the day is the receipt. It's now the workflow engine. Tell them, or be ready to say so if asked | `spec/prd.md`, "Event boundary" |
 | The native app after DevDay | Capacitor (keeps this code), React Native (rewrites the screens) or fully native | `spec/adr/010-web-only-devday-planner-cut.md` |
 | Does Calories set a daily target | The big calorie apps work one out at setup. Suggested: offer it, with a clear "Just log" option | `docs/product.md` |
-| Dark mode for DevDay | The look is picked (Soft Quilt, Mint air light, Denim dusk dark). Decide whether the build ships dark mode or just light | `spec/adr/009-soft-quilt-look-pickable-grounds.md` |
+| Dark mode for DevDay | The look is picked (Soft Quilt in the Mint colours, light and dark, ADR-013). Decide whether the build ships dark mode or just light | `spec/adr/009-soft-quilt-look-pickable-grounds.md` |
 | The first job new users see | The business review's three reviewers chose a class job: notes and syllabi filed into the right course | The review was removed from the repo; see the note at the end |
 | Pitch timing | The pitch doc says to say what Quilt is within 30 seconds; the YC advice it quotes says 20 | `docs/pitch.md` |
 | Smaller calls | A guest can't add a second device until they add an email. How long guest accounts, guest credits and photos are kept | `spec/prd.md` open questions |

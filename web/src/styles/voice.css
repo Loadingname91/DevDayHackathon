@@ -1,0 +1,47 @@
+/* Hold the Clair button to talk (lib/voice.ts, components/ListeningPanel.tsx). Owned by the voice pass; loaded after interaction.css.
+   The Talk state follows the ClairTalk board and fixspec "Talk": the spool waiting, "Listening", a running-stitch line whose
+   stitches follow the voice, the live transcript, and a hint for the release. */
+
+/* ---------- the hold: a light fill sweeps across the Clair button after 120 ms, so a quick tap never shows it ---------- */
+.bar .cell.clair, .side-clair { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.side-clair { position: relative; overflow: hidden; }
+.bar .cell.clair .ico::after, .side-clair::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: color-mix(in oklch, var(--cta-ink) 28%, transparent); clip-path: inset(0 100% 0 0);
+}
+.bar .cell.clair.holding .ico::after, .side-clair.holding::after { animation: hold-fill 330ms linear 120ms both; }
+@keyframes hold-fill { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes hold-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .bar .cell.clair.holding .ico::after, .side-clair.holding::after { clip-path: none; opacity: 0; animation: hold-fade 120ms linear 330ms both; }
+}
+
+/* ---------- the start state: the Talk button beside the field, one plain line for what the microphone did ---------- */
+.cs-fieldrow { display: flex; align-items: flex-end; gap: 8px; }
+.cs-fieldrow > .field { flex: 1; min-width: 0; }
+.cs-talk { flex: none; width: var(--hit); height: var(--hit); margin-bottom: 4px; border-radius: 16px; display: grid; place-items: center; background: var(--card); color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--line); transition: transform var(--t-fb) var(--ease); }
+.cs-talk:active { transform: scale(.97); }
+.cs-note { font-size: 14px; line-height: 1.4; color: var(--sec); }
+.foot .cs-note { padding: 0 4px 8px; }
+.cs-mute { flex: none; width: var(--hit); height: var(--hit); margin-right: -8px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); }
+.cs-mute + .cs-close { margin-left: -8px; }
+.cs-mute[aria-pressed='true'] { color: var(--sec); }
+@media (hover: hover) and (pointer: fine) { .cs-talk:hover, .cs-mute:hover { background: var(--hair); } }
+
+/* ---------- Talk: the stitch line, the words, the hint ---------- */
+.vp-head { cursor: default; }
+.vp-wave { height: 56px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.vp-wave svg { display: block; flex: none; }
+.vp-line { stroke: var(--focus); transition: stroke var(--t-state) var(--ease); }
+.vp-wave.still .vp-line { stroke: var(--line); } /* in the cancel zone, or sending: the thread goes still and grey */
+.vp-said { min-height: 52px; max-height: 78px; overflow: hidden;
+  font-size: 20px; font-weight: 700; letter-spacing: -.015em; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.vw { color: var(--ink); animation: vw-in var(--t-fb) linear both; }
+.vw.int { color: var(--sec); }
+.vw.int:last-child::after { content: '…'; }
+@keyframes vw-in { from { opacity: 0; } to { opacity: 1; } } /* a word fades in; it never moves */
+.vp-hint { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--hit); font-size: 13px; font-weight: 600; color: var(--sec); }
+.vp-hint.cancel { color: var(--ink); }
+.vp-act { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.vp-act .cta { flex: none; min-width: 120px; }

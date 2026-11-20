@@ -1,12 +1,14 @@
 """Soft Quilt look option: pastel patches on a soft gradient ground (after the Lumo reference),
 kept in Quilt's voice: stitched patch edges, basted card, spool for Clair, no red.
 
-Decided Nov 19: light = Mint air, dark = Denim dusk.
+Decided Nov 19: light = Mint air, dark = Denim dusk. Colours replaced Nov 20 by Mint (mint_theme.py, ADR-013).
 Boards: Home light (before), Home dark (after), Clair builds Car light and dark, Grounds (the 6 tried).
 
 Usage: python gen_soft.py <canvas dir> [<static preview dir>]
 """
 import os, re, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mint_theme import mint  # Nov 20: boards are written in the Mint colours (ADR-013); SqGrounds stays a record
 
 OUT = sys.argv[1]
 PREVIEW = sys.argv[2] if len(sys.argv) > 2 else None
@@ -338,7 +340,8 @@ BOARDS = [
 ]
 
 for name, title, w, h, inner, script, vals in BOARDS:
-    open(os.path.join(OUT, name + '.dc.html'), 'w').write(page(title, w, h, inner, script))
+    html = page(title, w, h, inner, script)
+    open(os.path.join(OUT, name + '.dc.html'), 'w').write(html if name == 'SqGrounds' else mint(html))
     if PREVIEW:
         os.makedirs(PREVIEW, exist_ok=True)
         open(os.path.join(PREVIEW, name + '.html'), 'w').write(

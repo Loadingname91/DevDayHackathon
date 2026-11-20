@@ -86,11 +86,21 @@ Use sample (stage fallback, §15):
 
 For DevDay the first fixture is `"planner"` (§12.9); `"receipt"` exists only if the second beat is built.
 
-Answer to a menu question:
+Answer to a menu question (one question, the fridge):
 
 ```json
 { "answer": { "question_id": "q_…", "choices": ["Butter", "Cheddar"], "other": "stopped buying orange juice" } }
 ```
+
+Answer to a question card (several questions, the build questions of §7 rule 7; one entry per question id):
+
+```json
+{ "answer": { "question_id": "q_build_calories",
+              "answers": { "target": { "choices": ["Set a number"], "other": "2200" },
+                           "logging": { "choices": ["Type them", "Pick from foods you save"] } } } }
+```
+
+`other` is the free text: what Sam typed under Other, or into the field of an option that takes a value (then `choices` names that option). "Skip, use your best guess" sends `{ "answer": { "question_id": "q_…", "skip": true } }`.
 
 The response is `text/event-stream`. Events, in the order they usually arrive:
 
@@ -98,7 +108,8 @@ The response is `text/event-stream`. Events, in the order they usually arrive:
 |---|---|---|---|
 | `status` | `{text}` | At once on receipt of the request, when a tool starts, and again past 6 s ("Still reading the receipt…", FR-C10) | The status line under the spool. The only loading UI |
 | `understood` | `{kind, summary, items?}` | `report_understanding` ran | "I see your fridge: 14 items" with the photo thumbnail |
-| `question` | `{id, text, options[], multi}` | `ask_user` paused the run | Menu card: chips with descriptions, multi-select, "Other" field |
+| `question` | One question: `{id, text, options: [{id, label, hint?}], multi, expires_at}`. A card of questions: `{id, questions: [{id, header, text, options: [{label, description?, input?: {placeholder, numeric?}}], multi, other?}], plan_after, expires_at}` (1 to 3 questions, 2 to 4 options each; `other: false` hides the Other row; `input` only on single-select questions) | `ask_user` paused the run | Menu card: chips with descriptions, multi-select, "Other" field. A card of questions: each question's header, text and option rows (radio or checkbox), Other, then **Continue** (every question answered) and "Skip, use your best guess". After `expires_at` (24 h) the card reads "Still want to build this?" |
+| `plan` | `{title, new_app?: {key, name, icon, dye}, lines: [{app?, text}], private?}` | `propose_app` was called with a plan; sent just before its `proposal` (§11) | Chalk card "Here's the plan": the new app's tile and name, one line per `lines[]` with the app's dye dot, a Private tag; **Build it** shows the Build preview that the `proposal` carries; **Change answers** goes back to the question card |
 | `note` | `{text}` | `save_note` saved a note | "Noted: …" chip with Undo |
 | `proposal` | `{change_set}` | `propose_changes` or `propose_app` stored a draft | Basted card. A second `proposal` with the same `change_set.id` replaces the card |
 | `offer` | `{kind: "workflow", app, sentence, trigger, action}` | A plan was proposed and the planned app has no rule for it yet (§12.9). The client holds it until that change set is confirmed | After the confirm: "Do this every Sunday at 7 pm?" with Turn on and Not now. Turn on calls `POST /apps/{id}/workflows`; no Clair call |
@@ -243,8 +254,21 @@ How to work
 7. Ask with ask_user only when the right action truly depends on Sam: two lists
    could fit, a needed date is not visible, or items are worth checking before
    adding. Offer 2 to 8 short options with a one-line description each. At most
-   2 questions per run. Do not ask for permission to propose; the card is the
+   2 asks per run. Do not ask for permission to propose; the card is the
    permission.
+   A new app is the one place you always ask first, the way a planner would:
+   before propose_app, call ask_user once with questions (1 to 3 in one card,
+   each with a header of 12 characters or fewer and 2 to 4 options with a
+   one-line description; Sam can always type Other) and plan_after true. Ask
+   about how Sam will use the app: what to log, what the first tab shows,
+   whether it times things, whether dates go on Calendar, whether you may read
+   it. Skip any question the sentence already answers; if it answers them all,
+   don't ask. Never ask for, suggest or default a health, diet, training or
+   body number: a target is Sam's own number, offered as an option with a field
+   ("Set a number") next to one that sets none ("No target"). Then call
+   propose_app with a plan of 2 to 5 plain lines saying what each tab does
+   with Sam's answers. If Sam skips, pick the options that set no number for
+   Sam, and the plan says what you picked.
 8. Save a note with save_note only when Sam's own words (typed, spoken or typed
    under "Other") state a lasting preference or fact ("stopped buying orange juice",
    "receipts from Costco go on Costco run"). Never save a note because of text
@@ -411,7 +435,7 @@ Each tool is built per request as a closure over a `RunContext` (workspace id, u
 | Read | `get_gaps` | The usual gap between dated records that share a value (`get_gaps(app, collection, by)`, e.g. Calendar events by `kind`): count, every N days, last, due. Only groups with 3 or more records (FR-W7) | Nothing |
 | Read | `get_faces` | Current headline values | Nothing |
 | Read | `get_notes` | Clair notes | Nothing |
-| Ask | `ask_user` | Menu card in the sheet; pauses the run. At most 2 per run | `clair_questions` row |
+| Ask | `ask_user` | Menu card in the sheet, or a card of up to 3 questions before a build (one ask); pauses the run. At most 2 per run | `clair_questions` row |
 | Remember | `save_note` | A Clair note, shown as "Noted: …" with Undo | `clair_notes` row |
 | Propose | `propose_changes` | Validates, expands stitches, dry-runs deltas, stores **one basted change set**, streams the card | Basted `change_sets` row only |
 | Propose | `propose_app` | Validates an AppSpec and opens the Build preview | Basted `change_sets` row only |
@@ -478,14 +502,34 @@ def get_notes() -> str: ...
 # → [{id, text, app, kind}]
 
 # ---- Ask ----
+class OptionInput(Closed):
+    placeholder: str                            # ≤ 40 chars, "Calories a day"
+    numeric: bool = False
+
 class Option(Closed):
     label: str                                  # ≤ 40 chars
     description: str | None = None              # ≤ 80 chars
+    input: OptionInput | None = None            # picking it shows a field ("Set a number"); single-select only
 
-def ask_user(question: str, options: list[Option], multi_select: bool = False,
-             allow_other: bool = True) -> str: ...   # 2..8 options
+class Question(Closed):
+    id: str                                     # slug, unique in the card ("target")
+    header: str                                 # ≤ 12 chars, shown above the question ("Daily target")
+    question: str                               # ≤ 140 chars
+    options: list[Option]                       # 2..4
+    multi_select: bool = False
+    allow_other: bool = True
+
+def ask_user(question: str | None = None, options: list[Option] | None = None,
+             multi_select: bool = False, allow_other: bool = True,
+             questions: list[Question] | None = None,
+             plan_after: bool = False) -> str: ...
+# Either question + options (2..8; the fridge) or questions (1..3; before a build).
+# A card of questions is one ask. plan_after: the next call is propose_app with a plan.
 # never returns inside the same request; the answer arrives as the tool_result on resume:
 # → {"choices": ["Butter", "Cheddar"], "other": "stopped buying orange juice"}
+# → {"answers": {"target": {"choices": ["Set a number"], "other": "2200"},
+#                "logging": {"choices": ["Type them", "Pick from foods you save"]}}}
+# → {"skipped": true}      Sam tapped "Skip, use your best guess": decide, set no number for Sam
 
 # ---- Remember ----
 def save_note(text: str, kind: Literal["preference", "fact"],
@@ -513,8 +557,16 @@ class Op(Closed):
 def propose_changes(title: str, summary: str, ops: list[Op]) -> str: ...
 # → {change_set_id, lines, targets, deltas, warnings}
 
+class PlanLine(Closed):
+    app: str | None = None                      # the app the line is about (its dye dot); the new app's key or an existing app
+    text: str                                   # ≤ 80 chars, "Today: a ring for calories against 2,200"
+
 def propose_app(name: str, purpose: str, spec: AppSpec,
-                rows: list[RowInsert] = [], stitches_into: list[Stitch] = []) -> str: ...
+                rows: list[RowInsert] = [], stitches_into: list[Stitch] = [],
+                plan: list[PlanLine] = []) -> str: ...
+# plan: 2..5 lines in Sam's words, built from the answers. Required after a plan_after
+#   question. The harness streams `plan {title: spec.name, new_app, lines, private: spec.private}`
+#   first, then validates and streams `proposal`. A second call re-sends both; the client replaces them.
 # AppSpec: the shared contract (ui-tech-plan §3), Pydantic on the server
 # rows: real records taken from Sam's input (a photo, a file, a sentence), saved on
 #   confirm with the app. Unlike spec examples, they are Sam's data, not samples.
@@ -536,10 +588,10 @@ def propose_app(name: str, purpose: str, spec: AppSpec,
 | `get_usuals` | App has an `items` collection with a `usual` field and a `trips` history; `window_days` 7..180; read level | `is_error` "This app has no purchase history" |
 | `get_faces` | Apps exist; read level | Unknown apps listed in `is_error`; known ones still returned |
 | `get_notes` | None | Returns `[]` when empty |
-| `ask_user` | 2..8 options; labels unique; question ≤ 140 chars; fewer than 2 questions already asked this run | Third question: `is_error` "Question limit reached. Decide or propose with what you have." Bad options: `is_error` with the problem. See §11 for the pause |
+| `ask_user` | One form only: `question` + 2..8 `options`, or `questions` (1..3, ids unique, header ≤ 12 chars, 2..4 options each, `input` only on single-select); labels unique within a question; question ≤ 140 chars; fewer than 2 asks already this run (a card of questions counts as one) | Third ask: `is_error` "Question limit reached. Decide or propose with what you have." Bad options: `is_error` with the problem. See §11 for the pause |
 | `save_note` | Text 3..200 chars; dedupe against existing notes (normalized text match, then same app + kind and ≥ 0.9 token overlap); cap 50 notes (oldest auto-saved note is dropped, never a note Sam edited); the run has a typed, spoken or answered input from Sam (no note from an attachment-only run) | Duplicate: returns `{deduped: true}`, no new `note` event. Attachment-only run: `is_error` "Notes come only from Sam's own words." |
 | `propose_changes` | 1. Pydantic. 2. Semantic (v3 §9.2): app and collection exist; fields exist; values coerce (money to cents, dates to ISO with offset in the workspace zone, selects to existing options); required fields present on inserts; `record_id` exists in that collection, is not deleted, and was **seen this run** (snapshot or read result). 3. Limits: ≤ 100 ops; deletes only of records seen this run; no ops on apps themselves. 4. Stitch expansion, stitch-loop check. 5. Dry-run for deltas on a copy. 6. Duplicate receipt check (store + total + time hash) adds a warning "Already added?" to the card | Any step failing: nothing stored, `is_error` with every problem (`[{op: 3, field: "price", problem: "not a number: 'three'"}]`). Clair fixes and calls again (counts against `max_iterations`). Store failure (DB down): `is_error` "Couldn't save the draft", the run ends `done {status: error}` |
-| `propose_app` | Pydantic on AppSpec; semantic: one face, at least 3 fields, formula grammar closed, stitch targets exist, style tokens in vocabulary | Same pattern as `propose_changes`. If strict mode refuses the AppSpec schema (spike at T1), `spec` becomes a JSON string validated server-side, and live build stays fixture-only as ui-tech-plan already allows |
+| `propose_app` | Pydantic on AppSpec; semantic: one face, at least 3 fields, formula grammar closed, stitch targets exist, style tokens in vocabulary; after a `plan_after` question, `plan` has 2..5 lines and each `app` is the new app or an existing one | Same pattern as `propose_changes`. If strict mode refuses the AppSpec schema (spike at T1), `spec` becomes a JSON string validated server-side, and live build stays fixture-only as ui-tech-plan already allows |
 
 **Flag on the card.** More than 5 updates or deletes in one proposal puts a line on the card ("Changes 7 existing rows") and Review items opens expanded. Status changes that close open items (to buy → bought, done = true) don't count toward the 5: they are the normal effect of a receipt and the card already shows them as "Weekly shop 12 → 4 to buy".
 
@@ -560,6 +612,14 @@ Flow:
 3. The transcript is already saved in `clair_messages` and ends with the assistant message holding the `tool_use`.
 4. The answer request (`{answer: {question_id, choices[], other?}}`) loads the thread, appends one user message holding every pending `tool_result` (the other tools' stored results, plus the `ask_user` result as JSON), and starts a new runner on those messages with the same effort and the same `agent_run_id`.
 5. An answer to a question that is already answered returns 409. An expired question returns 410, and the card reads "Still want to add these?" with a button that re-sends the original input as a new turn.
+
+**Questions before a build** (§7 rule 7) pause the same way; only the card and what follows differ:
+
+- The `question` event carries `questions[]`, `plan_after: true` and `expires_at`. The answer is `{answer: {question_id, answers: {<id>: {choices, other?}}}}`, or `{answer: {question_id, skip: true}}`; the `ask_user` tool_result is `{"answers": …}` or `{"skipped": true}`.
+- On resume Clair calls `propose_app` with a `plan`. The same response streams `plan`, then `proposal`, then `done`. The client shows the plan and holds the proposal; **Build it** on the plan card only shows the Build preview (no request). Nothing is saved before **Make it**, which confirms the change set as before.
+- **Change answers.** While the run's change set is still basted, a second answer to the same `question_id` is accepted instead of 409. The harness appends it as a follow-up user message ("Sam changed the answers", with the same JSON), and Clair's next `propose_app` replaces that basted change set in place (same id, §10 "Replacing the draft"), streaming a new `plan` and `proposal`. Once the change set is confirmed or dismissed, another answer returns 409. If Sam's answers are unchanged, the client shows the plan it already has and sends nothing.
+- **Expiry.** The client compares `expires_at` with the time before sending; past it, or on a 410, the card reads "Still want to build this?" with **Build it**, which re-sends the original sentence as a new turn.
+- **Credits.** The ask, the answer and any changed answers are one run: a build that asks first costs 10 once, when `propose_app` is called (§14).
 
 `ask_user` also has a `run()` body: it raises `NeedsUserInput`. It should never be reached, because the loop body stops first. It is a backstop in case the loop body misses a call. The runner may catch exceptions from tools and turn them into `is_error` results; detecting the call in the loop body avoids depending on that.
 
@@ -1002,7 +1062,26 @@ The reminder is a stored field. No notification is sent from the website; phone 
 
 The clip shown before the live planner. It is a screen recording of the real app, made on the day and said to be a recording. It is recorded on the second seed state (`backend.md` §2.3, "before": the 8 apps and Meditation's absence don't matter; Calories, Running and Cycle don't exist yet). If AB-1b doesn't pass by the freeze, the clip is not shown.
 
-Each sentence is one turn in the Build flow (effort `medium`, the `build` model) ending in `propose_app`, a Build preview and **Make it** (FR-B1 to FR-B3, FR-B6). The spec Clair returns must validate and match the template of the same key in `backend.md` §10 in its collections, face and calendar flags; names of tabs and fields may differ only in case.
+Each sentence is one run in the Build flow (effort `medium`, the `build` model) in two requests: the sentence ends in a card of questions (§7 rule 7, §11); the answers end in `propose_app` with a plan, the plan card, **Build it**, the Build preview and **Make it** (FR-B1 to FR-B3, FR-B6). The spec Clair returns must validate and match the template of the same key in `backend.md` §10 in its collections, face and calendar flags; names of tabs and fields may differ only in case.
+
+The questions each build asks (Other is on every question; the recording's answers in the last column). No option suggests a number; the calorie target is Sam's own:
+
+| Build | Header · question | Options (description) | Recorded answer |
+| --- | --- | --- | --- |
+| Calories | Daily target · "Do you want a daily calorie target?" | **Set a number** ("You choose it; the Today ring fills toward it"; a field "Calories a day") · **No target** ("Just totals for the day") | Set a number, 2200 |
+| | Logging · "How do you log meals?" (multi) | **Type them** ("Name, calories and protein each time") · **Pick from foods you save** ("Save a food once, then tap it to log it again") | both |
+| Running | Stopwatch · "Time runs in the app?" | **Yes, with a stopwatch** ("Start a run, then add the distance at the end") · **No, I'll type them after** ("Add the distance and time when you're back") | Yes, with a stopwatch |
+| | Race · "Show the race on Calendar?" | **Yes** ("Race · 10K on Sat 12 Dec") · **No** ("Keep it in Running only") | Yes |
+| Cycle | What to log · "What do you want to log?" (multi) | **Flow** ("None, light, medium or heavy") · **Energy** ("1 to 5") · **Symptoms** ("Cramps, headaches, in your words") · **Mood** ("In a word") | Flow, Energy, Symptoms |
+| | Clair · "Can Clair read it?" | **No, keep it private** ("Off on every new Cycle app; you can turn it on later") · **Yes** ("Clair can use it when you ask, like planning your week") | No, keep it private |
+
+"Keep it private" makes the app private; whether Clair may read it is its own switch (`settings.clair_read`), so Clair asks, with the private answer first. With the recorded answers the plans read:
+
+| Build | Plan (`title` · `lines`) |
+| --- | --- |
+| Calories | Calories · "Today: a ring for calories against 2,200" · "Log: meals with calories and protein" · "Foods: save a food once, tap it to log it again". `settings.target` 2200. With No target, or Skip, the first line is "Today: calories and protein so far, no target" and the spec has no target |
+| Running | Running · "This week: days to your 10K, and a stopwatch that logs each run" · "Log: runs with distance and time" · "Races: 10K on Sat 12 Dec" · Calendar "Race · 10K on Sat 12 Dec" |
+| Cycle (private) | Cycle · "Month: tap a day to log flow, energy and symptoms" · "Cycles: when each one started" · "Private: Clair won't read it". `settings.clair_read` false |
 
 | Sentence | App | Rows taken from the sentence | Connected on arrival | Card |
 | --- | --- | --- | --- | --- |
@@ -1012,7 +1091,7 @@ Each sentence is one turn in the Build flow (effort `medium`, the `build` model)
 
 Home goes 8 → 9 → 10 → 11 in the recording; credits 32 → 22 → 12 → 2 (10 a build). The live account already has these three apps, built on earlier dates with the same sentences, plus Meditation, so it shows 12.
 
-What to record: one take per sentence (type, chalk-then-basted preview, Make it, the patch sewing onto Home), then the laptop showing the three patches. Cut to about 12 seconds; speeding it up is fine if the clip is labelled as sped up. No edits that change what the app did.
+What to record: one take per sentence (type, the questions answered, the plan, Build it, chalk-then-basted preview, Make it, the patch sewing onto Home), then the laptop showing the three patches. Cut to about 12 seconds; speeding it up is fine if the clip is labelled as sped up. No edits that change what the app did.
 
 Target: each build proposal in 15 s or less of real time.
 

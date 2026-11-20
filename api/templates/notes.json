@@ -1,0 +1,108 @@
+{
+  "v": 1,
+  "key": "notes",
+  "name": "Notes",
+  "icon": "note",
+  "dye": "linen",
+  "settings": {},
+  "collections": [
+    {
+      "key": "notebooks",
+      "name": "Notebooks",
+      "titleField": "name",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Notebook",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "class",
+          "label": "Class",
+          "type": "relation",
+          "target": "classes/classes"
+        }
+      ]
+    },
+    {
+      "key": "notes",
+      "name": "Notes",
+      "titleField": "title",
+      "dateField": "at",
+      "fields": [
+        {
+          "key": "title",
+          "label": "Title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "body",
+          "label": "Note",
+          "type": "text"
+        },
+        {
+          "key": "notebook",
+          "label": "Notebook",
+          "type": "relation",
+          "target": "notes/notebooks"
+        },
+        {
+          "key": "at",
+          "label": "Written",
+          "type": "datetime"
+        },
+        {
+          "key": "photo",
+          "label": "Photo",
+          "type": "file"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    {
+      "kind": "page",
+      "id": "t_notebooks",
+      "title": "Notebooks",
+      "children": [
+        {
+          "kind": "list",
+          "id": "b_notebooks",
+          "source": "notes/notebooks"
+        }
+      ]
+    },
+    {
+      "kind": "page",
+      "id": "t_all",
+      "title": "All notes",
+      "children": [
+        {
+          "kind": "list",
+          "id": "b_notes",
+          "source": "notes/notes",
+          "fields": [
+            "notebook",
+            "at"
+          ],
+          "sort": {
+            "field": "at",
+            "dir": "desc"
+          }
+        }
+      ]
+    }
+  ],
+  "face": {
+    "value": {
+      "agg": "count",
+      "from": "notes/notes",
+      "window": "week"
+    },
+    "format": "count",
+    "label": "this week"
+  },
+  "stitches": []
+}

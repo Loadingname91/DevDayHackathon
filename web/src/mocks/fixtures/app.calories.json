@@ -1,0 +1,438 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "calories",
+  "key": "calories",
+  "name": "Calories",
+  "icon": "flame",
+  "dye": "apricot",
+  "settings": {
+   "target": 2200
+  },
+  "collections": [
+   {
+    "key": "meals",
+    "name": "Meals",
+    "titleField": "name",
+    "dateField": "at",
+    "fields": [
+     {
+      "key": "name",
+      "label": "Meal",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "calories",
+      "label": "Calories",
+      "type": "number",
+      "unit": "cal"
+     },
+     {
+      "key": "protein",
+      "label": "Protein",
+      "type": "number",
+      "unit": "g protein"
+     },
+     {
+      "key": "meal",
+      "label": "Meal time",
+      "type": "select",
+      "options": [
+       {
+        "id": "breakfast",
+        "label": "Breakfast"
+       },
+       {
+        "id": "lunch",
+        "label": "Lunch"
+       },
+       {
+        "id": "dinner",
+        "label": "Dinner"
+       },
+       {
+        "id": "snack",
+        "label": "Snack"
+       }
+      ]
+     },
+     {
+      "key": "at",
+      "label": "When",
+      "type": "datetime",
+      "required": true
+     }
+    ]
+   },
+   {
+    "key": "foods",
+    "name": "Foods",
+    "titleField": "name",
+    "fields": [
+     {
+      "key": "name",
+      "label": "Meal",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "calories",
+      "label": "Calories",
+      "type": "number",
+      "unit": "cal"
+     },
+     {
+      "key": "protein",
+      "label": "Protein",
+      "type": "number",
+      "unit": "g protein"
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_today",
+    "title": "Today",
+    "children": [
+     {
+      "kind": "ring",
+      "id": "b_ring",
+      "label": "Today",
+      "value": {
+       "agg": "sum",
+       "from": "calories/meals",
+       "field": "calories",
+       "window": "today"
+      },
+      "target": {
+       "setting": "target"
+      },
+      "format": "number"
+     },
+     {
+      "kind": "picks",
+      "id": "b_picks",
+      "label": "Again",
+      "from": "calories/foods",
+      "log": "calories/meals",
+      "fields": [
+       "name",
+       "calories",
+       "protein"
+      ]
+     },
+     {
+      "kind": "list",
+      "id": "b_meals_today",
+      "label": "Today",
+      "source": "calories/meals",
+      "fields": [
+       "meal",
+       "calories",
+       "protein"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "asc"
+      },
+      "where": [
+       {
+        "field": "at",
+        "op": "within",
+        "value": "today"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_log",
+    "title": "Log",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_meals",
+      "source": "calories/meals",
+      "fields": [
+       "calories",
+       "protein"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "desc"
+      },
+      "group": "at"
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_foods",
+    "title": "Foods",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_foods",
+      "source": "calories/foods",
+      "fields": [
+       "calories",
+       "protein"
+      ]
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "sum",
+    "from": "calories/meals",
+    "field": "calories",
+    "window": "today"
+   },
+   "format": "number",
+   "label": "today"
+  }
+ },
+ "data": {
+  "calories/meals": [
+   {
+    "id": "m_1",
+    "position": "a132",
+    "version": 1,
+    "properties": {
+     "name": "Oatmeal and banana",
+     "calories": 350,
+     "protein": 10,
+     "meal": "breakfast",
+     "at": "2026-11-16T08:00:00-07:00"
+    }
+   },
+   {
+    "id": "m_2",
+    "position": "a133",
+    "version": 1,
+    "properties": {
+     "name": "Turkey sandwich",
+     "calories": 520,
+     "protein": 28,
+     "meal": "lunch",
+     "at": "2026-11-16T12:30:00-07:00"
+    }
+   },
+   {
+    "id": "m_3",
+    "position": "a134",
+    "version": 1,
+    "properties": {
+     "name": "Pasta with chicken",
+     "calories": 780,
+     "protein": 42,
+     "meal": "dinner",
+     "at": "2026-11-16T19:00:00-07:00"
+    }
+   },
+   {
+    "id": "m_4",
+    "position": "a135",
+    "version": 1,
+    "properties": {
+     "name": "Greek yogurt and granola",
+     "calories": 310,
+     "protein": 18,
+     "meal": "breakfast",
+     "at": "2026-11-17T08:15:00-07:00"
+    }
+   },
+   {
+    "id": "m_5",
+    "position": "a136",
+    "version": 1,
+    "properties": {
+     "name": "Leftover pasta",
+     "calories": 640,
+     "protein": 34,
+     "meal": "lunch",
+     "at": "2026-11-17T12:40:00-07:00"
+    }
+   },
+   {
+    "id": "m_6",
+    "position": "a137",
+    "version": 1,
+    "properties": {
+     "name": "Tacos",
+     "calories": 820,
+     "protein": 38,
+     "meal": "dinner",
+     "at": "2026-11-17T19:10:00-07:00"
+    }
+   },
+   {
+    "id": "m_7",
+    "position": "a138",
+    "version": 1,
+    "properties": {
+     "name": "Oatmeal and banana",
+     "calories": 350,
+     "protein": 10,
+     "meal": "breakfast",
+     "at": "2026-11-18T08:05:00-07:00"
+    }
+   },
+   {
+    "id": "m_8",
+    "position": "a139",
+    "version": 1,
+    "properties": {
+     "name": "Taco Bell burrito",
+     "calories": 690,
+     "protein": 24,
+     "meal": "lunch",
+     "at": "2026-11-18T13:00:00-07:00"
+    }
+   },
+   {
+    "id": "m_9",
+    "position": "a140",
+    "version": 1,
+    "properties": {
+     "name": "Chicken and rice",
+     "calories": 640,
+     "protein": 45,
+     "meal": "dinner",
+     "at": "2026-11-18T19:20:00-07:00"
+    }
+   },
+   {
+    "id": "m_10",
+    "position": "a141",
+    "version": 1,
+    "properties": {
+     "name": "Eggs and toast",
+     "calories": 380,
+     "protein": 22,
+     "meal": "breakfast",
+     "at": "2026-11-19T08:20:00-07:00"
+    }
+   },
+   {
+    "id": "m_11",
+    "position": "a142",
+    "version": 1,
+    "properties": {
+     "name": "Union food court rice bowl",
+     "calories": 690,
+     "protein": 30,
+     "meal": "lunch",
+     "at": "2026-11-19T12:45:00-07:00"
+    }
+   },
+   {
+    "id": "m_12",
+    "position": "a143",
+    "version": 1,
+    "properties": {
+     "name": "Frozen pizza",
+     "calories": 900,
+     "protein": 36,
+     "meal": "dinner",
+     "at": "2026-11-19T19:30:00-07:00"
+    }
+   },
+   {
+    "id": "m_13",
+    "position": "a144",
+    "version": 1,
+    "properties": {
+     "name": "Oatmeal and banana",
+     "calories": 350,
+     "protein": 10,
+     "meal": "breakfast",
+     "at": "2026-11-20T08:10:00-07:00"
+    }
+   },
+   {
+    "id": "m_14",
+    "position": "a145",
+    "version": 1,
+    "properties": {
+     "name": "Chicken and rice",
+     "calories": 640,
+     "protein": 45,
+     "meal": "lunch",
+     "at": "2026-11-20T12:30:00-07:00"
+    }
+   },
+   {
+    "id": "m_15",
+    "position": "a146",
+    "version": 1,
+    "properties": {
+     "name": "Greek yogurt",
+     "calories": 150,
+     "protein": 15,
+     "meal": "snack",
+     "at": "2026-11-20T15:40:00-07:00"
+    }
+   }
+  ],
+  "calories/foods": [
+   {
+    "id": "fd_1",
+    "position": "a147",
+    "version": 1,
+    "properties": {
+     "name": "Oatmeal and banana",
+     "calories": 350,
+     "protein": 10
+    }
+   },
+   {
+    "id": "fd_2",
+    "position": "a148",
+    "version": 1,
+    "properties": {
+     "name": "Chicken and rice",
+     "calories": 640,
+     "protein": 45
+    }
+   },
+   {
+    "id": "fd_3",
+    "position": "a149",
+    "version": 1,
+    "properties": {
+     "name": "Greek yogurt",
+     "calories": 150,
+     "protein": 15
+    }
+   }
+  ]
+ },
+ "values": {
+  "b_ring": {
+   "text": "1,140",
+   "target": "of 2,200",
+   "pct": 52,
+   "sub": "70 g protein"
+  },
+  "b_today": {
+   "text": "1,140",
+   "target": "2,200",
+   "pct": 52
+  }
+ },
+ "status": "**1,140** of 2,200 today across **3** meals.",
+ "faces": {
+  "calories": {
+   "text": "1,140",
+   "label": "today"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

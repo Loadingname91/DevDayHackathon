@@ -1,0 +1,105 @@
+{
+ "credits": -1,
+ "home": {
+  "changed": [
+   "workout",
+   "calendar"
+  ]
+ },
+ "apps": {
+  "workout": {
+   "add": {
+    "workout/sessions": [
+     {
+      "id": "s_legs_1124",
+      "position": "a174",
+      "version": 1,
+      "properties": {
+       "name": "Leg day",
+       "routine": [
+        "ro_legs"
+       ],
+       "at": "2026-11-24T17:00:00-07:00",
+       "done": false,
+       "_moved_from": {
+        "record_id": "s_legs",
+        "occurrence": "2026-11-24"
+       }
+      }
+     },
+     {
+      "id": "s_push_1125",
+      "position": "a175",
+      "version": 1,
+      "properties": {
+       "name": "Push day",
+       "routine": [
+        "ro_push"
+       ],
+       "at": "2026-11-25T07:00:00-07:00",
+       "done": false,
+       "_moved_from": {
+        "record_id": "s_push",
+        "occurrence": "2026-11-25"
+       }
+      }
+     },
+     {
+      "id": "s_pull_1129",
+      "position": "a176",
+      "version": 1,
+      "properties": {
+       "name": "Pull day",
+       "routine": [
+        "ro_pull"
+       ],
+       "at": "2026-11-29T16:00:00-07:00",
+       "done": false,
+       "_moved_from": {
+        "record_id": "s_pull",
+        "occurrence": "2026-11-27"
+       }
+      }
+     }
+    ]
+   }
+  },
+  "calendar": {
+   "add": {
+    "*dated": [
+     {
+      "at": "2026-11-24T17:00:00-07:00",
+      "title": "Leg day",
+      "sub": "Workout",
+      "app": "workout",
+      "record_id": "s_legs_1124",
+      "changed": true
+     },
+     {
+      "at": "2026-11-25T07:00:00-07:00",
+      "title": "Push day",
+      "sub": "Workout",
+      "app": "workout",
+      "record_id": "s_push_1125",
+      "changed": true
+     },
+     {
+      "at": "2026-11-29T16:00:00-07:00",
+      "title": "Pull day",
+      "sub": "Workout",
+      "app": "workout",
+      "record_id": "s_pull_1129",
+      "changed": true
+     }
+    ]
+   },
+   "remove": {
+    "*dated": [
+     "s_legs@2026-11-24",
+     "s_push@2026-11-25",
+     "s_pull@2026-11-27"
+    ]
+   }
+  }
+ }
+}

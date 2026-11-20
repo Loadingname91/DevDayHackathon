@@ -1,0 +1,366 @@
+{
+  "v": 1,
+  "key": "workout",
+  "name": "Workout",
+  "icon": "dumbbell",
+  "dye": "blush",
+  "settings": {},
+  "collections": [
+    {
+      "key": "sessions",
+      "name": "Sessions",
+      "titleField": "name",
+      "dateField": "at",
+      "calendar": true,
+      "fields": [
+        {
+          "key": "name",
+          "label": "Session",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "routine",
+          "label": "Routine",
+          "type": "relation",
+          "target": "workout/routines"
+        },
+        {
+          "key": "at",
+          "label": "Next",
+          "type": "datetime"
+        },
+        {
+          "key": "meets",
+          "label": "Repeats",
+          "type": "text"
+        },
+        {
+          "key": "done",
+          "label": "Done",
+          "type": "bool"
+        },
+        {
+          "key": "repeat",
+          "label": "Repeat",
+          "type": "repeat"
+        },
+        {
+          "key": "started_at",
+          "label": "Started",
+          "type": "datetime"
+        },
+        {
+          "key": "minutes",
+          "label": "Minutes",
+          "type": "number",
+          "unit": "min"
+        }
+      ]
+    },
+    {
+      "key": "routines",
+      "name": "Routines",
+      "titleField": "name",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Routine",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "minutes",
+          "label": "About",
+          "type": "number",
+          "unit": "min"
+        },
+        {
+          "key": "needs",
+          "label": "Needs",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "key": "exercises",
+      "name": "Exercises",
+      "titleField": "name",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Exercise",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "routine",
+          "label": "Routine",
+          "type": "relation",
+          "target": "workout/routines"
+        },
+        {
+          "key": "plan",
+          "label": "Plan",
+          "type": "text"
+        },
+        {
+          "key": "sets",
+          "label": "Sets",
+          "type": "number"
+        },
+        {
+          "key": "reps",
+          "label": "Reps",
+          "type": "number"
+        },
+        {
+          "key": "weight",
+          "label": "Weight",
+          "type": "number",
+          "unit": "lb"
+        },
+        {
+          "key": "order",
+          "label": "Order",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "key": "sets",
+      "name": "Sets",
+      "titleField": "exercise",
+      "dateField": "at",
+      "fields": [
+        {
+          "key": "exercise",
+          "label": "Exercise",
+          "type": "relation",
+          "target": "workout/exercises"
+        },
+        {
+          "key": "session",
+          "label": "Session",
+          "type": "relation",
+          "target": "workout/sessions"
+        },
+        {
+          "key": "reps",
+          "label": "Reps",
+          "type": "number"
+        },
+        {
+          "key": "weight",
+          "label": "Weight",
+          "type": "number",
+          "unit": "lb"
+        },
+        {
+          "key": "at",
+          "label": "When",
+          "type": "datetime"
+        },
+        {
+          "key": "volume",
+          "label": "Volume",
+          "type": "formula",
+          "op": "mul",
+          "a": "weight",
+          "b": "reps",
+          "output": "number"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    {
+      "kind": "page",
+      "id": "t_today",
+      "title": "Today",
+      "children": [
+        {
+          "kind": "next",
+          "id": "b_next",
+          "source": "workout/sessions",
+          "log": "workout/sets",
+          "fields": [
+            "reps",
+            "weight"
+          ]
+        },
+        {
+          "kind": "metric",
+          "id": "b_lifted",
+          "label": "Lifted this week",
+          "value": {
+            "agg": "sum",
+            "from": "workout/sets",
+            "field": "volume",
+            "window": "week"
+          },
+          "format": "number"
+        },
+        {
+          "kind": "metric",
+          "id": "b_since",
+          "label": "Done since September",
+          "value": {
+            "agg": "count",
+            "from": "workout/sessions",
+            "window": "all"
+          },
+          "format": "count"
+        },
+        {
+          "kind": "progress",
+          "id": "b_sessions",
+          "label": "Sessions this week",
+          "value": {
+            "agg": "count",
+            "from": "workout/sessions",
+            "window": "week"
+          },
+          "target": 4,
+          "format": "count"
+        },
+        {
+          "kind": "strip",
+          "id": "b_strip",
+          "label": "This week",
+          "value": {
+            "agg": "count",
+            "from": "workout/sessions",
+            "window": "week"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "page",
+      "id": "t_log",
+      "title": "Log",
+      "children": [
+        {
+          "kind": "list",
+          "id": "b_sets",
+          "source": "workout/sets",
+          "fields": [
+            "reps",
+            "weight"
+          ],
+          "sort": {
+            "field": "at",
+            "dir": "desc"
+          },
+          "group": "at"
+        }
+      ]
+    },
+    {
+      "kind": "page",
+      "id": "t_history",
+      "title": "History",
+      "children": [
+        {
+          "kind": "metric",
+          "id": "b_done",
+          "label": "Done since September",
+          "value": {
+            "agg": "count",
+            "from": "workout/sessions",
+            "window": "all"
+          },
+          "format": "count"
+        },
+        {
+          "kind": "metric",
+          "id": "b_week",
+          "label": "This week",
+          "value": {
+            "agg": "count",
+            "from": "workout/sessions",
+            "window": "week"
+          },
+          "format": "count"
+        },
+        {
+          "kind": "list",
+          "id": "b_series",
+          "source": "workout/sessions",
+          "fields": [
+            "meets"
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "page",
+      "id": "t_progress",
+      "title": "Progress",
+      "children": [
+        {
+          "kind": "metric",
+          "id": "b_lat",
+          "label": "Lat pulldown",
+          "value": {
+            "agg": "max",
+            "from": "workout/sets",
+            "field": "weight",
+            "window": {
+              "days": 56
+            }
+          },
+          "format": "text"
+        },
+        {
+          "kind": "metric",
+          "id": "b_volume",
+          "label": "Volume this week",
+          "value": {
+            "agg": "sum",
+            "from": "workout/sets",
+            "field": "volume",
+            "window": "week"
+          },
+          "format": "number"
+        }
+      ]
+    },
+    {
+      "kind": "page",
+      "id": "t_routines",
+      "title": "Routines",
+      "children": [
+        {
+          "kind": "list",
+          "id": "b_routines",
+          "source": "workout/routines",
+          "fields": [
+            "minutes",
+            "needs"
+          ]
+        },
+        {
+          "kind": "list",
+          "id": "b_exercises",
+          "source": "workout/exercises",
+          "fields": [
+            "plan"
+          ],
+          "group": "routine"
+        }
+      ]
+    }
+  ],
+  "face": {
+    "value": {
+      "agg": "count",
+      "from": "workout/sessions",
+      "window": "week"
+    },
+    "format": "count",
+    "label": "this week"
+  },
+  "stitches": []
+}

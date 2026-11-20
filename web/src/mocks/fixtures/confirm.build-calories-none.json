@@ -1,0 +1,12 @@
+{
+ "change_set_id": "cs_build_calories",
+ "server_seq": 4150,
+ "blocks": [],
+ "faces": {
+  "calories": {
+   "text": "0",
+   "label": "today"
+  }
+ },
+ "warnings": []
+}

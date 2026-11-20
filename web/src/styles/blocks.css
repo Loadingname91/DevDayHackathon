@@ -1,0 +1,45 @@
+/* Shared block rules: what every block and every Clair-built app inherits. Owned by the blocks pass; see the list at the top of app.css.
+   Loads after motion.css, so a rule here wins over it at equal specificity. */
+
+/* ---------- tap targets: nothing you press is smaller than --hit (44 px) ----------
+   Most controls are 44 in their own box (app.css: .tab, .seg button, .chip, .round, .go, .qa-go, .sb, .sec-btn, .d-cell, .tick).
+   A control that must look smaller keeps its look and reaches 44 with a ::before or ::after of its own: the switch below, the
+   mock-data mark (app.css). Neighbouring hit areas never overlap: a row's tick ends 2 px before the row's text button begins. */
+.switch-btn::before { content: ''; position: absolute; inset: -6px -2px; } /* 52 × 32 to the eye, 56 × 44 to a thumb (the knob is its ::after) */
+.switch-btn:not([aria-checked='true']) { box-shadow: inset 0 0 0 1.5px var(--edge); } /* an off switch is a 3:1 shape, not a faint tint */
+
+/* a list row's focus ring sits inside the row, because the card clips whatever is outside it */
+.list .row-btn:focus-visible, .row-in .main:focus-visible { outline-offset: -3px; }
+.row .tick:focus-visible { outline-offset: -2px; }
+
+/* ---------- scrolling rows say so: an edge fades only where there is more ----------
+   lib/scrollEdge.ts sets data-edge="start", "end" or "start end" on .tabs, .chips.scroll and .side-apps when they scroll. */
+.tabs[data-edge], .chips.scroll[data-edge] { --fl: 0px; --fr: 0px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%); }
+.side-apps[data-edge] { --fl: 0px; --fr: 0px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%); }
+[data-edge~='start'] { --fl: 28px; }
+[data-edge~='end'] { --fr: 28px; }
+.side-apps[data-edge~='start'] { --fl: 24px; }
+.side-apps[data-edge~='end'] { --fr: 24px; }
+
+/* ---------- an empty list or block is never a dead end (components/EmptyState.tsx) ---------- */
+.landed .acts { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
+.landed .acts .ghost { min-height: 48px; }
+.empty-state.compact { padding: 16px; gap: 4px; }
+.empty-state.compact .acts { margin-top: 4px; }
+.list > li.empty-li { padding: 0; }
+/* a figure block with nothing sent for it: a quiet card with its label, never a lone dot and a dash */
+.nodata { padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+.nodata .nd-t { font-size: 15px; color: var(--sec); }
+.nodata.failed .nd-t { font-variant-numeric: tabular-nums; }
+.add-row-li { padding: 0; }
+.list > li.add-row-li { display: block; min-height: 0; }
+.list .add-row { min-height: 52px; }
+.list .add-row:active { background-color: var(--hair); transform: none; }
+.nodata .nd-s { font-size: 13px; color: var(--sec); }
+
+/* the month's seven cells stay 44 wide on a 360 phone (the grid's side padding gives 4 px back); the .m-* rules themselves are in app.css */
+@media (max-width: 380px) { .m-grid { padding-inline: 4px; } }

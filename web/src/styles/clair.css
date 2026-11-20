@@ -1,0 +1,53 @@
+/* Clair sheet, from the ClairSheet / ClairResult / ClairAsk boards (design/screens-css.md §12). Owned by the Clair sheet rebuild.
+   Everything is scoped under .cs (ClairSheet.tsx); .clair-head / .clair-line in app.css stay for Build, ReviewItems and the demo menu. */
+
+.cs { display: flex; flex-direction: column; gap: 16px; }
+.cs-turn { gap: 12px; padding-bottom: 8px; } /* the scroller's 12 gap; +8 so the 24 px fade below falls on padding */
+
+/* the scrolling column fades its last 24 px under the pinned field (board .scr) */
+.sheet .body:has(> .cs-turn) { -webkit-mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 24px), transparent); mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 24px), transparent); }
+
+/* ---------- header: spool 44 · title over a 13 px line · close × ---------- */
+/* sticky so the close stays in reach when a long plan scrolls; 8 + the grabber's 20 = the board's 8 + 4 + 16 */
+.cs-head { position: sticky; top: 0; z-index: 2; margin: 0 -16px; padding: 8px 16px 0; background: var(--ground); display: flex; align-items: center; gap: 12px; }
+.cs-turn .cs-head { padding-bottom: 4px; }
+.cs-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.cs-titles h2 { font-size: 22px; font-weight: 700; letter-spacing: -.015em; line-height: 1.1; }
+.cs-sub { font-size: 13px; color: var(--sec); }
+.cs-mark { flex: none; width: 36px; height: 36px; border-radius: 12px; background: var(--ink); color: var(--cta-ink); display: grid; place-items: center; } /* the Clair cell's faceless mark */
+.cs-head .pill { flex: none; }
+.cs-close { flex: none; width: 44px; height: 44px; margin-right: -8px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); }
+
+/* ---------- the field: under the header at the start, pinned at the bottom in a turn ---------- */
+.field.cs-field { min-height: 0; align-items: flex-end; gap: 8px; padding: 4px 4px 4px 12px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--line);
+  transition: box-shadow var(--t-fb) var(--ease); }
+.field.cs-field:focus-within { box-shadow: inset 0 0 0 2px var(--focus); }
+.cs-field textarea { padding: 8px 0; font-size: 16px; line-height: 1.4; color: var(--ink); max-height: 120px; }
+.cs-field textarea::placeholder { color: var(--sec); }
+.cs-field .send { width: 44px; height: 44px; border-radius: 16px; background: var(--cta); color: var(--cta-ink); }
+.field.cs-field.compact { padding: 2px 2px 2px 12px; } /* board ClairResult's bottom input: 48 tall */
+.cs-field.compact textarea { padding: 11px 0; }
+.cs-field.compact .send { border-radius: 14px; }
+
+/* ---------- "Try this evening": a card of rows, icon tile 36 + title over meta ---------- */
+.cs-try { padding: 4px 0; overflow: hidden; }
+.cs-row { position: relative; width: 100%; display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 16px; text-align: left; color: var(--ink);
+  transition: background-color var(--t-fb) var(--ease); }
+.cs-row:active { transform: none; background-color: var(--hair); }
+.cs-row + .cs-row::before { content: ''; position: absolute; left: 16px; right: 16px; top: 0; height: 1px;
+  background-image: linear-gradient(90deg, var(--line) 58%, transparent 0); background-size: 8px 1px; background-repeat: repeat-x; }
+.cs-tile { flex: none; width: 36px; height: 36px; border-radius: 12px; background: var(--hair); color: var(--ink); display: grid; place-items: center; }
+.cs-row-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cs-row-txt .t { font-size: 16px; font-weight: 500; }
+.cs-row-txt .s { font-size: 13px; color: var(--sec); }
+
+/* ---------- a turn: your words, Clair's line, cards, the answer ---------- */
+.cs .said { align-self: flex-end; max-width: 85%; padding: 8px 12px; border-radius: 22px 22px 4px 22px; background: var(--said); color: var(--said-ink); font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
+.cs-line { display: flex; align-items: center; gap: 12px; min-height: 34px; font-size: 15px; font-weight: 500; line-height: 1.35; color: var(--sec); }
+.cs-understood { font-size: 16px; line-height: 1.45; white-space: pre-wrap; }
+.cs-answer .answer { font-size: 16px; line-height: 1.45; color: var(--ink); font-variant-numeric: tabular-nums; white-space: pre-wrap; }
+.cs-answer .answer b { font-weight: 700; }
+.cs-from { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cs-from-l { font-size: 13px; color: var(--sec); }
+.cs-from .chip { justify-content: center; font-size: 14px; }
+.cs-err { font-size: 15px; font-weight: 500; line-height: 1.4; }

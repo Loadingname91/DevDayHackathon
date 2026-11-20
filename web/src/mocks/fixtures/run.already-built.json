@@ -1,0 +1,24 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading…"
+  }
+ },
+ {
+  "delay": 1100,
+  "event": "text_delta",
+  "data": {
+   "text": "You already have that app. Open it from Your apps."
+  }
+ },
+ {
+  "delay": 60,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": []
+  }
+ }
+]

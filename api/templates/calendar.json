@@ -1,0 +1,108 @@
+{
+  "v": 1,
+  "key": "calendar",
+  "name": "Calendar",
+  "icon": "calendar",
+  "dye": "chambray",
+  "settings": {},
+  "collections": [
+    {
+      "key": "events",
+      "name": "Events",
+      "titleField": "title",
+      "dateField": "at",
+      "calendar": true,
+      "fields": [
+        {
+          "key": "title",
+          "label": "Title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "at",
+          "label": "When",
+          "type": "datetime"
+        },
+        {
+          "key": "ends",
+          "label": "Ends",
+          "type": "datetime"
+        },
+        {
+          "key": "repeat",
+          "label": "Repeat",
+          "type": "repeat"
+        },
+        {
+          "key": "kind",
+          "label": "Kind",
+          "type": "select",
+          "options": [
+            {
+              "id": "doctor",
+              "label": "Doctor"
+            },
+            {
+              "id": "dentist",
+              "label": "Dentist"
+            },
+            {
+              "id": "barber",
+              "label": "Barber"
+            },
+            {
+              "id": "other",
+              "label": "Other"
+            }
+          ]
+        },
+        {
+          "key": "remind",
+          "label": "Remind",
+          "type": "text"
+        },
+        {
+          "key": "source",
+          "label": "Source",
+          "type": "text"
+        },
+        {
+          "key": "ext_id",
+          "label": "External id",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    {
+      "kind": "page",
+      "id": "t_days",
+      "title": "Calendar",
+      "children": [
+        {
+          "kind": "days",
+          "id": "b_days",
+          "source": "*dated",
+          "views": [
+            "day",
+            "week",
+            "month"
+          ],
+          "view": "week"
+        }
+      ]
+    }
+  ],
+  "face": {
+    "value": {
+      "agg": "count",
+      "from": "*dated",
+      "window": "today"
+    },
+    "format": "count",
+    "label": "today"
+  },
+  "stitches": []
+}

@@ -1,0 +1,202 @@
+{
+ "greeting": "Evening, Sam.",
+ "status": "**$412** left this month. Pull day at **6 pm**.",
+ "needsOk": [],
+ "nextUp": [
+  {
+   "at": "2026-11-20T18:00:00-07:00",
+   "title": "Pull day",
+   "sub": "Workout",
+   "app": "workout",
+   "record_id": "s_pull",
+   "occurrence": "2026-11-20"
+  },
+  {
+   "at": "2026-11-20T20:00:00-07:00",
+   "title": "Take out recycling",
+   "sub": "To-dos",
+   "app": "todos",
+   "record_id": "t_recycling",
+   "occurrence": "2026-11-20"
+  },
+  {
+   "at": "2026-11-20T21:00:00-07:00",
+   "title": "Return library books",
+   "sub": "To-dos",
+   "app": "todos",
+   "record_id": "t_library"
+  }
+ ],
+ "apps": [
+  {
+   "id": "groceries",
+   "key": "groceries",
+   "name": "Groceries",
+   "icon": "basket",
+   "dye": "sage",
+   "face": {
+    "text": "12",
+    "label": "to buy"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-20T17:41:00-07:00",
+   "pinned": true
+  },
+  {
+   "id": "budget",
+   "key": "budget",
+   "name": "Budget",
+   "icon": "wallet",
+   "dye": "sea glass",
+   "face": {
+    "text": "$412",
+    "label": "left"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-20T17:30:00-07:00",
+   "pinned": true
+  },
+  {
+   "id": "calories",
+   "key": "calories",
+   "name": "Calories",
+   "icon": "flame",
+   "dye": "apricot",
+   "face": {
+    "text": "1,140",
+    "label": "today"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-20T15:40:00-07:00",
+   "pinned": false
+  },
+  {
+   "id": "calendar",
+   "key": "calendar",
+   "name": "Calendar",
+   "icon": "calendar",
+   "dye": "chambray",
+   "face": {
+    "text": "3",
+    "label": "today"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-20T12:10:00-07:00",
+   "pinned": true
+  },
+  {
+   "id": "todos",
+   "key": "todos",
+   "name": "To-dos",
+   "icon": "check",
+   "dye": "butter",
+   "face": {
+    "text": "2",
+    "label": "today"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-20T08:05:00-07:00",
+   "pinned": true
+  },
+  {
+   "id": "meditation",
+   "key": "meditation",
+   "name": "Meditation",
+   "icon": "moon",
+   "dye": "lavender",
+   "face": {
+    "text": "25",
+    "label": "min this week"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-19T22:45:00-07:00",
+   "pinned": false
+  },
+  {
+   "id": "workout",
+   "key": "workout",
+   "name": "Workout",
+   "icon": "dumbbell",
+   "dye": "blush",
+   "face": {
+    "text": "3",
+    "label": "this week"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-19T18:50:00-07:00",
+   "pinned": false
+  },
+  {
+   "id": "running",
+   "key": "running",
+   "name": "Running",
+   "icon": "shoe",
+   "dye": "sage",
+   "face": {
+    "text": "7",
+    "label": "mi this week"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-19T17:15:00-07:00",
+   "pinned": false
+  },
+  {
+   "id": "notes",
+   "key": "notes",
+   "name": "Notes",
+   "icon": "note",
+   "dye": "linen",
+   "face": {
+    "text": "3",
+    "label": "this week"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-19T10:30:00-07:00",
+   "pinned": false
+  },
+  {
+   "id": "classes",
+   "key": "classes",
+   "name": "Classes",
+   "icon": "book",
+   "dye": "chambray",
+   "face": {
+    "text": "2",
+    "label": "due this week"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-19T09:00:00-07:00",
+   "pinned": false
+  },
+  {
+   "id": "subscriptions",
+   "key": "subscriptions",
+   "name": "Subscriptions",
+   "icon": "repeat",
+   "dye": "lavender",
+   "face": {
+    "text": "$38.46",
+    "label": "a month"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-15T12:00:00-07:00",
+   "pinned": false
+  },
+  {
+   "id": "cycle",
+   "key": "cycle",
+   "name": "Cycle",
+   "icon": "drop",
+   "dye": "pear",
+   "face": {
+    "text": "Tue 27 Oct",
+    "label": "last period started"
+   },
+   "changed": false,
+   "lastOpened": "2026-11-15T12:00:00-07:00",
+   "pinned": false
+  }
+ ],
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

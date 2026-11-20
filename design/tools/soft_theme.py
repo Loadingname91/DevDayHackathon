@@ -1,4 +1,4 @@
-"""Soft Quilt skin for the Screens boards (decided Nov 19: light = Mint air).
+"""Soft Quilt skin for the Screens boards (Nov 19; colours replaced by Mint on Nov 20, see mint_theme.py).
 
 The boards were authored in Quilter's Workbench tokens. retheme() rewrites one board's HTML to the
 Soft Quilt look: Mint air gradient ground, frosted white cards, pastel app dyes, ink pill buttons,
@@ -9,6 +9,7 @@ The boards that are not generated (Main, Groceries, Budget, Calendar, Spool) are
 Running it twice is safe: the old values it looks for are gone after the first pass.
 """
 import os, re, sys
+from mint_theme import mint  # Nov 20: the Mint colours (ADR-013) go on last
 
 GROUND_V1 = ('background-color: #EEF6F1; background-image: radial-gradient(75% 46% at 100% 0%, #C9F0DE 0%, transparent 72%), '
              'radial-gradient(75% 46% at 0% 22%, #DDEBFF 0%, transparent 72%), radial-gradient(75% 46% at 100% 60%, #FFF0C4 0%, transparent 72%), '
@@ -58,7 +59,7 @@ def tune(t):
 
 def retheme(t):
     if 'family=Figtree' in t:
-        return tune(t)
+        return mint(tune(t))
     # type: one family, tabular figures instead of the mono
     t = re.sub(r'family=Bricolage\+Grotesque[^"\']*?display=swap', 'family=Figtree:wght@400..800&amp;display=swap', t)
     t = t.replace('Bricolage Grotesque', 'Figtree').replace('Hanken Grotesk', 'Figtree').replace('DM Mono', 'Figtree')
@@ -94,7 +95,7 @@ def retheme(t):
     t = t.replace('rgba(42,33,25,', 'rgba(34,31,58,').replace('rgba(42, 33, 25,', 'rgba(34, 31, 58,')
     # rounder corners everywhere else
     t = re.sub(r'border-radius: ?[^;\'"}]+', lambda m: re.sub(r'\b(8|12|16)px', lambda k: RADIUS[k.group(1)] + 'px', m.group(0)), t)
-    return tune(t.replace('PX', 'px'))
+    return mint(tune(t.replace('PX', 'px')))
 
 
 if __name__ == '__main__':

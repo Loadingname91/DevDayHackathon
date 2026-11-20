@@ -1,0 +1,229 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "meditation",
+  "key": "meditation",
+  "name": "Meditation",
+  "icon": "moon",
+  "dye": "lavender",
+  "collections": [
+   {
+    "key": "sessions",
+    "name": "Sessions",
+    "titleField": "kind",
+    "dateField": "at",
+    "fields": [
+     {
+      "key": "kind",
+      "label": "Kind",
+      "type": "select",
+      "options": [
+       {
+        "id": "breathing",
+        "label": "Breathing"
+       },
+       {
+        "id": "body_scan",
+        "label": "Body scan"
+       },
+       {
+        "id": "sleep",
+        "label": "Sleep"
+       },
+       {
+        "id": "walking",
+        "label": "Walking"
+       }
+      ]
+     },
+     {
+      "key": "minutes",
+      "label": "Minutes",
+      "type": "number",
+      "unit": "min"
+     },
+     {
+      "key": "at",
+      "label": "When",
+      "type": "datetime",
+      "required": true
+     },
+     {
+      "key": "mood_before",
+      "label": "Mood before",
+      "type": "number",
+      "unit": "mood",
+      "unitFirst": true
+     },
+     {
+      "key": "mood_after",
+      "label": "Mood after",
+      "type": "number",
+      "unit": "→",
+      "unitFirst": true
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_sit",
+    "title": "Sit",
+    "children": [
+     {
+      "kind": "timer",
+      "id": "b_sit",
+      "label": "Sit",
+      "mode": "countdown",
+      "log": "meditation/sessions",
+      "minutesField": "minutes",
+      "kindField": "kind",
+      "presets": [
+       5,
+       10,
+       15,
+       20
+      ],
+      "moodFields": [
+       "mood_before",
+       "mood_after"
+      ]
+     },
+     {
+      "kind": "strip",
+      "id": "b_strip",
+      "label": "This week",
+      "value": {
+       "agg": "sum",
+       "from": "meditation/sessions",
+       "field": "minutes",
+       "window": "week"
+      }
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_sessions",
+    "title": "Sessions",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_sessions",
+      "source": "meditation/sessions",
+      "fields": [
+       "at",
+       "minutes",
+       "mood_before",
+       "mood_after"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "desc"
+      }
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "sum",
+    "from": "meditation/sessions",
+    "field": "minutes",
+    "window": "week"
+   },
+   "format": "number",
+   "label": "min this week"
+  }
+ },
+ "data": {
+  "meditation/sessions": [
+   {
+    "id": "med_1",
+    "position": "a171",
+    "version": 1,
+    "properties": {
+     "kind": "sleep",
+     "minutes": 10,
+     "at": "2026-11-16T22:30:00-07:00",
+     "mood_before": 2,
+     "mood_after": 4
+    }
+   },
+   {
+    "id": "med_2",
+    "position": "a172",
+    "version": 1,
+    "properties": {
+     "kind": "breathing",
+     "minutes": 5,
+     "at": "2026-11-18T07:40:00-07:00",
+     "mood_before": 3,
+     "mood_after": 4
+    }
+   },
+   {
+    "id": "med_3",
+    "position": "a173",
+    "version": 1,
+    "properties": {
+     "kind": "body_scan",
+     "minutes": 10,
+     "at": "2026-11-19T22:45:00-07:00",
+     "mood_before": 2,
+     "mood_after": 3
+    }
+   }
+  ]
+ },
+ "values": {
+  "b_strip": {
+   "days": [
+    {
+     "dow": "M",
+     "text": "10",
+     "on": true
+    },
+    {
+     "dow": "T"
+    },
+    {
+     "dow": "W",
+     "text": "5",
+     "on": true
+    },
+    {
+     "dow": "T",
+     "text": "10",
+     "on": true
+    },
+    {
+     "dow": "F",
+     "today": true
+    },
+    {
+     "dow": "S"
+    },
+    {
+     "dow": "S"
+    }
+   ]
+  },
+  "b_min": {
+   "text": "25 min"
+  },
+  "b_count": {
+   "text": "3"
+  }
+ },
+ "status": "**25 min** this week across **3** sessions.",
+ "faces": {
+  "meditation": {
+   "text": "25",
+   "label": "min this week"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

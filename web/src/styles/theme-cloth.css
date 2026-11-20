@@ -1,0 +1,116 @@
+/* Look: Cloth. An opt-in theme layer (proposal, Nov 20): `?look=cloth` sets <html data-look="cloth">.
+   The default look is untouched. Same structure, same tokens' names; this only remaps roles and
+   adds the quilt back into surfaces: woven ground, dyed page cloth, padded patches, and a stitch
+   grammar where every kind of thread means one thing.
+
+   Stitch grammar (one meaning each):
+     tack stitch   fine 2/4 dashes in the app's deep tone       the rows of a list (sewn, structural)
+     running stitch 1.5px dashes in the patch's own deep tone    a patch's seam: saved, yours
+     basting       long 12/8 dashes in GOLD thread               waiting for your OK (not saved yet)
+     chalk         dotted teal outline                           Clair's idea, nothing changed yet
+     gold thread   the "just changed" tag, the notch, a fresh patch's stitch
+   Light and dark are each composed (dark is night cloth: elevation steps, richer dyes), not inverted. */
+
+:root[data-look='cloth'] {
+  --nh: 172; --ah: 180;
+
+  /* ground, ink and surfaces: mint muslin by day, night cloth by night */
+  --ground: light-dark(oklch(.962 .02 172), oklch(.205 .036 215));
+  --ink: light-dark(oklch(.235 .04 195), oklch(.955 .012 195));
+  --sec: light-dark(oklch(.45 .04 195), oklch(.79 .03 205));
+  --card: light-dark(oklch(.994 .005 172), oklch(.262 .034 215));
+  --card-line: light-dark(oklch(.9 .018 172), oklch(.355 .034 215));
+  --raise: light-dark(oklch(.998 .003 172), oklch(.305 .034 215));
+  --hair: color-mix(in oklch, var(--ink) 11%, transparent);
+  --line: color-mix(in oklch, var(--ink) 36%, transparent);
+  --bar: color-mix(in oklch, var(--card) 94%, transparent);
+  --scrim: light-dark(oklch(.24 .04 195 / .3), oklch(0 0 0 / .55));
+  --focus: light-dark(oklch(.45 .13 var(--ah)), oklch(.84 .1 var(--ah)));
+  --cta-ink: light-dark(oklch(.985 .004 172), oklch(.2 .03 215));
+
+  /* thread: gold, the colour of Clair's spool. State, never decoration. */
+  --gold: light-dark(oklch(.85 .14 88), oklch(.83 .13 88));
+  --gold-ink: oklch(.26 .05 80);
+  --gold-line: light-dark(oklch(.66 .13 80), oklch(.82 .13 88));
+
+  /* depth: a lit top edge (--hi) and a soft, offset, tinted shadow (--shade) */
+  --hi: light-dark(oklch(1 0 0 / .85), oklch(1 0 0 / .075));
+  --shade: light-dark(oklch(.3 .06 195 / .5), oklch(0 0 0 / .62));
+  --shadow: inset 0 1px 0 var(--hi), 0 14px 22px -16px var(--shade);
+  --bar-shadow: inset 0 1px 0 var(--hi), 0 16px 30px -14px var(--shade);
+
+  /* woven ground: a 4px thread grid at 2.2% */
+  --weave: repeating-linear-gradient(0deg, color-mix(in oklch, var(--ink) 2.2%, transparent) 0 1px, transparent 1px 4px),
+           repeating-linear-gradient(90deg, color-mix(in oklch, var(--ink) 2.2%, transparent) 0 1px, transparent 1px 4px);
+  --ground-image: var(--weave);
+
+  accent-color: var(--focus);
+  scrollbar-color: color-mix(in oklch, var(--ink) 28%, transparent) transparent;
+  scrollbar-width: thin;
+  caret-color: var(--focus);
+}
+:root[data-look='cloth'] ::selection { background: color-mix(in oklch, var(--gold) 60%, transparent); color: var(--ink); }
+
+/* dyes: dyed cloth, richer in the dark (the Nov 20 morning patch looked brown there) */
+:root[data-look='cloth'] [data-dye] {
+  /* a little deeper than the default pastel by day so a patch reads as cloth, not a tint (fill vs ground 1.08 → ~1.3) */
+  --fill: light-dark(oklch(calc(var(--l) - .035) calc(var(--c) * 1.12) var(--h)), oklch(calc(var(--dl) + .025) calc(var(--c) * 1.4) var(--h)));
+  --stitch: color-mix(in oklch, var(--deep) 66%, transparent);
+  --tack: color-mix(in oklch, var(--deep) 46%, transparent);
+  --pill-ink: light-dark(#fff, oklch(.2 .03 215));
+  /* page cloth keeps the ground's lightness (elevation stays right), only hue and chroma follow the dye;
+     cards take the same hue so a card is always a lighter cloth than its page */
+  --cloth: light-dark(oklch(.946 calc(var(--c) * .5) var(--h)), oklch(.232 calc(var(--c) * .46) var(--h)));
+  --card: light-dark(oklch(.994 .008 var(--h)), oklch(.272 calc(var(--c) * .42) var(--h)));
+  --card-line: light-dark(oklch(.9 calc(var(--c) * .3) var(--h)), oklch(.36 calc(var(--c) * .4) var(--h)));
+}
+
+/* ---------- app bodies are cloth: the page takes a wash of its dye, cards are sewn on ---------- */
+:root[data-look='cloth'] .screen[data-dye] {
+  background-color: var(--cloth);
+  background-image: var(--weave);
+  min-height: 100dvh;
+}
+:root[data-look='cloth'] .shell .screen[data-dye] { max-width: none; margin: 0; padding-inline: max(30px, calc((100% - 900px) / 2)); }
+/* the app's hero card carries a seam in the app's own thread, like a patch */
+:root[data-look='cloth'] :is(.gauge, .ring, .countdown, .next-card, .timer) { position: relative; }
+:root[data-look='cloth'] :is(.gauge, .ring, .countdown, .next-card, .timer)::after {
+  content: ''; position: absolute; inset: 6px; border: 1.25px dashed color-mix(in oklch, var(--deep, var(--ink)) 34%, transparent); border-radius: 17px; pointer-events: none;
+}
+:root[data-look='cloth'] .ident .tile { color: var(--deep); box-shadow: inset 0 1px 0 var(--hi), inset 0 -6px 8px -6px var(--stitch), 0 6px 10px -8px var(--shade); }
+
+/* ---------- patches: padded cloth with a seam in matching thread ---------- */
+:root[data-look='cloth'] .patch {
+  background-image: radial-gradient(130% 95% at 28% 0%, light-dark(oklch(1 0 0 / .4), oklch(1 0 0 / .09)), transparent 62%);
+  box-shadow: inset 0 1.5px 0 var(--hi), inset 0 -12px 16px -14px var(--stitch), 0 14px 20px -16px var(--shade);
+}
+:root[data-look='cloth'] .patch::before { border: 1.5px dashed var(--stitch); }
+:root[data-look='cloth'] .patch:not([data-glint]):is(:has(.pill.now), :has(.notch2))::before { border-color: var(--gold-line); }
+/* "just changed": the gold seam draws itself once, as the number rolls (Home.tsx sets data-glint for ~1 s; the seam is gold under it
+   from then on). Thread curve, 600, left to right; the stitch under it keeps its own colour until the glint is done. */
+:root[data-look='cloth'] .patch[data-glint]::after { border-color: var(--gold-line); animation: seam-draw var(--t-focal) var(--ease-thread) both; }
+:root[data-look='cloth'] .patch.newapp { background-image: none; }
+
+/* ---------- tack stitches between rows (finer and lighter than any other dashed thing) ---------- */
+:root[data-look='cloth'] :is(.list ul > .row + .row::before, .rows > .row + .row::before, .row.sep::before, .cl-group .row + .row::before) {
+  background-image: linear-gradient(90deg, var(--tack, var(--line)) 36%, transparent 0); background-size: 6px 1px;
+}
+
+/* ---------- gold thread: fresh, and waiting ---------- */
+:root[data-look='cloth'] .pill.now { background: var(--gold); color: var(--gold-ink); }
+:root[data-look='cloth'] :is(.bar .notch, .patch .notch2) { background: var(--gold); box-shadow: 0 0 0 2px var(--card), 0 0 0 3px color-mix(in oklch, var(--gold-ink) 35%, transparent); }
+:root[data-look='cloth'] .st > .edge rect { stroke: color-mix(in oklch, var(--focus) 72%, transparent); }
+:root[data-look='cloth'] .st.basted > .edge rect { stroke: var(--gold-line); stroke-width: 1.75; }
+:root[data-look='cloth'] .st.frayed > .edge rect { stroke: var(--ink); }
+
+/* ---------- surfaces and depth ---------- */
+:root[data-look='cloth'] .bar { box-shadow: var(--bar-shadow); }
+:root[data-look='cloth'] .sheet { background-color: var(--ground); background-image: var(--weave); box-shadow: inset 0 1px 0 var(--hi), 0 22px 44px -20px var(--shade); }
+:root[data-look='cloth'] .cta { box-shadow: inset 0 1px 0 oklch(1 0 0 / .16), 0 10px 16px -12px var(--shade); }
+:root[data-look='cloth'] .detail { background-color: var(--card); }
+:root[data-look='cloth'] .side { background-color: color-mix(in oklch, var(--ground) 92%, var(--card)); }
+
+/* ---------- the receipt capsule (motion.css): gold thread is state, so the thread that unthreads is gold ---------- */
+:root[data-look='cloth'] .toast { box-shadow: inset 0 1px 0 var(--hi), inset 0 0 0 1px var(--card-line), var(--bar-shadow); }
+:root[data-look='cloth'] .toast .edge rect:not(.m) { stroke: var(--gold-line); }
+:root[data-look='cloth'] .toast.frayed .edge rect:not(.m) { stroke: var(--ink); }

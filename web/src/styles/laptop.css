@@ -1,0 +1,97 @@
+/* Laptop shell, from the Laptop board (1280×800): a 240px apps sidebar, the screen, a 320px detail pane.
+   Only applies from 1024px; a phone and a narrow window keep the bar. design/screens-css.md. */
+
+.pair { display: flex; flex-direction: column; gap: 16px; }
+.pair-item { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* ---------- the shell ---------- */
+.frame.shell { max-width: none; margin: 0; display: grid; grid-template-columns: 240px minmax(0, 1fr) 320px; align-items: start; }
+.frame.shell.no-detail { grid-template-columns: 240px minmax(0, 1fr); }
+.shell .main { min-width: 0; }
+.shell .screen { max-width: 900px; margin: 0 auto; padding: 26px 30px 56px; }
+.shell .screen.with-add { padding-bottom: 120px; }
+.shell .home-top { display: none; }           /* the sidebar carries the mark and you */
+.shell .home-grid { display: flex; flex-direction: column; gap: 16px; align-items: stretch; }
+.shell .home-grid > .col:empty { display: none; }
+.shell .greet h1 { font-size: 30px; }
+
+/* the sidebar and the pane stay put while the screen scrolls */
+.side, .detail { position: sticky; top: 0; height: 100dvh; overflow-y: auto; overscroll-behavior: contain; }
+
+/* ---------- sidebar ---------- */
+.side { overflow: hidden; padding: 24px 16px; display: flex; flex-direction: column; gap: 8px;
+  background-image: linear-gradient(0deg, var(--line) 58%, transparent 0); background-size: 1.5px 8px; background-repeat: repeat-y; background-position: 100% 0; }
+.side-logo { display: flex; gap: 8px; align-items: center; font-size: 18px; font-weight: 700; padding: 0 8px 8px; min-height: 44px; }
+.side-clair { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 16px; background: var(--cta); color: var(--cta-ink); font-size: 14px; font-weight: 600; text-align: left; }
+.side-clair .ico, .side-clair svg { flex: none; }
+.side-find { display: flex; align-items: center; gap: 8px; min-height: var(--hit); padding: 0 12px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--edge); color: var(--sec); }
+.side-find input { flex: 1; min-width: 0; min-height: var(--hit); border: 0; outline: 0; background: none; font-size: 14px; color: var(--ink); }
+.side-find input::placeholder { color: var(--sec); }
+.side-find:focus-within { box-shadow: inset 0 0 0 2px var(--focus); }
+.side-find kbd { font: inherit; font-size: 13px; padding: 1px 8px; border-radius: 4px; background: var(--hair); color: var(--sec); }
+.side-sec { font-size: 13px; font-weight: 600; color: var(--sec); padding: 8px 8px 0; }
+.side-apps { display: flex; flex-direction: column; gap: 2px; flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -8px; padding: 0 8px; scrollbar-width: none; } /* the bottom fade (blocks.css) says there is more */
+.side-apps::-webkit-scrollbar { display: none; }
+.side-app { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 8px; border-radius: 16px; font-size: 14px;
+  transition: background-color var(--t-fb) var(--ease); }
+.side-app .tile { width: 26px; height: 26px; border-radius: 12px; background: var(--fill); display: grid; place-items: center; flex: none; }
+.side-app .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-app .pill { margin-left: auto; }
+.side-app[aria-current='page'] { background: var(--card); box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 600; }
+.side-app:active { background: var(--hair); } /* a pressed row of the sidebar darkens; it never scales */
+.side-none { font-size: 13px; color: var(--sec); padding: 8px; }
+.side-new { flex: none; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 8px; font-size: 14px; font-weight: 600; color: var(--focus); }
+.side-you { margin-top: 0; flex: none; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 8px; font-size: 13px; }
+.side-you .avatar { width: 28px; height: 28px; }
+.side-logo .logo-mark rect:nth-child(1) { fill: var(--ink); }
+.side-logo .logo-mark rect:nth-child(2) { fill: #5B7DB1; }
+.side-logo .logo-mark rect:nth-child(3) { fill: #8DB580; }
+.side-logo .logo-mark rect:nth-child(4) { fill: #9C6BA8; }
+
+/* ---------- detail pane ---------- */
+.detail { padding: 26px 24px; display: flex; flex-direction: column; gap: 12px; background: var(--card); }
+.detail .sec { padding: 0; }
+.detail .next-up { gap: 12px; }
+.detail-empty { font-size: 14px; color: var(--sec); }
+.d-title { font-size: 22px; font-weight: 700; letter-spacing: -.015em; line-height: 1.15; }
+.d-amount { font-size: 30px; font-weight: 700; letter-spacing: -.025em; line-height: 1.05; }
+.d-meta, .d-also { font-size: 13px; color: var(--sec); }
+.d-also { display: flex; align-items: center; gap: 8px; }
+.d-fields { padding: 4px 16px; margin: 0; display: flex; flex-direction: column; font-size: 14px; }
+.d-fields > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; }
+.d-fields > div + div { background-image: linear-gradient(90deg, var(--line) 58%, transparent 0); background-size: 8px 1px; background-repeat: repeat-x; }
+.d-fields dt { color: var(--sec); }
+.d-fields dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.d-actions { margin-top: auto; display: flex; gap: 8px; }
+.d-actions .ghost { flex: 1; min-height: 44px; display: inline-flex; gap: 8px; align-items: center; justify-content: center; }
+
+/* ---------- screens on a laptop ---------- */
+.shell .pair { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.shell .pair-item > .card, .shell .pair-item > .metrics-row { flex: 1; } /* a short card in a pair takes the height of its neighbour (AppView also pairs only blocks of near height) */
+.shell .metrics-row { gap: 16px; }
+/* lists read as tables: title, detail, amount (the board's "Recent") */
+.shell .list > li.row .row-btn:has(.amt) { display: grid; grid-template-columns: minmax(0, 1fr) 210px 90px; gap: 12px; align-items: center; min-height: 48px; padding: 0 12px; }
+.shell .list > li.row .row-btn:has(.amt) .main { display: contents; }
+.shell .list > li.row .row-btn:has(.amt) .t { grid-column: 1; }
+.shell .list > li.row .row-btn:has(.amt) .s { grid-column: 2; grid-row: 1; font-size: 13px; }
+.shell .list > li.row .row-btn:has(.amt) .amt { grid-column: 3; grid-row: 1; text-align: right; }
+.shell .list > li.row .row-btn:has(.amt) .from { grid-column: 1 / -1; }
+.shell button.row-btn[aria-pressed='true'], .shell .row-in:has(> .main[aria-pressed='true']) { margin-inline: 8px; padding-inline: 8px; background: color-mix(in oklch, var(--focus) 10%, var(--card)); box-shadow: inset 0 0 0 1.5px var(--focus); border-radius: 16px; }
+.shell button.row-btn[aria-pressed='true'] { width: calc(100% - 16px); }
+.shell .list > li.row .row-btn:has(.amt)[aria-pressed='true'] { padding-inline: 4px; }
+.shell .row-in .main[aria-pressed='true'] { background: none; }
+
+/* the fixed things centre on the screen, not on the window */
+.shell .add-dock { left: calc(240px + (100vw - 240px - 320px) / 2); }
+.shell.no-detail .add-dock { left: calc(240px + (100vw - 240px) / 2); }
+.shell .s-actions { left: calc(240px + (100vw - 240px) / 2); right: auto; transform: translateX(-50%); width: min(calc(100% - 300px), 560px); }
+
+/* ---------- hover, only where there is a pointer ---------- */
+@media (hover: hover) and (pointer: fine) {
+  .side-app:hover:not([aria-current='page']) { background: var(--hair); }
+  .side-clair:hover { background: color-mix(in oklch, var(--cta) 88%, var(--card)); }
+  .side-new:hover { color: var(--deep, var(--focus)); }
+  .shell .list > li.row .row-btn:hover:not([aria-pressed='true']) { background: var(--hair); }
+}
+.detail .section { gap: 16px; }
+.detail .next .dot { box-shadow: 0 0 0 2px var(--card), inset 0 0 0 1.5px color-mix(in oklch, var(--ink) 50%, transparent); }

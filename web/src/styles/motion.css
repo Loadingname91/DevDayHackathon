@@ -1,0 +1,172 @@
+/* Motion, from design/notes/fixspec.md §A and design/notes/motion-catalogue.md.
+   Tokens live in tokens.css. Every transition names an easing; exits use the
+   -out durations (exit duration on the base rule, entrance on the active state). */
+
+/* ---------- press feedback (catalogue: Foundations) ---------- */
+.patch:active { transform: scale(.98); }
+/* pinned-bar cells darken instead of scaling */
+.bar .cell { transition: box-shadow var(--t-fb) var(--ease); }
+.bar .cell:active { transform: none; box-shadow: inset 0 0 0 100px color-mix(in oklch, var(--ink) 7%, transparent); }
+/* full-width rows tint, no scale */
+.next li, .row.tap { transition: background-color var(--t-fb) var(--ease); }
+.row.tap:active, .next li:active { background-color: var(--hair); }
+
+/* ---------- stitch edge: basted → stitched (catalogue: Stitching, "Morph") ----------
+   The basting gaps close: dash 12 / gap 8 → 12 / 0, so the edge tightens into a solid seam.
+   220 in, 140 back to basted. */
+.st { position: relative; }
+.st > .edge { position: absolute; inset: 7px; width: calc(100% - 14px); height: calc(100% - 14px); overflow: visible; pointer-events: none; }
+.st > .edge rect { fill: none; stroke: var(--thread); stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 12 0;
+  transition: stroke-dasharray var(--t-state) var(--ease), stroke var(--t-state) var(--ease); }
+.st.basted > .edge rect { stroke: var(--sec); stroke-dasharray: 12 8; transition-duration: var(--t-state-out); }
+/* frayed edge: an error, nothing saved (never red) */
+.st.frayed > .edge rect { stroke: var(--ink); stroke-dasharray: 2 5; }
+
+/* ---------- chalk: Clair's idea, not yet a draft (catalogue: Building, "Chalk outline") ---------- */
+.chalk { position: relative; padding: 12px 16px; border-radius: 16px; background: color-mix(in srgb, var(--focus) 7%, transparent); display: flex; flex-direction: column; gap: 8px; }
+.chalk > .ol, .piece > .ol { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.chalk > .ol rect, .piece > .ol rect { fill: none; stroke: var(--focus); stroke-opacity: .7; stroke-width: 2.2; stroke-dasharray: 1 6; stroke-linecap: round; }
+
+/* ---------- signature thread pull ---------- */
+.threads { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; overflow: visible; contain: layout paint; }
+.threads path { fill: none; stroke-width: 2.4; stroke-linecap: round; }
+
+/* ---------- number roll: old and new share one grid cell ---------- */
+.roll { display: inline-grid; overflow: hidden; vertical-align: bottom; }
+.roll > span { grid-area: 1 / 1; white-space: nowrap; }
+
+/* ---------- tags: "just now", "new" (scale in from the left) ---------- */
+.pill { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 8px; border-radius: var(--r-pill); font-size: 13px; font-weight: 700; white-space: nowrap; line-height: 1.2; }
+.pill.now { background: var(--deep); color: var(--pill-ink); transform-origin: left center; }
+.pill.soft { background: var(--card); border: 1px solid var(--card-line); color: var(--sec); }
+.tag-in { animation: tag-in var(--t-state) var(--ease); }
+@keyframes tag-in { from { opacity: 0; transform: scale(.95); } }
+.bar .notch, .patch .notch2 { animation: tag-in var(--t-state) var(--ease); transform-origin: center; }
+
+/* ---------- the receipt: one capsule docked on the bar's top edge (Toast.tsx; DESIGN.md §6, "The receipt") ----------
+   It says what just happened and carries Undo. It rises out of the bar (14 px + scale .97, opacity, 220) and sinks back into it (220).
+   On a phone it sits 10 px above the bar; on a laptop (no bar) at the bottom of the main column. Never at the top.
+   With an Undo a running stitch unthreads around it over the toast's life (--ms, linear: a timeline, not a transition): the
+   mask's dash is pulled out from the start, the dashed seam shows through it. A press, the pointer or focus holds it (.held). */
+:root { --dock: calc(max(18px, var(--safe-b)) + var(--bar-h) + 10px); }
+.toast { position: fixed; left: 50%; bottom: var(--dock); z-index: 70; width: max-content; max-width: min(calc(100% - 32px), 448px);
+  display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 4px 0 16px; border-radius: var(--r-pill);
+  background: var(--card); color: var(--ink); font-size: 15px; font-weight: 500;
+  box-shadow: inset 0 0 0 1px var(--card-line), var(--bar-shadow);
+  opacity: 0; transform: translate(-50%, 14px) scale(.97); transform-origin: 50% 100%; pointer-events: none;
+  transition: opacity var(--t-layout-out) var(--ease), transform var(--t-layout-out) var(--ease); }
+.toast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; transition-duration: var(--t-state); }
+/* Undo dissolves where it is (opacity only); the capsule that timed out sinks back into the bar */
+.toast.undoing:not(.on) { transform: translate(-50%, 0); transition-duration: var(--t-state-out); }
+/* with a field pinned above the bar (To-dos, Groceries) the capsule sits above that, never on it */
+.frame:not(.shell):has(.add-dock) .toast { bottom: calc(var(--dock) + 60px); }
+.toast > span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; animation: fade-in var(--t-fb) var(--ease); }
+.toast button { flex: none; min-height: 44px; padding: 0 14px; border-radius: var(--r-pill); font-size: 15px; font-weight: 600; color: var(--focus); }
+.toast:not(.thread) { padding-right: 16px; }
+/* the apps it is about: up to three dye dots, overlapping like buttons on a card */
+.toast .dyedots { display: flex; flex: none; }
+.toast .dyedot { width: 12px; height: 12px; box-shadow: 0 0 0 1.5px var(--card), inset 0 0 0 1.5px color-mix(in oklch, var(--ink) 45%, transparent); }
+.toast .dyedot + .dyedot { margin-left: -4px; }
+/* the stitch: a dashed seam under a mask whose dash is pulled out, start first, from the top left, clockwise */
+.toast .edge { position: absolute; inset: 1px; width: calc(100% - 2px); height: calc(100% - 2px); overflow: visible; pointer-events: none; }
+.toast .edge rect { fill: none; stroke: var(--focus); stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 5 4.5; transition: stroke-dasharray var(--t-fb) var(--ease); }
+.toast .edge .m { stroke: #fff; stroke-width: 8; stroke-dasharray: 100 100; stroke-dashoffset: 0; transition: none; animation: unthread var(--ms, 8s) linear both; }
+@keyframes unthread { to { stroke-dashoffset: 100; } }
+.toast:not(.on) .edge .m, .toast.held .edge .m { animation-play-state: paused; }
+/* Undo: the seam snaps whole (the gaps close, 120) while the thread stops where it is... and is shown complete */
+.toast.undoing .edge rect:not(.m) { stroke-dasharray: 5 0; }
+.toast.undoing .edge .m { animation: none; stroke-dashoffset: 0; }
+/* an error is a frayed edge (2 / 5, ink), static; a plain note has no edge at all */
+.toast.frayed .edge rect { stroke: var(--ink); stroke-dasharray: 2 5; }
+.toast.frayed:not(.thread) { padding-right: 16px; }
+
+/* ---------- sheet: rises from the Clair cell (catalogue N1) ----------
+   closed translateY(16px) scale(.96), origin bottom right; 350 in, 220 out. */
+.scrim { position: fixed; inset: 0; z-index: 40; background: var(--scrim); opacity: 0; visibility: hidden; touch-action: none;
+  transition: opacity var(--t-layout-out) var(--ease), visibility 0s linear var(--t-layout-out); }
+.scrim.on { opacity: 1; visibility: visible; transition: opacity var(--t-layout) var(--ease), visibility 0s; }
+.sheet { position: fixed; right: max(12px, calc((100vw - 456px) / 2)); bottom: calc(var(--bar-h) + 28px + var(--safe-b)); z-index: 45;
+  width: min(calc(100% - 24px), 456px); max-height: calc(100dvh - var(--bar-h) - 70px - var(--safe-b) - var(--safe-t));
+  display: flex; flex-direction: column; border-radius: 22px; background: var(--ground); box-shadow: 0 12px 32px -16px color-mix(in oklch, var(--ink) 60%, transparent); overflow: hidden;
+  transform-origin: 100% 100%; opacity: 0; visibility: hidden; transform: translateY(16px) scale(.96);
+  transition: transform var(--t-layout-out) var(--ease), opacity var(--t-layout-out) var(--ease), visibility 0s linear var(--t-layout-out); }
+.sheet.on { opacity: 1; visibility: visible; transform: none; transition: transform var(--t-layout) var(--ease), opacity var(--t-layout) var(--ease), visibility 0s; }
+.sheet.on > * { visibility: visible; }
+.sheet.dragging { transition: none; }
+.sheet .body::-webkit-scrollbar { display: none; }
+
+/* ---------- arrivals: proposals, offer, answer (catalogue N3) ---------- */
+.arrive { animation: arrive var(--t-state) var(--ease) backwards; }
+@keyframes arrive { from { opacity: 0; transform: translateY(8px); } }
+
+/* ---------- Clair's spool (fixspec §A "Spool mascot"); motion lives on the outer svg ---------- */
+:root { --m-hop: 420ms; --m-shake: 360ms; --m-bob: 560ms; --m-blink: 4.3s; --m-pulse: 1.2s; --m-breathe: 2.6s; --ease-char: ease-in-out; }
+.sp { overflow: visible; flex: none; transform-origin: 50% 100%; }
+.sp .eyes { transform-box: fill-box; transform-origin: center; }
+.sp-hop { animation: hop var(--m-hop) 1; }
+@keyframes hop { 0% { transform: none; animation-timing-function: cubic-bezier(.2,.8,.3,1); } 40% { transform: translateY(-5px); animation-timing-function: cubic-bezier(.6,0,.9,.5); } 75%, 100% { transform: none; } }
+.sp-shake { animation: shake var(--m-shake) var(--ease-char) 1; }
+@keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-3px) rotate(-3deg); } 45% { transform: translateX(3px) rotate(2deg); } 70% { transform: translateX(-1.5px); } }
+.sp-bob { animation: bob var(--m-bob) var(--ease-char) infinite alternate; }
+@keyframes bob { to { transform: translateY(-2px); } }
+.sp-bob .eyes { animation: blink var(--m-blink) infinite; animation-delay: -1.7s; }
+@keyframes blink { 0%, 90%, 94%, 96%, 100% { transform: scaleY(1); } 92%, 95% { transform: scaleY(.1); } }
+.sp-think .dots circle { animation: pulse var(--m-pulse) var(--ease-char) infinite; }
+.sp-think .dots circle:nth-child(2) { animation-delay: .2s; }
+.sp-think .dots circle:nth-child(3) { animation-delay: .4s; }
+@keyframes pulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+.sp-breathe .body { animation: breathe var(--m-breathe) var(--ease-char) infinite; transform-origin: 50% 100%; transform-box: fill-box; }
+@keyframes breathe { 50% { transform: scale(1.035); } }
+
+/* ---------- switch (catalogue: "Connection toggle") ---------- */
+.switch-btn { position: relative; width: 52px; height: 32px; border-radius: 16px; background: var(--hair); flex: none; transition: background-color var(--t-state) var(--ease); }
+.switch-btn::after { content: ''; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: var(--solid); box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform var(--t-state) var(--ease); }
+.switch-btn[aria-checked='true'] { background: var(--focus); }
+.switch-btn[aria-checked='true']::after { transform: translateX(20px); }
+.switch-btn:active { transform: none; }
+
+/* ---------- reduced motion: no movement, 120ms opacity only ----------
+   One exception: the 3% press scale stays (base.css), it is the finger's own feedback, not motion on screen. */
+@media (prefers-reduced-motion: reduce) {
+  .sp, .sp .body, .sp .eyes, .sp .dots circle { animation: none !important; }
+  .st > .edge rect, .st.basted > .edge rect { transition-duration: var(--t-fb); }
+  .toast, .toast.on, .toast.undoing:not(.on) { transform: translate(-50%, 0); transition: opacity var(--t-fb) var(--ease); }
+  .toast .edge .m { animation: none; } /* a static full stitch: the capsule just fades out at the end of its window */
+  .toast .edge rect { transition: none; }
+  .sheet, .sheet.on { transform: none; }
+  .sheet, .scrim { transition: opacity var(--t-fb) var(--ease), visibility 0s linear var(--t-fb); }
+  .sheet.on, .scrim.on { transition: opacity var(--t-fb) var(--ease), visibility 0s; }
+  .tag-in, .bar .notch, .arrive { animation: fade-in var(--t-fb) var(--ease); }
+  .switch-btn::after { transition: none; }
+}
+@keyframes fade-in { from { opacity: 0; } }
+
+/* ---------- stitch-in and peek (replace the thread pull) ---------- */
+.patch, .bar .ico { position: relative; }
+.stitch-ov rect { vector-effect: non-scaling-stroke; }
+.peek { position: fixed; left: 50%; bottom: var(--dock); z-index: 65; display: flex; gap: 8px; align-items: flex-end;
+  transform: translateX(-50%); pointer-events: none; }
+.peek-tile { position: relative; display: flex; flex-direction: column; gap: 4px; width: 124px; padding: 10px 12px; border-radius: 18px;
+  background: var(--fill); color: var(--ink); box-shadow: var(--bar-shadow); outline: 1.5px dashed color-mix(in srgb, var(--deep) 75%, transparent); outline-offset: -5px;
+  opacity: 0; transform: translateY(24px); transition: opacity var(--t-state-out) var(--ease), transform var(--t-state-out) var(--ease); }
+.peek.on .peek-tile { opacity: 1; transform: none; transition-duration: var(--t-layout); }
+.peek-tile .top { display: flex; justify-content: space-between; align-items: center; color: var(--deep); min-height: 22px; }
+.peek-tile .name { font-size: 13px; font-weight: 600; }
+.peek-tile .face { display: flex; align-items: baseline; gap: 4px; }
+.peek-tile .num { font-size: 20px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+.peek-tile .unit { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.peek-more { align-self: center; padding: 6px 10px; border-radius: var(--r-pill); background: var(--cta); color: var(--cta-ink); font-size: 13px; font-weight: 700;
+  opacity: 0; transition: opacity var(--t-state-out) var(--ease); }
+.peek.on .peek-more { opacity: 1; transition-duration: var(--t-layout); }
+@media (prefers-reduced-motion: reduce) {
+  .peek-tile, .peek.on .peek-tile { transform: none; transition: opacity var(--t-fb) var(--ease); }
+}
+
+/* ---------- "just changed" on Home: the seam draws itself once (Home.tsx sets data-glint on the patch for ~1 s) ----------
+   Default look, quiet: an ink seam draws over the patch's stitch (600, thread curve, left to right) and fades. The Cloth look keeps
+   a gold seam instead (theme-cloth.css). Reduced motion: no draw (Home.tsx does not set it). */
+@keyframes seam-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes seam-out { to { opacity: 0; } }
+.patch[data-glint]::after { content: ''; position: absolute; inset: 6px; border: 1.5px dashed color-mix(in oklch, var(--ink) 62%, transparent); border-radius: 11px; pointer-events: none;
+  animation: seam-draw var(--t-focal) var(--ease-thread) both, seam-out var(--t-state) var(--ease) calc(var(--t-focal) + 200ms) forwards; }
+@media (prefers-reduced-motion: reduce) { .patch[data-glint]::after { display: none; } }

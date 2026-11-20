@@ -1,0 +1,39 @@
+{
+ "credits": -1,
+ "rules": {
+  "classes": [
+   {
+    "id": "w_exam",
+    "on": true,
+    "sentence": "When an exam is added to Classes, add a study to-do two days before",
+    "trigger": {
+     "kind": "row_added",
+     "collection": "classes/due",
+     "where": [
+      {
+       "field": "kind",
+       "op": "eq",
+       "value": "exam"
+      }
+     ]
+    },
+    "action": {
+     "kind": "write_row",
+     "collection": "todos/todos",
+     "map": {
+      "title": "Study for {title}",
+      "due": {
+       "from": "at",
+       "offset": "-2d"
+      }
+     }
+    }
+   }
+  ]
+ },
+ "home": {
+  "changed": [
+   "classes"
+  ]
+ }
+}

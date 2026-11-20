@@ -1,0 +1,70 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your sentence…"
+  }
+ },
+ {
+  "delay": 1100,
+  "event": "status",
+  "data": {
+   "text": "A few questions first, then I'll show you the plan."
+  }
+ },
+ {
+  "delay": 260,
+  "event": "question",
+  "data": {
+   "id": "q_build_calories",
+   "questions": [
+    {
+     "id": "target",
+     "header": "Daily target",
+     "text": "Do you want a daily calorie target?",
+     "options": [
+      {
+       "label": "Set a number",
+       "description": "You choose it; the Today ring fills toward it",
+       "input": {
+        "placeholder": "Calories a day",
+        "numeric": true
+       }
+      },
+      {
+       "label": "No target",
+       "description": "Just totals for the day"
+      }
+     ],
+     "multi": false
+    },
+    {
+     "id": "logging",
+     "header": "Logging",
+     "text": "How do you log meals?",
+     "options": [
+      {
+       "label": "Type them",
+       "description": "Name, calories and protein each time"
+      },
+      {
+       "label": "Pick from foods you save",
+       "description": "Save a food once, then tap it to log it again"
+      }
+     ],
+     "multi": true
+    }
+   ],
+   "plan_after": true
+  }
+ },
+ {
+  "delay": 60,
+  "event": "done",
+  "data": {
+   "status": "awaiting_input",
+   "sources": []
+  }
+ }
+]

@@ -1,0 +1,222 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "notes",
+  "key": "notes",
+  "name": "Notes",
+  "icon": "note",
+  "dye": "linen",
+  "collections": [
+   {
+    "key": "notebooks",
+    "name": "Notebooks",
+    "titleField": "name",
+    "fields": [
+     {
+      "key": "name",
+      "label": "Notebook",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "class",
+      "label": "Class",
+      "type": "relation",
+      "target": "classes/classes"
+     }
+    ]
+   },
+   {
+    "key": "notes",
+    "name": "Notes",
+    "titleField": "title",
+    "dateField": "at",
+    "fields": [
+     {
+      "key": "title",
+      "label": "Title",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "body",
+      "label": "Note",
+      "type": "text"
+     },
+     {
+      "key": "notebook",
+      "label": "Notebook",
+      "type": "relation",
+      "target": "notes/notebooks"
+     },
+     {
+      "key": "at",
+      "label": "Written",
+      "type": "datetime",
+      "required": true
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_notebooks",
+    "title": "Notebooks",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_notebooks",
+      "source": "notes/notebooks"
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_all",
+    "title": "All notes",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_notes",
+      "source": "notes/notes",
+      "fields": [
+       "notebook",
+       "at"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "desc"
+      }
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "count",
+    "from": "notes/notes",
+    "window": "week"
+   },
+   "format": "count",
+   "label": "this week"
+  }
+ },
+ "data": {
+  "notes/notebooks": [
+   {
+    "id": "nb_econ",
+    "position": "a095",
+    "version": 1,
+    "properties": {
+     "name": "ECON 1010",
+     "class": [
+      "c01"
+     ]
+    }
+   },
+   {
+    "id": "nb_math",
+    "position": "a096",
+    "version": 1,
+    "properties": {
+     "name": "MATH 1210",
+     "class": [
+      "c02"
+     ]
+    }
+   },
+   {
+    "id": "nb_cs3500",
+    "position": "a097",
+    "version": 1,
+    "properties": {
+     "name": "CS 3500",
+     "class": [
+      "c03"
+     ]
+    }
+   },
+   {
+    "id": "nb_personal",
+    "position": "a098",
+    "version": 1,
+    "properties": {
+     "name": "Personal"
+    }
+   }
+  ],
+  "notes/notes": [
+   {
+    "id": "n_1",
+    "position": "a099",
+    "version": 1,
+    "properties": {
+     "title": "Related rates examples",
+     "notebook": [
+      "nb_math"
+     ],
+     "at": "2026-11-10T12:40:00-07:00"
+    }
+   },
+   {
+    "id": "n_2",
+    "position": "a100",
+    "version": 1,
+    "properties": {
+     "title": "Gift ideas for mom",
+     "notebook": [
+      "nb_personal"
+     ],
+     "at": "2026-11-15T20:15:00-07:00"
+    }
+   },
+   {
+    "id": "n_3",
+    "position": "a101",
+    "version": 1,
+    "properties": {
+     "title": "Unit testing with mocks",
+     "notebook": [
+      "nb_cs3500"
+     ],
+     "at": "2026-11-16T15:50:00-07:00"
+    }
+   },
+   {
+    "id": "n_4",
+    "position": "a102",
+    "version": 1,
+    "properties": {
+     "title": "Dependency injection",
+     "notebook": [
+      "nb_cs3500"
+     ],
+     "at": "2026-11-18T15:55:00-07:00"
+    }
+   },
+   {
+    "id": "n_5",
+    "position": "a103",
+    "version": 1,
+    "properties": {
+     "title": "Price elasticity",
+     "notebook": [
+      "nb_econ"
+     ],
+     "at": "2026-11-19T10:30:00-07:00"
+    }
+   }
+  ]
+ },
+ "values": {},
+ "status": "**3** notes this week.",
+ "faces": {
+  "notes": {
+   "text": "3",
+   "label": "this week"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

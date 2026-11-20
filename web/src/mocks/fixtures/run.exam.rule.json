@@ -1,0 +1,142 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your note…"
+  }
+ },
+ {
+  "delay": 900,
+  "event": "understood",
+  "data": {
+   "kind": "request",
+   "summary": "An exam for ECON 1010. That goes in Classes."
+  }
+ },
+ {
+  "delay": 900,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_exam",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "records",
+    "source": {
+     "kind": "text",
+     "label": "You typed",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Midterm 2",
+       "kind": "exam",
+       "at": "2026-12-03T09:10:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     }
+    ],
+    "expanded": [
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Midterm 2",
+       "kind": "exam",
+       "at": "2026-12-03T09:10:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "todos/todos",
+      "values": {
+       "title": "Study for Midterm 2",
+       "due": "2026-12-01",
+       "done": false,
+       "_via": {
+        "workflow": "w_exam"
+       }
+      }
+     }
+    ],
+    "deltas": [],
+    "title": "Midterm 2",
+    "summary": "ECON 1010, Thu 3 Dec 9:10 am. Your rule adds a study to-do.",
+    "lines": [
+     {
+      "apps": [
+       "classes"
+      ],
+      "what": "Midterm 2 · ECON 1010 · Thu 3 Dec 9:10 am",
+      "val": ""
+     },
+     {
+      "apps": [
+       "todos"
+      ],
+      "what": "Study for Midterm 2 · Tue 1 Dec",
+      "val": "",
+      "sub": "by rule"
+     },
+     {
+      "apps": [
+       "calendar"
+      ],
+      "what": "the exam and the to-do",
+      "val": ""
+     }
+    ],
+    "targets": [
+     "classes",
+     "todos",
+     "calendar"
+    ],
+    "actions": {
+     "primary": "Add to 3 apps",
+     "secondary": "Review items"
+    },
+    "review": [
+     {
+      "title": "Midterm 2",
+      "when": "Thu 3 Dec 9:10 am",
+      "change": "new",
+      "reason": "ECON 1010",
+      "source": "Classes",
+      "app": "classes"
+     },
+     {
+      "title": "Study for Midterm 2",
+      "when": "Tue 1 Dec",
+      "change": "new",
+      "reason": "by rule: two days before an exam",
+      "source": "Classes",
+      "app": "todos"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "classes"
+   ]
+  }
+ }
+]

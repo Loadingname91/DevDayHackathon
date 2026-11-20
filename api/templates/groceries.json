@@ -1,0 +1,223 @@
+{
+  "v": 1,
+  "key": "groceries",
+  "name": "Groceries",
+  "icon": "basket",
+  "dye": "sage",
+  "settings": {},
+  "collections": [
+    {
+      "key": "items",
+      "name": "Items",
+      "titleField": "name",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Item",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "list",
+          "label": "List",
+          "type": "select",
+          "options": [
+            {
+              "id": "l_weekly",
+              "label": "Weekly shop"
+            }
+          ]
+        },
+        {
+          "key": "status",
+          "label": "Status",
+          "type": "select",
+          "options": [
+            {
+              "id": "to_buy",
+              "label": "To buy"
+            },
+            {
+              "id": "bought",
+              "label": "Bought"
+            }
+          ]
+        },
+        {
+          "key": "qty",
+          "label": "Qty",
+          "type": "text"
+        },
+        {
+          "key": "price",
+          "label": "Price",
+          "type": "money"
+        },
+        {
+          "key": "bought_on",
+          "label": "Bought",
+          "type": "date"
+        },
+        {
+          "key": "trip",
+          "label": "Trip",
+          "type": "relation",
+          "target": "groceries/trips"
+        },
+        {
+          "key": "usual",
+          "label": "Usual",
+          "type": "select",
+          "options": [
+            {
+              "id": "auto",
+              "label": "Auto"
+            },
+            {
+              "id": "yes",
+              "label": "Yes"
+            },
+            {
+              "id": "no",
+              "label": "No"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "trips",
+      "name": "Trips",
+      "titleField": "store",
+      "dateField": "at",
+      "amountField": "total",
+      "calendar": true,
+      "label": "Grocery trip",
+      "fields": [
+        {
+          "key": "store",
+          "label": "Store",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "total",
+          "label": "Total",
+          "type": "money",
+          "required": true
+        },
+        {
+          "key": "at",
+          "label": "When",
+          "type": "datetime",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    {
+      "kind": "page",
+      "id": "t_list",
+      "title": "List",
+      "children": [
+        {
+          "kind": "checklist",
+          "id": "b_items",
+          "source": "groceries/items",
+          "switch": "list",
+          "fields": [
+            "qty"
+          ],
+          "groups": [
+            {
+              "label": "{option} · {n} to buy",
+              "where": [
+                {
+                  "field": "status",
+                  "op": "eq",
+                  "value": "to_buy"
+                }
+              ]
+            },
+            {
+              "label": "Bought in the last week · {n}",
+              "where": [
+                {
+                  "field": "status",
+                  "op": "eq",
+                  "value": "bought"
+                },
+                {
+                  "field": "bought_on",
+                  "op": "within",
+                  "value": "-7d"
+                }
+              ],
+              "done": true
+            }
+          ],
+          "add": {
+            "placeholder": "Add to {option}",
+            "set": {
+              "status": "to_buy"
+            }
+          },
+          "swipe": {
+            "right": "complete",
+            "left": "delete"
+          }
+        },
+        {
+          "kind": "progress",
+          "id": "b_spend",
+          "label": "Spent on groceries this month",
+          "value": {
+            "agg": "sum",
+            "from": "groceries/trips",
+            "field": "total",
+            "window": "month"
+          },
+          "target": 20000,
+          "format": "money"
+        },
+        {
+          "kind": "list",
+          "id": "b_trips",
+          "label": "Trips",
+          "source": "groceries/trips",
+          "fields": [
+            "at"
+          ],
+          "sort": {
+            "field": "at",
+            "dir": "desc"
+          },
+          "limit": 3
+        }
+      ]
+    }
+  ],
+  "face": {
+    "value": {
+      "agg": "count",
+      "from": "groceries/items",
+      "window": "all",
+      "where": [
+        {
+          "field": "status",
+          "op": "eq",
+          "value": "to_buy"
+        },
+        {
+          "field": "list",
+          "op": "eq",
+          "value": "l_weekly"
+        }
+      ]
+    },
+    "format": "count",
+    "label": "to buy"
+  },
+  "stitches": []
+}

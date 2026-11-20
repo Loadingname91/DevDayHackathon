@@ -1,0 +1,66 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your sentence…"
+  }
+ },
+ {
+  "delay": 1100,
+  "event": "status",
+  "data": {
+   "text": "A few questions first, then I'll show you the plan."
+  }
+ },
+ {
+  "delay": 260,
+  "event": "question",
+  "data": {
+   "id": "q_build_running",
+   "questions": [
+    {
+     "id": "stopwatch",
+     "header": "Stopwatch",
+     "text": "Time runs in the app?",
+     "options": [
+      {
+       "label": "Yes, with a stopwatch",
+       "description": "Start a run, then add the distance at the end"
+      },
+      {
+       "label": "No, I'll type them after",
+       "description": "Add the distance and time when you're back"
+      }
+     ],
+     "multi": false
+    },
+    {
+     "id": "race",
+     "header": "Race",
+     "text": "Show the race on Calendar?",
+     "options": [
+      {
+       "label": "Yes",
+       "description": "Race · 10K on Sat 12 Dec"
+      },
+      {
+       "label": "No",
+       "description": "Keep it in Running only"
+      }
+     ],
+     "multi": false
+    }
+   ],
+   "plan_after": true
+  }
+ },
+ {
+  "delay": 60,
+  "event": "done",
+  "data": {
+   "status": "awaiting_input",
+   "sources": []
+  }
+ }
+]

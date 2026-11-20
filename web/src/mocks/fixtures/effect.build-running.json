@@ -1,0 +1,44 @@
+{
+ "credits": -10,
+ "home": {
+  "addApps": [
+   {
+    "id": "running",
+    "key": "running",
+    "name": "Running",
+    "icon": "shoe",
+    "dye": "sage",
+    "face": {
+     "text": "0",
+     "label": "mi this week"
+    },
+    "changed": true,
+    "lastOpened": "2026-11-20T17:45:00-07:00",
+    "pinned": false,
+    "isNew": true
+   }
+  ],
+  "changed": [
+   "calendar"
+  ]
+ },
+ "fixtures": {
+  "/apps/running": "app.running.new"
+ },
+ "apps": {
+  "calendar": {
+   "add": {
+    "*dated": [
+     {
+      "at": "2026-12-12T09:00:00-07:00",
+      "title": "Race · 10K",
+      "sub": "Running",
+      "app": "running",
+      "record_id": "race_new",
+      "changed": true
+     }
+    ]
+   }
+  }
+ }
+}

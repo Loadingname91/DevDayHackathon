@@ -1,0 +1,63 @@
+/* Home, from the Main board (design/screens-css.md §4, §6, §8, §11). Owned by the Home rebuild.
+   Loads after app.css and motion.css, so these rules win; every rule is scoped to .home. */
+
+/* ---------- frame: the board's column starts at 48 and keeps a 16 gap between every block ---------- */
+.home.screen { padding-top: calc(48px + var(--safe-t)); }
+.home .section { gap: 16px; }
+.home .sec { line-height: 1.2; }
+.home .sec .meta { font-weight: 400; }
+.home .sec .n { font-weight: 500; }
+.home .next-sec { margin-top: 4px; }
+.home .link { justify-self: start; }
+
+/* ---------- top row: logo and avatar (§4 "Home top") ---------- */
+/* The four squares are the brand mark: fixed colours, the only ones on Home that are not tokens (screens-css §1). */
+.home .logo-mark { flex: none; }
+.home .logo-mark rect:nth-child(1) { fill: var(--ink); }
+.home .logo-mark rect:nth-child(2) { fill: #5B7DB1; }
+.home .logo-mark rect:nth-child(3) { fill: #8DB580; }
+.home .logo-mark rect:nth-child(4) { fill: #9C6BA8; }
+.home .avatar { flex: none; background: var(--fill); color: var(--ink); }
+
+/* ---------- Next up: time column, dashed thread, a dot in each app's fill (§11) ---------- */
+:is(.home, .detail) .next li { display: block; min-height: 0; margin: 0; padding: 0; border-radius: 0; }
+:is(.home, .detail) .next li:active { background: none; }
+:is(.home, .detail) .nx { position: relative; display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 8px; align-items: center; min-height: 56px;
+  margin-left: -22px; padding-left: 22px; border-radius: 12px; transition: background-color var(--t-fb) var(--ease); }
+:is(.home, .detail) .nx:active { background-color: var(--hair); }
+:is(.home, .detail) .next .dot { box-shadow: 0 0 0 2px var(--ground), inset 0 0 0 1.5px color-mix(in oklch, var(--ink) 50%, transparent); }
+:is(.home, .detail) .next .at { font-size: 13px; font-weight: 600; color: var(--sec); white-space: nowrap; }
+:is(.home, .detail) .next .what { line-height: 1.2; }
+:is(.home, .detail) .next .what .t { font-size: 16px; font-weight: 500; overflow-wrap: anywhere; }
+:is(.home, .detail) .next .what .s { font-size: 13px; color: var(--sec); }
+
+/* ---------- find field (§8) ---------- */
+.home .find { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 12px; border-radius: 16px; background: var(--card);
+  box-shadow: inset 0 0 0 1.5px var(--edge); color: var(--sec); font-size: 16px; cursor: text; }
+.home .find:focus-within { box-shadow: inset 0 0 0 2px var(--focus); }
+.home .find input { flex: 1; min-width: 0; min-height: 44px; padding: 0; border: 0; outline: 0; background: none; color: var(--ink); font-size: 16px; -webkit-appearance: none; appearance: none; }
+.home .find input::placeholder { color: var(--sec); opacity: 1; }
+
+/* ---------- the quilt and its patches (§11) ----------
+   Placement comes from pack() in Home.tsx (inline grid-column / grid-row). The patch itself does not
+   clip, so the confirm stitch sewn 3px outside its edge stays visible; the name and face clip instead. */
+.home .quilt { gap: 6px; grid-auto-rows: 58px; }
+.home .patch { overflow: visible; justify-content: space-between; align-items: flex-start; padding: 8px 12px; }
+.home .patch .name { position: relative; display: flex; align-items: center; gap: 4px; max-width: 100%; min-width: 0;
+  font-size: 13px; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+.home .patch .name .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.home .patch:has(.notch2) .name { padding-right: 12px; }
+/* The face is two parts: .fig, the figure the server leads with ("12", "$38.46", "Tue 27 Oct"), which keeps its width, and .unit,
+   its words ("to buy", "a month"), which gives way first and ends in an ellipsis. pack() in Home.tsx gives a long face a wider patch,
+   so the ellipsis is the last resort, not the usual case. */
+.home .patch .face { position: relative; display: flex; align-items: baseline; gap: 4px; max-width: 100%; min-width: 0; padding-bottom: 2px; margin-bottom: -2px;
+  font-size: 14px; font-weight: 700; letter-spacing: -.005em; line-height: 1.05; font-variant-numeric: tabular-nums;
+  white-space: nowrap; overflow: hidden; }
+.home .patch.big .face { font-size: 28px; letter-spacing: -.025em; }
+.home .patch .face .fig { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.home .patch .face .unit { flex: 0 100 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+/* "just changed" / "new": an ink pill in the patch's top right corner; a notch on small patches */
+.home .patch > .pill { position: absolute; top: 8px; right: 8px; min-height: 0; padding: 2px 8px; border-radius: 99px;
+  background: var(--ink); color: var(--cta-ink); font-size: 13px; font-weight: 600; line-height: 1.35; }
+.home .patch .notch2 { box-shadow: 0 0 0 2px color-mix(in oklch, var(--card) 90%, transparent); }
+.home .patch.newapp { justify-content: center; align-items: center; background: var(--card); color: var(--ink); }

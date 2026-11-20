@@ -35,7 +35,7 @@ flowchart LR
     CS[Clair sheet<br/>type · talk · photo · file] -->|POST /api/clair/turns · SSE| API
     HOME[Home] -->|GET /api/home| API
     AV[AppView renderer] -->|GET /api/apps/:id| API
-    AV --> BL[9 block components]
+    AV --> BL[block components<br/>base blocks + instruments]
     PC[ProposalCard<br/>basted] -->|POST /api/change-sets/:id/confirm · undo| API
     PC --> TP[threadPull to pins]
     CACHE[(IndexedDB read cache)] --> HOME
@@ -53,7 +53,7 @@ flowchart LR
 
 **Build path.** A sentence goes to Clair (`POST /api/clair/turns`). Clair calls `propose_app` with an `AppSpec` (validated server-side; on failure one retry with the errors fed back, then a friendly frayed-edge error). The Build flow previews the spec through the same `AppView` the finished app uses, with example records. "Add to my apps" stores it.
 
-**Render path.** `AppView` takes `{spec, data, faces}` and maps each block's `kind` to one of 9 components. Blocks never fetch; they read records from `data`. Faces and every computed value come from the server's Python formula engine; the client formats but never calculates. A block cannot do anything the spec cannot express, which is the point (ADR-001).
+**Render path.** `AppView` takes `{spec, data, faces, values, status}` and maps each block's `kind` to a component: the 9 base blocks, plus the instruments added Nov 20 (section 3, "Instruments"). Blocks never fetch; they read records from `data` and figures from `values`. Faces and every computed value come from the server's Python formula engine; the client formats but never calculates. A block cannot do anything the spec cannot express, which is the point (ADR-001).
 
 **Capture path.** Text, voice transcript, photo or file goes to `POST /api/clair/turns`, which streams SSE events: `status`, `understood`, `question` (a menu card), `note`, `proposal` (a basted card), `text_delta`, `done`. Nothing is written until confirm (section 4). Full contract: `clair-agent.md` §2.
 
@@ -89,7 +89,8 @@ type Collection = {                                    // data, not UI
 };
 
 type Scalar = string | number | boolean;
-type Filter = { field: string; op: 'eq'|'ne'|'lt'|'gt'|'within'; value: Scalar };  // field may be 'done'
+type Filter = { field: string; op: 'eq'|'ne'|'lt'|'gt'|'within'|'empty'; value: Scalar };  // field may be 'done'
+// within (Nov 20): 'today' | 'week' | 'past' | 'future' | '7d' | '-7d', by day against server_now. empty: no value (value is ignored, send true)
 type Query  = { agg: 'sum'|'count'|'avg'|'max'|'last'; from: CollectionRef | '*dated';
                 field?: string; where?: Filter[]; window?: 'today'|'week'|'month'|'all' };
 type Term   = number | Query;
@@ -111,11 +112,16 @@ type AppSpec = {
   stitches?: Stitch[];
 };
 
-// ---- the 9 blocks ----
+// ---- blocks: the 9 base blocks, then the instruments (Nov 20) ----
 type ViewBase = { id: string; source: CollectionRef | '*dated'; fields?: string[];
                   where?: Filter[]; sort?: { field: string; dir: 'asc'|'desc' };
                   group?: string; swipe?: { right?: 'complete'; left?: 'delete' };
-                  switch?: string };   // a select field: one chip per option ("Weekly shop 4"), filters the view; "New list" appends an option
+                  switch?: string;     // a select field: one chip per option ("Weekly shop 4"), filters the view; "New list" appends an option
+                  addAt?: 'start'|'end';
+                  label?: string;      // Nov 20: section label above the card ("Recent", "Renewals")
+                  limit?: number;      // Nov 20: show the first N rows, then "Show all N" (a list with no limit shows 30)
+                  add?: boolean;       // Nov 20, list only: a trailing "Add a <row>" row that opens the add sheet; on by default when `source` is this app's own collection, `false` opts out
+                  due?: string };      // Nov 20: a date field shown as a relative tag ("in 2 days", "Overdue · 2 days")
 type PageBlock = { kind: 'page'; id: string; title: string; children: LeafBlock[] };  // pages don't nest
 type Block = PageBlock | LeafBlock;
 type LeafBlock =
@@ -125,7 +131,26 @@ type LeafBlock =
   | ({ kind: 'list' | 'table' | 'calendar' } & ViewBase)   // Arrange "flip" = change kind only
   | { kind: 'form';     id: string; collection: CollectionRef; fields: string[]; submit: string }
   | { kind: 'chart';    id: string; type: 'bar'|'line'; from: CollectionRef;
-                        x: string; y: Query; window: 'week'|'month' };
+                        x: string; y: Query; window: 'week'|'month' }
+  // instruments (Nov 20): every figure they show comes from the server in values[block.id]
+  | { kind: 'gauge';     id: string; label: string; value: Value; target: Value; format: Format;
+                         link?: { app: string; text: string } }
+  | { kind: 'bars';      id: string; label: string; from: CollectionRef; by: string; value: Query }  // by: a select field, one bar per option
+  | { kind: 'ring';      id: string; label: string; value: Value; target: Value; format: Format }
+  | { kind: 'countdown'; id: string; source: CollectionRef }
+  | { kind: 'strip';     id: string; label: string; value: Query }                                  // Mon to Sun of this week
+  | { kind: 'picks';     id: string; label: string; from: CollectionRef; log: CollectionRef; fields: string[] }
+  | { kind: 'checklist'; id: string; source: CollectionRef; fields?: string[]; switch?: string; due?: string;
+                         groups: { label: string; where: Filter[]; done?: boolean; collapsed?: boolean }[];  // label tokens {today} {n} {option}
+                         add?: { placeholder: string; set?: Record<string, Scalar>; pinned?: boolean };
+                         swipe?: { right?: 'complete'; left?: 'delete' } }
+  | { kind: 'days';      id: string; source: CollectionRef | '*dated'; views: ('day'|'week'|'month')[];
+                         view: 'day'|'week'|'month'; apps?: string[] }                              // apps: keep only these apps' rows
+  | { kind: 'next';      id: string; source: CollectionRef; log: CollectionRef; fields: string[] }
+  | { kind: 'timer';     id: string; label: string; mode: 'countdown'|'stopwatch'; log: CollectionRef;
+                         minutesField: string; kindField?: string; presets?: number[];
+                         moodFields?: [string, string]; after?: string[]; set?: Record<string, Scalar> }
+  | { kind: 'month';     id: string; source: CollectionRef; dateField: string; mark: string; fields: string[] };
 
 // ---- data ----
 type Row = { id: string; ref: CollectionRef; values: Record<string, Scalar>;
@@ -152,9 +177,37 @@ type RowAction = { type: 'add'|'edit'|'complete'|'delete'; ref: CollectionRef; r
 
 Each block component gets `{ block, ctx }` where `ctx = { spec, rows(ref), value(v) → number, format(n, f) → string, act(RowAction) }`. Blocks are pure views over `ctx`. `GET /api/apps/:id` returns every collection the spec's blocks read, including other apps' collections and `*dated`, so the renderer never makes a second request.
 
-Notes on the block count: the brief lists "page, text, metric, progress, collection, list/table/calendar view, form, chart" and says 9. This plan makes **collection data** (declared in `spec.collections`, no UI) and counts list, table and calendar as three blocks with one shared shape, which gives 9 drawable blocks and makes the Arrange flip a one-field change. Confirm or adjust before T2.
+Notes on the block count: the brief lists "page, text, metric, progress, collection, list/table/calendar view, form, chart" and says 9. This plan makes **collection data** (declared in `spec.collections`, no UI) and counts list, table and calendar as three blocks with one shared shape, which gives 9 drawable blocks and makes the Arrange flip a one-field change. Confirm or adjust before T2. **Nov 20:** the 9 stay the base; the instruments (below) are added on top of them, so the count is now the 9 base blocks plus 11 instruments (and the `workflows` block of `workflows.md`).
 
 Money is stored in integer cents; `format('money')` rounds to whole dollars for faces and status ("$376") and shows cents on rows and receipts ("$35.83").
+
+### Instruments (Nov 20)
+
+The owner asked on Fri 20 Nov for each app to open on what it is for, not on a list and a form (`design/DESIGN.md` §10). The instruments are block kinds any app can use; the starter apps use them (their tabs: `backend.md` §10). The rule is unchanged: every figure an instrument shows is computed in Python on the server and sent in `values[block.id]`; the client lays it out and formats it, and never sums, counts dates or works out "today". What the client does measure on the device, the way it measures a gesture: the elapsed time of a timer or a guided session, whether a set just logged beats `best` ("New best"), and the number of rows in a section it shows (`{n}`, the counts on list chips).
+
+| Kind | What it shows | What the client reads | What it writes |
+| --- | --- | --- | --- |
+| `gauge` | A hero figure and its bar: Budget "$412 left of $1,200 · 11 days to go"; Subscriptions "$38.46 a month" | `values`: `text`, `target`, `pct` (the bar; no `pct`, no bar), `sub`, `link?` | nothing |
+| `bars` | One bar per option of the select field `by`, summed by `value`: Budget's "Where it went". Past a limit the excess is hatched | `values.rows[]`: `{label, text, pct?, over_pct?, note?}`; with `over_pct` the fill is `100 − over_pct` and the hatch `over_pct` | nothing |
+| `ring` | A goal ring: Calories "1,140 of 2,200 · 70 g protein". Progress only, never a judgement | `values`: `text`, `target`, `pct`, `sub` | nothing |
+| `countdown` | Days to the next dated row of `source`: "Winter 10K · 22 days to go · Sat 12 Dec · 9:00 am" | `values`: `title`, `text`, `unit`, `sub`, `note?`; no entry, no card | nothing |
+| `strip` | This week, Mon to Sun, one cell per day with that day's figure; a day with something logged takes the app's colour. History, not a streak | `values.days[7]`: `{dow, text?, on?, today?}` | nothing |
+| `picks` | "Again": the rows of `from` as chips; a tap logs a copy into `log` (Calories' foods into meals) | rows in `data[from]` | `POST /records {collection_id: log, fields}` with the block's `fields` copied and no time; the server stamps it |
+| `checklist` | Rows to tick, in sections (`groups`, each a `where`); done sections fold. Tap the circle or swipe right to complete, swipe left to delete, tap the row to edit; an add field inline or pinned above the bar | rows in `data[source]`, filtered on the client (below) | `POST /records/{id}/complete {occurrence?}` (`occurrence` for a repeating row), `DELETE /records/{id}`, `PATCH /records/{id}` from the edit sheet, `POST /records` from the add field |
+| `days` | `*dated` as Day (an hour timeline with a now-line), Week (day strip and agenda) or Month (a grid, a dot per item in its app's colour); `apps` keeps only some apps' rows (Classes) | rows in `data[source]` | nothing ("from Google" rows have no edit sheet) |
+| `next` | The next session and the guided log behind it: "Next up · today 6 pm · Pull day · Start pull day" → Log a set (exercise N of M, steppers filled from the plan, a rest timer, "New best") | `values`: `eyebrow`, `meta`, `title`, `action`, `record_id`, `occurrence`, `rest` (seconds), `steps[]`: `{id, name, plan, sets, reps, weight, unit, best?: {reps, weight, text}}` | each set: `POST /records {collection_id: log, fields: {exercise: [step id], session: [record_id], reps, weight}}`, no time; Finish: `POST /records/{record_id}/complete {occurrence, minutes}` |
+| `timer` | `countdown` (Meditation: kind chips, `presets` in minutes, mood 1 to 5 before and after, a chime) or `stopwatch` (Running: asks the kind and the `after` fields at the end) | nothing | one `POST /records {collection_id: log, fields}` on Save: `set`, `minutesField`, `kindField`, the mood fields or the `after` fields (a run also sends `name`, "Easy run"), no time |
+| `month` | A month of days to log into (Cycle): logged days filled by the `mark` field, cycle starts ringed, tap a day up to today to log or change it. No prediction | rows in `data[source]`, and the starts from `data["<app>/cycles"]` | a new day: `POST /records`; a logged day: `PATCH /records/{id} {fields, base_version}` |
+
+**Response.** `GET /apps/{id}` is `{spec, data, faces, values, status?, seq, server_now}`. `values` has an entry for every metric, progress and instrument block that shows a figure; a block with no entry shows a quiet card "No data yet" under its label (Nov 20; was "–"), and an entry that is there without its `text` keeps the dash and "Could not be worked out."; `bars` with `rows: []`, and `countdown`, `strip` and `next` with no entry, show nothing. What the server puts in each entry, with the seed's worked values: `backend.md` §10, "What the server computes for instruments".
+
+**Status.** `status` is one sentence the server writes for the app, shown under its title: "**22** to buy across 3 lists. **$142.00** of $200 spent this month." `**` marks the figures, which the client sets in bold. It is optional: Budget has none (its gauge says it) and a just-built app has none. Every app's sentence at `DEMO_NOW` is in `backend.md` §10.
+
+**Filters.** A view's or a checklist group's `where` is applied by the client to the rows it was sent, by day, against the day of `server_now` in the workspace zone. `within` takes `today`, `week` (Mon to Sun), `past` (before today), `future` (after today), `7d` (today and the next 6 days) and `-7d` (the last 7 days, today included); `empty` matches a missing, null or empty value (To-dos' Someday). The server uses the same meanings in queries (`backend.md` §6).
+
+**Writes.** All are gestures (`backend.md` §5: applied at once, Undo toast). Picks, the timer and each guided set send no time and expect the server to stamp the collection's `dateField` with now; which writes get the stamp is open (`split.md` §7, Nov 20). Record gestures are in the base build since Nov 20 (`backend.md` §13).
+
+**Schema note.** `checklist.add.set` and `timer.set` are open records. If `propose_app` is to emit these kinds, its schema needs them as key/value lists (the closed-object rule above).
 
 ## 4. Basted → stitched: the proposal model
 
@@ -297,7 +350,7 @@ api/                       FastAPI on Railway (spec/backend.md, spec/clair-agent
 
 Under reduced motion there is no movement anywhere: sheets and toasts fade, `flip()` and `roll()` swap values without translating, springs jump to the end, threads are skipped, the spool shows its face only.
 
-Dark mode is now in the look (ADR-009): light uses the Mint air ground and dark uses Denim dusk, and people can pick another ground per mode in Settings → Appearance (FR-T6, Proto / Beta). Because every colour is a variable, dark is one `[data-theme=dark]` block and a ground is one pair of variables (base colour and gradient image) set on the root. Whether the DevDay build ships dark is an open question in `spec/prd.md`; the earlier plan here was "dark theme is out for DevDay". `base.css` carries the mobile baseline (tap highlight, `overscroll-behavior`, 16 px inputs, `touch-action`, safe-area insets, hover gated behind `(hover:hover) and (pointer:fine)`, `:active` press feedback, scroller mask).
+Dark mode is now in the look (ADR-009; colours from ADR-013, Mint, one token set through `light-dark()`), and people can pick another ground per mode in Settings → Appearance (FR-T6, Proto / Beta). Because every colour is a variable, dark is one `[data-theme=dark]` block and a ground is one pair of variables (base colour and gradient image) set on the root. Whether the DevDay build ships dark is an open question in `spec/prd.md`; the earlier plan here was "dark theme is out for DevDay". `base.css` carries the mobile baseline (tap highlight, `overscroll-behavior`, 16 px inputs, `touch-action`, safe-area insets, hover gated behind `(hover:hover) and (pointer:fine)`, `:active` press feedback, scroller mask).
 
 **`src/lib/motion.ts`** ports the prototype functions with their signatures unchanged, so the prototype code is the reference implementation:
 

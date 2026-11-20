@@ -1,0 +1,422 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "calendar",
+  "key": "calendar",
+  "name": "Calendar",
+  "icon": "calendar",
+  "dye": "chambray",
+  "collections": [
+   {
+    "key": "events",
+    "name": "Events",
+    "titleField": "title",
+    "dateField": "at",
+    "calendar": true,
+    "fields": [
+     {
+      "key": "title",
+      "label": "Title",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "at",
+      "label": "When",
+      "type": "datetime",
+      "required": true
+     },
+     {
+      "key": "ends",
+      "label": "Ends",
+      "type": "datetime"
+     },
+     {
+      "key": "kind",
+      "label": "Kind",
+      "type": "select",
+      "options": [
+       {
+        "id": "doctor",
+        "label": "Doctor"
+       },
+       {
+        "id": "dentist",
+        "label": "Dentist"
+       },
+       {
+        "id": "barber",
+        "label": "Barber"
+       },
+       {
+        "id": "other",
+        "label": "Other"
+       }
+      ]
+     },
+     {
+      "key": "source",
+      "label": "Source",
+      "type": "text"
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_days",
+    "title": "Calendar",
+    "children": [
+     {
+      "kind": "days",
+      "id": "b_days",
+      "source": "*dated",
+      "views": [
+       "day",
+       "week",
+       "month"
+      ],
+      "view": "week"
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "count",
+    "from": "*dated",
+    "window": "today"
+   },
+   "format": "count",
+   "label": "today"
+  }
+ },
+ "data": {
+  "*dated": [
+   {
+    "at": "2026-11-16T11:50:00-07:00",
+    "title": "MATH 1210",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c02",
+    "occurrence": "2026-11-16"
+   },
+   {
+    "at": "2026-11-16T15:00:00-07:00",
+    "title": "CS 3500",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c03",
+    "occurrence": "2026-11-16"
+   },
+   {
+    "at": "2026-11-17T09:10:00-07:00",
+    "title": "ECON 1010",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c01",
+    "occurrence": "2026-11-17"
+   },
+   {
+    "at": "2026-11-18T11:50:00-07:00",
+    "title": "MATH 1210",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c02",
+    "occurrence": "2026-11-18"
+   },
+   {
+    "at": "2026-11-18T15:00:00-07:00",
+    "title": "CS 3500",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c03",
+    "occurrence": "2026-11-18"
+   },
+   {
+    "at": "2026-11-19T09:10:00-07:00",
+    "title": "ECON 1010",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c01",
+    "occurrence": "2026-11-19"
+   },
+   {
+    "at": "2026-11-20T18:00:00-07:00",
+    "title": "Pull day",
+    "sub": "Workout",
+    "app": "workout",
+    "record_id": "s_pull",
+    "occurrence": "2026-11-20"
+   },
+   {
+    "at": "2026-11-20T20:00:00-07:00",
+    "title": "Take out recycling",
+    "sub": "To-dos",
+    "app": "todos",
+    "record_id": "t_recycling",
+    "occurrence": "2026-11-20"
+   },
+   {
+    "at": "2026-11-20T21:00:00-07:00",
+    "title": "Return library books",
+    "sub": "To-dos",
+    "app": "todos",
+    "record_id": "t_library"
+   },
+   {
+    "at": "2026-11-21T10:00:00-07:00",
+    "title": "Coffee with Maya",
+    "sub": "Calendar",
+    "app": "calendar",
+    "record_id": "e_coffee"
+   },
+   {
+    "at": "2026-11-22",
+    "title": "Call home",
+    "sub": "To-dos",
+    "app": "todos",
+    "record_id": "t_call_home"
+   },
+   {
+    "at": "2026-11-22",
+    "title": "Spotify renews · $11.99",
+    "sub": "Subscriptions",
+    "app": "subscriptions",
+    "record_id": "sub_spotify",
+    "occurrence": "2026-11-22"
+   },
+   {
+    "at": "2026-11-23T11:50:00-07:00",
+    "title": "MATH 1210",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c02",
+    "occurrence": "2026-11-23"
+   },
+   {
+    "at": "2026-11-23T15:00:00-07:00",
+    "title": "CS 3500",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c03",
+    "occurrence": "2026-11-23"
+   },
+   {
+    "at": "2026-11-23T18:00:00-07:00",
+    "title": "Pull day",
+    "sub": "Workout",
+    "app": "workout",
+    "record_id": "s_pull",
+    "occurrence": "2026-11-23"
+   },
+   {
+    "at": "2026-11-23T23:59:00-07:00",
+    "title": "Start CS 3500 project",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "d01"
+   },
+   {
+    "at": "2026-11-24T07:00:00-07:00",
+    "title": "Leg day",
+    "sub": "Workout",
+    "app": "workout",
+    "record_id": "s_legs",
+    "occurrence": "2026-11-24"
+   },
+   {
+    "at": "2026-11-24T07:30:00-07:00",
+    "title": "Dentist",
+    "sub": "Google Calendar",
+    "app": "calendar",
+    "record_id": "g_dentist",
+    "ends": "2026-11-24T08:30:00-07:00",
+    "source": "google"
+   },
+   {
+    "at": "2026-11-24T09:10:00-07:00",
+    "title": "ECON 1010",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c01",
+    "occurrence": "2026-11-24"
+   },
+   {
+    "at": "2026-11-24T23:59:00-07:00",
+    "title": "Homework 11",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "d02"
+   },
+   {
+    "at": "2026-11-25T11:50:00-07:00",
+    "title": "MATH 1210",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c02",
+    "occurrence": "2026-11-25"
+   },
+   {
+    "at": "2026-11-25T15:00:00-07:00",
+    "title": "CS 3500",
+    "sub": "Classes",
+    "app": "classes",
+    "record_id": "c03",
+    "occurrence": "2026-11-25"
+   },
+   {
+    "at": "2026-11-25T17:00:00-07:00",
+    "title": "Drive home for Thanksgiving",
+    "sub": "Google Calendar",
+    "app": "calendar",
+    "record_id": "g_drive",
+    "ends": "2026-11-25T21:00:00-07:00",
+    "source": "google"
+   },
+   {
+    "at": "2026-11-25T18:00:00-07:00",
+    "title": "Push day",
+    "sub": "Workout",
+    "app": "workout",
+    "record_id": "s_push",
+    "occurrence": "2026-11-25"
+   },
+   {
+    "at": "2026-11-26",
+    "title": "Thanksgiving at home",
+    "sub": "Google Calendar",
+    "app": "calendar",
+    "record_id": "g_thanksgiving",
+    "ends": "2026-11-28",
+    "all_day": true,
+    "source": "google"
+   },
+   {
+    "at": "2026-11-27T18:00:00-07:00",
+    "title": "Pull day",
+    "sub": "Workout",
+    "app": "workout",
+    "record_id": "s_pull",
+    "occurrence": "2026-11-27"
+   },
+   {
+    "at": "2026-11-27T20:00:00-07:00",
+    "title": "Take out recycling",
+    "sub": "To-dos",
+    "app": "todos",
+    "record_id": "t_recycling",
+    "occurrence": "2026-11-27"
+   },
+   {
+    "at": "2026-11-29T12:00:00-07:00",
+    "title": "Back to campus",
+    "sub": "Google Calendar",
+    "app": "calendar",
+    "record_id": "g_back",
+    "ends": "2026-11-29T13:00:00-07:00",
+    "source": "google"
+   }
+  ],
+  "calendar/events": [
+   {
+    "id": "e_haircut_aug",
+    "position": "a075",
+    "version": 1,
+    "properties": {
+     "title": "Haircut",
+     "at": "2026-08-08T11:00:00-06:00",
+     "kind": "barber"
+    }
+   },
+   {
+    "id": "e_haircut_sep",
+    "position": "a076",
+    "version": 1,
+    "properties": {
+     "title": "Haircut",
+     "at": "2026-09-12T11:00:00-06:00",
+     "kind": "barber"
+    }
+   },
+   {
+    "id": "e_haircut_oct",
+    "position": "a077",
+    "version": 1,
+    "properties": {
+     "title": "Haircut",
+     "at": "2026-10-17T11:00:00-06:00",
+     "kind": "barber"
+    }
+   },
+   {
+    "id": "e_coffee",
+    "position": "a078",
+    "version": 1,
+    "properties": {
+     "title": "Coffee with Maya",
+     "at": "2026-11-21T10:00:00-07:00"
+    }
+   },
+   {
+    "id": "g_dentist",
+    "position": "a079",
+    "version": 1,
+    "properties": {
+     "title": "Dentist",
+     "at": "2026-11-24T07:30:00-07:00",
+     "ends": "2026-11-24T08:30:00-07:00",
+     "source": "google",
+     "ext_id": "g1"
+    }
+   },
+   {
+    "id": "g_drive",
+    "position": "a080",
+    "version": 1,
+    "properties": {
+     "title": "Drive home for Thanksgiving",
+     "at": "2026-11-25T17:00:00-07:00",
+     "ends": "2026-11-25T21:00:00-07:00",
+     "source": "google",
+     "ext_id": "g2"
+    }
+   },
+   {
+    "id": "g_thanksgiving",
+    "position": "a081",
+    "version": 1,
+    "properties": {
+     "title": "Thanksgiving at home",
+     "at": "2026-11-26",
+     "ends": "2026-11-28",
+     "source": "google",
+     "ext_id": "g3"
+    }
+   },
+   {
+    "id": "g_back",
+    "position": "a082",
+    "version": 1,
+    "properties": {
+     "title": "Back to campus",
+     "at": "2026-11-29T12:00:00-07:00",
+     "ends": "2026-11-29T13:00:00-07:00",
+     "source": "google",
+     "ext_id": "g4"
+    }
+   }
+  ]
+ },
+ "values": {},
+ "status": "**3** today. Dates from every app, in one place.",
+ "faces": {
+  "calendar": {
+   "text": "3",
+   "label": "today"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

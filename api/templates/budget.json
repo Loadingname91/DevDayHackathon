@@ -1,0 +1,207 @@
+{
+  "v": 1,
+  "key": "budget",
+  "name": "Budget",
+  "icon": "wallet",
+  "dye": "sea glass",
+  "settings": {},
+  "collections": [
+    {
+      "key": "spend",
+      "name": "Spending",
+      "titleField": "note",
+      "dateField": "at",
+      "amountField": "amount",
+      "fields": [
+        {
+          "key": "note",
+          "label": "Note",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "amount",
+          "label": "Amount",
+          "type": "money",
+          "required": true
+        },
+        {
+          "key": "category",
+          "label": "Category",
+          "type": "select",
+          "options": [
+            {
+              "id": "c_groceries",
+              "label": "Groceries",
+              "limit": 20000
+            },
+            {
+              "id": "c_eating_out",
+              "label": "Eating out",
+              "limit": 15000
+            },
+            {
+              "id": "c_rent",
+              "label": "Rent"
+            },
+            {
+              "id": "c_fun",
+              "label": "Fun"
+            },
+            {
+              "id": "c_transport",
+              "label": "Transport",
+              "limit": 10000
+            },
+            {
+              "id": "c_subscriptions",
+              "label": "Subscriptions",
+              "limit": 4000
+            }
+          ]
+        },
+        {
+          "key": "at",
+          "label": "When",
+          "type": "datetime"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    {
+      "kind": "page",
+      "id": "t_overview",
+      "title": "Overview",
+      "children": [
+        {
+          "kind": "gauge",
+          "id": "b_left",
+          "label": "Left this month",
+          "value": {
+            "minus": [
+              {
+                "setting": "limit"
+              },
+              {
+                "agg": "sum",
+                "from": "budget/spend",
+                "field": "amount",
+                "window": "month"
+              }
+            ]
+          },
+          "target": {
+            "setting": "limit"
+          },
+          "format": "money"
+        },
+        {
+          "kind": "bars",
+          "id": "b_where",
+          "label": "Where it went",
+          "from": "budget/spend",
+          "by": "category",
+          "value": {
+            "agg": "sum",
+            "from": "budget/spend",
+            "field": "amount",
+            "window": "month"
+          }
+        },
+        {
+          "kind": "bars",
+          "id": "b_subs",
+          "label": "Subscriptions",
+          "from": "subscriptions/subscriptions",
+          "by": "name",
+          "value": {
+            "agg": "sum",
+            "from": "subscriptions/subscriptions",
+            "field": "amount"
+          }
+        },
+        {
+          "kind": "list",
+          "id": "b_recent",
+          "label": "Recent",
+          "source": "budget/spend",
+          "fields": [
+            "category",
+            "at"
+          ],
+          "sort": {
+            "field": "at",
+            "dir": "desc"
+          },
+          "limit": 5
+        }
+      ]
+    }
+  ],
+  "face": {
+    "value": {
+      "minus": [
+        {
+          "setting": "limit"
+        },
+        {
+          "agg": "sum",
+          "from": "budget/spend",
+          "field": "amount",
+          "window": "month"
+        }
+      ]
+    },
+    "format": "money",
+    "label": "left",
+    "status": true
+  },
+  "stitches": [
+    {
+      "from": "groceries/trips",
+      "to": "budget/spend",
+      "map": [
+        {
+          "to": "amount",
+          "from": "total"
+        },
+        {
+          "to": "at",
+          "from": "at"
+        },
+        {
+          "to": "note",
+          "from": "store"
+        },
+        {
+          "to": "category",
+          "const": "c_groceries"
+        }
+      ]
+    },
+    {
+      "from": "subscriptions/subscriptions",
+      "to": "budget/spend",
+      "on": "occurrence",
+      "map": [
+        {
+          "to": "amount",
+          "from": "amount"
+        },
+        {
+          "to": "at",
+          "from": "renews"
+        },
+        {
+          "to": "note",
+          "from": "name"
+        },
+        {
+          "to": "category",
+          "const": "c_subscriptions"
+        }
+      ]
+    }
+  ]
+}

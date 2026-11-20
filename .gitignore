@@ -5,3 +5,10 @@ node_modules/
 __pycache__/
 design/docs-preview/
 heights.json
+
+# secrets and local state
+.env
+.env.*
+!.env.example
+api/supabase/.temp/
+.impeccable/review/

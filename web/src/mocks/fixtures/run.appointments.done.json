@@ -1,0 +1,26 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Checking your calendar…"
+  }
+ },
+ {
+  "delay": 1200,
+  "event": "text_delta",
+  "data": {
+   "text": "Nothing is due. Your next haircut is already on Calendar."
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "calendar"
+   ]
+  }
+ }
+]

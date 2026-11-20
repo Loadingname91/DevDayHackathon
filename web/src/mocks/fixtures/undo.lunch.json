@@ -1,0 +1,13 @@
+{
+ "change_set_id": "cs_lunch",
+ "server_seq": 4102,
+ "blocks": [],
+ "faces": {
+  "budget": {
+   "text": "$412",
+   "value": 41200,
+   "label": "left"
+  }
+ },
+ "warnings": []
+}

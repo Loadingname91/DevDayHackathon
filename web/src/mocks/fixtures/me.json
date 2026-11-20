@@ -1,0 +1,30 @@
+{
+ "user": {
+  "id": "u_sam",
+  "display_name": "Sam",
+  "email": "sam@quilt.demo"
+ },
+ "is_anonymous": false,
+ "workspace": {
+  "id": "w_demo",
+  "tz": "America/Denver",
+  "epoch": 1,
+  "settings": {
+   "pins": [
+    "groceries",
+    "budget",
+    "calendar",
+    "todos"
+   ],
+   "credits_monthly": 50,
+   "notes_enabled": true
+  }
+ },
+ "credits": {
+  "granted": 50,
+  "spent": 18,
+  "left": 32,
+  "resets": "2026-12-01"
+ },
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

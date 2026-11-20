@@ -1,0 +1,37 @@
+{
+ "credits": -1,
+ "home": {
+  "changed": [
+   "calendar"
+  ]
+ },
+ "apps": {
+  "calendar": {
+   "add": {
+    "calendar/events": [
+     {
+      "id": "e_haircut_nov",
+      "position": "a181",
+      "version": 1,
+      "properties": {
+       "title": "Haircut",
+       "kind": "barber",
+       "at": "2026-11-21T14:00:00-07:00",
+       "remind": "1d"
+      }
+     }
+    ],
+    "*dated": [
+     {
+      "at": "2026-11-21T14:00:00-07:00",
+      "title": "Haircut",
+      "sub": "Calendar",
+      "app": "calendar",
+      "record_id": "e_haircut_nov",
+      "changed": true
+     }
+    ]
+   }
+  }
+ }
+}

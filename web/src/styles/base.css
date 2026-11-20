@@ -1,0 +1,40 @@
+/* Mobile baseline: tap highlight, overscroll, 16px inputs, safe areas, hover gated to real pointers. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation;
+  /* a focused or scrolled-to element lands clear of the fixed bar below and the top chrome above (the laptop has no bar: interaction.css) */
+  scroll-padding-bottom: calc(var(--bar-h) + 40px + var(--safe-b)); scroll-padding-top: 56px; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  font-family: var(--font);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  color: var(--ink);
+  background-color: var(--ground);
+  background-image: var(--ground-image);
+  background-attachment: fixed;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1.35;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+input, textarea, select { font: inherit; font-size: 16px; color: inherit; } /* 16px stops iOS zooming the page */
+h1, h2, h3, p { margin: 0; }
+ul { margin: 0; padding: 0; list-style: none; }
+::selection { background: var(--said); color: var(--ink); }
+/* The ring follows each control's own radius (round buttons, ticks, chips, patches); no radius is forced here. */
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+button, a.press { transition: transform var(--t-fb) var(--ease); }
+button:active, a.press:active { transform: scale(.97); }
+button:disabled { opacity: .55; cursor: default; }
+
+.scroll-x { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.scroll-x::-webkit-scrollbar { display: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Reduced motion: no looping, no smooth scrolling; durations come from the tokens (120 ms fades). The 3% press scale stays:
+   it is the finger's own feedback, not movement on screen. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+}

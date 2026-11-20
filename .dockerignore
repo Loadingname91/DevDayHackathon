@@ -1,0 +1,7 @@
+*
+!api/
+!railway.json
+api/.env
+api/.venv/
+api/supabase/
+**/__pycache__/

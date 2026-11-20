@@ -1,0 +1,827 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "workout",
+  "key": "workout",
+  "name": "Workout",
+  "icon": "dumbbell",
+  "dye": "blush",
+  "collections": [
+   {
+    "key": "sessions",
+    "name": "Sessions",
+    "titleField": "name",
+    "dateField": "at",
+    "calendar": true,
+    "fields": [
+     {
+      "key": "name",
+      "label": "Session",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "routine",
+      "label": "Routine",
+      "type": "relation",
+      "target": "workout/routines"
+     },
+     {
+      "key": "at",
+      "label": "Next",
+      "type": "datetime"
+     },
+     {
+      "key": "meets",
+      "label": "Repeats",
+      "type": "text"
+     },
+     {
+      "key": "done",
+      "label": "Done",
+      "type": "bool"
+     },
+     {
+      "key": "repeat",
+      "label": "Repeat",
+      "type": "repeat"
+     }
+    ]
+   },
+   {
+    "key": "routines",
+    "name": "Routines",
+    "titleField": "name",
+    "fields": [
+     {
+      "key": "name",
+      "label": "Routine",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "minutes",
+      "label": "About",
+      "type": "number",
+      "unit": "min"
+     },
+     {
+      "key": "needs",
+      "label": "Needs",
+      "type": "text"
+     }
+    ]
+   },
+   {
+    "key": "exercises",
+    "name": "Exercises",
+    "titleField": "name",
+    "fields": [
+     {
+      "key": "name",
+      "label": "Exercise",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "routine",
+      "label": "Routine",
+      "type": "relation",
+      "target": "workout/routines"
+     },
+     {
+      "key": "plan",
+      "label": "Plan",
+      "type": "text"
+     },
+     {
+      "key": "sets",
+      "label": "Sets",
+      "type": "number"
+     },
+     {
+      "key": "reps",
+      "label": "Reps",
+      "type": "number"
+     },
+     {
+      "key": "weight",
+      "label": "Weight",
+      "type": "number",
+      "unit": "lb"
+     }
+    ]
+   },
+   {
+    "key": "sets",
+    "name": "Sets",
+    "titleField": "exercise",
+    "dateField": "at",
+    "fields": [
+     {
+      "key": "exercise",
+      "label": "Exercise",
+      "type": "relation",
+      "target": "workout/exercises"
+     },
+     {
+      "key": "did",
+      "label": "Sets",
+      "type": "text"
+     },
+     {
+      "key": "load",
+      "label": "Weight",
+      "type": "text"
+     },
+     {
+      "key": "at",
+      "label": "When",
+      "type": "datetime",
+      "required": true
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_today",
+    "title": "Today",
+    "children": [
+     {
+      "kind": "next",
+      "id": "b_next",
+      "source": "workout/sessions",
+      "log": "workout/sets",
+      "fields": [
+       "reps",
+       "weight"
+      ]
+     },
+     {
+      "kind": "metric",
+      "id": "b_lifted",
+      "label": "Lifted this week",
+      "value": 0,
+      "format": "number"
+     },
+     {
+      "kind": "metric",
+      "id": "b_since",
+      "label": "Done since September",
+      "value": 0,
+      "format": "count"
+     },
+     {
+      "kind": "progress",
+      "id": "b_sessions",
+      "label": "Sessions this week",
+      "value": 0,
+      "target": 4,
+      "format": "count"
+     },
+     {
+      "kind": "strip",
+      "id": "b_strip",
+      "label": "This week",
+      "value": {
+       "agg": "count",
+       "from": "workout/sessions",
+       "window": "week"
+      }
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_log",
+    "title": "Log",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_sets",
+      "source": "workout/sets",
+      "fields": [
+       "did",
+       "load"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "desc"
+      },
+      "group": "at"
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_history",
+    "title": "History",
+    "children": [
+     {
+      "kind": "metric",
+      "id": "b_done",
+      "label": "Done since September",
+      "value": 0,
+      "format": "count"
+     },
+     {
+      "kind": "metric",
+      "id": "b_week",
+      "label": "This week",
+      "value": 0,
+      "format": "count"
+     },
+     {
+      "kind": "list",
+      "id": "b_series",
+      "source": "workout/sessions",
+      "fields": [
+       "meets"
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_progress",
+    "title": "Progress",
+    "children": [
+     {
+      "kind": "metric",
+      "id": "b_lat",
+      "label": "Lat pulldown",
+      "value": 0,
+      "format": "text"
+     },
+     {
+      "kind": "metric",
+      "id": "b_volume",
+      "label": "Volume this week",
+      "value": 0,
+      "format": "number"
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_routines",
+    "title": "Routines",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_routines",
+      "source": "workout/routines",
+      "fields": [
+       "minutes",
+       "needs"
+      ]
+     },
+     {
+      "kind": "list",
+      "id": "b_exercises",
+      "source": "workout/exercises",
+      "fields": [
+       "plan"
+      ],
+      "group": "routine"
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "count",
+    "from": "workout/sessions",
+    "window": "week",
+    "where": [
+     {
+      "field": "done",
+      "op": "eq",
+      "value": true
+     }
+    ]
+   },
+   "format": "count",
+   "label": "this week"
+  },
+  "workflows": []
+ },
+ "data": {
+  "workout/sessions": [
+   {
+    "id": "s_pull",
+    "position": "a120",
+    "version": 1,
+    "properties": {
+     "name": "Pull day",
+     "routine": [
+      "ro_pull"
+     ],
+     "at": "2026-11-20T18:00:00-07:00",
+     "meets": "Mon and Fri 6:00 pm",
+     "done": false,
+     "repeat": {
+      "rule": "FREQ=WEEKLY;BYDAY=MO,FR",
+      "start": "2026-09-01T18:00",
+      "log": [
+       "2026-11-16"
+      ],
+      "skip": [
+       "2026-09-07",
+       "2026-10-12",
+       "2026-10-16"
+      ]
+     }
+    }
+   },
+   {
+    "id": "s_legs",
+    "position": "a121",
+    "version": 1,
+    "properties": {
+     "name": "Leg day",
+     "routine": [
+      "ro_legs"
+     ],
+     "at": "2026-11-24T07:00:00-07:00",
+     "meets": "Tue 7:00 am",
+     "done": false,
+     "repeat": {
+      "rule": "FREQ=WEEKLY;BYDAY=TU",
+      "start": "2026-09-01T07:00",
+      "log": [
+       "2026-11-17"
+      ],
+      "skip": [
+       "2026-10-13"
+      ]
+     }
+    }
+   },
+   {
+    "id": "s_push",
+    "position": "a122",
+    "version": 1,
+    "properties": {
+     "name": "Push day",
+     "routine": [
+      "ro_push"
+     ],
+     "at": "2026-11-25T18:00:00-07:00",
+     "meets": "Wed 6:00 pm",
+     "done": false,
+     "repeat": {
+      "rule": "FREQ=WEEKLY;BYDAY=WE",
+      "start": "2026-09-02T18:00",
+      "log": [
+       "2026-11-18"
+      ],
+      "skip": [
+       "2026-10-14"
+      ]
+     }
+    }
+   }
+  ],
+  "workout/routines": [
+   {
+    "id": "ro_pull",
+    "position": "a108",
+    "version": 1,
+    "properties": {
+     "name": "Pull",
+     "minutes": 45,
+     "needs": "Gym"
+    }
+   },
+   {
+    "id": "ro_push",
+    "position": "a109",
+    "version": 1,
+    "properties": {
+     "name": "Push",
+     "minutes": 40,
+     "needs": "Gym"
+    }
+   },
+   {
+    "id": "ro_legs",
+    "position": "a110",
+    "version": 1,
+    "properties": {
+     "name": "Legs",
+     "minutes": 35,
+     "needs": "Gym"
+    }
+   }
+  ],
+  "workout/exercises": [
+   {
+    "id": "ex_pull_ups",
+    "position": "a111",
+    "version": 1,
+    "properties": {
+     "name": "Pull-ups",
+     "routine": [
+      "ro_pull"
+     ],
+     "plan": "3×8 bodyweight",
+     "sets": 3,
+     "reps": 8,
+     "weight": 0
+    }
+   },
+   {
+    "id": "ex_lat_pulldown",
+    "position": "a112",
+    "version": 1,
+    "properties": {
+     "name": "Lat pulldown",
+     "routine": [
+      "ro_pull"
+     ],
+     "plan": "3×10 at 120 lb",
+     "sets": 3,
+     "reps": 10,
+     "weight": 120
+    }
+   },
+   {
+    "id": "ex_seated_cable_row",
+    "position": "a113",
+    "version": 1,
+    "properties": {
+     "name": "Seated cable row",
+     "routine": [
+      "ro_pull"
+     ],
+     "plan": "3×12 at 100 lb",
+     "sets": 3,
+     "reps": 12,
+     "weight": 100
+    }
+   },
+   {
+    "id": "ex_face_pulls",
+    "position": "a114",
+    "version": 1,
+    "properties": {
+     "name": "Face pulls",
+     "routine": [
+      "ro_pull"
+     ],
+     "plan": "3×15 at 40 lb",
+     "sets": 3,
+     "reps": 15,
+     "weight": 40
+    }
+   },
+   {
+    "id": "ex_hammer_curl",
+    "position": "a115",
+    "version": 1,
+    "properties": {
+     "name": "Hammer curl",
+     "routine": [
+      "ro_pull"
+     ],
+     "plan": "3×12 at 25 lb",
+     "sets": 3,
+     "reps": 12,
+     "weight": 25
+    }
+   },
+   {
+    "id": "ex_push_ups",
+    "position": "a116",
+    "version": 1,
+    "properties": {
+     "name": "Push-ups",
+     "routine": [
+      "ro_push"
+     ],
+     "plan": "3×12 bodyweight",
+     "sets": 3,
+     "reps": 12,
+     "weight": 0
+    }
+   },
+   {
+    "id": "ex_dumbbell_bench",
+    "position": "a117",
+    "version": 1,
+    "properties": {
+     "name": "Dumbbell bench",
+     "routine": [
+      "ro_push"
+     ],
+     "plan": "3×10 at 40 lb",
+     "sets": 3,
+     "reps": 10,
+     "weight": 40
+    }
+   },
+   {
+    "id": "ex_goblet_squat",
+    "position": "a118",
+    "version": 1,
+    "properties": {
+     "name": "Goblet squat",
+     "routine": [
+      "ro_legs"
+     ],
+     "plan": "3×10 at 45 lb",
+     "sets": 3,
+     "reps": 10,
+     "weight": 45
+    }
+   },
+   {
+    "id": "ex_walking_lunges",
+    "position": "a119",
+    "version": 1,
+    "properties": {
+     "name": "Walking lunges",
+     "routine": [
+      "ro_legs"
+     ],
+     "plan": "3×12 bodyweight",
+     "sets": 3,
+     "reps": 12,
+     "weight": 0
+    }
+   }
+  ],
+  "workout/sets": [
+   {
+    "id": "set_1",
+    "position": "a123",
+    "version": 1,
+    "properties": {
+     "exercise": [
+      "ex_lat_pulldown"
+     ],
+     "did": "3×10",
+     "load": "120 lb",
+     "at": "2026-11-16T18:10:00-07:00"
+    }
+   },
+   {
+    "id": "set_2",
+    "position": "a124",
+    "version": 1,
+    "properties": {
+     "exercise": [
+      "ex_seated_cable_row"
+     ],
+     "did": "3×12",
+     "load": "100 lb",
+     "at": "2026-11-16T18:20:00-07:00"
+    }
+   },
+   {
+    "id": "set_3",
+    "position": "a125",
+    "version": 1,
+    "properties": {
+     "exercise": [
+      "ex_face_pulls"
+     ],
+     "did": "3×15",
+     "load": "40 lb",
+     "at": "2026-11-16T18:30:00-07:00"
+    }
+   },
+   {
+    "id": "set_4",
+    "position": "a126",
+    "version": 1,
+    "properties": {
+     "exercise": [
+      "ex_hammer_curl"
+     ],
+     "did": "3×12",
+     "load": "25 lb",
+     "at": "2026-11-16T18:38:00-07:00"
+    }
+   },
+   {
+    "id": "set_5",
+    "position": "a127",
+    "version": 1,
+    "properties": {
+     "exercise": [
+      "ex_pull_ups"
+     ],
+     "did": "3×8",
+     "load": "Bodyweight",
+     "at": "2026-11-16T18:04:00-07:00"
+    }
+   },
+   {
+    "id": "set_6",
+    "position": "a128",
+    "version": 1,
+    "properties": {
+     "exercise": [
+      "ex_goblet_squat"
+     ],
+     "did": "3×10",
+     "load": "45 lb",
+     "at": "2026-11-17T07:08:00-07:00"
+    }
+   },
+   {
+    "id": "set_7",
+    "position": "a129",
+    "version": 1,
+    "properties": {
+     "exercise": [
+      "ex_walking_lunges"
+     ],
+     "did": "3×12",
+     "load": "Bodyweight",
+     "at": "2026-11-17T07:20:00-07:00"
+    }
+   },
+   {
+    "id": "set_8",
+    "position": "a130",
+    "version": 1,
+    "properties": {
+     "exercise": [
+      "ex_dumbbell_bench"
+     ],
+     "did": "3×10",
+     "load": "40 lb",
+     "at": "2026-11-18T18:15:00-07:00"
+    }
+   },
+   {
+    "id": "set_9",
+    "position": "a131",
+    "version": 1,
+    "properties": {
+     "exercise": [
+      "ex_push_ups"
+     ],
+     "did": "3×12",
+     "load": "Bodyweight",
+     "at": "2026-11-18T18:05:00-07:00"
+    }
+   }
+  ]
+ },
+ "values": {
+  "b_done": {
+   "text": "41",
+   "sub": "sessions, 5 skipped"
+  },
+  "b_week": {
+   "text": "3",
+   "sub": "of 4 planned"
+  },
+  "b_lat": {
+   "text": "100 → 120 lb",
+   "sub": "in 8 weeks"
+  },
+  "b_volume": {
+   "text": "12,450 lb"
+  },
+  "b_next": {
+   "eyebrow": "Next up · today 6 pm",
+   "meta": "5 exercises · about 45 min",
+   "title": "Pull day",
+   "action": "Start pull day",
+   "record_id": "s_pull",
+   "occurrence": "2026-11-20",
+   "rest": 90,
+   "steps": [
+    {
+     "id": "ex_pull_ups",
+     "name": "Pull-ups",
+     "plan": "3 × 8 · bodyweight",
+     "sets": 3,
+     "reps": 8,
+     "weight": 0,
+     "unit": "lb",
+     "best": {
+      "reps": 8,
+      "weight": 0,
+      "text": "best 8 reps"
+     }
+    },
+    {
+     "id": "ex_lat_pulldown",
+     "name": "Lat pulldown",
+     "plan": "3 × 10",
+     "sets": 3,
+     "reps": 10,
+     "weight": 120,
+     "unit": "lb",
+     "best": {
+      "reps": 10,
+      "weight": 120,
+      "text": "best 120 lb × 10"
+     }
+    },
+    {
+     "id": "ex_seated_cable_row",
+     "name": "Seated cable row",
+     "plan": "3 × 12",
+     "sets": 3,
+     "reps": 12,
+     "weight": 100,
+     "unit": "lb",
+     "best": {
+      "reps": 12,
+      "weight": 100,
+      "text": "best 100 lb × 12"
+     }
+    },
+    {
+     "id": "ex_face_pulls",
+     "name": "Face pulls",
+     "plan": "3 × 15",
+     "sets": 3,
+     "reps": 15,
+     "weight": 40,
+     "unit": "lb",
+     "best": {
+      "reps": 15,
+      "weight": 40,
+      "text": "best 40 lb × 15"
+     }
+    },
+    {
+     "id": "ex_hammer_curl",
+     "name": "Hammer curl",
+     "plan": "3 × 12",
+     "sets": 3,
+     "reps": 12,
+     "weight": 25,
+     "unit": "lb",
+     "best": {
+      "reps": 12,
+      "weight": 25,
+      "text": "best 25 lb × 12"
+     }
+    }
+   ]
+  },
+  "b_lifted": {
+   "text": "12,450 lb"
+  },
+  "b_since": {
+   "text": "41 sessions"
+  },
+  "b_sessions": {
+   "text": "3",
+   "target": "4",
+   "pct": 75
+  },
+  "b_strip": {
+   "days": [
+    {
+     "dow": "M",
+     "text": "Pull",
+     "on": true
+    },
+    {
+     "dow": "T",
+     "text": "Legs",
+     "on": true
+    },
+    {
+     "dow": "W",
+     "text": "Push",
+     "on": true
+    },
+    {
+     "dow": "T"
+    },
+    {
+     "dow": "F",
+     "text": "6 pm",
+     "today": true
+    },
+    {
+     "dow": "S"
+    },
+    {
+     "dow": "S"
+    }
+   ]
+  }
+ },
+ "faces": {
+  "workout": {
+   "text": "3",
+   "label": "this week"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

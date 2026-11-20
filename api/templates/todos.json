@@ -1,0 +1,168 @@
+{
+  "v": 1,
+  "key": "todos",
+  "name": "To-dos",
+  "icon": "check",
+  "dye": "butter",
+  "settings": {},
+  "collections": [
+    {
+      "key": "todos",
+      "name": "To-dos",
+      "titleField": "title",
+      "dateField": "due",
+      "calendar": true,
+      "fields": [
+        {
+          "key": "title",
+          "label": "To-do",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "due",
+          "label": "Due",
+          "type": "datetime"
+        },
+        {
+          "key": "place",
+          "label": "Place",
+          "type": "text"
+        },
+        {
+          "key": "done",
+          "label": "Done",
+          "type": "bool"
+        },
+        {
+          "key": "repeat",
+          "label": "Repeat",
+          "type": "repeat"
+        },
+        {
+          "key": "remind",
+          "label": "Remind",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    {
+      "kind": "page",
+      "id": "t_todos",
+      "title": "To-dos",
+      "children": [
+        {
+          "kind": "checklist",
+          "id": "b_todos",
+          "source": "todos/todos",
+          "fields": [
+            "due",
+            "place"
+          ],
+          "due": "due",
+          "groups": [
+            {
+              "label": "Overdue · {n}",
+              "where": [
+                {
+                  "field": "done",
+                  "op": "eq",
+                  "value": false
+                },
+                {
+                  "field": "due",
+                  "op": "within",
+                  "value": "past"
+                }
+              ]
+            },
+            {
+              "label": "Today · {today}",
+              "where": [
+                {
+                  "field": "done",
+                  "op": "eq",
+                  "value": false
+                },
+                {
+                  "field": "due",
+                  "op": "within",
+                  "value": "today"
+                }
+              ]
+            },
+            {
+              "label": "Coming up",
+              "where": [
+                {
+                  "field": "done",
+                  "op": "eq",
+                  "value": false
+                },
+                {
+                  "field": "due",
+                  "op": "within",
+                  "value": "future"
+                }
+              ]
+            },
+            {
+              "label": "Someday",
+              "where": [
+                {
+                  "field": "done",
+                  "op": "eq",
+                  "value": false
+                },
+                {
+                  "field": "due",
+                  "op": "empty",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "label": "Done · {n}",
+              "where": [
+                {
+                  "field": "done",
+                  "op": "eq",
+                  "value": true
+                }
+              ],
+              "done": true,
+              "collapsed": true
+            }
+          ],
+          "add": {
+            "placeholder": "Add a to-do, like \"email TA Friday\"",
+            "pinned": true
+          },
+          "swipe": {
+            "right": "complete",
+            "left": "delete"
+          }
+        }
+      ]
+    }
+  ],
+  "face": {
+    "value": {
+      "agg": "count",
+      "from": "todos/todos",
+      "window": "today",
+      "where": [
+        {
+          "field": "done",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    "format": "count",
+    "label": "today"
+  },
+  "stitches": []
+}

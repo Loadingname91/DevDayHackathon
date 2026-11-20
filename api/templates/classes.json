@@ -1,0 +1,214 @@
+{
+  "v": 1,
+  "key": "classes",
+  "name": "Classes",
+  "icon": "book",
+  "dye": "chambray",
+  "settings": {},
+  "collections": [
+    {
+      "key": "classes",
+      "name": "Classes",
+      "titleField": "name",
+      "dateField": "time",
+      "calendar": true,
+      "fields": [
+        {
+          "key": "name",
+          "label": "Class",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "title",
+          "label": "Title",
+          "type": "text"
+        },
+        {
+          "key": "room",
+          "label": "Room",
+          "type": "text"
+        },
+        {
+          "key": "meets",
+          "label": "Meets",
+          "type": "text"
+        },
+        {
+          "key": "time",
+          "label": "Next",
+          "type": "datetime"
+        },
+        {
+          "key": "repeat",
+          "label": "Repeat",
+          "type": "repeat"
+        }
+      ]
+    },
+    {
+      "key": "due",
+      "name": "Due",
+      "titleField": "title",
+      "dateField": "at",
+      "calendar": true,
+      "fields": [
+        {
+          "key": "title",
+          "label": "Title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "kind",
+          "label": "Kind",
+          "type": "select",
+          "options": [
+            {
+              "id": "assignment",
+              "label": "Assignment"
+            },
+            {
+              "id": "exam",
+              "label": "Exam"
+            }
+          ]
+        },
+        {
+          "key": "at",
+          "label": "Due",
+          "type": "datetime"
+        },
+        {
+          "key": "class",
+          "label": "Class",
+          "type": "relation",
+          "target": "classes/classes"
+        },
+        {
+          "key": "done",
+          "label": "Done",
+          "type": "bool"
+        }
+      ]
+    }
+  ],
+  "tabs": [
+    {
+      "kind": "page",
+      "id": "t_week",
+      "title": "This week",
+      "children": [
+        {
+          "kind": "days",
+          "id": "b_week",
+          "source": "*dated",
+          "views": [
+            "week"
+          ],
+          "view": "week",
+          "apps": [
+            "classes"
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "page",
+      "id": "t_due",
+      "title": "Due",
+      "children": [
+        {
+          "kind": "checklist",
+          "id": "b_due",
+          "source": "classes/due",
+          "fields": [
+            "class",
+            "at"
+          ],
+          "due": "at",
+          "groups": [
+            {
+              "label": "Coming up",
+              "where": [
+                {
+                  "field": "done",
+                  "op": "eq",
+                  "value": false
+                },
+                {
+                  "field": "kind",
+                  "op": "eq",
+                  "value": "assignment"
+                }
+              ]
+            },
+            {
+              "label": "Done · {n}",
+              "where": [
+                {
+                  "field": "done",
+                  "op": "eq",
+                  "value": true
+                }
+              ],
+              "done": true,
+              "collapsed": true
+            }
+          ],
+          "swipe": {
+            "right": "complete"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "page",
+      "id": "t_exams",
+      "title": "Exams",
+      "children": [
+        {
+          "kind": "list",
+          "id": "b_exams",
+          "source": "classes/due",
+          "fields": [
+            "class",
+            "at"
+          ],
+          "sort": {
+            "field": "at",
+            "dir": "asc"
+          },
+          "where": [
+            {
+              "field": "kind",
+              "op": "eq",
+              "value": "exam"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "face": {
+    "value": {
+      "agg": "count",
+      "from": "classes/due",
+      "where": [
+        {
+          "field": "done",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "field": "at",
+          "op": "within",
+          "value": "7d"
+        }
+      ]
+    },
+    "format": "count",
+    "label": "due this week"
+  },
+  "stitches": []
+}

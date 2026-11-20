@@ -1,0 +1,27 @@
+{
+ "credits": -10,
+ "home": {
+  "addApps": [
+   {
+    "id": "calories",
+    "key": "calories",
+    "name": "Calories",
+    "icon": "flame",
+    "dye": "apricot",
+    "face": {
+     "text": "0",
+     "label": "today"
+    },
+    "changed": true,
+    "lastOpened": "2026-11-20T17:45:00-07:00",
+    "pinned": false,
+    "isNew": true
+   }
+  ],
+  "changed": []
+ },
+ "fixtures": {
+  "/apps/calories": "app.calories.new"
+ },
+ "apps": {}
+}

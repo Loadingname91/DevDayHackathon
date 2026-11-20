@@ -1,0 +1,27 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your week…"
+  }
+ },
+ {
+  "delay": 1600,
+  "event": "text_delta",
+  "data": {
+   "text": "Next week is already planned. Nothing to move or add."
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "workout",
+    "calendar"
+   ]
+  }
+ }
+]

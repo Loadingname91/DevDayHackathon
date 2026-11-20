@@ -1,0 +1,345 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Planning with your answers…"
+  }
+ },
+ {
+  "delay": 900,
+  "event": "plan",
+  "data": {
+   "title": "Calories",
+   "new_app": {
+    "key": "calories",
+    "name": "Calories",
+    "icon": "flame",
+    "dye": "apricot"
+   },
+   "lines": [
+    {
+     "app": "calories",
+     "text": "Today: a ring for calories against 2,200"
+    },
+    {
+     "app": "calories",
+     "text": "Log: meals with calories and protein"
+    },
+    {
+     "app": "calories",
+     "text": "Foods: save a food once, tap it to log it again"
+    }
+   ]
+  }
+ },
+ {
+  "delay": 500,
+  "event": "status",
+  "data": {
+   "text": "Cutting 3 tabs…"
+  }
+ },
+ {
+  "delay": 1500,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_build_calories",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "app",
+    "source": {
+     "kind": "text",
+     "label": "You typed",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [
+     {
+      "op": "insert",
+      "ref": "apps",
+      "values": {
+       "key": "calories"
+      }
+     }
+    ],
+    "expanded": [],
+    "deltas": [],
+    "title": "Make a Calories app?",
+    "summary": "Meals with calories and protein, and foods you save.",
+    "lines": [
+     {
+      "apps": [
+       "calories"
+      ],
+      "what": "new app · Today, Log and Foods",
+      "val": ""
+     }
+    ],
+    "targets": [
+     "calories"
+    ],
+    "actions": {
+     "primary": "Make it"
+    },
+    "preview": {
+     "spec": {
+      "v": 1,
+      "id": "calories",
+      "key": "calories",
+      "name": "Calories",
+      "icon": "flame",
+      "dye": "apricot",
+      "settings": {
+       "target": 2200
+      },
+      "collections": [
+       {
+        "key": "meals",
+        "name": "Meals",
+        "titleField": "name",
+        "dateField": "at",
+        "fields": [
+         {
+          "key": "name",
+          "label": "Meal",
+          "type": "text",
+          "required": true
+         },
+         {
+          "key": "calories",
+          "label": "Calories",
+          "type": "number",
+          "unit": "cal"
+         },
+         {
+          "key": "protein",
+          "label": "Protein",
+          "type": "number",
+          "unit": "g protein"
+         },
+         {
+          "key": "meal",
+          "label": "Meal time",
+          "type": "select",
+          "options": [
+           {
+            "id": "breakfast",
+            "label": "Breakfast"
+           },
+           {
+            "id": "lunch",
+            "label": "Lunch"
+           },
+           {
+            "id": "dinner",
+            "label": "Dinner"
+           },
+           {
+            "id": "snack",
+            "label": "Snack"
+           }
+          ]
+         },
+         {
+          "key": "at",
+          "label": "When",
+          "type": "datetime",
+          "required": true
+         }
+        ]
+       },
+       {
+        "key": "foods",
+        "name": "Foods",
+        "titleField": "name",
+        "fields": [
+         {
+          "key": "name",
+          "label": "Meal",
+          "type": "text",
+          "required": true
+         },
+         {
+          "key": "calories",
+          "label": "Calories",
+          "type": "number",
+          "unit": "cal"
+         },
+         {
+          "key": "protein",
+          "label": "Protein",
+          "type": "number",
+          "unit": "g protein"
+         }
+        ]
+       }
+      ],
+      "tabs": [
+       {
+        "kind": "page",
+        "id": "t_today",
+        "title": "Today",
+        "children": [
+         {
+          "kind": "ring",
+          "id": "b_ring",
+          "label": "Today",
+          "value": {
+           "agg": "sum",
+           "from": "calories/meals",
+           "field": "calories",
+           "window": "today"
+          },
+          "target": {
+           "setting": "target"
+          },
+          "format": "number"
+         },
+         {
+          "kind": "picks",
+          "id": "b_picks",
+          "label": "Again",
+          "from": "calories/foods",
+          "log": "calories/meals",
+          "fields": [
+           "name",
+           "calories",
+           "protein"
+          ]
+         },
+         {
+          "kind": "list",
+          "id": "b_meals_today",
+          "label": "Today",
+          "source": "calories/meals",
+          "fields": [
+           "meal",
+           "calories",
+           "protein"
+          ],
+          "sort": {
+           "field": "at",
+           "dir": "asc"
+          },
+          "where": [
+           {
+            "field": "at",
+            "op": "within",
+            "value": "today"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "kind": "page",
+        "id": "t_log",
+        "title": "Log",
+        "children": [
+         {
+          "kind": "list",
+          "id": "b_meals",
+          "source": "calories/meals",
+          "fields": [
+           "calories",
+           "protein"
+          ],
+          "sort": {
+           "field": "at",
+           "dir": "desc"
+          },
+          "group": "at"
+         }
+        ]
+       },
+       {
+        "kind": "page",
+        "id": "t_foods",
+        "title": "Foods",
+        "children": [
+         {
+          "kind": "list",
+          "id": "b_foods",
+          "source": "calories/foods",
+          "fields": [
+           "calories",
+           "protein"
+          ]
+         }
+        ]
+       }
+      ],
+      "face": {
+       "value": {
+        "agg": "sum",
+        "from": "calories/meals",
+        "field": "calories",
+        "window": "today"
+       },
+       "format": "number",
+       "label": "today"
+      }
+     },
+     "data": {
+      "calories/meals": [
+       {
+        "id": "xm_1",
+        "position": "a184",
+        "version": 1,
+        "properties": {
+         "name": "Oatmeal and banana",
+         "calories": 350,
+         "protein": 10,
+         "meal": "breakfast",
+         "at": "2026-11-20T08:00:00-07:00"
+        },
+        "example": true
+       },
+       {
+        "id": "xm_2",
+        "position": "a185",
+        "version": 1,
+        "properties": {
+         "name": "Chicken and rice",
+         "calories": 640,
+         "protein": 45,
+         "meal": "lunch",
+         "at": "2026-11-20T12:30:00-07:00"
+        },
+        "example": true
+       }
+      ],
+      "calories/foods": []
+     },
+     "values": {
+      "b_ring": {
+       "text": "990",
+       "target": "of 2,200",
+       "pct": 45,
+       "sub": "example"
+      }
+     },
+     "faces": {
+      "calories": {
+       "text": "0",
+       "label": "today"
+      }
+     },
+     "seq": 0,
+     "server_now": "2026-11-20T17:45:00-07:00"
+    }
+   }
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": []
+  }
+ }
+]

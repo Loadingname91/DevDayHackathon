@@ -1,0 +1,34 @@
+{
+  "about": "Use sample for the live planner, rung 1 (clair-agent.md §12.9; backend.md §2.3). Needs the four Google events on Calendar. Records by {ref, name}, resolved at replay.",
+  "status": "Reading your week…",
+  "understood": {"kind": "request", "summary": "Read 4 apps: Calendar, Classes, To-dos and Workout.", "confidence": 1.0},
+  "statuses": ["Fitting 4 lifts around your week…"],
+  "propose": {
+    "title": "Next week's training",
+    "summary": "4 lifts (1 kept, 3 moved).",
+    "ops": [
+      {"op": "keep", "keep": true, "app": "workout", "collection": "sessions",
+       "record_id": {"ref": "workout/sessions", "name": "Pull day"}, "occurrence": "2026-11-23",
+       "reason": "Free after CS 3500", "reason_source": {"ref": "classes/classes", "name": "CS 3500"}},
+      {"op": "move_occurrence", "app": "workout", "collection": "sessions",
+       "record_id": {"ref": "workout/sessions", "name": "Leg day"}, "occurrence": "2026-11-24",
+       "fields": [{"key": "at", "value": "2026-11-24T17:00:00-07:00"}],
+       "reason": "Dentist at 7:30 am", "reason_source": {"ref": "calendar/events", "name": "Dentist"}},
+      {"op": "move_occurrence", "app": "workout", "collection": "sessions",
+       "record_id": {"ref": "workout/sessions", "name": "Push day"}, "occurrence": "2026-11-25",
+       "fields": [{"key": "at", "value": "2026-11-25T07:00:00-07:00"}],
+       "reason": "Drive home at 5:00 pm", "reason_source": {"ref": "calendar/events", "name": "Drive home for Thanksgiving"}},
+      {"op": "move_occurrence", "app": "workout", "collection": "sessions",
+       "record_id": {"ref": "workout/sessions", "name": "Pull day"}, "occurrence": "2026-11-27",
+       "fields": [{"key": "at", "value": "2026-11-29T16:00:00-07:00"}],
+       "reason": "Back on campus Sun 12:00 pm", "reason_source": {"ref": "calendar/events", "name": "Back to campus"}}
+    ]
+  },
+  "offer": {
+    "kind": "workflow", "app": "workout", "prompt": "Do this every Sunday at 7 pm?",
+    "sentence": "Every Sunday at 7:00 pm, plan next week's training",
+    "trigger": {"kind": "schedule", "rule": "FREQ=WEEKLY;BYDAY=SU", "at": "19:00"},
+    "action": {"kind": "ask_clair", "text": "Plan my training for next week"}
+  },
+  "sources": ["calendar", "classes", "todos", "workout"]
+}

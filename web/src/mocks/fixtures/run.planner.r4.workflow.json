@@ -1,0 +1,395 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your week…"
+  }
+ },
+ {
+  "delay": 1400,
+  "event": "understood",
+  "data": {
+   "kind": "request",
+   "summary": "Read 9 apps: Calendar, Classes, To-dos, Workout, Running, Calories, Cycle, Meditation and Groceries."
+  }
+ },
+ {
+  "delay": 2600,
+  "event": "status",
+  "data": {
+   "text": "Fitting 4 lifts around your week…"
+  }
+ },
+ {
+  "delay": 3200,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_planner_rule",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "records",
+    "source": {
+     "kind": "workflow",
+     "label": "Every Sunday at 7:00 pm",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [
+     {
+      "op": "keep",
+      "record_id": "s_pull",
+      "occurrence": "2026-11-23",
+      "reason": "Free after CS 3500",
+      "reason_source": "c03"
+     },
+     {
+      "op": "move_occurrence",
+      "app": "workout",
+      "collection": "sessions",
+      "record_id": "s_legs",
+      "occurrence": "2026-11-24",
+      "fields": [
+       {
+        "key": "at",
+        "value": "2026-11-24T17:00:00-07:00"
+       }
+      ],
+      "reason": "Dentist at 7:30 am",
+      "reason_source": "g_dentist",
+      "also": "shortest session; energy 2 logged on day 1 of your last 3 cycles",
+      "also_source": "cd_7"
+     },
+     {
+      "op": "move_occurrence",
+      "app": "workout",
+      "collection": "sessions",
+      "record_id": "s_push",
+      "occurrence": "2026-11-25",
+      "fields": [
+       {
+        "key": "at",
+        "value": "2026-11-25T07:00:00-07:00"
+       }
+      ],
+      "reason": "Drive home at 5:00 pm",
+      "reason_source": "g_drive"
+     },
+     {
+      "op": "insert",
+      "ref": "running/runs",
+      "values": {
+       "name": "Easy run",
+       "kind": "easy",
+       "distance": 3,
+       "at": "2026-11-26T08:00:00-07:00",
+       "done": false
+      },
+      "reason": "Away from the gym; a run goes anywhere",
+      "reason_source": "g_thanksgiving"
+     },
+     {
+      "op": "insert",
+      "ref": "running/runs",
+      "values": {
+       "name": "Long run",
+       "kind": "long",
+       "distance": 5.5,
+       "at": "2026-11-28T09:00:00-07:00",
+       "done": false
+      },
+      "reason": "10K on Sat 12 Dec; last long run 5 mi",
+      "reason_source": "race_10k"
+     },
+     {
+      "op": "move_occurrence",
+      "app": "workout",
+      "collection": "sessions",
+      "record_id": "s_pull",
+      "occurrence": "2026-11-27",
+      "fields": [
+       {
+        "key": "at",
+        "value": "2026-11-29T16:00:00-07:00"
+       }
+      ],
+      "reason": "Back on campus Sun 12:00 pm",
+      "reason_source": "g_back"
+     },
+     {
+      "op": "insert",
+      "ref": "todos/todos",
+      "values": {
+       "title": "10 min body scan",
+       "due": "2026-11-24T21:30:00-07:00",
+       "done": false
+      },
+      "reason": "After Leg day; 3 sessions logged this week",
+      "reason_source": "med_3"
+     },
+     {
+      "op": "insert",
+      "ref": "groceries/items",
+      "values": {
+       "name": "Oats",
+       "list": "l_weekly",
+       "status": "to_buy"
+      },
+      "reason": "Oatmeal 3 of 5 mornings; not on your list",
+      "reason_source": "m_13"
+     }
+    ],
+    "expanded": [
+     {
+      "op": "keep",
+      "record_id": "s_pull",
+      "occurrence": "2026-11-23",
+      "reason": "Free after CS 3500",
+      "reason_source": "c03"
+     },
+     {
+      "op": "move_occurrence",
+      "app": "workout",
+      "collection": "sessions",
+      "record_id": "s_legs",
+      "occurrence": "2026-11-24",
+      "fields": [
+       {
+        "key": "at",
+        "value": "2026-11-24T17:00:00-07:00"
+       }
+      ],
+      "reason": "Dentist at 7:30 am",
+      "reason_source": "g_dentist",
+      "also": "shortest session; energy 2 logged on day 1 of your last 3 cycles",
+      "also_source": "cd_7"
+     },
+     {
+      "op": "move_occurrence",
+      "app": "workout",
+      "collection": "sessions",
+      "record_id": "s_push",
+      "occurrence": "2026-11-25",
+      "fields": [
+       {
+        "key": "at",
+        "value": "2026-11-25T07:00:00-07:00"
+       }
+      ],
+      "reason": "Drive home at 5:00 pm",
+      "reason_source": "g_drive"
+     },
+     {
+      "op": "insert",
+      "ref": "running/runs",
+      "values": {
+       "name": "Easy run",
+       "kind": "easy",
+       "distance": 3,
+       "at": "2026-11-26T08:00:00-07:00",
+       "done": false
+      },
+      "reason": "Away from the gym; a run goes anywhere",
+      "reason_source": "g_thanksgiving"
+     },
+     {
+      "op": "insert",
+      "ref": "running/runs",
+      "values": {
+       "name": "Long run",
+       "kind": "long",
+       "distance": 5.5,
+       "at": "2026-11-28T09:00:00-07:00",
+       "done": false
+      },
+      "reason": "10K on Sat 12 Dec; last long run 5 mi",
+      "reason_source": "race_10k"
+     },
+     {
+      "op": "move_occurrence",
+      "app": "workout",
+      "collection": "sessions",
+      "record_id": "s_pull",
+      "occurrence": "2026-11-27",
+      "fields": [
+       {
+        "key": "at",
+        "value": "2026-11-29T16:00:00-07:00"
+       }
+      ],
+      "reason": "Back on campus Sun 12:00 pm",
+      "reason_source": "g_back"
+     },
+     {
+      "op": "insert",
+      "ref": "todos/todos",
+      "values": {
+       "title": "10 min body scan",
+       "due": "2026-11-24T21:30:00-07:00",
+       "done": false
+      },
+      "reason": "After Leg day; 3 sessions logged this week",
+      "reason_source": "med_3"
+     },
+     {
+      "op": "insert",
+      "ref": "groceries/items",
+      "values": {
+       "name": "Oats",
+       "list": "l_weekly",
+       "status": "to_buy"
+      },
+      "reason": "Oatmeal 3 of 5 mornings; not on your list",
+      "reason_source": "m_13"
+     }
+    ],
+    "deltas": [
+     {
+      "app": "groceries",
+      "before": "12",
+      "after": "13"
+     }
+    ],
+    "title": "Next week's training",
+    "summary": "4 lifts (1 kept, 3 moved), 2 runs, 1 recovery to-do, 1 grocery item. Mon to Thu you logged 1,650 to 1,970 calories a day (target 2,200).",
+    "lines": [
+     {
+      "apps": [
+       "workout"
+      ],
+      "what": "Pull Mon 6:00 pm · Legs Tue 5:00 pm · Push Wed 7:00 am · Pull Sun 4:00 pm",
+      "val": ""
+     },
+     {
+      "apps": [
+       "running"
+      ],
+      "what": "Easy 3 mi Thu 8:00 am · Long 5.5 mi Sat 9:00 am",
+      "val": ""
+     },
+     {
+      "apps": [
+       "todos"
+      ],
+      "what": "10 min body scan · Tue 9:30 pm",
+      "val": ""
+     },
+     {
+      "apps": [
+       "groceries"
+      ],
+      "what": "Oats",
+      "val": "",
+      "sub": "12 → 13 to buy"
+     },
+     {
+      "apps": [
+       "calendar"
+      ],
+      "what": "3 sessions move, 2 runs and 1 to-do added",
+      "val": ""
+     }
+    ],
+    "targets": [
+     "workout",
+     "running",
+     "todos",
+     "groceries",
+     "calendar"
+    ],
+    "actions": {
+     "primary": "Add to 5 apps",
+     "secondary": "Review items"
+    },
+    "review": [
+     {
+      "title": "Pull day",
+      "when": "Mon 23 Nov 6:00 pm",
+      "change": "kept",
+      "reason": "Free after CS 3500",
+      "source": "Classes",
+      "app": "workout"
+     },
+     {
+      "title": "Leg day",
+      "when": "Tue 24 Nov 7:00 am → 5:00 pm",
+      "change": "moved",
+      "reason": "Dentist at 7:30 am",
+      "source": "Google Calendar",
+      "app": "workout",
+      "also": "shortest session; energy 2 logged on day 1 of your last 3 cycles",
+      "also_source": "Cycle"
+     },
+     {
+      "title": "Push day",
+      "when": "Wed 25 Nov 6:00 pm → 7:00 am",
+      "change": "moved",
+      "reason": "Drive home at 5:00 pm",
+      "source": "Google Calendar",
+      "app": "workout"
+     },
+     {
+      "title": "Easy run",
+      "when": "Thu 26 Nov 8:00 am · 3 mi",
+      "change": "new",
+      "reason": "Away from the gym; a run goes anywhere",
+      "source": "Google Calendar",
+      "app": "running"
+     },
+     {
+      "title": "Long run",
+      "when": "Sat 28 Nov 9:00 am · 5.5 mi",
+      "change": "new",
+      "reason": "10K on Sat 12 Dec; last long run 5 mi",
+      "source": "Running",
+      "app": "running"
+     },
+     {
+      "title": "Pull day",
+      "when": "Fri 27 → Sun 29 Nov 4:00 pm",
+      "change": "moved",
+      "reason": "Back on campus Sun 12:00 pm",
+      "source": "Google Calendar",
+      "app": "workout"
+     },
+     {
+      "title": "Body scan",
+      "when": "Tue 24 Nov 9:30 pm · 10 min",
+      "change": "new",
+      "reason": "After Leg day; 3 sessions logged this week",
+      "source": "Meditation",
+      "app": "todos"
+     },
+     {
+      "title": "Oats",
+      "when": "Weekly shop",
+      "change": "new",
+      "reason": "Oatmeal 3 of 5 mornings; not on your list",
+      "source": "Calories",
+      "app": "groceries"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "calendar",
+    "classes",
+    "todos",
+    "workout",
+    "running",
+    "calories",
+    "cycle",
+    "meditation",
+    "groceries"
+   ]
+  }
+ }
+]

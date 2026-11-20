@@ -1,0 +1,18 @@
+{
+  "about": "Use sample for the lunch sentence (tests and the base cut line). Records by {ref, name}; {now} is the server clock.",
+  "status": "Reading your note…",
+  "understood": {"kind": "request", "summary": "A $12 lunch. That goes in Budget.", "confidence": 1.0},
+  "propose": {
+    "title": "Lunch",
+    "summary": "$12.00 in Eating out.",
+    "ops": [
+      {"op": "insert", "app": "budget", "collection": "spend", "fields": [
+        {"key": "note", "value": "Lunch"},
+        {"key": "amount", "value": "12.00"},
+        {"key": "category", "value": "Eating out"},
+        {"key": "at", "value": "{now}"}
+      ]}
+    ]
+  },
+  "sources": ["budget"]
+}

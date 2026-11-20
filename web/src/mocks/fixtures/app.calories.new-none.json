@@ -1,0 +1,218 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "calories",
+  "key": "calories",
+  "name": "Calories",
+  "icon": "flame",
+  "dye": "apricot",
+  "settings": {},
+  "collections": [
+   {
+    "key": "meals",
+    "name": "Meals",
+    "titleField": "name",
+    "dateField": "at",
+    "fields": [
+     {
+      "key": "name",
+      "label": "Meal",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "calories",
+      "label": "Calories",
+      "type": "number",
+      "unit": "cal"
+     },
+     {
+      "key": "protein",
+      "label": "Protein",
+      "type": "number",
+      "unit": "g protein"
+     },
+     {
+      "key": "meal",
+      "label": "Meal time",
+      "type": "select",
+      "options": [
+       {
+        "id": "breakfast",
+        "label": "Breakfast"
+       },
+       {
+        "id": "lunch",
+        "label": "Lunch"
+       },
+       {
+        "id": "dinner",
+        "label": "Dinner"
+       },
+       {
+        "id": "snack",
+        "label": "Snack"
+       }
+      ]
+     },
+     {
+      "key": "at",
+      "label": "When",
+      "type": "datetime",
+      "required": true
+     }
+    ]
+   },
+   {
+    "key": "foods",
+    "name": "Foods",
+    "titleField": "name",
+    "fields": [
+     {
+      "key": "name",
+      "label": "Meal",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "calories",
+      "label": "Calories",
+      "type": "number",
+      "unit": "cal"
+     },
+     {
+      "key": "protein",
+      "label": "Protein",
+      "type": "number",
+      "unit": "g protein"
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_today",
+    "title": "Today",
+    "children": [
+     {
+      "kind": "ring",
+      "id": "b_ring",
+      "label": "Today",
+      "value": {
+       "agg": "sum",
+       "from": "calories/meals",
+       "field": "calories",
+       "window": "today"
+      },
+      "target": {
+       "setting": "target"
+      },
+      "format": "number"
+     },
+     {
+      "kind": "picks",
+      "id": "b_picks",
+      "label": "Again",
+      "from": "calories/foods",
+      "log": "calories/meals",
+      "fields": [
+       "name",
+       "calories",
+       "protein"
+      ]
+     },
+     {
+      "kind": "list",
+      "id": "b_meals_today",
+      "label": "Today",
+      "source": "calories/meals",
+      "fields": [
+       "meal",
+       "calories",
+       "protein"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "asc"
+      },
+      "where": [
+       {
+        "field": "at",
+        "op": "within",
+        "value": "today"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_log",
+    "title": "Log",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_meals",
+      "source": "calories/meals",
+      "fields": [
+       "calories",
+       "protein"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "desc"
+      },
+      "group": "at"
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_foods",
+    "title": "Foods",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_foods",
+      "source": "calories/foods",
+      "fields": [
+       "calories",
+       "protein"
+      ]
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "sum",
+    "from": "calories/meals",
+    "field": "calories",
+    "window": "today"
+   },
+   "format": "number",
+   "label": "today"
+  }
+ },
+ "data": {
+  "calories/meals": [],
+  "calories/foods": []
+ },
+ "values": {
+  "b_ring": {
+   "text": "0",
+   "target": "today",
+   "pct": 0,
+   "sub": "No daily target"
+  }
+ },
+ "faces": {
+  "calories": {
+   "text": "0",
+   "label": "today"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

@@ -1,0 +1,103 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Checking your calendar…"
+  }
+ },
+ {
+  "delay": 900,
+  "event": "understood",
+  "data": {
+   "kind": "request",
+   "summary": "Read Calendar."
+  }
+ },
+ {
+  "delay": 1500,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_haircut_rule",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "records",
+    "source": {
+     "kind": "workflow",
+     "label": "Every Sunday at 7:00 pm",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [
+     {
+      "op": "insert",
+      "ref": "calendar/events",
+      "values": {
+       "title": "Haircut",
+       "kind": "barber",
+       "at": "2026-11-21T14:00:00-07:00",
+       "remind": "1d"
+      },
+      "reason": "Usual 11:00 am is right after Coffee with Maya",
+      "reason_source": "e_coffee"
+     }
+    ],
+    "expanded": [
+     {
+      "op": "insert",
+      "ref": "calendar/events",
+      "values": {
+       "title": "Haircut",
+       "kind": "barber",
+       "at": "2026-11-21T14:00:00-07:00",
+       "remind": "1d"
+      },
+      "reason": "Usual 11:00 am is right after Coffee with Maya",
+      "reason_source": "e_coffee"
+     }
+    ],
+    "deltas": [],
+    "title": "Haircut is due",
+    "summary": "You go about every 5 weeks. The last was Sat 17 Oct.",
+    "lines": [
+     {
+      "apps": [
+       "calendar"
+      ],
+      "what": "Haircut · Sat 21 Nov 2:00 pm · reminder the day before",
+      "val": ""
+     }
+    ],
+    "targets": [
+     "calendar"
+    ],
+    "actions": {
+     "primary": "Add to Calendar",
+     "secondary": "Review items"
+    },
+    "review": [
+     {
+      "title": "Haircut",
+      "when": "Sat 21 Nov 2:00 pm · reminder the day before",
+      "change": "new",
+      "reason": "Usual 11:00 am is right after Coffee with Maya",
+      "source": "Calendar",
+      "app": "calendar"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "calendar"
+   ]
+  }
+ }
+]

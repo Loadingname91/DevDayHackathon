@@ -1,0 +1,10 @@
+web/
+design/
+docs/
+spec/
+setup/
+.impeccable/
+api/.env
+api/.venv/
+api/supabase/.temp/
+node_modules/

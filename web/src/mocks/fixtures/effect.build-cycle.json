@@ -1,0 +1,27 @@
+{
+ "credits": -10,
+ "home": {
+  "addApps": [
+   {
+    "id": "cycle",
+    "key": "cycle",
+    "name": "Cycle",
+    "icon": "drop",
+    "dye": "pear",
+    "face": {
+     "text": "None yet",
+     "label": "logged"
+    },
+    "changed": true,
+    "lastOpened": "2026-11-20T17:45:00-07:00",
+    "pinned": false,
+    "isNew": true
+   }
+  ],
+  "changed": []
+ },
+ "fixtures": {
+  "/apps/cycle": "app.cycle.new"
+ },
+ "apps": {}
+}

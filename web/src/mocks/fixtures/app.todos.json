@@ -1,0 +1,251 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "todos",
+  "key": "todos",
+  "name": "To-dos",
+  "icon": "check",
+  "dye": "butter",
+  "collections": [
+   {
+    "key": "todos",
+    "name": "To-dos",
+    "titleField": "title",
+    "dateField": "due",
+    "calendar": true,
+    "fields": [
+     {
+      "key": "title",
+      "label": "To-do",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "due",
+      "label": "Due",
+      "type": "datetime"
+     },
+     {
+      "key": "place",
+      "label": "Place",
+      "type": "text"
+     },
+     {
+      "key": "done",
+      "label": "Done",
+      "type": "bool"
+     },
+     {
+      "key": "repeat",
+      "label": "Repeat",
+      "type": "repeat"
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_todos",
+    "title": "To-dos",
+    "children": [
+     {
+      "kind": "checklist",
+      "id": "b_todos",
+      "source": "todos/todos",
+      "fields": [
+       "due",
+       "place"
+      ],
+      "due": "due",
+      "groups": [
+       {
+        "label": "Overdue · {n}",
+        "where": [
+         {
+          "field": "done",
+          "op": "eq",
+          "value": false
+         },
+         {
+          "field": "due",
+          "op": "within",
+          "value": "past"
+         }
+        ]
+       },
+       {
+        "label": "Today · {today}",
+        "where": [
+         {
+          "field": "done",
+          "op": "eq",
+          "value": false
+         },
+         {
+          "field": "due",
+          "op": "within",
+          "value": "today"
+         }
+        ]
+       },
+       {
+        "label": "Coming up",
+        "where": [
+         {
+          "field": "done",
+          "op": "eq",
+          "value": false
+         },
+         {
+          "field": "due",
+          "op": "within",
+          "value": "future"
+         }
+        ]
+       },
+       {
+        "label": "Someday",
+        "where": [
+         {
+          "field": "done",
+          "op": "eq",
+          "value": false
+         },
+         {
+          "field": "due",
+          "op": "empty",
+          "value": true
+         }
+        ]
+       },
+       {
+        "label": "Done · {n}",
+        "where": [
+         {
+          "field": "done",
+          "op": "eq",
+          "value": true
+         }
+        ],
+        "done": true,
+        "collapsed": true
+       }
+      ],
+      "add": {
+       "placeholder": "Add a to-do, like \"email TA Friday\"",
+       "pinned": true
+      },
+      "swipe": {
+       "right": "complete",
+       "left": "delete"
+      }
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "count",
+    "from": "todos/todos",
+    "window": "today",
+    "where": [
+     {
+      "field": "done",
+      "op": "eq",
+      "value": false
+     }
+    ]
+   },
+   "format": "count",
+   "label": "today"
+  }
+ },
+ "data": {
+  "todos/todos": [
+   {
+    "id": "t_library",
+    "position": "a083",
+    "version": 1,
+    "properties": {
+     "title": "Return library books",
+     "due": "2026-11-20T21:00:00-07:00",
+     "place": "Marriott Library",
+     "done": false
+    }
+   },
+   {
+    "id": "t_recycling",
+    "position": "a084",
+    "version": 1,
+    "properties": {
+     "title": "Take out recycling",
+     "due": "2026-11-20T20:00:00-07:00",
+     "done": false,
+     "repeat": {
+      "rule": "FREQ=WEEKLY;BYDAY=FR",
+      "start": "2026-10-23T20:00",
+      "log": [
+       "2026-10-23",
+       "2026-10-30",
+       "2026-11-13"
+      ],
+      "skip": [
+       "2026-11-06"
+      ]
+     }
+    }
+   },
+   {
+    "id": "t_call_home",
+    "position": "a085",
+    "version": 1,
+    "properties": {
+     "title": "Call home",
+     "due": "2026-11-22",
+     "done": false
+    }
+   },
+   {
+    "id": "t_maya",
+    "position": "a086",
+    "version": 1,
+    "properties": {
+     "title": "Pay Maya back for pizza ($14)",
+     "done": false
+    }
+   },
+   {
+    "id": "t_devday",
+    "position": "a087",
+    "version": 1,
+    "properties": {
+     "title": "DevDay demo",
+     "due": "2026-11-20T15:00:00-07:00",
+     "place": "Lassonde Studios",
+     "done": true
+    }
+   },
+   {
+    "id": "t_flu",
+    "position": "a088",
+    "version": 1,
+    "properties": {
+     "title": "Book flu shot",
+     "place": "Student health",
+     "done": true
+    }
+   }
+  ]
+ },
+ "values": {},
+ "status": "**2** left today.",
+ "faces": {
+  "todos": {
+   "text": "2",
+   "label": "today"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

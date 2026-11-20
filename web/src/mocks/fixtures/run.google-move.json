@@ -1,0 +1,26 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your calendar…"
+  }
+ },
+ {
+  "delay": 1100,
+  "event": "text_delta",
+  "data": {
+   "text": "I can't change events from Google Calendar. Move it in Google, and I'll plan around it."
+  }
+ },
+ {
+  "delay": 60,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "calendar"
+   ]
+  }
+ }
+]

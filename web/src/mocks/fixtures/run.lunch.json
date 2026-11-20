@@ -1,0 +1,106 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your note…"
+  }
+ },
+ {
+  "delay": 900,
+  "event": "understood",
+  "data": {
+   "kind": "request",
+   "summary": "A $12 lunch. That goes in Budget."
+  }
+ },
+ {
+  "delay": 900,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_lunch",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "records",
+    "source": {
+     "kind": "text",
+     "label": "You typed",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Lunch",
+       "amount": 1200,
+       "category": "c_eating_out",
+       "at": "2026-11-20T17:45:00-07:00"
+      }
+     }
+    ],
+    "expanded": [
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Lunch",
+       "amount": 1200,
+       "category": "c_eating_out",
+       "at": "2026-11-20T17:45:00-07:00"
+      }
+     }
+    ],
+    "deltas": [
+     {
+      "app": "budget",
+      "before": "$412",
+      "after": "$400"
+     }
+    ],
+    "title": "Lunch",
+    "summary": "$12.00 in Eating out.",
+    "lines": [
+     {
+      "apps": [
+       "budget"
+      ],
+      "what": "Lunch · Eating out",
+      "val": "$12.00",
+      "sub": "$412 → $400 left"
+     }
+    ],
+    "targets": [
+     "budget"
+    ],
+    "actions": {
+     "primary": "Add to Budget",
+     "secondary": "Review items"
+    },
+    "review": [
+     {
+      "title": "Lunch",
+      "when": "Today, 5:45 pm · $12.00",
+      "change": "new",
+      "reason": "Eating out",
+      "app": "budget"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "delay": 150,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "budget"
+   ],
+   "spoken": "Lunch, twelve dollars. Add to Budget?"
+  }
+ }
+]

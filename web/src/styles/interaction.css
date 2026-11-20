@@ -1,0 +1,125 @@
+/* Interaction and motion rules (sheets, swipe, toast, press states, calendar, timer, month log). Owned by the interaction pass.
+   Loaded last (main.tsx), so these rules win ties with app.css and motion.css. Everything here is shared: apps Clair builds inherit it. */
+
+/* ---------- sheets (Sheet.tsx): modal, with a way out ---------- */
+/* a sheet covers the bar and the page; the Clair sheet keeps the bar lit (its cards stitch onto the pins), so it opts out with `keepBar` */
+.scrim.cover { z-index: 55; }
+.sheet.cover { z-index: 56; }
+.sheet:focus { outline: none; }
+/* the grabber and the header belong to the drag: the browser does not scroll from them */
+.sheet-head, .cs-head, .clair-head { touch-action: none; }
+.sheet-x { position: absolute; top: 0; right: 6px; z-index: 3; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--ink);
+  transition: background-color var(--t-fb) var(--ease), transform var(--t-fb) var(--ease); }
+.sheet.has-x .sheet-head { padding-right: 44px; }
+/* a sheet whose header already carries its own Done or Close keeps just that one */
+.sheet.has-x:has(.clair-head > button) .sheet-x { display: none; }
+
+/* ---------- swipe rows ---------- */
+.swrow .sw-bg { transition: opacity var(--t-fb) var(--ease); }
+/* a collapsed section opens with a short fade, like its chevron turns */
+.cl-group > ul { animation: fade-in var(--t-fb) var(--ease); }
+
+/* ---------- press feedback on links, like buttons ---------- */
+:where(a.round, a.avatar, a.link, a.lk, a.cta, a.ghost, a.outline, a.chip, .side-new, .side-you, .side-logo) { transition: transform var(--t-fb) var(--ease); }
+:where(a.round, a.avatar, a.link, a.lk, a.cta, a.ghost, a.outline, a.chip, .side-new, .side-you, .side-logo):active { transform: scale(.97); }
+/* a long press on a tile or a pin selects nothing and opens no callout */
+.patch, .bar .cell, .nx, .side-app { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+/* the switch thumb squeezes under the finger, anchored on the side it sits */
+.switch-btn { --sx: 0px; }
+.switch-btn[aria-checked='true'] { --sx: 20px; }
+.switch-btn::after { transform-origin: 0 50%; }
+.switch-btn[aria-checked='true']::after { transform-origin: 100% 50%; }
+.switch-btn:active::after { transform: translateX(var(--sx)) scaleX(1.15); }
+
+/* ---------- text floor: nothing under 13 px ---------- */
+.mock-mark { font-size: 13px; }
+.tl-ev small { font-size: 13px; }
+
+/* ---------- Clair proposal card: the action row never wraps, a change line is at most two lines ---------- */
+.cs .pcard { container-type: inline-size; }
+.cs .pcard .line .what { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.cs .pcard .line .more { color: var(--sec); font-weight: 500; white-space: nowrap; }
+.cs .pcard .btns .cta, .cs .pcard .btns .ghost { padding: 0 14px; white-space: nowrap; min-width: max-content; }
+@container (max-width: 279px) {
+  .cs .pcard .btns { flex-direction: column; align-items: stretch; }
+  .cs .pcard .btns > * { flex: none; width: 100%; }
+}
+
+/* ---------- month grids (Calendar, Cycle): a day out of the month steps back by weight and a faint cell fill, never by opacity or a
+   pale colour (the number stays --sec, 4.5:1 and up, in light and dark); a logged mark and a picked day never dim ---------- */
+.m-cell.out:not([aria-pressed='true']) { background: color-mix(in oklch, var(--hair) 60%, transparent); }
+.m-cell.out:not([aria-pressed='true']):not([data-lv='1'], [data-lv='2'], [data-lv='3']) .m-n { color: var(--sec); font-weight: 500; }
+/* the first of a month carries its name, small and in --sec */
+.m-n.first { display: inline-flex; align-items: center; justify-content: center; width: auto; min-width: 28px; padding: 0 4px; border-radius: 14px; white-space: nowrap; }
+.m-mo { margin-left: 3px; font-size: 13px; font-weight: 500; color: var(--sec); }
+.m-cell.log[data-lv='3'] .m-mo, .m-cell[aria-pressed='true'] .m-mo { color: inherit; }
+/* Cycle: flow is also a count of stitches (1 light, 2 medium, 3 heavy), so it reads without the tint */
+.m-fl { display: inline-flex; align-items: center; gap: 2px; }
+.m-fl b { width: 6px; height: 2.5px; border-radius: 2px; background: var(--deep); }
+.m-legend { align-items: center; }
+.m-legend span { gap: 6px; }
+.m-legend i[data-lv] { width: 14px; height: 14px; box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--deep) 65%, transparent); }
+
+/* ---------- timer: one clock, Start in reach ---------- */
+.t-arc { transition: none !important; } /* the ring is one linear animation (Timer.tsx), not a transition retargeted every tick */
+.t-ring { width: min(200px, 54vw, 30dvh); height: auto; aspect-ratio: 1; }
+.t-ring svg { display: block; width: 100%; height: 100%; }
+/* the kinds sit in a grid (2 × 2 on a phone), never wrapping three and one */
+.timer .chips.kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.timer .chips.kinds .chip { justify-content: center; }
+.t-feel { align-self: center; }
+.t-note { font-size: 14px; line-height: 1.4; color: var(--sec); text-align: center; }
+
+/* ---------- Log a set: "Finish with N sets left?" ---------- */
+.s-ask { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; font-size: 16px; font-weight: 600; }
+.s-ask-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* ---------- keyboard focus ---------- */
+/* A field that draws its own box (outline 0 on the input) shows focus on that box: a 2 px --focus ring inside the edge, 3:1 or more on
+   the card in light and dark. Never ship `outline: 0` on an input without its wrapper in this list. (.describe-box, .fld and .input
+   carry their own :focus ring; the Clair field and the Home and sidebar finds add the same ring in clair.css, home.css and laptop.css.) */
+:is(.add-dock, .quick-add, .field, label.find, .side-find):focus-within { box-shadow: inset 0 0 0 2px var(--focus), var(--ring-lift, 0 0 transparent); }
+.add-dock { --ring-lift: var(--shadow); } /* the dock keeps its lift under the ring */
+.quick-add { border-radius: 16px; } /* so the ring has corners inside its card */
+
+/* the page scrolls a focused element clear of the pinned bar (base.css); with the add dock above the bar there is more to clear, and the laptop has no bar */
+:root:has(.screen.with-add) { scroll-padding-bottom: calc(var(--bar-h) + 112px + var(--safe-b)); }
+:root:has(.frame.shell) { scroll-padding-bottom: 24px; }
+:root:has(.frame.shell .screen.with-add) { scroll-padding-bottom: 120px; }
+
+/* ---------- the receipt capsule and the raised tiles on a laptop (motion.css; DESIGN.md §6) ----------
+   There is no bar there: they sit 24 px from the bottom, centred on the main column like the add field (laptop.css). Never at the top. */
+.shell .toast, .shell .peek { bottom: 24px; left: calc(240px + (100vw - 240px - 320px) / 2); }
+.shell.no-detail .toast, .shell.no-detail .peek { left: calc(240px + (100vw - 240px) / 2); }
+
+/* ---------- the other moments (brief O): arriving rows, timer controls and finish, disclosures ----------
+   Occasional moments only (design/DESIGN.md §6, frequency): ticking, steppers, tab and list switches stay instant. Owned by that pass. */
+
+/* Timer.tsx: the controls crossfade (old copy out 120, new in 220, opacity only); the ring and the clock do not move */
+.t-controls { position: relative; }
+.t-in { display: flex; flex-direction: column; gap: 16px; }
+.t-in > .chips { justify-content: center; }
+.t-ghost { position: absolute; left: 0; right: 0; top: 0; pointer-events: none; }
+.t-ghost, .t-ghost * { animation: none !important; } /* a copy of the old controls only fades; the spool in it does not hop again */
+/* the kinds above the ring fold away as the sit starts (and back on Save), so the ring slides up instead of jumping; the gap goes with them */
+.t-kinds { margin-bottom: -16px; }
+.t-kinds > .disc-in { padding-bottom: 16px; }
+.t-feelbox, .t-feel-link { text-align: center; }
+/* the spool beside "Done" hangs off the word: neither the word nor the clock moves when it arrives (it fades in as it hops) */
+.t-eyebrow:has(> .t-cheer) { position: relative; width: fit-content; align-self: center; }
+.t-cheer { position: absolute; left: 100%; top: 50%; translate: 0 -50%; margin-left: 6px; width: 30px; height: 31px; display: flex; animation: fade-in var(--t-state) var(--ease) backwards; }
+
+/* Disclosure.tsx: grows from nothing (rows 0fr → 1fr, 220) and fades in; closes in 140. Closed it is hidden and inert. */
+.disc { display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden;
+  transition: grid-template-rows var(--t-state-out) var(--ease), opacity var(--t-state-out) var(--ease), visibility 0s linear var(--t-state-out); }
+.disc.open { grid-template-rows: 1fr; opacity: 1; visibility: visible;
+  transition: grid-template-rows var(--t-state) var(--ease), opacity var(--t-state) var(--ease), visibility 0s; }
+.disc > .disc-in { min-height: 0; overflow: hidden; }
+/* once it is open the clip is lifted, so a focus ring at its edge is not cut (a browser without this keeps the clip) */
+@supports (transition-behavior: allow-discrete) {
+  .disc.open > .disc-in { overflow: visible; transition: overflow 0s linear var(--t-state) allow-discrete; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .disc { transition: opacity var(--t-fb) var(--ease), visibility 0s linear var(--t-fb); }
+  .disc.open { transition: opacity var(--t-fb) var(--ease), visibility 0s; }
+}

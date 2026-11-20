@@ -1,0 +1,301 @@
+-- From spec/backend.md §2.1 (keep the two in step).
+-- Quilt schema, DevDay. Postgres 15+ on Supabase. gen_random_uuid() is built in.
+
+create table workspaces (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null default 'My quilt',
+  tz          text not null default 'America/Denver',      -- IANA zone; all windows use it
+  read_level  text not null default 'full'
+              check (read_level in ('full', 'field_names', 'none')),
+  settings    jsonb not null default '{}'::jsonb,          -- {pins: [page ids], credits_monthly (default 50), notes_enabled (default true)}
+  epoch       int not null default 1,                      -- bumped by reseed; clients wipe their cache
+  created_at  timestamptz not null default now()
+);
+
+create table workspace_members (
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  role         text not null default 'owner' check (role in ('owner')),
+  display_name text,                                       -- "Sam"; from Keep your quilt or Settings → Name; null for a guest
+  app_opens    jsonb not null default '{}'::jsonb,         -- {page_id: last opened timestamptz}; written by POST /apps/{id}/opened
+  created_at   timestamptz not null default now(),
+  primary key (workspace_id, user_id)
+);
+create index workspace_members_user on workspace_members (user_id);
+
+create table blocks (
+  id                 uuid primary key default gen_random_uuid(),
+  workspace_id       uuid not null references workspaces(id) on delete cascade,
+  parent_id          uuid,
+  position           text collate "C" not null,               -- fractional key; byte order
+  block_type         text not null check (block_type in ('page', 'collection', 'record')),
+  block_type_version int not null default 1,
+  collection_id      uuid,
+  properties         jsonb not null default '{}'::jsonb,
+  deleted_at         timestamptz,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now(),
+  version            bigint not null default 1,
+  unique (workspace_id, id),
+  -- parent and collection must be in the same workspace (v3 §8.2), enforced by the database
+  foreign key (workspace_id, parent_id) references blocks (workspace_id, id),
+  foreign key (workspace_id, collection_id) references blocks (workspace_id, id),
+  check ((block_type = 'record') = (collection_id is not null)),
+  check ((block_type = 'page') = (parent_id is null))
+);
+create index blocks_tree    on blocks (workspace_id, parent_id, position) where deleted_at is null;
+create index blocks_records on blocks (workspace_id, collection_id)       where deleted_at is null;
+create unique index blocks_page_key on blocks (workspace_id, (properties ->> 'key'))
+  where block_type = 'page' and deleted_at is null;
+
+create table change_sets (
+  id           uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  actor        text not null check (actor in ('user', 'clair', 'system')),
+  user_id      uuid references auth.users(id),
+  origin       text not null
+               check (origin in ('gesture', 'clair', 'template', 'undo', 'sweep', 'seed', 'connector')),
+  status       text not null check (status in ('basted', 'stitched', 'undone', 'dismissed')),
+  source       jsonb not null default '{}'::jsonb,     -- {kind, label, at, mode: live|fixture}
+  title        text,
+  summary      text,
+  ops          jsonb not null default '[]'::jsonb,     -- the draft ops; kept after stitching for audit
+  input_hash   text,                                   -- receipt dedupe (section 11)
+  run_id       uuid,                                   -- the agent run that proposed it
+  undo_of      uuid references change_sets(id),        -- set on an origin = 'undo' change set
+  stitched_seq bigint,                                 -- last server_seq of the apply
+  version      int not null default 1,                 -- bumped by each Review items edit
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create index change_sets_queue on change_sets (workspace_id, status, created_at desc);
+create index change_sets_hash  on change_sets (workspace_id, input_hash) where input_hash is not null;
+
+create table events (
+  server_seq    bigserial primary key,
+  workspace_id  uuid not null references workspaces(id) on delete cascade,
+  change_set_id uuid not null references change_sets(id),
+  block_id      uuid references blocks(id),   -- null on a change set status event
+  field_path    text,                         -- null: whole block (insert, delete, restore)
+  old           jsonb,
+  new           jsonb,
+  version       bigint,                       -- block version after this event
+  created_at    timestamptz not null default now()
+);
+create index events_ws_seq    on events (workspace_id, server_seq);
+create index events_block_seq on events (block_id, server_seq);
+create index events_set       on events (change_set_id);
+
+-- ---- Clair (design in clair-agent.md) ----
+
+create table clair_threads (
+  id             uuid primary key default gen_random_uuid(),
+  workspace_id   uuid not null references workspaces(id) on delete cascade,
+  user_id        uuid not null references auth.users(id),
+  created_at     timestamptz not null default now(),
+  last_active_at timestamptz not null default now()
+);
+create index clair_threads_recent on clair_threads (workspace_id, user_id, last_active_at desc);
+
+create table agent_runs (
+  id            uuid primary key default gen_random_uuid(),
+  workspace_id  uuid not null references workspaces(id) on delete cascade,
+  user_id       uuid not null references auth.users(id),
+  thread_id     uuid not null references clair_threads(id) on delete cascade,
+  input_kind    text not null,      -- text | voice | photo | image | pdf | file | answer
+  status        text not null default 'running'
+                check (status in ('running', 'complete', 'awaiting_input', 'error')),
+  model         text not null,
+  effort        text,
+  iterations    int not null default 0,
+  input_tokens  int not null default 0,
+  output_tokens int not null default 0,
+  credits       int not null default 0,
+  change_set_id uuid references change_sets(id),
+  stop_reason   text,
+  timings       jsonb not null default '{}'::jsonb,   -- ms to first status, understood, proposal, done
+  events        jsonb not null default '[]'::jsonb,   -- every SSE event of the run, for the polling fallback
+  error         text,
+  started_at    timestamptz not null default now(),
+  ended_at      timestamptz
+);
+create index agent_runs_user_time on agent_runs (user_id, started_at desc);
+create index agent_runs_time      on agent_runs (started_at desc);
+create unique index agent_runs_one_live on agent_runs (thread_id) where status = 'running';
+
+alter table change_sets add foreign key (run_id) references agent_runs(id);
+
+create table clair_messages (                -- append-only; full content blocks, thinking included
+  id           bigserial primary key,
+  thread_id    uuid not null references clair_threads(id) on delete cascade,
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  run_id       uuid references agent_runs(id),
+  role         text not null check (role in ('user', 'assistant')),
+  content      jsonb not null,
+  created_at   timestamptz not null default now()
+);
+create index clair_messages_thread on clair_messages (thread_id, id);
+
+create table clair_questions (
+  id           uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  thread_id    uuid not null references clair_threads(id) on delete cascade,
+  run_id       uuid not null references agent_runs(id),
+  tool_use_id  text not null,
+  question     text not null,
+  options      jsonb not null,             -- [{label, description?}]
+  multi        boolean not null default false,
+  status       text not null default 'open' check (status in ('open', 'answered', 'expired')),
+  answer       jsonb,                      -- {choices: [...], other?}
+  other_results jsonb not null default '[]'::jsonb,   -- results of the other tool_use blocks in the paused message
+  created_at   timestamptz not null default now(),
+  expires_at   timestamptz not null default now() + interval '24 hours',
+  answered_at  timestamptz
+);
+create index clair_questions_open on clair_questions (workspace_id, status, expires_at);
+
+create table clair_notes (
+  id            uuid primary key default gen_random_uuid(),
+  workspace_id  uuid not null references workspaces(id) on delete cascade,
+  user_id       uuid not null references auth.users(id),
+  text          text not null check (char_length(text) between 3 and 200),
+  app_id        uuid references blocks(id),
+  kind          text not null check (kind in ('preference', 'fact')),
+  source_run_id uuid references agent_runs(id),
+  created_at    timestamptz not null default now(),
+  deleted_at    timestamptz
+);
+create unique index clair_notes_dedupe on clair_notes (workspace_id, lower(text)) where deleted_at is null;
+
+create table llm_calls (                      -- metadata only; bodies are in clair_messages
+  id                 uuid primary key default gen_random_uuid(),
+  run_id             uuid not null references agent_runs(id) on delete cascade,
+  workspace_id       uuid not null references workspaces(id) on delete cascade,
+  iteration          int not null,
+  model              text not null,
+  request_id         text,
+  input_tokens       int,
+  output_tokens      int,
+  cache_read_tokens  int,
+  cache_write_tokens int,
+  stop_reason        text,
+  fallback           boolean not null default false,   -- served by the server-side fallback model
+  latency_ms         int,
+  created_at         timestamptz not null default now()
+);
+create index llm_calls_run on llm_calls (run_id);
+
+create table tool_calls (
+  id            uuid primary key default gen_random_uuid(),
+  run_id        uuid not null references agent_runs(id) on delete cascade,
+  workspace_id  uuid not null references workspaces(id) on delete cascade,
+  tool_use_id   text not null,
+  name          text not null,
+  input         jsonb not null,
+  is_error      boolean not null default false,
+  result        jsonb,                       -- truncated to 4 kB
+  change_set_id uuid references change_sets(id),
+  latency_ms    int,
+  created_at    timestamptz not null default now()
+);
+create index tool_calls_run on tool_calls (run_id);
+
+-- ---- credits and pairing ----
+
+create table usage_ledger (
+  id           bigserial primary key,
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  user_id      uuid references auth.users(id),
+  period       date not null,                -- first day of the month, workspace time zone
+  kind         text not null
+               check (kind in ('grant', 'chat', 'photo', 'build', 'refund', 'topup')),
+  credits      int not null,                 -- grants positive, spends negative
+  run_id       uuid references agent_runs(id),
+  created_at   timestamptz not null default now()
+);
+create index usage_ledger_period on usage_ledger (workspace_id, period);
+
+create table join_codes (
+  id           uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  code_hash    text not null,                -- sha256(code || server pepper); the code is never stored
+  attempts     int not null default 0,
+  created_at   timestamptz not null default now(),
+  expires_at   timestamptz not null default now() + interval '5 minutes',
+  used_at      timestamptz
+);
+create unique index join_codes_live on join_codes (code_hash) where used_at is null;
+
+create table join_attempts (                  -- failed redeems, counted per IP and overall
+  id         bigserial primary key,
+  ip_hash    text not null,                   -- sha256(ip || pepper)
+  created_at timestamptz not null default now()
+);
+create index join_attempts_ip   on join_attempts (ip_hash, created_at);
+create index join_attempts_time on join_attempts (created_at);
+
+create table connections (                    -- outside accounts (section 8a); server only, never sent to a client
+  id             uuid primary key default gen_random_uuid(),
+  workspace_id   uuid not null references workspaces(id) on delete cascade,
+  user_id        uuid not null references auth.users(id) on delete cascade,
+  provider       text not null check (provider in ('google_calendar')),
+  account_email  text not null,                -- shown in Calendar ("Google Calendar · sam@…")
+  refresh_token  text not null,                -- plain text for DevDay; encrypt with the rest (section 12)
+  sync_token     text,                         -- Google's incremental sync token, if used
+  last_synced_at timestamptz,
+  created_at     timestamptz not null default now(),
+  unique (workspace_id, provider)
+);
+
+-- ---- RLS: clients may read their workspace; nobody but the API writes ----
+
+create function is_member(ws uuid) returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (
+    select 1 from workspace_members m
+    where m.workspace_id = ws and m.user_id = auth.uid()
+  )
+$$;
+
+alter table workspaces        enable row level security;
+alter table workspace_members enable row level security;
+alter table blocks            enable row level security;
+alter table change_sets       enable row level security;
+alter table events            enable row level security;
+alter table clair_threads     enable row level security;
+alter table clair_messages    enable row level security;
+alter table clair_questions   enable row level security;
+alter table clair_notes       enable row level security;
+alter table agent_runs        enable row level security;
+alter table llm_calls         enable row level security;
+alter table tool_calls        enable row level security;
+alter table usage_ledger      enable row level security;
+alter table join_codes        enable row level security;
+alter table join_attempts     enable row level security;
+alter table connections       enable row level security;   -- no policies: the API's service role only
+
+create policy workspaces_read  on workspaces        for select to authenticated using (is_member(id));
+create policy members_read     on workspace_members for select to authenticated using (user_id = auth.uid());
+create policy blocks_read      on blocks            for select to authenticated using (is_member(workspace_id));
+create policy change_sets_read on change_sets       for select to authenticated using (is_member(workspace_id));
+create policy events_read      on events            for select to authenticated using (is_member(workspace_id));
+create policy notes_read       on clair_notes       for select to authenticated using (is_member(workspace_id));
+-- clair_threads, clair_messages, clair_questions, agent_runs, llm_calls, tool_calls,
+-- usage_ledger, join_codes, join_attempts: RLS on, no policy, so clients can't read them at all.
+
+revoke insert, update, delete, truncate on all tables in schema public from anon, authenticated;
+revoke all on all tables in schema public from anon;
+
+-- Realtime nudges come from inserts on events
+alter publication supabase_realtime add table events;
+
+-- Private bucket for Clair photos and files. The client uploads straight into its own
+-- workspace folder ({workspace_id}/{uuid}.jpg) with supabase-js; the API reads with the service key.
+insert into storage.buckets (id, name, public) values ('clair-uploads', 'clair-uploads', false);
+
+create policy uploads_insert on storage.objects for insert to authenticated
+  with check (bucket_id = 'clair-uploads' and is_member(((storage.foldername(name))[1])::uuid));
+create policy uploads_read on storage.objects for select to authenticated
+  using (bucket_id = 'clair-uploads' and is_member(((storage.foldername(name))[1])::uuid));

@@ -1,0 +1,97 @@
+{
+  "v": 1,
+  "key": "subscriptions",
+  "name": "Subscriptions",
+  "icon": "repeat",
+  "dye": "lavender",
+  "settings": {},
+  "collections": [
+    {
+      "key": "subscriptions",
+      "name": "Subscriptions",
+      "titleField": "name",
+      "dateField": "renews",
+      "amountField": "amount",
+      "calendar": true,
+      "fields": [
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "amount",
+          "label": "Cost",
+          "type": "money"
+        },
+        {
+          "key": "renews",
+          "label": "Renews",
+          "type": "date"
+        },
+        {
+          "key": "every",
+          "label": "Repeats",
+          "type": "text"
+        },
+        {
+          "key": "repeat",
+          "label": "Repeat",
+          "type": "repeat"
+        },
+        {
+          "key": "remind",
+          "label": "Remind",
+          "type": "text"
+        }
+      ],
+      "datedTitle": "{name} renews · {amount}"
+    }
+  ],
+  "tabs": [
+    {
+      "kind": "page",
+      "id": "t_subs",
+      "title": "Subscriptions",
+      "children": [
+        {
+          "kind": "gauge",
+          "id": "b_total",
+          "label": "A month",
+          "value": {
+            "agg": "sum",
+            "from": "subscriptions/subscriptions",
+            "field": "amount"
+          },
+          "target": 0,
+          "format": "money"
+        },
+        {
+          "kind": "list",
+          "id": "b_renewals",
+          "label": "Renewals",
+          "source": "subscriptions/subscriptions",
+          "fields": [
+            "every"
+          ],
+          "sort": {
+            "field": "renews",
+            "dir": "asc"
+          },
+          "due": "renews"
+        }
+      ]
+    }
+  ],
+  "face": {
+    "value": {
+      "agg": "sum",
+      "from": "subscriptions/subscriptions",
+      "field": "amount"
+    },
+    "format": "money",
+    "label": "a month"
+  },
+  "stitches": []
+}

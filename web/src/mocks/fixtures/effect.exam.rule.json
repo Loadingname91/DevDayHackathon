@@ -1,0 +1,73 @@
+{
+ "credits": -1,
+ "home": {
+  "changed": [
+   "classes",
+   "todos",
+   "calendar"
+  ]
+ },
+ "apps": {
+  "classes": {
+   "add": {
+    "classes/due": [
+     {
+      "id": "d_midterm2",
+      "position": "a182",
+      "version": 1,
+      "properties": {
+       "title": "Midterm 2",
+       "kind": "exam",
+       "at": "2026-12-03T09:10:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     }
+    ]
+   }
+  },
+  "calendar": {
+   "add": {
+    "*dated": [
+     {
+      "at": "2026-12-03T09:10:00-07:00",
+      "title": "Midterm 2",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_midterm2",
+      "changed": true
+     },
+     {
+      "at": "2026-12-01",
+      "title": "Study for Midterm 2",
+      "sub": "To-dos",
+      "app": "todos",
+      "record_id": "t_study_mid2",
+      "changed": true
+     }
+    ]
+   }
+  },
+  "todos": {
+   "add": {
+    "todos/todos": [
+     {
+      "id": "t_study_mid2",
+      "position": "a183",
+      "version": 1,
+      "properties": {
+       "title": "Study for Midterm 2",
+       "due": "2026-12-01",
+       "done": false,
+       "_via": {
+        "workflow": "w_exam"
+       }
+      }
+     }
+    ]
+   }
+  }
+ }
+}

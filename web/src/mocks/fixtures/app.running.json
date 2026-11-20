@@ -1,0 +1,392 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "running",
+  "key": "running",
+  "name": "Running",
+  "icon": "shoe",
+  "dye": "sage",
+  "collections": [
+   {
+    "key": "runs",
+    "name": "Runs",
+    "titleField": "name",
+    "dateField": "at",
+    "calendar": true,
+    "label": "Run",
+    "fields": [
+     {
+      "key": "name",
+      "label": "Run",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "kind",
+      "label": "Kind",
+      "type": "select",
+      "options": [
+       {
+        "id": "easy",
+        "label": "Easy"
+       },
+       {
+        "id": "long",
+        "label": "Long"
+       },
+       {
+        "id": "tempo",
+        "label": "Tempo"
+       },
+       {
+        "id": "intervals",
+        "label": "Intervals"
+       },
+       {
+        "id": "race",
+        "label": "Race"
+       }
+      ]
+     },
+     {
+      "key": "distance",
+      "label": "Distance",
+      "type": "number",
+      "unit": "mi"
+     },
+     {
+      "key": "minutes",
+      "label": "Time",
+      "type": "number",
+      "unit": "min"
+     },
+     {
+      "key": "at",
+      "label": "When",
+      "type": "datetime",
+      "required": true
+     },
+     {
+      "key": "done",
+      "label": "Done",
+      "type": "bool"
+     }
+    ]
+   },
+   {
+    "key": "races",
+    "name": "Races",
+    "titleField": "name",
+    "dateField": "at",
+    "calendar": true,
+    "label": "Race",
+    "fields": [
+     {
+      "key": "name",
+      "label": "Race",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "at",
+      "label": "When",
+      "type": "datetime"
+     },
+     {
+      "key": "distance",
+      "label": "Distance",
+      "type": "text"
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_week",
+    "title": "This week",
+    "children": [
+     {
+      "kind": "countdown",
+      "id": "b_race",
+      "source": "running/races"
+     },
+     {
+      "kind": "strip",
+      "id": "b_strip",
+      "label": "This week",
+      "value": {
+       "agg": "sum",
+       "from": "running/runs",
+       "field": "distance",
+       "window": "week"
+      }
+     },
+     {
+      "kind": "timer",
+      "id": "b_run",
+      "label": "Start a run",
+      "mode": "stopwatch",
+      "log": "running/runs",
+      "minutesField": "minutes",
+      "kindField": "kind",
+      "after": [
+       "distance"
+      ],
+      "set": {
+       "done": true
+      }
+     },
+     {
+      "kind": "list",
+      "id": "b_runs_week",
+      "label": "Runs this week",
+      "source": "running/runs",
+      "fields": [
+       "at",
+       "distance",
+       "minutes"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "desc"
+      },
+      "where": [
+       {
+        "field": "at",
+        "op": "within",
+        "value": "week"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_log",
+    "title": "Log",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_runs",
+      "source": "running/runs",
+      "fields": [
+       "at",
+       "distance",
+       "minutes"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "desc"
+      }
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_races",
+    "title": "Races",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_races",
+      "source": "running/races",
+      "fields": [
+       "at",
+       "distance"
+      ]
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "sum",
+    "from": "running/runs",
+    "field": "distance",
+    "window": "week",
+    "where": [
+     {
+      "field": "done",
+      "op": "eq",
+      "value": true
+     }
+    ]
+   },
+   "format": "number",
+   "label": "mi this week"
+  }
+ },
+ "data": {
+  "running/runs": [
+   {
+    "id": "run_1",
+    "position": "a150",
+    "version": 1,
+    "properties": {
+     "name": "Long run",
+     "kind": "long",
+     "distance": 4,
+     "minutes": 40,
+     "at": "2026-10-31T09:00:00-06:00",
+     "done": true
+    }
+   },
+   {
+    "id": "run_2",
+    "position": "a151",
+    "version": 1,
+    "properties": {
+     "name": "Easy run",
+     "kind": "easy",
+     "distance": 3,
+     "minutes": 30,
+     "at": "2026-11-03T17:30:00-07:00",
+     "done": true
+    }
+   },
+   {
+    "id": "run_3",
+    "position": "a152",
+    "version": 1,
+    "properties": {
+     "name": "Long run",
+     "kind": "long",
+     "distance": 4.5,
+     "minutes": 44,
+     "at": "2026-11-07T09:00:00-07:00",
+     "done": true
+    }
+   },
+   {
+    "id": "run_4",
+    "position": "a153",
+    "version": 1,
+    "properties": {
+     "name": "Easy run",
+     "kind": "easy",
+     "distance": 3,
+     "minutes": 29,
+     "at": "2026-11-10T17:30:00-07:00",
+     "done": true
+    }
+   },
+   {
+    "id": "run_5",
+    "position": "a154",
+    "version": 1,
+    "properties": {
+     "name": "Easy run",
+     "kind": "easy",
+     "distance": 3.5,
+     "minutes": 34,
+     "at": "2026-11-12T16:30:00-07:00",
+     "done": true
+    }
+   },
+   {
+    "id": "run_6",
+    "position": "a155",
+    "version": 1,
+    "properties": {
+     "name": "Long run",
+     "kind": "long",
+     "distance": 5,
+     "minutes": 49,
+     "at": "2026-11-14T09:00:00-07:00",
+     "done": true
+    }
+   },
+   {
+    "id": "run_7",
+    "position": "a156",
+    "version": 1,
+    "properties": {
+     "name": "Easy run",
+     "kind": "easy",
+     "distance": 3,
+     "minutes": 29,
+     "at": "2026-11-17T17:30:00-07:00",
+     "done": true
+    }
+   },
+   {
+    "id": "run_8",
+    "position": "a157",
+    "version": 1,
+    "properties": {
+     "name": "Easy run",
+     "kind": "easy",
+     "distance": 4,
+     "minutes": 38,
+     "at": "2026-11-19T16:30:00-07:00",
+     "done": true
+    }
+   }
+  ],
+  "running/races": [
+   {
+    "id": "race_10k",
+    "position": "a158",
+    "version": 1,
+    "properties": {
+     "name": "Winter 10K",
+     "at": "2026-12-12T09:00:00-07:00",
+     "distance": "10K"
+    }
+   }
+  ]
+ },
+ "values": {
+  "b_race": {
+   "title": "Winter 10K",
+   "text": "22",
+   "unit": "days to go",
+   "sub": "Sat 12 Dec · 9:00 am",
+   "note": "Long runs: 4 → 4.5 → 5 mi"
+  },
+  "b_strip": {
+   "days": [
+    {
+     "dow": "M"
+    },
+    {
+     "dow": "T",
+     "text": "3 mi",
+     "on": true
+    },
+    {
+     "dow": "W"
+    },
+    {
+     "dow": "T",
+     "text": "4 mi",
+     "on": true
+    },
+    {
+     "dow": "F",
+     "today": true
+    },
+    {
+     "dow": "S"
+    },
+    {
+     "dow": "S"
+    }
+   ]
+  },
+  "b_week": {
+   "text": "7 mi",
+   "sub": "2 runs"
+  }
+ },
+ "status": "**7 mi** this week. Winter 10K in **22 days**.",
+ "faces": {
+  "running": {
+   "text": "7",
+   "label": "mi this week"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

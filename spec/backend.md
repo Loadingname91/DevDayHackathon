@@ -574,7 +574,7 @@ The rows below finish the demo account. Every number, name and date on a board o
 | `settings.pins` | Groceries, Budget, Calendar, To-dos (in that order) | Default pins from the templates; long-press a pin to swap |
 | `settings.credits_monthly` | 50 | Plan default (free plan) |
 | `settings.notes_enabled` | true | Settings → What Clair remembers → Turn off notes |
-| Appearance (FR-T6) | Match phone; light ground Mint air; dark ground Denim dusk | The defaults. **Not built for DevDay: nothing is stored and there is no field or endpoint for it yet.** After DevDay it is a per-user setting (it follows the person to every device), so it belongs with the member, not in the workspace `settings` above; the column, its shape and whether `PATCH /settings` carries it are still to be designed |
+| Appearance (FR-T6) | Match phone; Mint colours (ADR-013) | The defaults. **Not built for DevDay: nothing is stored and there is no field or endpoint for it yet.** After DevDay it is a per-user setting (it follows the person to every device), so it belongs with the member, not in the workspace `settings` above; the column, its shape and whether `PATCH /settings` carries it are still to be designed |
 | `workspace_members.app_opens` | Groceries 5:41 pm today, Budget 5:30 pm, Calories 3:40 pm, Calendar 12:10 pm, To-dos 8:05 am, Running Thu 19 Nov 5:15 pm, Meditation Thu 19 Nov 10:45 pm, Notes Thu 19 Nov 10:30 am, Workout Thu 19 Nov 6:50 pm, Classes Thu 19 Nov 9:00 am, Subscriptions Sun 15 Nov, Cycle Sun 15 Nov | The client records an open each time an app opens (FR-D8); "Your apps" sorts by it |
 
 **The 12 apps** (third cut, late Nov 19, ADR-010). One page block each: `notes`, `budget`, `subscriptions`, `groceries`, `calendar`, `classes`, `todos`, `workout` (the original 8), plus `calories`, `running`, `cycle` and `meditation`. Most come from onboarding chips (`origin template`); Meditation was added from New app → starters (`origin template`, no credits). Five Sam built with Clair, one build run and 10 credits each, none in November's ledger except Subscriptions: Notes on Tue 25 Aug ("notes for each of my classes"), Cycle on Tue 1 Sep ("Track my cycle and keep it private"), Running on Sun 25 Oct ("I'm running a 10K on Sat 12 Dec. Track my runs"), Calories on Sat 31 Oct ("Track what I eat, calories and protein"), and Subscriptions on Sun 1 Nov. The three new builds use the specs of the same key in §10. The boards and prototypes still draw 8 patches; the seed wins.
@@ -593,7 +593,7 @@ The rows below finish the demo account. Every number, name and date on a board o
 
 `foods` (saved, Made by: Calories → Foods → Save): Oatmeal and banana 350 · 10; Chicken and rice 640 · 45; Greek yogurt 150 · 15.
 
-**Meditation.** Face: sum of `sessions.minutes` this week, "min this week", which reads **25 min this week**. Rows typed in Meditation → Add (there is no timer in the DevDay build).
+**Meditation.** Face: sum of `sessions.minutes` this week, "min this week", which reads **25 min this week**. Rows come from the Sit timer (a countdown that logs one `sessions` row with minutes and mood before and after, Nov 20) or Meditation → Add.
 
 | at | kind | minutes | mood before → after |
 | --- | --- | --- | --- |
@@ -913,7 +913,7 @@ All formulas run on the server in `api/quilt/formula.py` (v3 ADR-4 deferred: no 
 | Number | `120000` | Money in cents |
 | Setting | `{setting: "limit"}` | A value from the app's `settings` (Budget's monthly limit). Unset is null, so the face shows its empty text ("Set a monthly amount") |
 | Query | `{agg, from, field?, where?, window?}` | `agg`: `sum`, `count`, `avg`, `min`, `max`, `last`. `from`: a `CollectionRef` or `*dated` |
-| Filter (`where`) | `{field, op, value}` | `op`: `eq`, `ne`, `lt`, `gt`, `within` (`value` like `"72h"` or `"7d"`, from now) |
+| Filter (`where`) | `{field, op, value}` | `op`: `eq`, `ne`, `lt`, `gt`, `within`, `empty`. `within` takes, by day in the workspace zone (Nov 20, the client filters with the same values against `server_now`): `today`, `week` (Mon to Sun), `past` (before today), `future` (after today), `7d` (today and the next 6 days), `-7d` (the last 7 days, today included); `"72h"` stays for the server's own use (Next up). `empty` (Nov 20) matches a missing, null or empty value; its `value` is ignored (To-dos' Someday) |
 | Window | `today`, `week`, `month`, `all`, `{days: N}` | Applied to the collection's `dateField` in the workspace zone (section 3). `{days: N}` is the last N days up to now (Workout Progress uses 56). A window on a collection without `dateField` fails validation. On a collection with a `repeat` field, `count` over a window counts logged occurrences (`repeat.log`) in it, so a weekly series done 3 times this week counts 3 |
 | Option limit | `{limit: {field: "category", option: "c_eating_out"}}` | The `limit` stored on a select option (Budget's per-category limits). Unset is null, so a category row without a limit shows only its total |
 | Difference | `{minus: [Term, Term]}` | One level only (closed, non-recursive) |
@@ -1102,9 +1102,9 @@ All paths are under `/api` on the Railway server; the site on Vercel calls them 
 | `PATCH /apps/{id}/workflows/{wid}` | `{on}` | command result | new |
 | `POST /apps/{id}/workflows/{wid}/run` | | `{run_id}`; starts the rule's Clair run, events as for `/clair/turns` (FR-W2). `409` if the rule is off | new |
 | `POST /templates/apply` | `{templates: string[]}` | command result (one `template` change set) | new |
-| `GET /home` | | `{greeting, status, needsOk: Card[], nextUp: Dated[], noticed?, apps: Patch[], seq}` | `GET /api/home` |
+| `GET /home` | | `{greeting, status, needsOk: Card[], nextUp: Dated[], noticed?, apps: Patch[], seq}`. `greeting` is "Evening, Sam." at `DEMO_NOW` (the band and the name, section 6); `status` is "**$412** left this month. Pull day at **6 pm**." (`**` marks the figures) | `GET /api/home` |
 | `GET /apps` | | `Patch[]` with faces | `GET /api/apps` |
-| `GET /apps/{id}` | | `{spec: AppSpec, data: {CollectionRef: Record[]}, faces, seq}` (every collection its blocks read, `*dated` included) | `GET /api/apps/:id` |
+| `GET /apps/{id}` | | `{spec: AppSpec, data: {CollectionRef: Record[]}, faces, values, status?, seq, server_now}` (every collection its blocks read, `*dated` included). `values`: `{<block id>: …}` for every metric, progress and instrument block; `status`: the app's sentence, `**` around the figures. Both: "What the server computes for instruments" below | `GET /api/apps/:id` |
 | `POST /apps/{id}/opened` | | `204`; sets `workspace_members.app_opens[id]` to now ("Your apps" sorts by it, "Just used" reads it). Not a change set: it has no undo and no event | new |
 | `PATCH /me` | `{display_name?}` | `{user, workspace}` | new |
 | `POST /apps` | `{spec}` | command result, `201` | `POST /api/apps` |
@@ -1113,12 +1113,12 @@ All paths are under `/api` on the Railway server; the site on Vercel calls them 
 | `POST /collections/{id}/options` | `{field, label}` (New list) | command result | new (FR-A4b) |
 | `PATCH /collections/{id}/options/{option_id}` | `{field, label}` (rename) | command result | new |
 | `DELETE /collections/{id}/options/{option_id}` | `{field, items: "move:<option_id>" \| "delete"}` | command result, or `409 {count}` if items remain and `items` is missing | new |
-| `POST /records` | `{collection_id, fields, before_id?, after_id?}` | command result, `201` | `POST /api/rows` |
-| `PATCH /records/{id}` | `{fields, base_version}` | command result | `PATCH /api/rows/:id` |
+| `POST /records` | `{collection_id, fields, before_id?, after_id?}`. Base build since Nov 20: the add field, the Add form, picks, the timer, each set of the guided session, a new day in Cycle's month log. Picks, the timer and guided sets send no time (see "Writes the instruments make" below) | command result, `201` | `POST /api/rows` |
+| `PATCH /records/{id}` | `{fields, base_version}`. Base build since Nov 20: the edit sheet, a logged day in Cycle's month log | command result | `PATCH /api/rows/:id` |
 | `POST /records/{id}/move` | `{before_id?, after_id?, list?}` | command result | new |
-| `POST /records/{id}/complete` | `{occurrence?}` | command result | was `PATCH {done}` |
+| `POST /records/{id}/complete` | `{occurrence?, minutes?}`. Base build since Nov 20: checklists (tap the circle, swipe right) and Workout's guided session (Finish sends `occurrence` and `minutes`) | command result | was `PATCH {done}` |
 | `POST /records/{id}/skip` | `{occurrence}` | command result | new |
-| `DELETE /records/{id}` | | command result (Undo via the change set) | `DELETE /api/rows/:id` |
+| `DELETE /records/{id}` | Base build since Nov 20: swipe left, Delete in the edit sheet | command result (Undo via the change set) | `DELETE /api/rows/:id` |
 | `GET /change-sets` | `?status=basted` | `ChangeSet[]` with fresh `lines`, `targets`, `deltas`, `actions` | `GET /api/proposals` |
 | `PATCH /change-sets/{id}` | `{ops, version}` (Review items) | `ChangeSet` re-expanded, or `409` | `PATCH /api/proposals/:id` |
 | `POST /change-sets/{id}/confirm` | | command result with final `faces`, or `409 {status}` | `POST /api/proposals/:id/confirm` |
@@ -1168,7 +1168,62 @@ On DevDay `/home` returns only `change_set` cards; the other kinds are in the ty
 | `cycle` Cycle (built by Clair in the demo; `settings.clair_read` false by default) | `days {date, flow select[None, Light, Medium, Heavy], symptoms text, energy number, note}`; `cycles {start date, length number}` (not in Calendar) | none | `{agg: max, from: cycle/cycles, field: start}`, "last period started" |
 | `calendar` Calendar (always added) | `events {title, at date or datetime, ends date or datetime, repeat, kind select[Doctor, Dentist, Barber, Other] (optional), remind, source text, ext_id text}` ● (`source` and `ext_id` are set only by a connector, section 8a); its blocks read `*dated` | none | count of `*dated` today, "today" |
 
-**Tabs of the starter apps** (owner decision, Nov 19; a Workflows tab is added to any app that has rules). Groceries: List, Trips. Workout: Today, Log, History, Progress, Routines. Budget: Overview (left this month, category progress), Spending, Categories. Calories: Today (progress toward the target when one is set, today's meals), Log, Foods; Trends (chart) after DevDay. Meditation: Sessions, This week. Cycle: Log, Cycles. Running: This week, Log, Races. Calendar: Today, Week, Events. To-dos: Today, All, Done. Classes: Schedule, Due, Exams. Notes: Notebooks, All notes. Subscriptions: Subscriptions, Renewals.
+**Tabs of the starter apps** (owner decision, Nov 20; supersedes the Nov 19 list, which gave each app lists and a form). Each app opens on what it is for, using the instrument blocks (`ui-tech-plan.md` §3, "Instruments"; `design/DESIGN.md` §10). A Workflows tab is added to any app that has rules. The exact specs are `instrumented()` in `web/scripts/make-fixtures.mjs`; each `web/src/mocks/fixtures/app.*.json` is a worked response.
+
+- **Single pages** (no tab bar): **Budget**: Overview (gauge "Left this month", bars "Where it went", Recent, the last 5 spends). **Groceries**: List (a checklist with a chip per list, "Weekly shop · 12 to buy" and "Bought in the last week"; spent on groceries this month against $200; the last 3 trips). **Calendar**: one `days` block, Day, Week and Month, opening on Week. **To-dos**: one checklist (Overdue, Today · Fri 20 Nov, Coming up, Someday, Done folded; the add field pinned above the bar). **Subscriptions**: gauge "A month", then Renewals with "in 2 days" tags.
+- **Workout** keeps 5 tabs, Today leading: Today (the `next` card "Start pull day", Lifted this week, Done since September, Sessions this week 3 of 4, the week strip), Log, History, Progress, Routines. With the planner's rule on, Workflows makes 6.
+- **Running**: This week (countdown to the race, the week strip, "Start a run", runs this week), Log, Races.
+- **Meditation**: Sit (the timer, the week strip), Sessions. The collection uses `mood_before` and `mood_after`, as in the template table above.
+- **Calories**: Today (the ring, "Again" picks from Foods, today's meals), Log, Foods; Trends (chart) after DevDay.
+- **Cycle**: Month (the month log), Cycles.
+- **Classes**: This week (a `days` week of Classes' own `*dated` rows), Due (a checklist), Exams.
+- **Notes**: Notebooks, All notes (unchanged).
+
+**What the server computes for instruments** (Nov 20). Every figure on an instrument is formula-engine work (section 6) at `now()` in the workspace zone, sent in `values[block.id]` on `GET /apps/{id}` (and on a build card's `preview`); nothing is stored. The shape is `BlockValue` in `web/src/api/types.ts`; which fields each kind reads is in `ui-tech-plan.md` §3. The server words and rounds the strings as it does faces: cents on rows and bars ("$142.00"), whole dollars on heroes and limits ("$412", "$200"), `pct` a whole number. The middle column is the fixture's value at `DEMO_NOW` (`web/src/mocks/fixtures/app.<key>.json`), and each is checked against the seed in §2.3; use them as the worked example.
+
+| Block (app · id) | `values[block.id]` at `DEMO_NOW` (fixture) | How to compute it from the seed |
+| --- | --- | --- |
+| `gauge` · Budget `b_left` | `{text: "$412", target: "left of $1,200", pct: 66, sub: "11 days to go"}`. After "spent $12 on lunch" (`app.budget.lunch.json`): `{text: "$400", pct: 67, sub: "Was $412 · 11 days to go"}` | `text`: the block's `value` (the face: limit − sum of `spend.amount` this month). `target`: "left of " + `settings.limit`. `pct`: spent ÷ limit (788 ÷ 1,200 = 66). `sub`: whole days from today to the 1st of next month (Fri 20 Nov → Tue 1 Dec = 11), led by "Was <face before> · " after a change that moved the face, from that change set's `deltas` (how long "Was" stays is open) |
+| `gauge` · Subscriptions `b_total` | `{text: "$38.46", sub: "4 subscriptions"}` | `text`: sum of `amount` (all monthly), with cents. `sub`: the row count. No `pct`, so no bar. `design/DESIGN.md` §10 words it "$38.46 a month · 4 subscriptions" (`target: "a month · 4 subscriptions"`); the fixture's older value wins over that today, see `split.md` §7 |
+| `bars` · Budget `b_where` | `rows`: Groceries "$142.00 of $200" 71; Eating out "$165.00 of $150" `pct` 91, `over_pct` 9, note "$15 over."; Transport "$42.00 of $100" 42; Subscriptions "$26.47 of $40" 66; Rent "$380.00", note "No limit"; Fun "$32.53", note "No limit" | One row per option of `by` (`category`): the sum of `value` (amount this month) for that option. With an option `limit`: `text` "<sum> of <limit>"; under it `pct` = sum ÷ limit (142 ÷ 200 = 71); over it `pct` = limit ÷ sum (150 ÷ 165 = 91), `over_pct` = (sum − limit) ÷ sum, the excess share of the total (15 ÷ 165 = 9), `note` "$15 over.". Without a limit: `text` the sum, `note` "No limit", no `pct`. Order: options with a limit, then the rest, each in option order. After lunch Eating out is "$177.00 of $150", 85, 15, "$27 over." |
+| `ring` · Calories `b_ring` | `{text: "1,140", target: "of 2,200", pct: 52, sub: "70 g protein"}` | `text`: sum of today's `meals.calories` (350 + 640 + 150). `target`: "of " + `settings.target`. `pct`: sum ÷ target (1,140 ÷ 2,200 = 52). `sub`: sum of today's `protein` (10 + 45 + 15) + " g protein". No target set (`app.calories.new.json`): `{text: "0", target: "today", pct: 0, sub: "Set a daily target to see a ring"}` |
+| `countdown` · Running `b_race` | `{title: "Winter 10K", text: "22", unit: "days to go", sub: "Sat 12 Dec · 9:00 am", note: "Long runs: 4 → 4.5 → 5 mi"}` | The first row of `source` dated today or later. `title`: its title. `text`: whole days from today to its day (Fri 20 Nov → Sat 12 Dec = 22). `sub`: its day and time. `note` (Running): the distances of the last three done runs of kind Long, oldest first. No such row: no entry, and the card hides |
+| `strip` · Running `b_strip` | M, T "3 mi" on, W, T "4 mi" on, F today, S, S | `days`: Mon to Sun of this week (Mon 16 to Sun 22 Nov), `dow` the letter. `text`: that day's sum of the query's field with its unit (Tue 17 Nov 3 mi, Thu 19 Nov 4 mi). `on`: something was logged that day. `today`: on today's cell. A day with nothing has no `text` |
+| `strip` · Meditation `b_strip` | M "10" on, T, W "5" on, T "10" on, F today, S, S | The same, the day's sum of `minutes`, no unit (Mon 16 sleep 10, Wed 18 breathing 5, Thu 19 body scan 10) |
+| `strip` · Workout `b_strip` | M "Pull" on, T "Legs" on, W "Push" on, T, F "6 pm" today (not `on`), S, S | A done occurrence this week (`repeat.log`) shows its routine's name; today's open occurrence shows its time and is not `on` |
+| `next` · Workout `b_next` | `{eyebrow: "Next up · today 6 pm", meta: "5 exercises · about 45 min", title: "Pull day", action: "Start pull day", record_id: "s_pull", occurrence: "2026-11-20", rest: 90, steps: […5]}`; a step: `{id: "ex_lat_pulldown", name: "Lat pulldown", plan: "3 × 10", sets: 3, reps: 10, weight: 120, unit: "lb", best: {reps: 10, weight: 120, text: "best 120 lb × 10"}}` | The next open occurrence of `source` (Pull day, Fri 20 Nov 6:00 pm). `meta`: the count of its routine's exercises and the routine's `minutes`. `steps`: the routine's exercises in order, with `sets`, `reps`, `weight` from the plan; `plan` "3 × 10", or "3 × 8 · bodyweight" when the weight is 0. `best`: the set with the highest weight logged for that exercise, ties broken by reps (Lat pulldown 120 lb × 10 on Mon 16 Nov; Pull-ups "best 8 reps"). `rest`: seconds between sets, 90; no seed field holds it yet. No open occurrence: no entry |
+| `metric` · Workout `b_lifted` | `{text: "12,450 lb"}` | Sum of weight × reps over this week's sets (the row formula `volume`); bodyweight counts 0 (3,600 + 3,600 + 1,800 + 900 + 1,350 + 1,200) |
+| `metric` · Workout `b_since` | `{text: "41 sessions"}` | Done occurrences since Tue 1 Sep: 46 less 5 skipped |
+| `progress` · Workout `b_sessions` | `{text: "3", target: "4", pct: 75}` | Done occurrences this week of the occurrences planned this week (Mon, Tue, Wed done; Fri open) |
+
+The three Workout blocks above carry `value: 0` in the fixture spec as a placeholder; the seeded spec needs real queries for them.
+
+**Rows, not values.** `checklist`, `days`, `month` and `picks` read rows, so `GET /apps/{id}` sends them: Groceries every item on every list, to buy and bought (the "Bought in the last week" section filters `bought_on` within `-7d`); To-dos every to-do, done ones included; Cycle `cycle/days` and `cycle/cycles` (the month log rings the starts); Classes `*dated` (its This week tab) and `classes/due`; Calories `calories/foods`. A `days` block lays out only the `*dated` rows it was sent and asks for no more, so Calendar needs at least the six-week grid of the current month, Mon 26 Oct to Sun 6 Dec at `DEMO_NOW` (proposed; the fixture sends Mon 16 to Sun 29 Nov). The client filters these rows with the `within` and `empty` ops of section 6.
+
+**Writes the instruments make** (gestures, section 5).
+
+- Picks, the timer and each guided set send no value for the collection's `dateField`; the server stamps it with now. Open: To-dos' pinned add field also sends no `due` and expects the to-do under Someday, so the stamp can't apply to every collection.
+- The timer sends `minutes` and the kind; Meditation adds `mood_before` and `mood_after` (1 to 5), Running adds `distance`, `name` ("Easy run") and `done: true`.
+- Each guided set is one `workout/sets` row `{exercise: [id], session: [series id], reps, weight}`, as in the template. Finish calls `complete {occurrence, minutes}`; where `minutes` lives for one occurrence of a series is open (`repeat.log` holds dates only).
+- Completing a Groceries item sets `status` to bought. For it to show under "Bought in the last week" it also needs `bought_on` set to today (section 4 says a tick changes `status` only).
+- Cycle's month log sends `{date, flow, symptoms, energy?}`: `POST /records` for a new day, `PATCH /records/{id}` for a logged one; a cleared flow is `none`.
+
+**Status sentences** (`status` on `GET /apps/{id}`; `**` marks the figures). At `DEMO_NOW`, from the fixtures:
+
+| App | `status` | From |
+| --- | --- | --- |
+| Groceries | "**22** to buy across 3 lists. **$142.00** of $200 spent this month." After the planner's Oats: **23** | Items to buy on every list (12 + 5 + 5); trips this month against the spend block's target |
+| Calendar | "**3** today. Dates from every app, in one place." | The face |
+| To-dos | "**2** left today." | The face |
+| Workout | "**3** of 4 sessions this week. Pull day at **6 pm**." | Done of planned occurrences this week; today's open session |
+| Running | "**7 mi** this week. Winter 10K in **22 days**." | The face; the countdown |
+| Meditation | "**25 min** this week across **3** sessions." | The face; sessions this week |
+| Calories | "**1,140** of 2,200 today across **3** meals." | The face, `settings.target`, today's meals |
+| Cycle | "Last period started **Tue 27 Oct**." | The face |
+| Classes | "**2** due this week. Next: Start CS 3500 project, **Mon 23 Nov**." | The face; the first open `due` row |
+| Subscriptions | "Next: **Spotify** renews **Sun 22 Nov**, $11.99." | The row with the earliest `renews` from today |
+| Notes | "**3** notes this week." | The face |
+| Budget, and any just-built app | none | The gauge says it |
 
 **Status codes.** `401` no or bad token; `402` out of credits; `403` read level `none`, or a guest or unconfirmed account making a join code; `404` not found or not yours; `409` state conflict (transition, version, undo precondition, list still has items, thread busy); `410` join code or menu question expired; `413` attachment too large; `422` validation with `{error, issues[]}`; `429` rate limit.
 
@@ -1290,7 +1345,7 @@ Rewritten late Nov 19 (ADR-010). Two people: **A** (API, data, Clair) and **B** 
 | | Base (tonight) | Feature (the day) | Later |
 | --- | --- | --- | --- |
 | Tables | `workspaces`, `workspace_members`, `blocks`, `change_sets`, `events`, `agent_runs`, `usage_ledger`, `join_codes`, `join_attempts`, `clair_threads`, `clair_messages` | `connections` | `clair_questions`, `clair_notes`; `llm_calls`, `tool_calls` (stdout for now); the `clair-uploads` bucket (second beat only) |
-| Endpoints | `/health`, `/me`, `/home`, `/apps`, `/apps/{id}`, `/sync`, `/change-sets` (list, confirm, undo, dismiss), `/clair/turns` (text), `/clair/runs/{id}/events`, `/join-codes`, `/join-codes/redeem`, `/dev/reset` | `/connect/google/*`, `/connect`, `/apps/{id}/workflows` (create, switch, run), `/clair/turns` with `fixture: "planner"` | `/me/bootstrap`, `/templates/apply`, `/clair/notes`, record gestures, list options, `PATCH /change-sets/{id}`, `/search`, `/usage`, `/settings`, `/cron/sweep`, app create, edit and delete |
+| Endpoints | `/health`, `/me`, `/home`, `/apps`, `/apps/{id}` (with `values` and `status`, section 10), `/sync`, `/change-sets` (list, confirm, undo, dismiss), `/clair/turns` (text), `/clair/runs/{id}/events`, `/join-codes`, `/join-codes/redeem`, `/dev/reset`. Record gestures: `POST /records`, `PATCH` and `DELETE /records/{id}`, `POST /records/{id}/complete` (moved from Later on Nov 20, because the client now ships the add field, the edit sheet, swipe to complete and delete, and the instruments' logs) | `/connect/google/*`, `/connect`, `/apps/{id}/workflows` (create, switch, run), `/clair/turns` with `fixture: "planner"` | `/me/bootstrap`, `/templates/apply`, `/clair/notes`, `/records/{id}/move` and `/skip`, list options, `PATCH /change-sets/{id}`, `/search`, `/usage`, `/settings`, `/cron/sweep`, app create, edit and delete |
 | Clair tools | `list_apps`, `query_records`, `report_understanding`, `propose_changes` (insert, update) | `move_occurrence` op, `reason` and `also` on each op, the planning brief (`api/clair/brief.py`), the planning check and its prompt section, the `offer` event, `propose_app` for the three sentences, `get_gaps`, `propose_workflow` (ladder step 4) | `propose_app`, `ask_user`, `save_note`, `get_usuals`, `search` |
 | Behaviour | Undo as a plain inverse with `changed_since` warnings (section 5) | Read-only `source` records; the sync before a planning run | Undo `409` and `force`; most of section 11 |
 
@@ -1315,7 +1370,7 @@ Rewritten late Nov 19 (ADR-010). Two people: **A** (API, data, Clair) and **B** 
 | --- | --- | --- |
 | **Tonight (Nov 19): the base** | | |
 | T1 | Railway service for the API and its first deploy (`/health` answers). Supabase project: schema and RLS from section 2.1. The "must pass tonight" spikes. Google Cloud project and consent screen | Vite + React shell, `tokens.css`, `base.css`, `motion.ts` port, `Bar`, `Spool`; web app manifest and icons; first deploy to Vercel; open it from the phone's Home screen |
-| T2 | Seed script: the demo auth user and workspace, Sam's 12 apps from the templates table (§2.3; the four new specs are JSON only and use the six base blocks), and the "before" state for the recording, the canonical seed (sections 2.2 and 2.3, `DEMO_NOW` 5:45 pm), `DEMO_GCAL_FIXTURE`. `POST /dev/reset`. FastAPI skeleton: `/health`, JWT check, `GET /apps`, `GET /apps/{id}` with Python faces (`formula.py`), `*dated` with repeats | Sign-in ("I have a quilt · Sign in"); `AppView` + blocks (page, text, metric, progress, list, calendar) rendering all 8 apps from the API; Calendar's week view |
+| T2 | Seed script: the demo auth user and workspace, Sam's 12 apps from the templates table (§2.3; the four new specs are JSON only; since Nov 20 the starter specs also use the instrument blocks, §10 "Tabs of the starter apps"), and the "before" state for the recording, the canonical seed (sections 2.2 and 2.3, `DEMO_NOW` 5:45 pm), `DEMO_GCAL_FIXTURE`. `POST /dev/reset`. FastAPI skeleton: `/health`, JWT check, `GET /apps`, `GET /apps/{id}` with Python faces (`formula.py`), `*dated` with repeats | Sign-in ("I have a quilt · Sign in"); `AppView` + blocks (page, text, metric, progress, list, calendar) rendering all 8 apps from the API; Calendar's week view |
 | T3 | `GET /home`, `GET /sync`. Command service: validate, apply, events, change sets, `position.py`; confirm, undo, dismiss | Home; IndexedDB cache (paint, then catch up); Realtime subscription and catch-up; join code screen on the laptop |
 | T4 | Clair loop, text only: snapshot, `list_apps`, `query_records`, `report_understanding`, `propose_changes` → basted change set; SSE or the polling fallback. One sentence works: "spent $12 on lunch" → a Budget card | Clair sheet: start state with the text field, status, `understood`, `ProposalCard` (plain confirm and an Undo toast for at least 8 s; `threadPull` and `roll` if there's time) |
 | **Base cut line** | **Both devices signed in to the demo account → type "spent $12 on lunch" → basted card → Add → $412 → $400 → laptop updates → Undo.** `check.py` items 1 and 2 pass | |

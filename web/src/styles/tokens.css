@@ -1,0 +1,76 @@
+/* Soft Quilt, Mint (picked Nov 20 over the Nov 19 Mint air / Denim dusk palette).
+   Ground, ink and accent are one mint family; the app dyes are distinct hues (amended Nov 20, see ADR-013).
+   Light and dark come from light-dark(), which follows color-scheme below. No red anywhere. */
+:root {
+  --font: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* neutral hue and chroma (ground, ink, cards) and the accent hue (focus, Clair's bubble) */
+  --nh: 172; --nc: .016; --ah: 180;
+
+  --ground: light-dark(oklch(.966 var(--nc) var(--nh)), oklch(.19 calc(var(--nc) * 1.5) var(--nh)));
+  --ground-image: none;
+  --ink: light-dark(oklch(.24 .03 var(--nh)), oklch(.95 .01 var(--nh)));
+  --sec: light-dark(oklch(.46 .03 var(--nh)), oklch(.78 .025 var(--nh)));
+  --card: light-dark(oklch(.995 .003 var(--nh)), oklch(.25 calc(var(--nc) * 1.5) var(--nh)));
+  --card-line: light-dark(oklch(.91 .012 var(--nh)), oklch(.33 .02 var(--nh)));
+  --solid: var(--card);
+  --shadow: light-dark(0 10px 22px -16px oklch(.3 .04 var(--nh) / .5), 0 12px 26px -14px oklch(0 0 0 / .6));
+  --cta: var(--ink);
+  --cta-ink: light-dark(oklch(.985 .004 var(--nh)), oklch(.2 .02 var(--nh)));
+  --thread: color-mix(in oklch, var(--ink) 40%, transparent);
+  --hair: color-mix(in oklch, var(--ink) 11%, transparent);
+  --line: color-mix(in oklch, var(--ink) 34%, transparent); /* decorative stitches only: dashed separators, the grabber, the tab baseline, tags (boards #A5B5AF over the ground) */
+  --edge: light-dark(color-mix(in oklch, var(--ink) 52%, transparent), color-mix(in oklch, var(--ink) 44%, transparent)); /* the edge of anything you can press or type in: fields, chips, secondary buttons, steppers, switches. Measured 3.35:1 on the ground and 3.42:1 on a card in light (44% gave 2.7), 3.9:1 in dark. */
+  --bar: color-mix(in oklch, var(--card) 94%, transparent);
+  --bar-shadow: light-dark(0 14px 30px -12px oklch(.3 .05 var(--nh) / .45), 0 14px 30px -12px oklch(0 0 0 / .6));
+  --scrim: light-dark(oklch(.24 .03 var(--nh) / .28), oklch(0 0 0 / .5));
+  --focus: light-dark(oklch(.45 .13 var(--ah)), oklch(.84 .09 var(--ah)));
+  --said: light-dark(oklch(.9 .045 var(--ah)), oklch(.4 .07 var(--ah)));
+  --said-ink: var(--ink);
+
+  --r-s: 8px; --r-m: 12px; --r-l: 16px; --r-xl: 22px; --r-card: 24px; --r-pill: 99px;
+
+  --ease: cubic-bezier(.16,1,.3,1);
+  --ease-thread: cubic-bezier(.45,0,.15,1);
+  --t-fb: 120ms; --t-state: 220ms; --t-layout: 350ms; --t-focal: 600ms;
+  --t-state-out: 140ms; --t-layout-out: 220ms; --t-focal-out: 360ms;
+  --t-sel: var(--t-fb); /* a selected tab, segment or day cell changes colour as fast as a press */
+  --hit: 44px; /* the smallest thing you can press: a small visual gets min-height/width var(--hit) or a ::after that reaches it */
+
+  --bar-h: 64px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  color-scheme: light;
+}
+
+/* Dark follows the phone unless a host sets data-theme (the artifact viewer does). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+}
+:root[data-theme="dark"] { color-scheme: dark; }
+
+/* App dyes keep their names (the API stores them). Cloth dyed to one standard: every dye has nearly the same
+   lightness and chroma, so nine hues sit side by side without clashing, and each patch is clearly a different
+   cloth. --fill is the patch, --deep the icon, stitch and progress fill, --dl the patch's dark lightness.
+   An unknown dye falls back to the neutral (the app also maps it to one of the nine, lib/dye.ts). No red:
+   blush leans mauve so its deep tone reads plum. Neighbours on Home never share a dye (fixtures assign them). */
+[data-dye] {
+  --h: var(--nh); --l: .94; --c: .02; --dl: .34;
+  --fill: light-dark(oklch(var(--l) var(--c) var(--h)), oklch(var(--dl) calc(var(--c) * 1.1) var(--h)));
+  --deep: light-dark(oklch(.44 .1 var(--h)), oklch(.86 .08 var(--h)));
+  --pill-ink: light-dark(#fff, oklch(.2 .02 var(--nh)));
+}
+[data-dye='butter']    { --h: 95;  --l: .93; --c: .085; --dl: .38; }
+[data-dye='pear']      { --h: 125; --l: .91; --c: .085; --dl: .38; }
+[data-dye='sage']      { --h: 150; --l: .90; --c: .07;  --dl: .38; }
+[data-dye='sea glass'] { --h: 188; --l: .90; --c: .06;  --dl: .39; }
+[data-dye='chambray']  { --h: 245; --l: .90; --c: .06;  --dl: .40; }
+[data-dye='lavender']  { --h: 292; --l: .90; --c: .06;  --dl: .41; }
+[data-dye='blush']     { --h: 340; --l: .91; --c: .05;  --dl: .40; }
+[data-dye='apricot']   { --h: 60;  --l: .91; --c: .07;  --dl: .39; }
+[data-dye='linen']     { --h: 85;  --l: .94; --c: .02;  --dl: .34; }
+
+/* Reduced motion: every duration that moves something becomes a 120 ms fade. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-state: 120ms; --t-layout: 120ms; --t-focal: 120ms; --t-state-out: 120ms; --t-layout-out: 120ms; --t-focal-out: 120ms; }
+}

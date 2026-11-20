@@ -1,0 +1,152 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "cycle",
+  "key": "cycle",
+  "name": "Cycle",
+  "icon": "drop",
+  "dye": "pear",
+  "settings": {
+   "clair_read": false
+  },
+  "private": true,
+  "collections": [
+   {
+    "key": "days",
+    "name": "Days",
+    "titleField": "date",
+    "dateField": "date",
+    "fields": [
+     {
+      "key": "date",
+      "label": "Day",
+      "type": "date",
+      "required": true
+     },
+     {
+      "key": "flow",
+      "label": "Flow",
+      "type": "select",
+      "options": [
+       {
+        "id": "none",
+        "label": "None"
+       },
+       {
+        "id": "light",
+        "label": "Light"
+       },
+       {
+        "id": "medium",
+        "label": "Medium"
+       },
+       {
+        "id": "heavy",
+        "label": "Heavy"
+       }
+      ]
+     },
+     {
+      "key": "symptoms",
+      "label": "Symptoms",
+      "type": "text"
+     },
+     {
+      "key": "energy",
+      "label": "Energy",
+      "type": "number",
+      "unit": "energy",
+      "unitFirst": true
+     },
+     {
+      "key": "note",
+      "label": "Note",
+      "type": "text"
+     }
+    ]
+   },
+   {
+    "key": "cycles",
+    "name": "Cycles",
+    "titleField": "start",
+    "dateField": "start",
+    "fields": [
+     {
+      "key": "start",
+      "label": "Started",
+      "type": "date",
+      "required": true
+     },
+     {
+      "key": "length",
+      "label": "Length",
+      "type": "number",
+      "unit": "days"
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_month",
+    "title": "Month",
+    "children": [
+     {
+      "kind": "month",
+      "id": "b_month",
+      "source": "cycle/days",
+      "dateField": "date",
+      "mark": "flow",
+      "fields": [
+       "flow",
+       "energy",
+       "symptoms"
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_cycles",
+    "title": "Cycles",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_cycles",
+      "source": "cycle/cycles",
+      "fields": [
+       "length"
+      ],
+      "sort": {
+       "field": "start",
+       "dir": "desc"
+      }
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "agg": "max",
+    "from": "cycle/cycles",
+    "field": "start"
+   },
+   "format": "text",
+   "label": "last period started"
+  }
+ },
+ "data": {
+  "cycle/days": [],
+  "cycle/cycles": []
+ },
+ "values": {},
+ "faces": {
+  "cycle": {
+   "text": "None yet",
+   "label": "logged"
+  }
+ },
+ "seq": 4100,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}

@@ -1,0 +1,93 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your rule…"
+  }
+ },
+ {
+  "delay": 1200,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_rule_exam",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "rule",
+    "source": {
+     "kind": "text",
+     "label": "You typed",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [],
+    "expanded": [],
+    "deltas": [],
+    "title": "Add this rule to Classes?",
+    "summary": "When an exam is added to Classes, add a study to-do two days before",
+    "rule": {
+     "app": "classes",
+     "sentence": "When an exam is added to Classes, add a study to-do two days before",
+     "trigger": {
+      "kind": "row_added",
+      "collection": "classes/due",
+      "where": [
+       {
+        "field": "kind",
+        "op": "eq",
+        "value": "exam"
+       }
+      ]
+     },
+     "action": {
+      "kind": "write_row",
+      "collection": "todos/todos",
+      "map": {
+       "title": "Study for {title}",
+       "due": {
+        "from": "at",
+        "offset": "-2d"
+       }
+      }
+     }
+    },
+    "lines": [
+     {
+      "apps": [
+       "classes"
+      ],
+      "what": "Workflows tab",
+      "val": ""
+     },
+     {
+      "apps": [
+       "todos"
+      ],
+      "what": "gets the study to-dos",
+      "val": ""
+     }
+    ],
+    "targets": [
+     "classes"
+    ],
+    "actions": {
+     "primary": "Turn on",
+     "secondary": "Not now"
+    }
+   }
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "classes",
+    "todos"
+   ]
+  }
+ }
+]

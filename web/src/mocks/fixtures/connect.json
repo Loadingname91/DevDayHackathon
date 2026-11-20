@@ -1,0 +1,8 @@
+[
+ {
+  "provider": "google",
+  "account_email": "sam@example.com",
+  "last_synced_at": "2026-11-20T17:45:00-07:00",
+  "needs_reconnect": false
+ }
+]

@@ -1,5 +1,7 @@
 # Design files
 
+**Start with `DESIGN.md`**: the design system the client applies (Mint colours from ADR-013, the Screens boards' layout and components, motion, Clair's spool, words, and which board each screen follows). **`screens-css.md`** has every component's exact CSS from the 40 Screens boards, with its token; `board-css-inventory.md` is the generated evidence (`tools/board_css.py`).
+
 Trimmed on Nov 19, 2026, before the DevDay build. The design canvas on claude.ai is the single place to look at the design: its Screens page ends with link cards to every other Quilt artifact.
 
 | What | Live link | Source here |
@@ -14,7 +16,8 @@ Trimmed on Nov 19, 2026, before the DevDay build. The design canvas on claude.ai
 
 - `prototypes/`: the clickable Home, Flows and motion pages. The client ports its CSS and motion from these (`spec/ui-tech-plan.md` §7).
 - `notes/fixspec.md`: the motion and Clair-sheet spec that the files in `spec/` cite as "fixspec". `notes/motion-catalogue.md` and `notes/surface-brief.md` are the matching notes.
-- `tools/gen_soft.py`, `tools/soft_theme.py`, `tools/gen_soft_themes.py`: the Soft Quilt look and its tokens (the look chosen on Nov 19, `spec/adr/009-soft-quilt-look-pickable-grounds.md`).
+- `tools/gen_soft.py`, `tools/soft_theme.py`, `tools/gen_soft_themes.py`: the Soft Quilt look (chosen Nov 19, `spec/adr/009-soft-quilt-look-pickable-grounds.md`).
+- `tools/mint_theme.py`: the Mint colours (picked Nov 20, `spec/adr/013-mint-one-family-palette.md`). The generators call it last, and it converts boards already on disk.
 - `tools/gen_all.py`, `tools/layout_canvas.py`, `tools/gen_docs.py`: the generators for the canvas boards.
 
 ## What was removed, and how to get it back

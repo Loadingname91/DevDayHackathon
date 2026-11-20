@@ -101,7 +101,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 THESIS: A calm pastel quilt. Every app is a soft patch with a stitched edge, and you can see which changes are still waiting for a yes. Refuses the generic assistant look the reference comes from: no sparkle mark, no glass everywhere.
 
-OWN-WORLD: Soft gradient ground, Mint air in light mode and Denim dusk in dark (owner's pick). Frosted white cards. Nine pastel app dyes, each with a deep tone for its icon and a running-stitch edge. Ink pill buttons. Figtree with tabular numbers. Spool for Clair. No red.
+OWN-WORLD (colours superseded Nov 20 by Mint, below): Soft gradient ground, Mint air in light mode and Denim dusk in dark. Frosted white cards. Nine pastel app dyes, each with a deep tone for its icon and a running-stitch edge. Ink pill buttons. Figtree with tabular numbers. Spool for Clair. No red.
 
 STORY: Sam sees what is waiting, taps once, and the dashed edge goes solid while the app faces change. They trust it because nothing is added without a yes and Undo is right there.
 
@@ -113,3 +113,9 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 - States in this look: waiting for OK = dashed edge; saved = solid edge; just changed = "just now" pill in the app's own colour; frost only on the pinned bar and Clair's field.
 - Tokens: `design/tools/gen_soft.py` (GROUNDS, MODE, APP). Boards: canvas page "Look: Soft Quilt".
+
+## Colours, Nov 20, 2026 · supersedes the Mint air / Denim dusk colours above
+
+- Owner's words: "?look=mint is definitely the goat". Picked from four rendered options (3 cloths, Washed, Mint, Paper).
+- Ground, ink and accent are one mint family; the nine dyes are distinct hues at matched lightness and chroma (amended Nov 20 afternoon, ADR-013), plus icon and name. Plain mint ground, no gradient; ink, cards and buttons take the ground's hue. Dark is a deep green-black from the same tokens via `light-dark()`.
+- Tokens: `web/src/styles/tokens.css`. Record: `spec/adr/013-mint-one-family-palette.md`.

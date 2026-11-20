@@ -1,0 +1,717 @@
+{
+ "spec": {
+  "v": 1,
+  "id": "budget",
+  "key": "budget",
+  "name": "Budget",
+  "icon": "wallet",
+  "dye": "sea glass",
+  "settings": {
+   "limit": 120000
+  },
+  "collections": [
+   {
+    "key": "spend",
+    "name": "Spending",
+    "label": "Spend",
+    "titleField": "note",
+    "dateField": "at",
+    "amountField": "amount",
+    "fields": [
+     {
+      "key": "note",
+      "label": "Note",
+      "type": "text",
+      "required": true
+     },
+     {
+      "key": "amount",
+      "label": "Amount",
+      "type": "money",
+      "required": true
+     },
+     {
+      "key": "category",
+      "label": "Category",
+      "type": "select",
+      "options": [
+       {
+        "id": "c_groceries",
+        "label": "Groceries",
+        "limit": 20000
+       },
+       {
+        "id": "c_eating_out",
+        "label": "Eating out",
+        "limit": 15000
+       },
+       {
+        "id": "c_rent",
+        "label": "Rent"
+       },
+       {
+        "id": "c_fun",
+        "label": "Fun"
+       },
+       {
+        "id": "c_transport",
+        "label": "Transport",
+        "limit": 10000
+       },
+       {
+        "id": "c_subscriptions",
+        "label": "Subscriptions",
+        "limit": 4000
+       }
+      ]
+     },
+     {
+      "key": "at",
+      "label": "When",
+      "type": "datetime",
+      "required": true
+     }
+    ]
+   }
+  ],
+  "tabs": [
+   {
+    "kind": "page",
+    "id": "t_overview",
+    "title": "Overview",
+    "children": [
+     {
+      "kind": "gauge",
+      "id": "b_left",
+      "label": "Left this month",
+      "value": {
+       "minus": [
+        {
+         "setting": "limit"
+        },
+        {
+         "agg": "sum",
+         "from": "budget/spend",
+         "field": "amount",
+         "window": "month"
+        }
+       ]
+      },
+      "target": {
+       "setting": "limit"
+      },
+      "format": "money"
+     },
+     {
+      "kind": "bars",
+      "id": "b_where",
+      "label": "Where it went",
+      "from": "budget/spend",
+      "by": "category",
+      "value": {
+       "agg": "sum",
+       "from": "budget/spend",
+       "field": "amount",
+       "window": "month"
+      }
+     },
+     {
+      "kind": "bars",
+      "id": "b_subs",
+      "label": "Subscriptions · $38.46 a month",
+      "from": "subscriptions/subscriptions",
+      "by": "name",
+      "value": {
+       "agg": "sum",
+       "from": "subscriptions/subscriptions",
+       "field": "amount"
+      }
+     },
+     {
+      "kind": "list",
+      "id": "b_recent",
+      "label": "Recent",
+      "source": "budget/spend",
+      "fields": [
+       "category",
+       "at"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "desc"
+      },
+      "limit": 5
+     }
+    ]
+   }
+  ],
+  "face": {
+   "value": {
+    "minus": [
+     {
+      "setting": "limit"
+     },
+     {
+      "agg": "sum",
+      "from": "budget/spend",
+      "field": "amount",
+      "window": "month"
+     }
+    ]
+   },
+   "format": "money",
+   "label": "left",
+   "status": true
+  },
+  "stitches": [
+   {
+    "from": "groceries/trips",
+    "to": "budget/spend",
+    "map": [
+     {
+      "to": "amount",
+      "from": "total"
+     },
+     {
+      "to": "at",
+      "from": "at"
+     },
+     {
+      "to": "note",
+      "from": "store"
+     },
+     {
+      "to": "category",
+      "const": "c_groceries"
+     }
+    ]
+   }
+  ]
+ },
+ "data": {
+  "budget/spend": [
+   {
+    "id": "sp_01",
+    "position": "a000",
+    "version": 1,
+    "properties": {
+     "note": "November rent",
+     "category": "c_rent",
+     "amount": 38000,
+     "at": "2026-11-01T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_02",
+    "position": "a001",
+    "version": 1,
+    "properties": {
+     "note": "Cafe Rio",
+     "category": "c_eating_out",
+     "amount": 1148,
+     "at": "2026-11-01T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_03",
+    "position": "a002",
+    "version": 1,
+    "properties": {
+     "note": "Hulu",
+     "category": "c_subscriptions",
+     "amount": 999,
+     "at": "2026-11-02T12:00:00-07:00",
+     "_via": {
+      "app": "subscriptions"
+     }
+    }
+   },
+   {
+    "id": "sp_04",
+    "position": "a003",
+    "version": 1,
+    "properties": {
+     "note": "Lime scooter",
+     "category": "c_transport",
+     "amount": 560,
+     "at": "2026-11-02T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_05",
+    "position": "a004",
+    "version": 1,
+    "properties": {
+     "note": "Adobe CC, student",
+     "category": "c_subscriptions",
+     "amount": 1349,
+     "at": "2026-11-03T12:00:00-07:00",
+     "_via": {
+      "app": "subscriptions"
+     }
+    }
+   },
+   {
+    "id": "sp_06",
+    "position": "a005",
+    "version": 1,
+    "properties": {
+     "note": "Blue Copper",
+     "category": "c_eating_out",
+     "amount": 525,
+     "at": "2026-11-03T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_07",
+    "position": "a006",
+    "version": 1,
+    "properties": {
+     "note": "Chipotle",
+     "category": "c_eating_out",
+     "amount": 1235,
+     "at": "2026-11-04T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_08",
+    "position": "a007",
+    "version": 1,
+    "properties": {
+     "note": "Smith's",
+     "category": "c_groceries",
+     "amount": 4137,
+     "at": "2026-11-05T12:00:00-07:00",
+     "_via": {
+      "app": "groceries"
+     }
+    }
+   },
+   {
+    "id": "sp_09",
+    "position": "a008",
+    "version": 1,
+    "properties": {
+     "note": "Blue Copper",
+     "category": "c_eating_out",
+     "amount": 525,
+     "at": "2026-11-06T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_10",
+    "position": "a009",
+    "version": 1,
+    "properties": {
+     "note": "Costa Vida",
+     "category": "c_eating_out",
+     "amount": 1320,
+     "at": "2026-11-07T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_11",
+    "position": "a010",
+    "version": 1,
+    "properties": {
+     "note": "Megaplex movie",
+     "category": "c_fun",
+     "amount": 1250,
+     "at": "2026-11-07T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_12",
+    "position": "a011",
+    "version": 1,
+    "properties": {
+     "note": "Corner Market",
+     "category": "c_groceries",
+     "amount": 862,
+     "at": "2026-11-09T12:00:00-07:00",
+     "_via": {
+      "app": "groceries"
+     }
+    }
+   },
+   {
+    "id": "sp_13",
+    "position": "a012",
+    "version": 1,
+    "properties": {
+     "note": "iCloud 50 GB",
+     "category": "c_subscriptions",
+     "amount": 299,
+     "at": "2026-11-09T12:00:00-07:00",
+     "_via": {
+      "app": "subscriptions"
+     }
+    }
+   },
+   {
+    "id": "sp_14",
+    "position": "a013",
+    "version": 1,
+    "properties": {
+     "note": "Corner Market",
+     "category": "c_groceries",
+     "amount": 429,
+     "at": "2026-11-10T12:00:00-07:00",
+     "_via": {
+      "app": "groceries"
+     }
+    }
+   },
+   {
+    "id": "sp_15",
+    "position": "a014",
+    "version": 1,
+    "properties": {
+     "note": "Blue Copper",
+     "category": "c_eating_out",
+     "amount": 525,
+     "at": "2026-11-10T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_16",
+    "position": "a015",
+    "version": 1,
+    "properties": {
+     "note": "Smith's",
+     "category": "c_groceries",
+     "amount": 2715,
+     "at": "2026-11-11T12:00:00-07:00",
+     "_via": {
+      "app": "groceries"
+     }
+    }
+   },
+   {
+    "id": "sp_17",
+    "position": "a016",
+    "version": 1,
+    "properties": {
+     "note": "Corner Market",
+     "category": "c_groceries",
+     "amount": 429,
+     "at": "2026-11-12T12:00:00-07:00",
+     "_via": {
+      "app": "groceries"
+     }
+    }
+   },
+   {
+    "id": "sp_18",
+    "position": "a017",
+    "version": 1,
+    "properties": {
+     "note": "Sushi with Maya",
+     "category": "c_eating_out",
+     "amount": 2240,
+     "at": "2026-11-12T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_19",
+    "position": "a018",
+    "version": 1,
+    "properties": {
+     "note": "Corner Market",
+     "category": "c_groceries",
+     "amount": 778,
+     "at": "2026-11-13T12:00:00-07:00",
+     "_via": {
+      "app": "groceries"
+     }
+    }
+   },
+   {
+    "id": "sp_20",
+    "position": "a019",
+    "version": 1,
+    "properties": {
+     "note": "Thai Siam",
+     "category": "c_eating_out",
+     "amount": 2800,
+     "at": "2026-11-13T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_21",
+    "position": "a020",
+    "version": 1,
+    "properties": {
+     "note": "Smith's",
+     "category": "c_groceries",
+     "amount": 4501,
+     "at": "2026-11-14T12:00:00-07:00",
+     "_via": {
+      "app": "groceries"
+     }
+    }
+   },
+   {
+    "id": "sp_22",
+    "position": "a021",
+    "version": 1,
+    "properties": {
+     "note": "Cafe Rio",
+     "category": "c_eating_out",
+     "amount": 1148,
+     "at": "2026-11-14T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_23",
+    "position": "a022",
+    "version": 1,
+    "properties": {
+     "note": "Lime scooter",
+     "category": "c_transport",
+     "amount": 840,
+     "at": "2026-11-14T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_24",
+    "position": "a023",
+    "version": 1,
+    "properties": {
+     "note": "Thrift shop",
+     "category": "c_fun",
+     "amount": 2003,
+     "at": "2026-11-14T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_25",
+    "position": "a024",
+    "version": 1,
+    "properties": {
+     "note": "Corner Market",
+     "category": "c_groceries",
+     "amount": 349,
+     "at": "2026-11-15T12:00:00-07:00",
+     "_via": {
+      "app": "groceries"
+     }
+    }
+   },
+   {
+    "id": "sp_26",
+    "position": "a025",
+    "version": 1,
+    "properties": {
+     "note": "Bagel Project",
+     "category": "c_eating_out",
+     "amount": 1497,
+     "at": "2026-11-15T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_27",
+    "position": "a026",
+    "version": 1,
+    "properties": {
+     "note": "Cafe Rio",
+     "category": "c_eating_out",
+     "amount": 962,
+     "at": "2026-11-16T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_28",
+    "position": "a027",
+    "version": 1,
+    "properties": {
+     "note": "Blue Copper",
+     "category": "c_eating_out",
+     "amount": 525,
+     "at": "2026-11-17T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_29",
+    "position": "a028",
+    "version": 1,
+    "properties": {
+     "note": "Gas",
+     "category": "c_transport",
+     "amount": 2800,
+     "at": "2026-11-17T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_30",
+    "position": "a029",
+    "version": 1,
+    "properties": {
+     "note": "Taco Bell",
+     "category": "c_eating_out",
+     "amount": 687,
+     "at": "2026-11-18T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_31",
+    "position": "a030",
+    "version": 1,
+    "properties": {
+     "note": "Union food court",
+     "category": "c_eating_out",
+     "amount": 1140,
+     "at": "2026-11-19T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_32",
+    "position": "a031",
+    "version": 1,
+    "properties": {
+     "note": "Union vending",
+     "category": "c_eating_out",
+     "amount": 223,
+     "at": "2026-11-19T12:00:00-07:00"
+    }
+   },
+   {
+    "id": "sp_lunch",
+    "position": "a032",
+    "version": 1,
+    "properties": {
+     "note": "Lunch",
+     "category": "c_eating_out",
+     "amount": 1200,
+     "at": "2026-11-20T17:45:00-07:00"
+    }
+   }
+  ]
+ },
+ "values": {
+  "b_left": {
+   "text": "$400",
+   "target": "left of $1,200",
+   "pct": 67,
+   "sub": "Was $412 · 11 days to go"
+  },
+  "b_where": {
+   "rows": [
+    {
+     "label": "Groceries",
+     "text": "$142.00 of $200",
+     "pct": 71
+    },
+    {
+     "label": "Eating out",
+     "text": "$177.00 of $150",
+     "pct": 85,
+     "over_pct": 15,
+     "note": "$27 over."
+    },
+    {
+     "label": "Transport",
+     "text": "$42.00 of $100",
+     "pct": 42
+    },
+    {
+     "label": "Subscriptions",
+     "text": "$26.47 of $40",
+     "pct": 66
+    },
+    {
+     "label": "Rent",
+     "text": "$380.00",
+     "note": "No limit"
+    },
+    {
+     "label": "Fun",
+     "text": "$32.53",
+     "note": "No limit"
+    }
+   ]
+  },
+  "b_subs": {
+   "rows": [
+    {
+     "label": "Spotify",
+     "text": "$11.99",
+     "note": "Renews Sun 22 Nov"
+    },
+    {
+     "label": "Hulu",
+     "text": "$9.99",
+     "note": "Renews Wed 2 Dec"
+    },
+    {
+     "label": "Adobe CC, student",
+     "text": "$13.49",
+     "note": "Renews Thu 3 Dec"
+    },
+    {
+     "label": "iCloud 50 GB",
+     "text": "$2.99",
+     "note": "Renews Wed 9 Dec"
+    }
+   ]
+  },
+  "b_spent": {
+   "text": "$800.00",
+   "target": "$1,200",
+   "pct": 67
+  },
+  "b_c_eating": {
+   "text": "$177.00",
+   "target": "$150",
+   "pct": 100,
+   "over": "$27 over"
+  },
+  "b_c_groceries": {
+   "text": "$142.00",
+   "target": "$200",
+   "pct": 71
+  },
+  "b_c_transport": {
+   "text": "$42.00",
+   "target": "$100",
+   "pct": 42
+  },
+  "b_c_subs": {
+   "text": "$26.47",
+   "target": "$40",
+   "pct": 66
+  },
+  "b_k_rent": {
+   "text": "$380.00",
+   "sub": "no limit"
+  },
+  "b_k_eating": {
+   "text": "$177.00",
+   "sub": "limit $150 · $27 over"
+  },
+  "b_k_groceries": {
+   "text": "$142.00",
+   "sub": "limit $200"
+  },
+  "b_k_transport": {
+   "text": "$42.00",
+   "sub": "limit $100"
+  },
+  "b_k_fun": {
+   "text": "$32.53",
+   "sub": "no limit"
+  },
+  "b_k_subs": {
+   "text": "$26.47",
+   "sub": "limit $40"
+  }
+ },
+ "faces": {
+  "budget": {
+   "text": "$400",
+   "label": "left"
+  }
+ },
+ "seq": 4101,
+ "server_now": "2026-11-20T17:45:00-07:00"
+}
