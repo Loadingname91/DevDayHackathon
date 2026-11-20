@@ -34,6 +34,11 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
 - Live canvas: https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P (the artifact serves files at `project/<file>`; publish by mapping each `project/<file>` to `design/canvas/<file>` in `files`). Home and Flows prototypes: see `design/README.md`.
 - Never commit or publish `support.js` / `dc-runtime.js` (git-ignored; fetch from the artifact when needed).
 
+## Current state (Nov 19 evening)
+
+- The visual redesign is waiting on the owner's pick: see `docs/open-decisions.md` §1. Until then the Quilter's Workbench look in `.impeccable/surfaces/app.md` is still what the boards use, but it is being replaced. Don't polish it.
+- Look mocks: canvas pages "Look: cross-stitch" and "Look: Gen Z options" (`design/tools/gen_xstitch.py`, `design/tools/gen_looks.py`).
+
 ## Working rules
 
 - Commit or push only when asked.
