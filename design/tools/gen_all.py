@@ -1,4 +1,6 @@
 import os, re, sys, json
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from soft_theme import retheme  # Soft Quilt skin, decided Nov 19 (see soft_theme.py)
 
 FONTS = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&amp;family=DM+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap">'
 META = ('<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">\n'
@@ -37,7 +39,7 @@ def norm(t):
     return re.sub(r'font-size: ([\d.]+)px', _fs, t)
 
 def page(title, body, script='class Component extends DCLogic {\n  renderVals() { return {}; }\n}', w=390, h=844, css=''):
-    return ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' + META + '\n<title>' + title + '</title>\n<script src="./support.js"></script>\n</head>\n<body>\n<x-dc>\n<helmet>\n'
+    return retheme('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' + META + '\n<title>' + title + '</title>\n<script src="./support.js"></script>\n</head>\n<body>\n<x-dc>\n<helmet>\n'
             + FONTS + '\n' + CSS + ('\n<style>\n' + css + '\n</style>' if css else '') + '\n</helmet>\n' + norm(body) + '\n</x-dc>\n<script type="text/x-dc" data-dc-script data-props=\'{"$preview":{"width":' + str(w) + ',"height":' + str(h) + '}}\'>\n'
             + norm(script) + '\n</script>\n</body>\n</html>\n')
 
@@ -155,21 +157,29 @@ def tag(t='just changed'):
 def dot(app):
     return '<span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 50%; background: ' + DYE[app] + '; box-shadow: inset 0 0 0 1.5px rgba(42,33,25,0.45);"></span>'
 PINS = ['Budget', 'Groceries', 'Calendar', 'To-dos']
-BAR = 'position: absolute; left: 12px; right: 12px; bottom: max(18px, env(safe-area-inset-bottom, 0px)); height: 62px; display: flex; border-radius: 16px; box-shadow: 0 8px 22px -14px rgba(42,33,25,0.55);'
-BARLBL = 'font-size: 13px; font-weight: 600; letter-spacing: 0; white-space: nowrap;'
+# Pinned bar (Soft Quilt): five equal cells on a frosted strip. Each cell is a tile in the app's dye holding the icon, with the name
+# under it on the strip, so a name never has to fit inside a coloured pill. Values here are final (soft_theme.py leaves them alone);
+# padding-block/-inline and the 13px radius are spelled that way so norm() does not round them.
+DEEP = {'Budget': '#1C6F52', 'Groceries': '#A8481B', 'Calendar': '#2B58B8', 'To-dos': '#7D5B00', 'Workout': '#A52E62', 'Classes': '#5340BE', 'Subscriptions': '#146E7F', 'Meals': '#75552A'}
+BAR = ('position: absolute; left: 12px; right: 12px; bottom: max(18px, env(safe-area-inset-bottom, 0px)); height: 64px; display: flex; padding-block: 5px; padding-inline: 6px; box-sizing: border-box; '
+       'border-radius: 26px; background: rgba(255,255,255,0.74); border: 1px solid rgba(255,255,255,0.95); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); '
+       'box-shadow: 0 14px 30px -12px rgba(20,30,40,0.4);')
+BARLBL = 'font-size: 13px; font-weight: 600; line-height: 16px; letter-spacing: 0; white-space: nowrap;'
+BARCELL = 'flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-radius: 20px;'
+BARTILE = 'position: relative; overflow: hidden; width: 46px; height: 30px; border-radius: 13px; display: grid; place-items: center;'
 # The Clair button (pinned bar, right cell). Tap = Clair sheet; hold 450ms = talk. Canvas stills route <a> only, so it stays an <a role="button">.
 CLAIR_ARIA = 'Clair: type, talk or add a photo. Hold to talk'
 def clairbtn(held=False):
-    fill = '<span aria-hidden="true" style="position: absolute; inset: 0; background: rgba(251,246,236,0.22);"></span>' if held else ''
+    fill = '<span aria-hidden="true" style="position: absolute; inset: 0; background: rgba(255,255,255,0.28);"></span>' if held else ''
     return ('    <a class="pb" role="button" href="' + ('ClairResult.dc.html' if held else 'ClairSheet.dc.html') + '" aria-label="' + CLAIR_ARIA + '"' + (' aria-pressed="true"' if held else '')
-            + ' style="position: relative; overflow: hidden; flex: 0 0 64px; background: #2A2119; color: #FBF6EC; border-radius: 0 16px 16px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">'
-            + fill + svg('spool', 20, '#FBF6EC') + '<span style="' + BARLBL + ' color: #FBF6EC;">Clair</span></a>')
+            + ' style="' + BARCELL + '"><span aria-hidden="true" style="' + BARTILE + ' background: #221F3A;">' + fill + svg('spool', 19, '#FFFFFF') + '</span><span style="' + BARLBL + ' font-weight: 700;">Clair</span></a>')
 def bar(active=None, held=False, extra='', pins=PINS):
     out = ['  <nav aria-label="Pinned apps and Clair" style="' + BAR + extra + '">']
-    for i, n in enumerate(pins):
-        st = ('flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: ' + DYE[n] + '; '
-              + ('border-radius: 16px 0 0 16px;' if i == 0 else 'border-left: 1.5px dashed rgba(42,33,25,0.4);') + (' box-shadow: inset 0 -3px 0 #3557A6;' if n == active else ''))
-        out.append('    <a class="pb" href="' + HREF[n] + '" aria-label="' + n + '"' + (' aria-current="page"' if n == active else '') + ' style="' + st + '">' + svg(ICON[n]) + '<span style="' + BARLBL + '">' + n + '</span></a>')
+    for n in pins:
+        on = n == active
+        tile = BARTILE + ' background: ' + DYE[n] + '; color: ' + DEEP[n] + ';' + (' box-shadow: inset 0 0 0 2px #221F3A;' if on else '')
+        out.append('    <a class="pb" href="' + HREF[n] + '" aria-label="' + n + '"' + (' aria-current="page"' if on else '') + ' style="' + BARCELL + '"><span aria-hidden="true" style="' + tile + '">'
+                   + svg(ICON[n], 19) + '</span><span style="' + BARLBL + (' font-weight: 700;' if on else '') + '">' + n + '</span></a>')
     out.append(clairbtn(held))
     out.append('  </nav>')
     return '\n'.join(out)
@@ -648,7 +658,7 @@ def backdrop():
             + card('<span style="' + LBL + '">From your receipt photo · 5:41' + NB + 'pm</span><div style="display: flex; justify-content: space-between; align-items: baseline;"><b style="font-size: 16px;">Corner Market</b><span style="font-family: \'DM Mono\', monospace; font-size: 15px;' + NUM + '">$35.83</span></div><span style="' + ROWM + '">8 items. Adding updates Groceries, Budget and Calendar.</span>', 'st basted') + '\n'
             + '  </div>\n'
             '  <a href="Main.dc.html" tabindex="-1" aria-hidden="true" style="position: absolute; inset: 0; background: rgba(42,33,25,0.32);"></a>\n')
-SHEET_BOTTOM = 'calc(92px + env(safe-area-inset-bottom, 0px))'  # 12px above the pinned bar (bar: bottom 18, height 62)
+SHEET_BOTTOM = 'calc(92px + env(safe-area-inset-bottom, 0px))'  # 10px above the pinned bar (bar: bottom 18, height 64)
 def sheet(inner, top=None):
     # Floats above the pinned bar, which stays visible above the scrim so confirm threads land on real pins.
     # Rises from the Clair button: transform-origin bottom right (enter T.layout, exit T.layoutOut in the prototypes).

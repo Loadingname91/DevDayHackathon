@@ -1,0 +1,413 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/SqHomeLight.dc.html"
+        ],
+        "createdAt": "2026-11-20T03:50:53.564Z",
+        "reason": "user confirmed: picked the Mint air and Denim dusk gradient grounds for light and dark mode (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/SqHomeDark.dc.html"
+        ],
+        "createdAt": "2026-11-20T03:50:53.674Z",
+        "reason": "user confirmed: picked the Mint air and Denim dusk gradient grounds for light and dark mode (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/SqClair.dc.html"
+        ],
+        "createdAt": "2026-11-20T03:50:53.840Z",
+        "reason": "user confirmed: picked the Mint air and Denim dusk gradient grounds for light and dark mode (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/SqClairDark.dc.html"
+        ],
+        "createdAt": "2026-11-20T03:50:53.925Z",
+        "reason": "user confirmed: picked the Mint air and Denim dusk gradient grounds for light and dark mode (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Arrange.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:01.878Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Budget.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:01.956Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Calendar.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.042Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Build.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.132Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/ClairAsk.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.249Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Clair.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.355Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/ClairResult.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.451Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/ClairPhoto.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.540Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/ClairTalk.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.621Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Connect.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.691Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/ClairNotes.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.760Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/ClairFridge.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.817Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/ClairShare.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.885Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/ClairSheet.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:02.955Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Empty.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:03.017Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnCamera.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:03.072Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnKeep.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:03.134Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnSheet.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:03.209Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Receipt.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:03.312Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/EditItem.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:03.420Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Main.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:03.587Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnHome.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:03.726Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnOffline.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:03.862Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Preview.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:04.048Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Session.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:04.183Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Groceries.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:04.308Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnCheckin.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:04.406Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnLaptop.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:04.517Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnSlips.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:04.621Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Rule.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:04.719Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Laptop.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:04.798Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnDevice.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:04.858Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnMaking.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:04.932Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/OnWelcome.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:05.038Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Search.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:05.169Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Workout.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:05.282Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/You.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:05.401Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Tabs.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:05.525Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Todos.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:05.647Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/Welcome.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:05:05.750Z",
+        "reason": "user confirmed: picked the Mint air gradient ground for light mode and asked for the Screens page restyled to it (Nov 19)"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "design/canvas/SqAppearance.dc.html"
+        ],
+        "createdAt": "2026-11-20T04:44:04.557Z",
+        "reason": "user confirmed: said yes to a background picker; the board shows the six gradient grounds people choose from (Nov 19)"
+      }
+    ]
+  }
+}

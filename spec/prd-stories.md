@@ -16,7 +16,9 @@ Shared definitions used in every criterion:
 - **Phone** = 390×844 touch viewport. **Laptop** = 1440-wide browser signed in to the same account.
 - **Reduced motion** = the OS "reduce motion" setting is on.
 - **Demo receipt** = Corner Market, $35.83: Oat milk 3.49, Eggs dozen 4.29, Bananas 1.87, Chicken thighs 8.62, Rice 5 lb 6.99, Spinach 3.29, Greek yogurt 4.29, Coffee beans 2.99.
-- **Phone** for the demo runs the Android APK; the laptop runs the same build as a website, joined with a join code.
+- **Phone** for the demo runs the website in Chrome, opened from the Home screen icon; the laptop runs the same site, joined with a join code (ADR-010). Where a story below says "APK" or "Capacitor", read the website.
+- **Demo plan** = the eight rows of `spec/backend.md` §2.3. Lifts: Pull day Mon 23 Nov 6:00 pm kept; Leg day Tue 24 Nov 7:00 am → 5:00 pm; Push day Wed 25 Nov 6:00 pm → 7:00 am; Pull day Fri 27 Nov 6:00 pm → Sun 29 Nov 4:00 pm. Added: Easy run 3 mi Thu 26 Nov 8:00 am; Long run 5.5 mi Sat 28 Nov 9:00 am; to-do "10 min body scan" Tue 24 Nov 9:30 pm; Oats on Weekly shop.
+- **Cut (late Nov 19, ADR-010).** US-12 to US-16 are the judged event-day stories, with US-6 for the three sentences of the recorded clip (third cut). US-15 is the top of the engine ladder and is cut first. US-1 and US-2 are the second beat, built only after them. US-11 is not built for DevDay.
 
 | ID | Title | Priority | Cut | Size | FRs |
 | --- | --- | --- | --- | --- | --- |
@@ -25,14 +27,20 @@ Shared definitions used in every criterion:
 | US-3 | Confirm once, see every app that changed | P0 | Live | M | FR-S1 to FR-S4, FR-H2 |
 | US-4 | Same change on the laptop | P0 | Live | S | FR-X1, FR-L1, FR-L2, FR-S5 |
 | US-5 | Know how I'm doing from Home | P0 | Live | M | FR-H1 to FR-H5, FR-H7, FR-P1 |
-| US-6 | Build an app from one sentence | P1 | Live+ | L | FR-B1 to FR-B3, FR-B6, FR-H7c |
+| US-6 | Build an app from one sentence | P0 for three sentences | Live (recorded clip; AB-1b) / Live+ (any sentence) | L | FR-B1 to FR-B3, FR-B6, FR-H7c |
 | US-7 | Undo what I just added | P0 | Live | S | FR-S6 |
 | US-8 | Tell Clair a quick note | P1 | Live+ | M | FR-C2, FR-C4 |
 | US-9 | First open as a guest | P1 | Live+ | M | FR-X1, FR-O1 to FR-O5 |
 | US-10 | Put my list in my order, everywhere | P1 | Live+ | S | FR-A7, FR-L1 |
-| US-11 | Restock from a fridge photo | P1 | Live (second beat) | M | FR-C12 to FR-C16, FR-S1 |
+| US-11 | Restock from a fridge photo | P2 | Not built for DevDay | M | FR-C12 to FR-C16, FR-S1 |
+| US-12 | See my Google Calendar in Quilt | P0 | Live (judged) | M | FR-G1, FR-G2 |
+| US-13 | Plan my training around my week | P0 | Live (judged; rung 1 must run) | XL | FR-C19, FR-C19a, FR-C19b |
+| US-14 | Keep doing it every Sunday | P0 | Live (judged) | S | FR-W1, FR-W2 |
+| US-16 | Know when a regular appointment is due | P0 | Live (judged, ladder step 2b) | M | FR-W7 |
+| US-17 | Four more apps on Home | P0 | Live (base) | M | FR-A8 |
+| US-15 | Describe a rule and let it run across my apps | P1 | Live (judged, ladder steps 3 and 4) | L | FR-W3, FR-W4 |
 
-Stories are independent except where Dependencies says otherwise; US-1 → US-2 → US-3 → US-4 → US-7 is the demo path and is built in that order; US-11 comes after it.
+Stories are independent except where Dependencies says otherwise; the demo path (ADR-010) is US-5, US-8, US-3, US-4 and US-7 as the base tonight, then US-12 → US-13 → US-14 on the day; US-1 and US-2 are the second beat after them.
 
 ---
 
@@ -151,7 +159,7 @@ Stories are independent except where Dependencies says otherwise; US-1 → US-2 
 
 **Entry.** The "New app" patch at the end of Your apps (FR-H7c), or "Build an app" in the Clair sheet.
 **Design.** Flows prototype https://claude.ai/artifact/HrLSUSPiXKCLphYfHVFxne.
-**Tech.** Spec schema and retry in `spec/ui-tech-plan.md`. AB-1 checklist must pass for "Track my plants" ×3 before it is shown on stage.
+**Tech.** Spec schema and retry in `spec/ui-tech-plan.md`. For DevDay (third cut) this story is built for three sentences and shown as a recording: "Track what I eat, calories and protein", "I'm running a 10K on Sat 12 Dec. Track my runs", "Track my cycle and keep it private" (`spec/clair-agent.md` §12.11). AB-1b must pass 5 of 5 for each before the clip is recorded. For any other sentence, AB-1 must pass for "Track my plants" ×3 before it is shown on stage.
 **Out of scope.** Patterns list, 3-layout pager (Live+), Arrange.
 
 ---
@@ -227,7 +235,7 @@ Stories are independent except where Dependencies says otherwise; US-1 → US-2 
 
 **As** Sam standing at an open fridge, **I want** to photograph it and have Clair ask which of my usual things to add to the shop **so that** I restock without writing a list, and Clair learns what I've stopped buying.
 
-**Context.** The second demo beat (PRD must-run row 11), after the receipt path works. Worked example: `spec/clair-agent.md` §12. Seed: 6 weeks of trips, so usuals are real. The fridge uses usuals that are not on today's receipt (Eggs, Spinach, Greek yogurt and Bananas were bought at 5:41 pm), so it runs after the receipt beat with no reset.
+**Context.** Not built for DevDay (ADR-010); it was the second demo beat until late Nov 19. Worked example: `spec/clair-agent.md` §12. Seed: 6 weeks of trips, so usuals are real. The fridge uses usuals that are not on today's receipt (Eggs, Spinach, Greek yogurt and Bananas were bought at 5:41 pm), so it runs after the receipt beat with no reset.
 
 **Acceptance criteria**
 - **AC-1 Understanding line.** Given the demo fridge photo, when Clair reads it, then the sheet shows the thumbnail and "I see your fridge: 14 items" before any proposal, and nothing is saved.
@@ -244,3 +252,111 @@ Stories are independent except where Dependencies says otherwise; US-1 → US-2 
 **Design.** Boards ClairFridge, ClairNotes and the Groceries usual mark (being added to the canvas).
 **Dependencies.** US-1 to US-3 (sheet, card, confirm); the usuals seed.
 **Out of scope.** Pantry and freezer photos, quantities beyond "low", adding to lists other than Weekly shop unless Sam picks one under Other.
+
+---
+
+## US-12: See my Google Calendar in Quilt (Live, judged)
+
+**As** Sam, **I want** my Google Calendar events to show in Quilt's Calendar **so that** Clair and I plan around everything I've already booked.
+
+**Acceptance criteria**
+- **AC-1 Connect.** Given Sam is signed in to Quilt, when Sam taps Calendar → "Add Google Calendar" and approves read-only access at Google, then Sam is returned to Calendar, which shows "Google Calendar · <email> · synced just now".
+- **AC-2 Events show once.** Given the demo Google account, when the first sync ends, then Calendar's next week shows Dentist, Drive home for Thanksgiving, Thanksgiving at home and Back to campus, each marked "from Google", each exactly once, on the phone and the laptop.
+- **AC-3 Read-only.** Given a "from Google" row, when Sam taps it, then no edit sheet opens and nothing can be changed or deleted in Quilt.
+- **AC-4 Refresh.** Given Sam adds an event in Google Calendar, when Sam taps Refresh in Quilt's Calendar, then the event shows on both devices within 5 s and no other row changes.
+- **AC-5 Today is untouched.** Given the demo account, when the sync ends, then Calendar's face still reads "3 today" and Next up is unchanged.
+- **AC-6 Said plainly.** The connect screen says Quilt reads the calendar and never writes to it.
+- **AC-7 Denied.** Given Sam cancels at Google, when Sam returns, then Calendar shows "Google Calendar wasn't connected." and nothing else changes.
+
+**FRs.** FR-G1, FR-G2 (FR-G3 Disconnect is Live+). **Tech.** `spec/backend.md` §8a. **Out of scope.** Writing to Google (FR-G4), more than one Google account, other calendars than the main one.
+
+---
+
+## US-13: Plan my training around my week (Live, judged)
+
+**As** Sam, **I want** to ask Clair to plan my training for next week **so that** I get one plan, lifts, runs, recovery and what to buy, that fits my classes, my calendar and what I've logged, with the reason for each line.
+
+The planner is built in four rungs (`spec/clair-agent.md` §12.9). Criteria marked with a rung apply from that rung up; the demo runs the highest rung that passes.
+
+**Acceptance criteria**
+- **AC-1 Says what it read.** Given the demo account with Google Calendar connected, when Sam types "Plan my training for next week" and sends, then the sheet names the apps read before any card (rung 4: "Read 9 apps: Calendar, Classes, To-dos, Workout, Running, Calories, Cycle, Meditation and Groceries.").
+- **AC-2 One card.** Then one basted card shows "Next week's training", the counts (rung 4: "4 lifts (1 kept, 3 moved), 2 runs, 1 recovery to-do, 1 grocery item."), a line per app, a button naming the count of apps (rung 1 "Add to 2 apps", rung 4 "Add to 5 apps") and "Review items".
+- **AC-3 The lifts (rung 1).** Review items lists the demo plan's four lifts, each with a reason and its source app; no lift is over a class, a timed to-do or a Google event.
+- **AC-4 The runs (rung 2).** The plan adds Easy run 3 mi Thu 26 Nov 8:00 am and Long run 5.5 mi Sat 28 Nov 9:00 am; no lift falls on a day Sam is away; Friday's Pull day moves to Sun 29 Nov 4:00 pm.
+- **AC-5 From my own logs (rung 3).** Leg day carries "also: shortest session; energy 2 logged on day 1 of your last 3 cycles · Cycle", and the card states "Mon to Thu you logged 1,650 to 1,970 calories a day (target 2,200)." Nothing says a number is good or bad, and nothing names a date for a period.
+- **AC-6 Recovery and food (rung 4).** The plan adds the to-do "10 min body scan" Tue 24 Nov 9:30 pm and Oats on Weekly shop, each with its reason; the card previews Groceries "12 → 13 to buy".
+- **AC-7 Nothing before OK.** Given the card is showing, then every app shows its old state on both devices.
+- **AC-8 One tap, two devices.** When Sam confirms, then within 3 s the laptop's Calendar shows the sessions at their new times and the runs with "just changed", and at rung 4 Groceries rolls 12 → 13 on Home.
+- **AC-9 Undo.** Undo on the toast returns every app the plan touched, on both devices.
+- **AC-10 Private stays private.** Given Cycle's switch is off, then the plan has no Cycle line, the understanding line doesn't name Cycle, and no request to the model holds Cycle data.
+- **AC-11 Nothing to do.** Given the plan is already confirmed, when Sam sends the sentence again, then Clair says "Next week is already planned. Nothing to move or add." and no card appears.
+- **AC-12 Google events are never moved.** Given Sam types "move the dentist to Friday", then Clair says it can't change Google Calendar events and proposes nothing.
+- **AC-13 No advice.** Clair never says what Sam should eat, how hard to train or anything medical.
+- **AC-14 Use sample.** Given no card after 12 s, then "Use sample" appears and shows the same card marked "sample".
+
+**FRs.** FR-C19, FR-C19a, FR-C19b, FR-C4, FR-S1, FR-S2, FR-S6. **Tech.** `spec/clair-agent.md` §12.9 (the brief, the prompt, the rungs); AB-11 must pass 10 of 10 at the rung shown. **Out of scope.** Changing weights, sets or routines, planning meals, editing a row in Review items, health data.
+
+---
+
+## US-14: Keep doing it every Sunday (Live, judged)
+
+**As** Sam, **I want** to turn the plan into a rule **so that** I don't have to ask again each week.
+
+**Acceptance criteria**
+- **AC-1 Offered after OK.** Given Sam has confirmed the plan, then the sheet shows "Do this every Sunday at 7 pm?" with "Turn on" and "Not now". It is not shown before the confirm.
+- **AC-2 Turn on.** When Sam taps Turn on, then Workout gains a Workflows tab showing "Every Sunday at 7:00 pm, plan next week's training" with its switch on, on both devices, and no credits are used.
+- **AC-3 Run now asks first.** When Sam taps Run now, then a Clair run starts and its result is a card in Needs your OK; nothing in Workout or Calendar changes until Sam confirms.
+- **AC-4 Off means off.** Given the switch is off, then Run now is disabled.
+- **AC-5 No false promise.** "Next run" is shown only if the scheduled job is deployed.
+
+**FRs.** FR-W1, FR-W2 (FR-W5 for the scheduled run). **Tech.** `spec/workflows.md`, Engine v1, ladder steps 1 and 2. **Out of scope.** Settings → Automations, plan limits.
+
+---
+
+## US-15: Describe a rule and let it run across my apps (Live, judged, engine ladder steps 3 and 4)
+
+**As** Sam, **I want** to describe a rule in a sentence and have Clair set it up **so that** things I always do by hand happen on their own.
+
+**Acceptance criteria**
+- **AC-1 Described, not configured.** Given Sam types "When I add an exam, add a study to-do two days before", then Clair shows one basted rule card: "Add this rule to Classes?" with the rule as one sentence, "Turn on" and "Not now". Nothing is saved before Turn on.
+- **AC-2 It shows where rules live.** When Sam taps Turn on, then Classes gains a Workflows tab with the sentence and its switch on, on both devices.
+- **AC-3 It runs with the change that fired it.** Given the rule is on, when an exam on Thu 3 Dec is added to Classes, then the same change adds the to-do "Study for <exam>" due Tue 1 Dec, marked "by rule ›", and the row shows on Calendar.
+- **AC-4 One Undo.** When Sam undoes that change, then the exam and the to-do are both removed.
+- **AC-5 Off means off.** Given the switch is off, when an exam is added, then no to-do is added.
+- **AC-6 Says what it can't do.** Given Sam asks for a rule the engine can't run ("email me when rent is due"), then Clair says rules can't do that yet and shows no card.
+- **AC-7 No loops.** A rule that would write into the collection that triggers it is refused with a plain message.
+
+**FRs.** FR-W3, FR-W4. **Tech.** `spec/workflows.md`, Engine v1. If step 4 isn't built, AC-1 and AC-6 are not shown. **Out of scope.** Date triggers, reminders, sending, connectors.
+
+---
+
+## US-16: Know when a regular appointment is due (Live, judged, engine ladder step 2b)
+
+**As** Sam, **I want** Clair to notice when a regular appointment is due and offer to put it on my calendar **so that** I don't have to remember.
+
+**Acceptance criteria**
+- **AC-1 From my own history.** Given the demo account (haircuts on Sat 8 Aug, Sat 12 Sep and Sat 17 Oct), when Sam types "Am I due for any appointments?", then one card shows: "Haircut is due", "You go about every 5 weeks. The last was Sat 17 Oct.", "Haircut · Sat 21 Nov 2:00 pm · reminder the day before", "Add to Calendar".
+- **AC-2 A free time.** The proposed time doesn't overlap anything on Calendar; Review items says why it isn't the usual 11:00 am.
+- **AC-3 Nothing before OK, and never booked.** Calendar is unchanged until Sam taps Add to Calendar. Clair doesn't claim to have booked anything.
+- **AC-4 Keep checking.** After the confirm, "Check every Sunday at 7 pm?" → Turn on → Calendar's Workflows tab shows "Every Sunday at 7:00 pm, check for appointments that are due".
+- **AC-5 Not enough history.** Given only two past visits of a kind, then nothing is proposed for it.
+- **AC-6 Already booked.** Given a haircut already on Calendar in the next 14 days, then Clair says nothing is due.
+- **AC-7 No advice.** Clair never says how often Sam should see a doctor, dentist or anyone else.
+
+**FRs.** FR-W7, FR-W1, FR-W2. **Tech.** `spec/clair-agent.md` §12.10; AB-12 must pass before it is shown. **Out of scope.** Phone notifications (the reminder is stored only), booking, kinds other than those on Calendar events.
+
+---
+
+## US-17: Four more apps on Home (Live, base)
+
+**As** Sam, **I want** Calories, Running, Cycle and Meditation among my apps **so that** food, runs, my cycle and calm sit next to everything else I track.
+
+**Acceptance criteria**
+- **AC-1 They render.** Given the demo account, Home shows 12 apps; Calories reads "1,140 today", Running "7 mi this week", Meditation "25 min this week", Cycle "last period started Tue 27 Oct".
+- **AC-2 Add by hand.** In each app, Add opens a form for one record and the face updates on both devices.
+- **AC-3 Add by sentence.** Given Sam types "had a chicken burrito, about 700 calories", then Clair proposes one Calories meal and the card previews "1,140 → 1,840 today".
+- **AC-4 Clair doesn't guess calories.** Given a meal with no number and no saved food of that name, Clair asks for the calories in words and proposes nothing.
+- **AC-5 Cycle stays private unless shared.** While Cycle's switch is off, no Clair snapshot, brief, tool result or answer contains Cycle data, and a sentence about a period gets "Cycle isn't shared with me. You can log it in the Cycle app." A new Cycle app starts with the switch off; the demo account has it on.
+- **AC-6 No judgement.** No copy calls a number good, bad, over or under; the target shows as progress only.
+
+**FRs.** FR-A8. **Out of scope.** Photo meals, calorie estimates, pace, charts, a timer, a prediction shown in the Cycle app.

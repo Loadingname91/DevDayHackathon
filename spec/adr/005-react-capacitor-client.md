@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted · 2026-11-19 · Deciders: Quilt team · Reverses TabOS v3 ADR-5 (Expo / React Native)
+Accepted · 2026-11-19 · Deciders: Quilt team · Reverses TabOS v3 ADR-5 (Expo / React Native) · **Narrowed the same night by [ADR-010](010-web-only-devday-planner-cut.md):** no Capacitor shell or APK for DevDay (the phone runs the website in its browser), and the framework for the native app after DevDay is open again
 
 ## Context
 

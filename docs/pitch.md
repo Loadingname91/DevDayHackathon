@@ -133,9 +133,9 @@ What the market shows: free tiers convert on structural limits (number of projec
 
 | Plan | Price | What you get |
 | --- | --- | --- |
-| Free | $0 | 5 apps, every block, templates, sync on all your devices, 50 Clair credits a month, button automations, basic widgets |
-| Plus | $6 a month ($48 a year) | Unlimited apps, 1,000 Clair credits, voice capture, 10 scheduled or triggered automations, smart widgets, questions across apps, full export |
-| Pro | $12 a month ($96 a year) | 4,000 credits, unlimited automations, connectors (bank feed, health data, live sync tables), webhooks and MCP, option to bring your own AI key |
+| Free | $0 | 5 apps, every block, templates, sync on all your devices, 50 Clair credits a month, button automations, basic widgets, import and full export (decided Nov 19) |
+| Plus | $6 a month ($48 a year); Student Plus $4 a month or $15 a semester (decided Nov 19) | Unlimited apps, 1,000 Clair credits, voice capture, 10 scheduled or triggered automations, Clair's pattern checks with a monthly cap, health data from the phone, smart widgets, questions across apps |
+| Pro | $12 a month ($96 a year) | 4,000 credits, unlimited automations, connectors (bank feed, live sync tables), webhooks and MCP, option to bring your own AI key |
 | Teams | $10 per seat a month | Shared workspaces, pooled credits, roles and admin, shared templates |
 
 - Credits: a Clair chat step costs 1, building an app 10, a photo fill 5 and a scheduled run 2. Extra packs are $5 for 500 and never expire.
@@ -162,7 +162,7 @@ The MVP takes a thin slice of every pillar except Share, so the demo shows the w
 
 Demo apps, pre-seeded with realistic data: Budget, Groceries, Calendar, Classes, Workout, To-dos and Subscriptions. The scripted demo uses Budget, Groceries and Calendar.
 
-**Stack:** React + Vite web app wrapped with Capacitor for Android; a Python (FastAPI) API on Vercel that alone holds the Claude key; Supabase for Postgres, guest sign-in and live updates; Claude (`claude-opus-5-5`, vision and tools) for Clair through the Anthropic Python SDK tool runner. All formulas run in Python on the server. DevDay has no stack rules.
+**Stack:** React + Vite website, on the phone's browser and the laptop for DevDay (no Android app yet; decided late Nov 19); a Python (FastAPI) API on Vercel that alone holds the Claude key; Supabase for Postgres, guest sign-in and live updates; Claude (`claude-opus-5-5`, vision and tools) for Clair through the Anthropic Python SDK tool runner. All formulas run in Python on the server. DevDay has no stack rules.
 
 **Split for two people**
 
@@ -252,16 +252,16 @@ Sources: [Seibel, How to pitch your company](https://www.ycombinator.com/blog/ho
 
 ## 90-second pitch and demo
 
-The pitch has one problem, one user, one magic moment and real numbers. Open with a show of hands, say what Quilt is within 30 seconds, spend the most time on the demo (a whiteboard into a course note, then a receipt), and end on the bigger vision in one line.
+The pitch is shaped like a Shark Tank pitch: who we are and a hook, the problem as one person's story, what the product is, the product working, why us, the numbers, the close. Rewritten late Nov 19; the full script, with what to tap, is `docs/demo-day.md`.
 
-1. **Hook, 10 s.** "Hands up if you pay for more than three apps to manage your money, workouts or to-dos. Keep it up if they don't talk to each other."
-2. **Problem with our numbers, 10 s.** "We surveyed \[N\] U students this week. They pay for \[X\] apps, about $\[Y\] a month, and none of them share data."
-3. **What it is, then who we are, 10 s.** "Describe any app and Clair builds it: notes for each class, a workout log, a car tracker. Then fill it from anywhere: type it, say it, snap it, drop a file. It's on your laptop before you sit down. I'm \[name\], this is \[name\]."
-4. **The magic moment, 25 s.** "I have a car; Quilt has no car app." Photograph the car's maintenance card and say "make this an app". Clair builds a Car app with the three services, puts the next oil change on the calendar and wires service costs to the budget. One tap, and it's on the laptop too. Then photograph an oil-change receipt: the service is logged, the budget drops from $412 to $367, and the next oil change moves to May. Any app you can describe, built and connected in seconds.
-5. **Why not Notion, 10 s.** "Notion makes you build it. AI app builders build apps that sit alone. Quilt's apps arrive connected to your calendar, your budget and each other, and nothing changes without your OK."
-6. **Traction and model, 10 s.** "\[N\] students joined our waitlist in \[D\] days. Free to start, $6 a month, $4 for students."
-7. **Bigger vision, 10 s.** "Students first. But parents, caregivers, athletes and freelancers all pay for apps that don't talk, or need one nobody built."
-8. **Close, 5 s.** "Quilt: your life, stitched together."
+1. **Hook, 10 s.** "Hi, we're \[name\] and \[name\], and this is Quilt. Hands up if you pay for more than three apps to run your money, your workouts and your to-dos. Keep it up if none of them talk to each other."
+2. **The problem, as a story, 10 s.** "That's Sam, a student here. A budget app, a gym app, a calorie app, a calendar. Four subscriptions, and each one knows a quarter of Sam's week. We asked \[N\] U students: they pay for \[X\] apps, about $\[Y\] a month."
+3. **What it is, 8 s.** "Quilt is one app where you describe the app you need and Clair, our AI, builds it. Every app it builds is connected to the others."
+4. **Recorded: three builds, 12 s.** Play the clip. "We recorded this today, in the real app. Three sentences: a calorie tracker, a running tracker for my 10K, a private cycle tracker. Three working apps."
+5. **Live: the planner, 30 s.** "This is my real account. Next week is Thanksgiving, I've got a dentist appointment and a 10K in three weeks." Type "Plan my training for next week". Clair reads nine apps and the Google calendar and comes back with one card: four lifts moved around what's booked, two runs toward the race, a recovery slot, and oats on the shopping list, each with its reason. "Five apps, one tap. Nothing changed until I said OK." Clair offers to do it every Sunday; one more tap and the rule is on.
+6. **Why us, 10 s.** "Notion makes you build it yourself. AI app builders make apps that sit alone. Quilt's apps know about each other, and nothing changes without your OK."
+7. **Traction and price, 7 s.** "\[N\] students joined our waitlist in \[D\] days. Free to start, $6 a month, $4 for students."
+8. **Close, 3 s.** "Quilt: your life, stitched together."
 
 Demo safety: pre-seed every app with realistic data, warm the server before going on, keep a recorded backup video, and use "Use sample" (it says "sample" on screen) if Clair or the Wi-Fi is slow. Checklist: `docs/demo-day.md`.
 

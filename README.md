@@ -1,6 +1,6 @@
 # Quilt
 
-Quilt is a phone app for a student's money, groceries, classes, workouts and to-dos. Clair, the assistant inside it, reads a photo (a receipt, a fridge shelf, a syllabus) and updates every app it touches once you tap OK. We're building it for Lassonde DevDay on Nov 20, 2026.
+Quilt is a personal app builder for a student's money, groceries, classes, workouts and to-dos. Clair, the AI inside it, builds apps from a sentence, connects them to each other and to your calendar, and proposes changes across them that you approve with one tap. We're building it for Lassonde DevDay on Nov 20, 2026.
 
 ## Where things are
 
@@ -13,13 +13,13 @@ Quilt is a phone app for a student's money, groceries, classes, workouts and to-
 | `founder/` | The business | The founder-pack review: board, competitors, simulated buyer panel, pricing, unit economics and the plan (start with `founder/summary.md`); the first run is in `founder/run-1-photo-wedge/` |
 | `setup/` | New machines | A copy of the Claude Code settings and hook (see `docs/setup-claude-code.md`) |
 
-Start with `docs/start-here.md`. Then `docs/pitch.md` for the idea, or `docs/demo-day.md` for the demo.
+Start with `docs/start-here.md`. Then `docs/product.md` for the product in plain words, `docs/pitch.md` for the pitch, or `docs/demo-day.md` for the demo.
 
 `GLOSSARY.md` defines the product's words (app, patch, Clair, basted, stitched). `PRODUCT.md` and `.impeccable/` hold the design brief the design tools read. `CLAUDE.md` is the map for Claude Code.
 
 ## Stack
 
-React + Vite, wrapped with Capacitor for Android (the same build runs as a website on the laptop). A Python FastAPI API on Vercel holds the only Claude key. Supabase provides Postgres, sign-in and live updates, and Claude powers Clair. Details are in `spec/backend.md`.
+React + Vite, served as a website on the phone and the laptop for DevDay (a native phone app comes after). A Python FastAPI API on Vercel holds the only Claude key. Supabase provides Postgres, sign-in and live updates, and Claude powers Clair. Details are in `spec/backend.md`.
 
 ## Live design links
 

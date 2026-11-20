@@ -94,5 +94,22 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 - "Your apps" replaces "Your quilt": find box, no pile chips, a number on every patch, "not opened in N wk" on forgotten ones. Header clock removed.
 - Canvas demo path rebuilt in Workbench (Home, Groceries, Review receipt, Budget, Calendar); final design book: https://claude.ai/artifact/N37FhQVVYTNoeDf4rJFyjq
 
-- Platform (Nov 19, evening): one React app, wrapped with Capacitor for Android (APK) and served as a website for laptops; motion and CSS port from the prototypes unchanged. Clair reads any photo or file, asks with menu questions and keeps Clair notes; voice uses the phone's own speech in and out. See spec/backend.md and spec/clair-agent.md.
+- Platform (Nov 19, evening): one React app, served as a website on the phone's browser and on laptops for DevDay (no APK; spec/adr/010); motion and CSS port from the prototypes unchanged. Clair reads any photo or file, asks with menu questions and keeps Clair notes; voice uses the phone's own speech in and out. See spec/backend.md and spec/clair-agent.md.
 - Bar behaviour (Nov 19): the bar never swipes sideways and never moves on scroll. More apps = swipe up on the bar ("Just used", then Home's quilt). The bar hides only for focused tasks: keyboard up, camera, logging a set, reviewing a receipt, building an app; those screens carry their own Done/Back. The Clair sheet floats above the bar and keeps it visible so threads land on the pins.
+
+## Look decision, Nov 19 night: Soft Quilt (supersedes the Quilter's Workbench direction contract and its muslin, denim, mustard and font choices; behaviour, copy, states and layout decisions above still hold)
+
+THESIS: A calm pastel quilt. Every app is a soft patch with a stitched edge, and you can see which changes are still waiting for a yes. Refuses the generic assistant look the reference comes from: no sparkle mark, no glass everywhere.
+
+OWN-WORLD: Soft gradient ground, Mint air in light mode and Denim dusk in dark (owner's pick). Frosted white cards. Nine pastel app dyes, each with a deep tone for its icon and a running-stitch edge. Ink pill buttons. Figtree with tabular numbers. Spool for Clair. No red.
+
+STORY: Sam sees what is waiting, taps once, and the dashed edge goes solid while the app faces change. They trust it because nothing is added without a yes and Undo is right there.
+
+FIRST VIEWPORT: Date and profile, the status line as the heading, the "Describe an app. Clair builds it." field, then the Needs your OK card with "Add to 3 apps" in thumb reach; Next up and the apps grid below; pinned bar frosted at the bottom.
+
+FORM: seed: none (pinned). Owner's words: "redesign for the design bg and themes mainly" from the Lumo reference, then "I like mint air and denim dusk for light and dark mode".
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+- States in this look: waiting for OK = dashed edge; saved = solid edge; just changed = "just now" pill in the app's own colour; frost only on the pinned bar and Clair's field.
+- Tokens: `design/tools/gen_soft.py` (GROUNDS, MODE, APP). Boards: canvas page "Look: Soft Quilt".

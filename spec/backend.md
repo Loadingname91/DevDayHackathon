@@ -4,7 +4,7 @@ Nov 19, 2026 · for the DevDay build (Nov 20) and the beta after it · reads wit
 
 This doc fixes how Quilt stores data, the one write path, formulas, sync, accounts, the API and the edge cases. Clair's agent loop has its own doc ([`clair-agent.md`](clair-agent.md)); section 9 here is a summary plus the tables it uses.
 
-Decisions with trade-offs are ADRs: [004 Python backend on Vercel](adr/004-python-backend-on-vercel.md), [005 React + Capacitor client](adr/005-react-capacitor-client.md), [006 Supabase blocks table](adr/006-supabase-blocks-table.md), [007 Clair agent loop](adr/007-clair-agent-loop.md), [008 online writes and a read cache](adr/008-online-writes-read-cache.md). [ADR-002](adr/002-mock-api-route-handlers.md) (mock API on Next route handlers) is superseded by 004 and 008; [ADR-001](adr/001-spec-driven-renderer.md) and [ADR-003](adr/003-basted-proposals.md) still hold, with the AppSpec now stored on the page block and a proposal now being a change set with status `basted`.
+Decisions with trade-offs are ADRs: [004 Python backend on Vercel](adr/004-python-backend-on-vercel.md), [005 React + Capacitor client](adr/005-react-capacitor-client.md), [006 Supabase blocks table](adr/006-supabase-blocks-table.md), [007 Clair agent loop](adr/007-clair-agent-loop.md), [008 online writes and a read cache](adr/008-online-writes-read-cache.md), [010 web only for DevDay and the planner cut](adr/010-web-only-devday-planner-cut.md) (narrows 005: no Capacitor shell or APK for DevDay; "APK" below means the website in the phone's browser). [ADR-002](adr/002-mock-api-route-handlers.md) (mock API on Next route handlers) is superseded by 004 and 008; [ADR-001](adr/001-spec-driven-renderer.md) and [ADR-003](adr/003-basted-proposals.md) still hold, with the AppSpec now stored on the page block and a proposal now being a change set with status `basted`.
 
 **Spikes.** Anything marked **spike (T1)** is a platform behaviour we have not tested. It gets checked in the first hour tonight; the fallback is written next to it. No platform limit in this doc is stated as fact.
 
@@ -15,7 +15,7 @@ Decisions with trade-offs are ADRs: [004 Python backend on Vercel](adr/004-pytho
 ```mermaid
 flowchart LR
   subgraph Devices
-    APK["Android APK<br/>React + Capacitor"]
+    APK["Phone browser<br/>the website, Home screen icon"]
     WEB["Laptop website<br/>same Vite build"]
     IDB[("IndexedDB<br/>read cache")]
   end
@@ -28,6 +28,7 @@ flowchart LR
   API -->|Anthropic Python SDK| CLAUDE["Claude API"]
   API -->|service key| ST[("Storage<br/>clair-uploads, private")]
   API -->|admin API: generate_link| AUTH["Supabase Auth"]
+  API -->|OAuth, read-only Calendar API| GCAL["Google Calendar"]
   APK -->|anonymous sign-in, linkIdentity| AUTH
   WEB -->|verifyOtp with join code token| AUTH
   PG -->|inserts on events| RT["Supabase Realtime"]
@@ -35,7 +36,7 @@ flowchart LR
   RT -->|nudge, filtered by RLS| WEB
 ```
 
-- **Client.** React (Vite, DOM) wrapped by Capacitor. The Android APK is the phone; the same build, served by Vercel, is the laptop website. The client never computes a number: faces, totals and row formulas come from the API (section 6).
+- **Client.** React (Vite, DOM), served by Vercel as a website. For DevDay the phone runs it in its browser, added to the Home screen; the laptop runs the same site (ADR-010). A native phone app comes after DevDay. The client never computes a number: faces, totals and row formulas come from the API (section 6).
 - **API.** One FastAPI app deployed as a Vercel Python function. It owns every write (the command service, section 5), every formula, sync, join codes and the Clair loop. The one Anthropic key lives only here.
 - **Database.** Supabase Postgres, reached by psycopg through the Supabase pooler in transaction mode, so each command is a real Postgres transaction. Supabase also gives anonymous auth, Realtime and Storage.
 - **Live updates.** Clients subscribe to Supabase Realtime `postgres_changes` on the `events` table. RLS decides which rows a user sees. A Realtime message is only a nudge; the client then calls `GET /sync?since=seq` (section 7).
@@ -44,7 +45,7 @@ flowchart LR
 | v3 part | Here | How |
 | --- | --- | --- |
 | §1.2 Go monolith | FastAPI on Vercel | **Reversed** (ADR-004; v3 ADR-6's trigger "Python-native team" applies) |
-| §1.2 Expo / React Native, Tauri | React + Capacitor; the laptop uses the website | **Reversed** (ADR-005) |
+| §1.2 Expo / React Native, Tauri | React website on phone and laptop for DevDay; native phone app after | **Reversed** (ADR-005, narrowed by ADR-010) |
 | §1.2 Redis pub/sub + SSE fan-out | Supabase Realtime on `events` | Adapted |
 | §4 command service | Same pipeline, Python | Adopted |
 | §7 encryption | Plain JSONB + RLS | Deferred (section 12) |
@@ -138,7 +139,7 @@ create table change_sets (
   actor        text not null check (actor in ('user', 'clair', 'system')),
   user_id      uuid references auth.users(id),
   origin       text not null
-               check (origin in ('gesture', 'clair', 'template', 'undo', 'sweep', 'seed')),
+               check (origin in ('gesture', 'clair', 'template', 'undo', 'sweep', 'seed', 'connector')),
   status       text not null check (status in ('basted', 'stitched', 'undone', 'dismissed')),
   source       jsonb not null default '{}'::jsonb,     -- {kind, label, at, mode: live|fixture}
   title        text,
@@ -319,6 +320,19 @@ create table join_attempts (                  -- failed redeems, counted per IP 
 create index join_attempts_ip   on join_attempts (ip_hash, created_at);
 create index join_attempts_time on join_attempts (created_at);
 
+create table connections (                    -- outside accounts (section 8a); server only, never sent to a client
+  id             uuid primary key default gen_random_uuid(),
+  workspace_id   uuid not null references workspaces(id) on delete cascade,
+  user_id        uuid not null references auth.users(id) on delete cascade,
+  provider       text not null check (provider in ('google_calendar')),
+  account_email  text not null,                -- shown in Calendar ("Google Calendar · sam@…")
+  refresh_token  text not null,                -- plain text for DevDay; encrypt with the rest (section 12)
+  sync_token     text,                         -- Google's incremental sync token, if used
+  last_synced_at timestamptz,
+  created_at     timestamptz not null default now(),
+  unique (workspace_id, provider)
+);
+
 -- ---- RLS: clients may read their workspace; nobody but the API writes ----
 
 create function is_member(ws uuid) returns boolean
@@ -345,6 +359,7 @@ alter table tool_calls        enable row level security;
 alter table usage_ledger      enable row level security;
 alter table join_codes        enable row level security;
 alter table join_attempts     enable row level security;
+alter table connections       enable row level security;   -- no policies: the API's service role only
 
 create policy workspaces_read  on workspaces        for select to authenticated using (is_member(id));
 create policy members_read     on workspace_members for select to authenticated using (user_id = auth.uid());
@@ -559,11 +574,50 @@ The rows below finish the demo account. Every number, name and date on a board o
 | `settings.pins` | Groceries, Budget, Calendar, To-dos (in that order) | Default pins from the templates; long-press a pin to swap |
 | `settings.credits_monthly` | 50 | Plan default (free plan) |
 | `settings.notes_enabled` | true | Settings → What Clair remembers → Turn off notes |
-| `workspace_members.app_opens` | Groceries 5:41 pm today, Budget 5:30 pm, Calendar 12:10 pm, To-dos 8:05 am, Notes Thu 19 Nov 10:30 am, Workout Thu 19 Nov 6:50 pm, Classes Thu 19 Nov 9:00 am, Subscriptions Sun 15 Nov | The client records an open each time an app opens (FR-D8); "Your apps" sorts by it |
+| Appearance (FR-T6) | Match phone; light ground Mint air; dark ground Denim dusk | The defaults. **Not built for DevDay: nothing is stored and there is no field or endpoint for it yet.** After DevDay it is a per-user setting (it follows the person to every device), so it belongs with the member, not in the workspace `settings` above; the column, its shape and whether `PATCH /settings` carries it are still to be designed |
+| `workspace_members.app_opens` | Groceries 5:41 pm today, Budget 5:30 pm, Calories 3:40 pm, Calendar 12:10 pm, To-dos 8:05 am, Running Thu 19 Nov 5:15 pm, Meditation Thu 19 Nov 10:45 pm, Notes Thu 19 Nov 10:30 am, Workout Thu 19 Nov 6:50 pm, Classes Thu 19 Nov 9:00 am, Subscriptions Sun 15 Nov, Cycle Sun 15 Nov | The client records an open each time an app opens (FR-D8); "Your apps" sorts by it |
 
-**The 8 apps.** One page block each, from the starter templates (§10): `notes`, `budget`, `subscriptions`, `groceries`, `calendar`, `classes`, `todos`, `workout`. Most come from onboarding chips (`origin template`). Two Sam built with Clair: Notes on Tue 25 Aug, from "notes for each of my classes", and Subscriptions on Sun 1 Nov (`origin clair`, one build run each, 10 credits; August's build isn't in November's ledger).
+**The 12 apps** (third cut, late Nov 19, ADR-010). One page block each: `notes`, `budget`, `subscriptions`, `groceries`, `calendar`, `classes`, `todos`, `workout` (the original 8), plus `calories`, `running`, `cycle` and `meditation`. Most come from onboarding chips (`origin template`); Meditation was added from New app → starters (`origin template`, no credits). Five Sam built with Clair, one build run and 10 credits each, none in November's ledger except Subscriptions: Notes on Tue 25 Aug ("notes for each of my classes"), Cycle on Tue 1 Sep ("Track my cycle and keep it private"), Running on Sun 25 Oct ("I'm running a 10K on Sat 12 Dec. Track my runs"), Calories on Sat 31 Oct ("Track what I eat, calories and protein"), and Subscriptions on Sun 1 Nov. The three new builds use the specs of the same key in §10. The boards and prototypes still draw 8 patches; the seed wins.
 
-**Credits.** `usage_ledger` for November: grant +50 (Sun 1 Nov 12:00 am), build −10 (Sun 1 Nov, Subscriptions; one build run, its screenshot included), chat −1 (Sun 8 Nov, "Costco receipts go on Costco run"), chat −1 (Tue 17 Nov, "move leg day to 7 am"), chat −1 (Tue 17 Nov, "don't suggest snacks"), photo −5 (Thu 19 Nov, Union food court receipt). Used 18, so **32 of 50 left, resets Tue 1 Dec**, before the demo beats. The receipt and fridge photos cost 5 each, so it reads 22 after both.
+**The "before" state, for the recording** (`spec/clair-agent.md` §12.11). A second workspace, `DEMO_RECORD_WORKSPACE_ID`, reset with `POST /dev/reset?state=before`, holds the same seed without Calories, Running, Cycle and Meditation and their rows: 8 apps, credits 32. The three builds are recorded there. It is never shown live.
+
+**Calories.** `settings.target` 2,200 (Made by: Calories → Set a daily target; a new account has none). Face: sum of `meals.calories` today, "today", which reads **1,140 today** (of 2,200). Every row was typed in Calories → Add, except Thursday's lunch, which Clair proposed with the Union food court receipt.
+
+| Day | Meals (calories · protein g) | Day total |
+| --- | --- | --- |
+| Mon 16 Nov | Oatmeal and banana 350 · 10; Turkey sandwich 520 · 28; Pasta with chicken 780 · 42 | 1,650 |
+| Tue 17 Nov | Greek yogurt and granola 310 · 18; Leftover pasta 640 · 34; Tacos 820 · 38 | 1,770 |
+| Wed 18 Nov | Oatmeal and banana 350 · 10; Taco Bell burrito 690 · 24; Chicken and rice 640 · 45 | 1,680 |
+| Thu 19 Nov | Eggs and toast 380 · 22; Union food court rice bowl 690 · 30; Frozen pizza 900 · 36 | 1,970 |
+| Fri 20 Nov (today) | Oatmeal and banana 350 · 10 (8:10 am); Chicken and rice 640 · 45 (12:30 pm); Greek yogurt 150 · 15 (3:40 pm) | 1,140 |
+
+`foods` (saved, Made by: Calories → Foods → Save): Oatmeal and banana 350 · 10; Chicken and rice 640 · 45; Greek yogurt 150 · 15.
+
+**Meditation.** Face: sum of `sessions.minutes` this week, "min this week", which reads **25 min this week**. Rows typed in Meditation → Add (there is no timer in the DevDay build).
+
+| at | kind | minutes | mood before → after |
+| --- | --- | --- | --- |
+| Mon 16 Nov 10:30 pm | Sleep | 10 | 2 → 4 |
+| Wed 18 Nov 7:40 am | Breathing | 5 | 3 → 4 |
+| Thu 19 Nov 10:45 pm | Body scan | 10 | 2 → 3 |
+
+**Cycle.** `settings.clair_read` is **true** on the demo account (Made by: Cycle → Let Clair read this, Sun 15 Nov; the app was built with it off, and a new Cycle app always starts with it off). With it off the app is left out of Clair's snapshot, the planning brief and every read tool. Nothing is encrypted. Face: the latest `cycles.start`, "last period started", which reads **Tue 27 Oct**. Rows tapped in Cycle → Log.
+
+| Collection | Rows |
+| --- | --- |
+| `cycles` | Tue 1 Sep (28 days), Tue 29 Sep (28 days), Tue 27 Oct (open). The brief works out "expected next Mon 23 to Wed 25 Nov" from these (the mean length, plus or minus a day); no prediction is stored or shown in the app |
+| `days` | Days 1 and 2 of each cycle: Tue 1 and Wed 2 Sep, Tue 29 and Wed 30 Sep, Tue 27 and Wed 28 Oct. Each: flow Medium (day 1) or Heavy (day 2), cramps, **energy 2**. Day 3 of each: Light, energy 3 |
+
+**Running.** Face: sum of `runs.distance` where done, this week, "mi this week", which reads **7 mi this week**. The race came from the build sentence; runs were added in Running → Add after each run.
+
+| Collection | Rows |
+| --- | --- |
+| `races` | Winter 10K, Sat 12 Dec 9:00 am (on Calendar as "Race · Winter 10K"; Sam renamed "10K" after the build) |
+| `runs` (all done) | Long: Sat 31 Oct 4 mi 40 min; Sat 7 Nov 4.5 mi 44 min; Sat 14 Nov 5 mi 49 min. Easy: Tue 3 Nov 3 mi 30 min; Tue 10 Nov 3 mi 29 min; Thu 12 Nov 3.5 mi 34 min; Tue 17 Nov 5:30 pm 3 mi 29 min; Thu 19 Nov 4:30 pm 4 mi 38 min |
+
+No run is planned before the demo, so nothing from Running sits on Calendar except the race.
+
+**Credits.** `usage_ledger` for November: grant +50 (Sun 1 Nov 12:00 am), build −10 (Sun 1 Nov, Subscriptions; one build run, its screenshot included), chat −1 (Sun 8 Nov, "Costco receipts go on Costco run"), chat −1 (Tue 17 Nov, "move leg day to 7 am"), chat −1 (Tue 17 Nov, "don't suggest snacks"), photo −5 (Thu 19 Nov, Union food court receipt). Used 18, so **32 of 50 left, resets Tue 1 Dec**, before the demo beats. The planner beat is one chat step, so it reads **31** after it; turning on the rule costs nothing. If the receipt beat follows it costs 5 (26).
 
 **Budget.** `settings.limit` 120000 ($1,200). The `category` select options carry an optional `limit` (FR-D3): Groceries $200, Eating out $150, Rent (none), Fun (none), Transport $100, Subscriptions $40. November `spend` rows total **$788.00**, so the face reads **$412 left**:
 
@@ -640,7 +694,35 @@ No reminder is set yet, so Home can offer "Remind you the night before?" for Spo
 
 Total $142.00. October trips (Fri 9 Oct to Sat 31 Oct) come from a fixed rule: each usual is bought every `every_days` counting back from its November date, grouped into one trip per day, at Smith's when the trip has 3 or more items and at Corner Market otherwise, at the prices above. They feed `get_usuals` only. Every trip, October and November, was added with Groceries → Trips → Add (Made by: gesture).
 
-**Calendar.** One event of its own: **Coffee with Maya**, Sat 21 Nov 10:00 am (Calendar → Add). Everything else on Calendar comes from `*dated`. Today at 5:45 pm that is 3 rows: Pull day 6:00 pm (Workout), Take out recycling 8:00 pm (To-dos), Return library books 9:00 pm (To-dos). Nothing else falls today: no class meets on Fridays, and DevDay demo is done. After the receipt, "Grocery trip · Corner Market 5:41 pm" makes 4.
+**Calendar.** Its own events: **Coffee with Maya**, Sat 21 Nov 10:00 am, and three past haircuts with `kind: Barber` (all Calendar → Add): **Haircut** Sat 8 Aug 11:00 am, Sat 12 Sep 11:00 am and Sat 17 Oct 11:00 am, each 35 days apart, so the next is due Sat 21 Nov. Everything else on Calendar comes from `*dated`. Today at 5:45 pm that is 3 rows: Pull day 6:00 pm (Workout), Take out recycling 8:00 pm (To-dos), Return library books 9:00 pm (To-dos). Nothing else falls today: no class meets on Fridays, and DevDay demo is done. After the receipt, "Grocery trip · Corner Market 5:41 pm" makes 4.
+
+**Demo beat: the appointment check** (`spec/clair-agent.md` §12.10; engine ladder step 2b). Sam asks "Am I due for any appointments?". Clair reads Calendar events that have a `kind`, finds the 35-day haircut gap and proposes one event: **Haircut**, `kind: Barber`, Sat 21 Nov 2:00 pm (the usual 11:00 am is right after Coffee with Maya), `remind: 1d`. Target: Calendar ("Add to Calendar"). Calendar stays "3 today" and Next up is unchanged (its three rows are all tonight). The offer after it: "Check every Sunday at 7 pm?" → Calendar's Workflows tab: "Every Sunday at 7:00 pm, check for appointments that are due". Credits: 1 (31 → 30 after the planner). The reminder is stored; no notification is sent from the website.
+
+**Google Calendar events (the demo Google account).** Four events, all next week, so nothing changes today's counts or Next up. The demo Google account's main calendar must hold exactly these between Fri 13 Nov and Tue 19 Jan and nothing else. They reach Quilt through the connection (section 8a) as `calendar/events` records with `source: "google"`; `/dev/reset` deletes them and syncs again if the connection exists. With `DEMO_GCAL_FIXTURE=1` the seed script writes the same four records itself, for a day when Google sign-in doesn't work.
+
+| title | at | ends | Made by |
+| --- | --- | --- | --- |
+| Dentist | Tue 24 Nov 7:30 am | 8:30 am | Google Calendar sync (Sam made it in Google) |
+| Drive home for Thanksgiving | Wed 25 Nov 5:00 pm | 9:00 pm | Google Calendar sync |
+| Thanksgiving at home | Thu 26 Nov (all day) | Sat 28 Nov (all day) | Google Calendar sync |
+| Back to campus | Sun 29 Nov 12:00 pm | 1:00 pm | Google Calendar sync |
+
+**Next week before the planner** (Mon 23 to Sun 29 Nov). Workout's repeating series give 4 sessions: Pull day Mon 6:00 pm, Leg day Tue 7:00 am, Push day Wed 6:00 pm, Pull day Fri 6:00 pm. Classes: MATH 1210 and CS 3500 on Mon and Wed (11:50 am, 3:00 pm), ECON 1010 on Tue 9:10 am (Thu 26 Nov is skipped). Due: Start CS 3500 project Mon 11:59 pm, Homework 11 Tue 11:59 pm. To-dos with a time: none next week except Take out recycling Fri 8:00 pm. Three sessions clash with a Google event: Leg day (Dentist), Push day (Drive home) and Friday's Pull day (Thanksgiving at home).
+
+**Demo beat: the training planner** (`spec/clair-agent.md` §12.9; third cut). Sam types "Plan my training for next week". One change set, shown here at rung 4 (the full plan); lower rungs are prefixes of it (rung 1: the four lifts; rung 2: plus the two runs; rung 3: plus the "also" line and the calorie sentence):
+
+| When | What | Change | Reason on the row · source |
+| --- | --- | --- | --- |
+| Mon 23 Nov 6:00 pm | Pull day | kept | Free after CS 3500 · Classes |
+| Tue 24 Nov 7:00 am → 5:00 pm | Leg day | moved | Dentist at 7:30 am · Google Calendar. Also: shortest session; energy 2 logged on day 1 of your last 3 cycles · Cycle |
+| Wed 25 Nov 6:00 pm → 7:00 am | Push day | moved | Drive home at 5:00 pm · Google Calendar |
+| Thu 26 Nov 8:00 am | Easy run, 3 mi | new, Running | Away from the gym; a run goes anywhere · Google Calendar |
+| Sat 28 Nov 9:00 am | Long run, 5.5 mi | new, Running | 10K on Sat 12 Dec; last long run 5 mi · Running |
+| Fri 27 Nov 6:00 pm → Sun 29 Nov 4:00 pm | Pull day | moved | Back on campus Sun 12:00 pm · Google Calendar |
+| Tue 24 Nov 9:30 pm | To-do "10 min body scan" | new, To-dos | After Leg day; 3 sessions logged this week · Meditation |
+| Weekly shop | Oats | new, Groceries | Oatmeal 3 of 5 mornings; not on your list · Calories |
+
+Card summary: "4 lifts (1 kept, 3 moved), 2 runs, 1 recovery to-do, 1 grocery item. Mon to Thu you logged 1,650 to 1,970 calories a day (target 2,200)." Targets at rung 4: Workout, Running, To-dos, Groceries and Calendar ("Add to 5 apps"). One face on Home changes: **Groceries 12 → 13 to buy**. Workout stays "3 this week", Calendar "3 today", To-dos "2 today", Running "7 mi this week", because everything else lands next week. Oats is on no list and in no seeded trip. Turning on the rule adds `workflows[0]` to Workout's page block (`spec/workflows.md`): "Every Sunday at 7:00 pm, plan next week's training", on. Workout then has 6 tabs. Credits 32 → 31. `/dev/reset` removes all of it.
 
 **To-dos.** Template `todos` gains `place` (text). Face: count of open to-dos due today, "today", which reads **2 today**.
 
@@ -655,13 +737,13 @@ Total $142.00. October trips (Fri 9 Oct to Sat 31 Oct) come from a fixed rule: e
 
 Open: 4. Class work lives in Classes and shows in Home's Next up and Calendar through `*dated`. It isn't copied into To-dos.
 
-**Classes.** As in the table above, with one change: MATH 1210 meets **MW** 11:50 am (not MWF), so no class falls on Friday and Calendar's "3 today" holds.
+**Classes.** As in the table above, with two changes: ECON 1010's repeat has `skip: ["2026-11-26"]` (Thanksgiving; Made by: Classes → the class → Skip this date), and MATH 1210 meets **MW** 11:50 am (not MWF), so no class falls on Friday and Calendar's "3 today" holds.
 
 **Workout.** The template gains routines, exercises, sets and two session fields (§10). Face: count of sessions done this week, which reads **3 this week** (of 4 planned).
 
 | Collection | Rows |
 | --- | --- |
-| `routines` | Pull (about 45 min), Push (about 40 min), Legs (about 35 min). Workout itself came from the onboarding chip on Tue 1 Sep (template); Sam added the routines and exercises with Workout → Routines → Add (gesture) |
+| `routines` | Pull (about 45 min), Push (about 40 min), Legs (about 35 min), each with `needs: Gym` (third cut; the planner keeps gym routines off days Sam is away). Workout itself came from the onboarding chip on Tue 1 Sep (template); Sam added the routines and exercises with Workout → Routines → Add (gesture) |
 | `exercises` (plan, in order) | Pull: 1 Pull-ups 3×8 bodyweight, 2 Lat pulldown 3×10, 3 Seated cable row 3×12 at 100 lb, 4 Face pulls 3×15 at 40 lb, 5 Hammer curl 3×12 at 25 lb. Push: Push-ups 3×12 bodyweight, Dumbbell bench 3×10 at 40 lb. Legs: Goblet squat 3×10 at 45 lb, Walking lunges 3×12 bodyweight |
 | `sessions` | Three repeating series from Tue 1 Sep: Pull day (Mon and Fri 6:00 pm), Leg day (Tue; 6:00 pm until Clair moved it to 7:00 am on Tue 17 Nov, a confirmed change set), Push day (Wed 6:00 pm). 46 occurrences from 1 Sep to 19 Nov, 5 skipped (Mon 7 Sep Labor Day; Mon 12, Tue 13, Wed 14 and Fri 16 Oct fall break), so **41 done since September**. This week: Mon Pull, Tue Legs and Wed Push done; Fri Pull day at 6 pm open |
 | `sets` | Logged in Workout → Today → Log a set. Lat pulldown starts at 100 lb and goes up 5 lb every two weeks from Mon 21 Sep (105 on 5 Oct, 110 on 19 Oct, 115 on 2 Nov, 120 on 16 Nov), so Progress reads "100 → 120 lb in 8 weeks". This week: Mon Pull (Lat pulldown 3×10 at 120, Seated cable row 3×12 at 100, Face pulls 3×15 at 40, Hammer curl 3×12 at 25, Pull-ups 3×8 at 0), Tue Legs (Goblet squat 3×10 at 45, lunges at 0), Wed Push (Dumbbell bench 3×10 at 40, Push-ups at 0). Volume this week (sum of weight × reps) is **12,450 lb**. Every earlier done session has one set row per planned set of its routine, at the plan's reps and weight, with Lat pulldown at the ramp weight for that date; skipped occurrences have no sets |
@@ -673,9 +755,9 @@ Open: 4. Class work lives in Classes and shows in Home's Next up and Calendar th
 | `notebooks` | nb_econ ECON 1010 (class c01), nb_math MATH 1210 (c02), nb_cs3500 CS 3500 (c03), nb_personal Personal |
 | `notes` | Tue 10 Nov, MATH 1210, "Related rates examples". Sun 15 Nov, Personal, "Gift ideas for mom". **This week:** Mon 16 Nov 3:50 pm, CS 3500, "Unit testing with mocks"; Wed 18 Nov 3:55 pm, CS 3500, "Dependency injection"; Thu 19 Nov 10:30 am, ECON 1010, "Price elasticity". All made by Notes → folder → New note (typed) |
 
-The whiteboard fallback beat adds the fourth this week, from a whiteboard photo (`spec/clair-agent.md` §12.0a): Notes 3 → 4 this week, Classes 2 → 3 due this week (HW 4, CS 3500, due Tue 24 Nov 11:59 pm), and Calendar gains HW 4 on Tue (today's count is unchanged).
+The whiteboard example (not built for DevDay) would add the fourth this week, from a whiteboard photo (`spec/clair-agent.md` §12.0a): Notes 3 → 4 this week, Classes 2 → 3 due this week (HW 4, CS 3500, due Tue 24 Nov 11:59 pm), and Calendar gains HW 4 on Tue (today's count is unchanged).
 
-**Demo beat 1 adds the Car app.** Nothing about the car is seeded except the $28.00 gas spend. The build (`spec/clair-agent.md` §12.0) adds the 9th app, Car, with 3 service rows from the photo, an Oil change on Calendar for Sat 5 Dec, and the `car/log → budget/spend` stitch on Budget. The 5-second fill then adds a log row (Campus Auto, $44.99, 61,980 mi) and moves the next oil change to Thu 20 May 2027. It also adds a Transport spend, so Budget goes $412 → $367 and Transport reaches $86.99 of $100. Credits go 32 → 22 → 17. `/dev/reset` removes all of it.
+**The Car app (not built for DevDay, ADR-010).** The build stays the product's reference example (`spec/clair-agent.md` §12.0) and its numbers stay canonical for the boards: Car with 3 service rows from the photo, an Oil change on Calendar for Sat 5 Dec, the `car/log → budget/spend` stitch on Budget; then the fill adds a log row (Campus Auto, $44.99, 61,980 mi), moves the next oil change to Thu 20 May 2027 and adds a Transport spend, so Budget goes $412 → $367 and Transport reaches $86.99 of $100 (8 → 9 apps; credits 32 → 22 → 17 if it were run from the fresh seed). Nothing about the car is seeded except the $28.00 gas spend.
 
 **Clair notes.** Two notes before the demo, both in Sam's own words: "Receipts from Costco go on Costco run." (preference, Sun 8 Nov) and "Don't suggest snacks" (preference, Tue 17 Nov). The fridge beat adds the third, "You stopped buying orange juice", so "What Clair remembers" reads 3 only after the fridge beat.
 
@@ -719,6 +801,8 @@ Occurrences are computed per window and never stored: Calendar asks for a month 
 **Completing an occurrence** (`POST /records/{id}/complete {occurrence}`): appends the date to `log`, then sets the date field to the next occurrence after the later of that occurrence and today, skipping `skip` dates. If the rule has no more occurrences (`UNTIL` passed), `done` becomes true. One change set, so Undo puts both back.
 
 **Skipping** (`POST /records/{id}/skip {occurrence}`) appends to `skip` and moves the date field the same way. **"Edit this one only"** (Later) will split the occurrence into its own record and add its date to `skip`.
+
+**Moving one occurrence** (FR-C19b; DevDay: only through a Clair proposal). The op `{op: "move_occurrence", app, collection, record_id, occurrence, fields: [{key: <dateField>, value: <new datetime>}]}` expands to two commands in the same change set: an `update` that appends `occurrence` to the series' `skip`, and an `insert` of a one-off record in the same collection that copies the series' fields without `repeat`, takes the new date and carries `_moved_from: {record_id, occurrence}`. Undo removes the one-off and takes the date out of `skip`. Validation: the occurrence must exist on the series, lie in the future and not be in `log` or `skip`. This is "Edit this one only" for the date field, pulled forward; the gesture for it stays Later.
 
 **`*dated` across every app.** A virtual source, not a table. For each live collection with `calendar: true` and a `dateField`, every record in the window becomes `{at, title, sub, app, record_id, occurrence?}` (`title` is "<label> · <record title>" when the collection has a `label`); records with a repeat field contribute their occurrences instead. Calendar's block reads `source: "*dated"`; Home's Next up takes the next 3 within 72 hours. Records with `done` true are left out. In the starter templates: trips, subscription renewals, class times, due dates, calendar events, to-dos and workouts have `calendar: true`; Budget spends and grocery items don't. A change to any record in a calendar collection makes Calendar a target of the change set (`ui-tech-plan.md` §4 `affected`).
 
@@ -920,11 +1004,51 @@ A guest-only account, or one whose email isn't confirmed yet, can't make a join 
 
 **A laptop's own guest workspace.** The laptop's first open made an anonymous user and an empty workspace before it joined. Joining switches the session; that guest workspace is orphaned and purged later with other unused guest workspaces (section 12).
 
-**Deep links** (open a magic link or a join code from a notification straight into the APK) use the Capacitor `App` plugin's `appUrlOpen`. Later.
+**Deep links** (open a magic link or a join code from a notification straight into the app) wait for the native app. Later.
 
 **Workspaces.** One per user for now; the API uses the caller's only membership. Roles beyond `owner` are deferred (v3 §8.6).
 
-**CORS.** The website is same-origin. The APK's web view has its own origin (`https://localhost` by default on recent Capacitor Android; **spike (T1)**: read it from the device). The API allows exactly the website origin and that one.
+**CORS.** The website is same-origin on the phone and the laptop, so the API allows only the website origin (ADR-010; no web-view origin to add).
+
+---
+
+## 8a. Google Calendar connection (event day, FR-G1 to FR-G3)
+
+Read-only, one Google account per workspace. It is a connection, not a sign-in: the Quilt session stays the Supabase one, and Supabase's Google provider isn't used for it, because Supabase doesn't keep or refresh Google's tokens. The API runs Google's OAuth authorization-code flow itself. **Everything Google-specific below is from memory: confirm each parameter against Google's current docs in the spike before relying on it.**
+
+**Set up tonight (configuration, not code).** A Google Cloud project with the Calendar API enabled; an OAuth consent screen in testing mode with the demo Google account added as a test user; an OAuth client of type "Web application" whose redirect URI is `https://<deployment>/api/connect/google/callback`. Env: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`. An unreviewed app shows Google's "unverified app" screen and its refresh tokens are short-lived; fine for the demo, not for launch.
+
+**Flow.**
+
+1. Calendar → "Add Google Calendar" calls `POST /connect/google/start`. The API returns Google's consent URL with scope `https://www.googleapis.com/auth/calendar.readonly`, `access_type=offline`, `prompt=consent` and a `state` it signs (user id, workspace id, a nonce, 10 minutes). The client navigates the whole page there; no popup, so it works on the phone.
+2. Google redirects to `GET /connect/google/callback?code&state` (no bearer token; `state` is the proof). The API checks `state`, exchanges the code for tokens, reads the account's email, upserts the `connections` row with the refresh token, runs the first sync, and redirects to `/app/calendar?connected=google`.
+3. Calendar shows "Google Calendar · <email> · synced just now" with Refresh and Disconnect.
+
+**Sync** (`POST /connect/google/sync`, also called by the API itself). Get an access token from the refresh token. List events on the `primary` calendar from 7 days before `now()` to 60 days after, with recurring events expanded into single events, cancelled ones included so they can be removed. Map each to a `calendar/events` record:
+
+| Google | Record field |
+| --- | --- |
+| `summary` | `title` (empty → "Busy") |
+| `start.dateTime` / `end.dateTime` | `at` / `ends` as datetimes in the workspace zone |
+| `start.date` / `end.date` (all day) | `at` / `ends` as dates; Google's end date is exclusive, so store the day before |
+| event `id` | `ext_id` |
+| | `source: "google"` |
+
+Records are matched on `ext_id`: new → `insert`, changed → `update`, cancelled or gone from the window → `delete`. All of it is one change set, `actor system`, `origin connector`, `stitched`, not offered for Undo; an empty diff writes nothing. The inserts on `events` nudge both devices as usual. Description, attendees, location and links are not stored.
+
+**When it runs.** On connect; when Calendar opens and `last_synced_at` is more than 60 s old; on Refresh; at the start of a Clair run whose text matches the planning check (`spec/clair-agent.md` §12.9), so the plan never uses a stale calendar. No webhook and no background job for DevDay.
+
+**Read-only in Quilt.** The command service rejects `update`, `move`, `delete` and `move_occurrence` on a record with `source` set unless the change set's origin is `connector` (`422 {error: "from_google"}`). The client shows such rows with "from Google" and no edit sheet. Clair's validation returns the same error as a tool result, so it corrects itself.
+
+**In `*dated`.** Google records are ordinary `calendar/events` records, so Calendar, Next up and Clair's `query_records(app="*", collection="*dated")` see them with `sub: "Google Calendar"`. An all-day record covers each day from `at` to `ends` in a window. All-day records count in Calendar's "today" face; the demo's are all next week.
+
+**Disconnect** (`DELETE /connect/google`). Deletes the imported records (one `connector` change set) and the `connections` row, and revokes the token at Google if the call succeeds.
+
+**`/dev/reset`.** Reseeds the workspace, keeps the `connections` row and runs a sync. With `DEMO_GCAL_FIXTURE=1` it writes the four seeded events instead and skips Google.
+
+**Failure.** Consent denied or `state` bad: back to Calendar with "Google Calendar wasn't connected." Token refresh fails (revoked or expired): the row stays, Calendar shows "Reconnect Google Calendar", imported records stay as they were. A sync error never fails a Clair run; the run goes on with what is stored and the understanding line adds "Google Calendar last synced <time>".
+
+**Fallback if the OAuth spike fails:** read the calendar's secret iCal address instead (pasted once into env `DEMO_GCAL_ICS_URL`), parsed with the ICS reader FR-C12 plans for files, into the same records. Same screens, no sign-in.
 
 ---
 
@@ -969,6 +1093,14 @@ All paths are under `/api` on the Vercel deployment. All bodies are Pydantic mod
 | `POST /me/bootstrap` | `{tz?}` | `{user, is_anonymous, workspace, credits}`; creates the workspace on first call | new |
 | `GET /me` | | `{user, is_anonymous, workspace, credits, server_now}` | new |
 | `PATCH /settings` | `{tz?, read_level?, pins?}` | `{workspace}` | new |
+| `POST /connect/google/start` | | `{url}` (Google's consent URL; the client navigates to it) | new (section 8a) |
+| `GET /connect/google/callback` | `?code&state` (from Google; no bearer token) | `302` to `/app/calendar?connected=google`, or `?connected=failed` | new |
+| `GET /connect` | | `[{provider, account_email, last_synced_at, needs_reconnect}]` | new |
+| `POST /connect/google/sync` | | `{added, changed, removed, last_synced_at}` | new |
+| `DELETE /connect/google` | | `204` | new (Live+) |
+| `POST /apps/{id}/workflows` | `{sentence, trigger, action}` (Turn on, FR-W1; validated against the engine v1 grammar in `spec/workflows.md`) | command result (the spec gains `workflows[]`) | new |
+| `PATCH /apps/{id}/workflows/{wid}` | `{on}` | command result | new |
+| `POST /apps/{id}/workflows/{wid}/run` | | `{run_id}`; starts the rule's Clair run, events as for `/clair/turns` (FR-W2). `409` if the rule is off | new |
 | `POST /templates/apply` | `{templates: string[]}` | command result (one `template` change set) | new |
 | `GET /home` | | `{greeting, status, needsOk: Card[], nextUp: Dated[], noticed?, apps: Patch[], seq}` | `GET /api/home` |
 | `GET /apps` | | `Patch[]` with faces | `GET /api/apps` |
@@ -1003,7 +1135,7 @@ All paths are under `/api` on the Vercel deployment. All bodies are Pydantic mod
 | `POST /join-codes` | | `{code, expires_at}` (5 minutes), or `403` for a guest-only or unconfirmed account | new |
 | `POST /join-codes/redeem` | `{code}` (no auth) | `{email, token_hash}`, or `404` / `410` / `429` | new |
 | `POST /cron/sweep` | header from Vercel Cron | `204`; expires questions, deletes uploads older than 30 days | new |
-| `POST /dev/reset` | header `X-Demo-Key` | `204`; reseeds the workspace `DEMO_WORKSPACE_ID` (env) and bumps its `epoch`; never touches another workspace or the demo auth user | `POST /api/dev/reset` |
+| `POST /dev/reset` | header `X-Demo-Key`; `?state=before` reseeds `DEMO_RECORD_WORKSPACE_ID` to the 8-app state for the recording (§2.3) | `204`; reseeds the workspace `DEMO_WORKSPACE_ID` (env) and bumps its `epoch`; never touches another workspace or the demo auth user | `POST /api/dev/reset` |
 
 `ChangeSet` is `ui-tech-plan.md` §4's `Proposal` with these names: `{id, status, source, title, summary, ops, lines, expanded, targets, deltas, actions, flagged, version}`.
 
@@ -1030,7 +1162,13 @@ On DevDay `/home` returns only `change_set` cards; the other kinds are in the ty
 | `classes` Classes | `classes {name, title, room, time datetime, repeat}` ●; `due {title, kind select[assignment, exam], at date or datetime, class relation, done bool}` ● | none | count of `due` where done = false and `at` within 7 d, "due this week" |
 | `workout` Workout | `sessions {name, routine relation, at datetime, repeat, done bool, started_at datetime, minutes number}` ●; `routines {name, minutes number}`; `exercises {name, routine relation, sets number, reps number, weight number, order}`; `sets {exercise relation, session relation, reps number, weight number, at datetime}` with row formula `volume = weight × reps` | none | count of done `sessions` occurrences this week, "this week" |
 | `todos` To-dos | `todos {title, due date or datetime, place text, done bool, repeat, remind}` ● | none | count where done = false and `due` today, "today" |
-| `calendar` Calendar (always added) | `events {title, at datetime, ends datetime, repeat}` ●; its blocks read `*dated` | none | count of `*dated` today, "today" |
+| `calories` Calories (Food; built by Clair in the demo, also a starter) | `meals {name, calories number, protein number, meal select[Breakfast, Lunch, Dinner, Snack], at datetime, photo file}` (not in Calendar); `foods {name, calories number, protein number}` | none for DevDay (later: an Eating out receipt proposes a meal) | sum of `meals.calories` today, "today"; `settings.target` starts unset |
+| `running` Running (third cut; built by Clair in the demo) | `runs {name, kind select[Easy, Long, Tempo, Intervals, Race], distance number, minutes number, at datetime, done bool}` ● label "Run" (done runs drop off Calendar like any done record); `races {name, at date or datetime, distance text}` ● label "Race" | none | sum of `runs.distance` where done, this week, "mi this week" |
+| `meditation` Meditation (DevDay addition) | `sessions {kind select[Breathing, Body scan, Sleep, Walking], minutes number, at datetime, mood_before number, mood_after number, note}` (not in Calendar: they are logs) | none | sum of `sessions.minutes` this week, "min this week" |
+| `cycle` Cycle (built by Clair in the demo; `settings.clair_read` false by default) | `days {date, flow select[None, Light, Medium, Heavy], symptoms text, energy number, note}`; `cycles {start date, length number}` (not in Calendar) | none | `{agg: max, from: cycle/cycles, field: start}`, "last period started" |
+| `calendar` Calendar (always added) | `events {title, at date or datetime, ends date or datetime, repeat, kind select[Doctor, Dentist, Barber, Other] (optional), remind, source text, ext_id text}` ● (`source` and `ext_id` are set only by a connector, section 8a); its blocks read `*dated` | none | count of `*dated` today, "today" |
+
+**Tabs of the starter apps** (owner decision, Nov 19; a Workflows tab is added to any app that has rules). Groceries: List, Trips. Workout: Today, Log, History, Progress, Routines. Budget: Overview (left this month, category progress), Spending, Categories. Calories: Today (progress toward the target when one is set, today's meals), Log, Foods; Trends (chart) after DevDay. Meditation: Sessions, This week. Cycle: Log, Cycles. Running: This week, Log, Races. Calendar: Today, Week, Events. To-dos: Today, All, Done. Classes: Schedule, Due, Exams. Notes: Notebooks, All notes. Subscriptions: Subscriptions, Renewals.
 
 **Status codes.** `401` no or bad token; `402` out of credits; `403` read level `none`, or a guest or unconfirmed account making a join code; `404` not found or not yours; `409` state conflict (transition, version, undo precondition, list still has items, thread busy); `410` join code or menu question expired; `413` attachment too large; `422` validation with `{error, issues[]}`; `429` rate limit.
 
@@ -1135,64 +1273,79 @@ This table is the **post-demo backlog**, except the rows marked **(demo)**: thos
 | §12.1 Tauri desktop | The laptop uses the website | Desktop retention lags, or a native-only feature (menu bar, global shortcut) |
 | §13 marketplace, live collaboration, B2B, paywall | Not built; `usage_ledger` meters credits from day one | As v3 §13 |
 | §9.3 `agent_memories` (encrypted) | `clair_notes` (plain, visible, deletable) | Adapted, not deferred |
+| Encryption of connector tokens | The Google refresh token is plain text in `connections`, which no client can read | With encryption at rest (first row), and before any account that isn't ours connects |
+| Workflow engine beyond v1 (`spec/workflows.md`) | Version 1 on the day: triggers `row_added`, `field_changed`, `schedule`; actions `write_row`, `ask_clair`; built up a ladder, cut from the top | Right after DevDay: date and connector triggers, `remind`, `send`, plan limits; it is the paid layer |
+| Native phone app | The website in the phone's browser, added to the Home screen (ADR-010) | After DevDay: health data, notifications, widgets and the share sheet all need it |
 
 ---
 
 ## 13. Build order
 
-Two people: **A** (API, data, Clair) and **B** (client, motion, Capacitor). The judged feature (photo → basted proposal → stitched into three apps) is built on Nov 20; the base is built tonight. If tonight slips, do T1–T3 first thing on the day and drop D6.
+Rewritten late Nov 19 (ADR-010). Two people: **A** (API, data, Clair) and **B** (client, motion). The build is the website only; there is no Capacitor project. **Tonight** builds the base: the app working end to end, from a typed sentence to a confirmed, undoable change on two devices. **The day** builds the judged feature: the workflow engine, version 1 (`spec/workflows.md`), with the training planner as its first rule and Google Calendar feeding it, plus the three recorded builds (third cut: the owner asked for all of it, so the order and the cut order below are what keep the demo safe). If tonight slips, the day starts with what is left of the base, and the cut order below applies.
 
-**What the receipt path needs, and what can wait.**
+**What the base needs, what the feature adds, and what waits.**
 
-| | Needed for the receipt path (build first) | Later (fridge, onboarding, post-demo) |
-| --- | --- | --- |
-| Tables | `workspaces`, `workspace_members`, `blocks`, `change_sets`, `events`, `agent_runs`, `usage_ledger`, `join_codes`, `join_attempts`, plus `clair_threads` and `clair_messages`, which every run writes; the `clair-uploads` bucket | `clair_questions`, `clair_notes` (fridge, D4); `llm_calls`, `tool_calls` (log if time, else stdout); `product_events` (not built for DevDay) |
-| Endpoints | `/health`, `/me`, `/home`, `/apps`, `/apps/{id}`, `/sync`, `/change-sets` (list, confirm, undo, dismiss), `/clair/turns` (photo and `fixture`), `/clair/runs/{id}/events`, `/join-codes`, `/join-codes/redeem`, `/dev/reset` | `/me/bootstrap`, `/templates/apply` (D6); `/clair/notes`, `/clair/threads/latest` (D4); record gestures, list options, `PATCH /change-sets/{id}` (D5); `/search`, `/usage`, `/settings`, `/cron/sweep`, app create, edit and delete |
-| Behaviour | Undo as a plain inverse with `changed_since` warnings (section 5) | Undo `409` and `force`; most of section 11 |
+| | Base (tonight) | Feature (the day) | Later |
+| --- | --- | --- | --- |
+| Tables | `workspaces`, `workspace_members`, `blocks`, `change_sets`, `events`, `agent_runs`, `usage_ledger`, `join_codes`, `join_attempts`, `clair_threads`, `clair_messages` | `connections` | `clair_questions`, `clair_notes`; `llm_calls`, `tool_calls` (stdout for now); the `clair-uploads` bucket (second beat only) |
+| Endpoints | `/health`, `/me`, `/home`, `/apps`, `/apps/{id}`, `/sync`, `/change-sets` (list, confirm, undo, dismiss), `/clair/turns` (text), `/clair/runs/{id}/events`, `/join-codes`, `/join-codes/redeem`, `/dev/reset` | `/connect/google/*`, `/connect`, `/apps/{id}/workflows` (create, switch, run), `/clair/turns` with `fixture: "planner"` | `/me/bootstrap`, `/templates/apply`, `/clair/notes`, record gestures, list options, `PATCH /change-sets/{id}`, `/search`, `/usage`, `/settings`, `/cron/sweep`, app create, edit and delete |
+| Clair tools | `list_apps`, `query_records`, `report_understanding`, `propose_changes` (insert, update) | `move_occurrence` op, `reason` and `also` on each op, the planning brief (`api/clair/brief.py`), the planning check and its prompt section, the `offer` event, `propose_app` for the three sentences, `get_gaps`, `propose_workflow` (ladder step 4) | `propose_app`, `ask_user`, `save_note`, `get_usuals`, `search` |
+| Behaviour | Undo as a plain inverse with `changed_since` warnings (section 5) | Read-only `source` records; the sync before a planning run | Undo `409` and `force`; most of section 11 |
 
-**T1 spikes.** Two groups. If a "must pass tonight" spike fails, use its fallback before going on.
+**Spikes.** If a "must pass tonight" spike fails, use its fallback before going on.
 
 | Must pass tonight | Fallback |
 | --- | --- |
 | psycopg through the Supabase pooler in transaction mode, with `prepare_threshold=None` and `pg_advisory_xact_lock` inside a transaction | Session-mode pooler or a direct connection, one per request |
 | SSE from a Vercel Python function streams without buffering; read the plan's `maxDuration` | Client polls `GET /clair/runs/{id}/events` (section 10) |
-| Demo sign-in: the seed script creates the demo user; email and password sign-in works on the phone and the laptop | None; fix before going on |
-| The Capacitor debug APK installs and opens on the demo phone; read its web view origin for CORS | Phone browser on the website |
-| **Time one full receipt run on the deployed stack** (photo taken → `proposal` event). Set the "Use sample" threshold and the PRD latency AC from this number | If it's over 6 s: the receipt prompt runs from the snapshot only, with no read tools, and makes exactly one `propose_changes` call |
+| Demo sign-in: the seed script creates the demo user; email and password sign-in works in Chrome on the phone and on the laptop | None; fix before going on |
+| The site opens full screen from the phone's Home screen icon (web app manifest, `display: standalone`); the session survives closing and reopening it | A normal Chrome tab |
+| Google Cloud project, Calendar API on, consent screen in testing mode with the demo Google account as a test user, web OAuth client with the deployment's redirect URI (configuration only) | The secret iCal address (section 8a) |
 
-| Can slip to the day | Fallback |
+| First thing on the day | Fallback |
 | --- | --- |
-| JWT verification mode (JWKS or HS256) | Read it from the project settings in the morning |
+| Google OAuth round trip on the deployment: consent → callback → refresh token → one `events.list` call | The secret iCal address; then `DEMO_GCAL_FIXTURE=1` |
+| **Time one full planner run on the deployed stack** (sentence sent → `proposal` event). Set the "Use sample" threshold from it | If it's over 10 s: the planner prompt gets next week's `*dated` rows in the snapshot and makes exactly one `propose_changes` call with no read tools |
+| JWT verification mode (JWKS or HS256) | Read it from the project settings |
 | `generate_link` → `verifyOtp` for the join code | The laptop uses "I have a quilt · Sign in" |
-| Manual identity linking (Google) | Keep your quilt is Beta anyway |
-| Tool runner pause and resume (`clair-agent.md` §11) | The manual loop; needed by D4 only |
-| On-device speech recognition plugin (`clair-agent.md` §4) | Scripted transcript toggle |
-| Vercel request body limit | Uploads go to Storage directly either way |
 
 | When | A: API and Clair | B: client |
 | --- | --- | --- |
-| **Tonight (Nov 19)** | | |
-| T1 | Supabase project: schema and RLS from section 2.1, anonymous sign-in on. The "must pass tonight" spikes above | Vite + React shell, `tokens.css`, `base.css`, `motion.ts` port, `Bar`, `Spool`. Capacitor Android project building a debug APK; install it on the demo phone |
-| T2 | Seed script: the demo auth user (`DEMO_EMAIL`, `DEMO_PASSWORD`) and its workspace (`DEMO_WORKSPACE_ID`), Sam's 8 apps from the templates table (§2.3), the canonical seed (section 2.2: 3 Groceries lists, 6 weeks of trips with the fridge usuals, Budget `limit` 120000, `DEMO_NOW` 5:45 pm), the queued receipt card. `POST /dev/reset` on that workspace. FastAPI skeleton on Vercel: `/health`, JWT check, `GET /apps`, `GET /apps/{id}` with Python faces (`formula.py`) | Welcome with "I have a quilt · Sign in" (email + password); `AppView` + blocks (page, text, metric, progress, list, calendar) rendering Budget, Groceries, Calendar from the API |
-| T3 | `GET /home`, `GET /sync`; first deploy; the timed receipt spike | Home; IndexedDB cache (paint, then catch up); APK signed in to the demo account |
-| **Day (Nov 20)** | | |
-| D1 | Command service: validate, apply, events, change sets, `position.py`; confirm, undo, dismiss; `check.py` (below) | `ProposalCard`: basted look, `threadPull`, `roll`, tags; undo toast for at least 8 s (FR-S6); Realtime subscription and catch-up |
-| D2 | Clair loop: tools, SSE (or the polling fallback), `propose_changes` → basted change set; **receipt first**; `fixture: "receipt"` replay | Clair sheet: start, status, `understood`, proposal card; camera via Capacitor; downscale to 1568 px and upload to Storage; "Use sample" |
-| D3 | Deploy; phone APK + laptop website: sign in on both (phone by email and password, laptop by join code, password as fallback), confirm on the phone, laptop updates | Join code screen on the laptop; two-device check |
-| **MVP cut line** | **Both devices signed in to the demo account → receipt photo (live) → basted card → Add to 3 apps → threads → $412 → $376 → laptop updates → Undo. "Use sample" works if live fails.** | |
-| D4 | The fridge: `get_usuals`, `ask_user` and the pause wrapper, `save_note`, `clair_notes`; `fixture: "fridge"` | Menu question card, "Noted" chip, Settings → What Clair remembers |
-| D5 | Ask and photo-plus-question through the same loop; run the evals | Review items; answer state with source chips |
-| D6 | Templates and `POST /templates/apply` | Onboarding (Welcome, "What slips?", starter apps, first prompt) |
-| D7 | Last deploy before rehearsal; warm the functions; record the backup video | Rehearse three times: APK on the phone, website on the laptop |
+| **Tonight (Nov 19): the base** | | |
+| T1 | Supabase project: schema and RLS from section 2.1. The "must pass tonight" spikes. Google Cloud project and consent screen | Vite + React shell, `tokens.css`, `base.css`, `motion.ts` port, `Bar`, `Spool`; web app manifest and icons; first deploy to Vercel; open it from the phone's Home screen |
+| T2 | Seed script: the demo auth user and workspace, Sam's 12 apps from the templates table (§2.3; the four new specs are JSON only and use the six base blocks), and the "before" state for the recording, the canonical seed (sections 2.2 and 2.3, `DEMO_NOW` 5:45 pm), `DEMO_GCAL_FIXTURE`. `POST /dev/reset`. FastAPI skeleton: `/health`, JWT check, `GET /apps`, `GET /apps/{id}` with Python faces (`formula.py`), `*dated` with repeats | Sign-in ("I have a quilt · Sign in"); `AppView` + blocks (page, text, metric, progress, list, calendar) rendering all 8 apps from the API; Calendar's week view |
+| T3 | `GET /home`, `GET /sync`. Command service: validate, apply, events, change sets, `position.py`; confirm, undo, dismiss | Home; IndexedDB cache (paint, then catch up); Realtime subscription and catch-up; join code screen on the laptop |
+| T4 | Clair loop, text only: snapshot, `list_apps`, `query_records`, `report_understanding`, `propose_changes` → basted change set; SSE or the polling fallback. One sentence works: "spent $12 on lunch" → a Budget card | Clair sheet: start state with the text field, status, `understood`, `ProposalCard` (plain confirm and an Undo toast for at least 8 s; `threadPull` and `roll` if there's time) |
+| **Base cut line** | **Both devices signed in to the demo account → type "spent $12 on lunch" → basted card → Add → $412 → $400 → laptop updates → Undo.** `check.py` items 1 and 2 pass | |
+| **Day (Nov 20): the judged feature, in this order** | | |
+| D1 | The day's spikes. `move_occurrence` (section 3) with its undo. The planning brief, parts for rung 1 (booked, sessions, clashes, free). Planner rung 1: planning check, prompt, eval AB-11 at rung 1, 10 runs | `threadPull`, `roll` and "just changed" if they slipped; Review items as a read-only list with each row's reason, "also" line and source app; the laptop on next week in Calendar |
+| D2 | Engine ladder steps 1 and 2 (`spec/workflows.md`): `workflows[]` on the spec with the v1 grammar, the three workflow endpoints, `schedule` + `ask_clair`, Run now, the `offer` event | The offer card ("Do this every Sunday at 7 pm?"), the `workflows` block and the Workflows tab |
+| **Safe point** | **Seeded Google events (`DEMO_GCAL_FIXTURE=1`) → "Plan my training for next week" → rung 1 card → Add to 2 apps → laptop's next week changes → Turn on → rule on the Workflows tab → Undo.** `fixture: "planner"` recorded for rung 1 | |
+| D3 | Build path for the three sentences (`clair-agent.md` §12.11): `propose_app`, spec validation and retry, the build confirm, the "before" state. AB-1b 5 of 5 each | Build flow: the sentence field, chalk then basted preview, Make it, the patch sewing onto Home (FR-B1 to FR-B3, FR-B6, one layout) |
+| **Record** | **By early afternoon: record the three builds on the "before" workspace.** If AB-1b isn't passing by then, drop the clip and plan to show the Flows prototype as a prototype | Cut the clip to about 12 s; label it "recorded today" (and "sped up" if it is) |
+| D4 | Planner rungs 2, 3, 4: brief parts running, away, cycle, calories, foods, shop, recovery; server checks (no lift on an away day, run distances from the brief); AB-11 at each rung, 10 runs. Re-record `fixture: "planner"` at the rung that passes | The planner card's per-app lines; Groceries rolling 12 → 13 on Home |
+| D5 | Google Calendar (section 8a): `connections`, start, callback, sync, read-only guard, `connector` change sets | "Add Google Calendar" in Calendar, the connected row with Refresh, "from Google" on rows, all-day events in the week view |
+| D6 | Ladder step 2b: the appointment check (`get_gaps`, prompt, AB-12) | Nothing new beyond the offer card on Calendar |
+| D7 | Ladder step 3: `row_added` and `field_changed` + `write_row` inside `expand`; guards; `check.py` item 8 | "by rule ›" on rows; the rule's run line |
+| D8 | Ladder step 4: `propose_workflow`; 3 eval sentences | The rule card |
+| D9 | Ladder step 5: scheduled firing on a Vercel cron | "Next run" on the rule row |
+| Freeze | Two hours before the pitch: last deploy, record the fallback video | Rehearse three times: clip, then the live planner, on the hotspot |
+| D10, only if all of the above are done | Second beat: photo upload, the receipt prompt, `fixture: "receipt"` (`clair-agent.md` §12.1) | Photo chip with the file input, downscale to 1568 px, the receipt card |
 
-**`check.py`** (one assert-based script, run against a reset demo workspace with `DEMO_NOW` set):
+**Cut order.** Cut from the bottom of the table: D10, D9, D8, D7, D6; then the live Google connection (keep `DEMO_GCAL_FIXTURE=1` and say the events are seeded); then planner rungs 4, 3, 2 (demo the highest that passes 10 of 10); then the recorded clip (show the Flows prototype and say so). Never cut the safe point, "Use sample", `check.py`, or the two-device check. This is more than two people are likely to finish in a day; the order is built so that stopping anywhere still leaves a working demo.
 
-1. Receipt draft (the recorded fixture) → targets Budget, Groceries, Calendar; Budget "$412" → "$376"; Groceries 12 → 4; Calendar 3 → 4 today. Confirm; a second confirm is `409`; Undo restores the seed exactly.
-2. Dedupe only against stitched sets: confirm → Undo → the same receipt again gives a card with no "Already added" warning.
-3. `fixture: "receipt"` and `fixture: "fridge"` each give one basted change set with `source.mode = "fixture"`, resolved to the current seed's ids.
-4. After the receipt, `get_usuals` for the fridge offers exactly Butter, Cheddar, Orange juice and Hummus as missing and not listed, and none of the 8 receipt items.
-5. AC-7 (US-11): after the fridge change set is confirmed (Orange juice `usual = no`), `get_usuals` no longer offers Orange juice, and a new "Orange juice" record copies `usual = no`.
+**`check.py`** (one assert-based script, run against a reset demo workspace with `DEMO_NOW` set and `DEMO_GCAL_FIXTURE=1`):
 
-**Reset checklist** (before each rehearsal and the pitch): `POST /dev/reset`; both devices reload (epoch bump); run `fixture: "receipt"` once and dismiss it, to prove Use sample resolves against the fresh seed; `/health` and one live turn to warm the functions.
+1. Typed draft "spent $12 on lunch" (a recorded fixture) → target Budget; "$412" → "$400". Confirm; a second confirm is `409`; Undo restores the seed exactly.
+2. Nothing in a basted change set is counted: faces, `*dated` and `/home` are unchanged before confirm.
+3. `*dated` for Mon 23 to Sun 29 Nov holds the 4 sessions at their seeded times, the 4 Google events, no run and no ECON 1010 on Thu 26 Nov. Home shows 12 apps with the faces of §2.3; the "before" state shows 8.
+3a. The planning brief for that window equals the fixture in `clair-agent.md` §12.9 line for line: 3 clashes, calories 1,650 · 1,770 · 1,680 · 1,970, shop "Oats", cycle expected Mon 23 to Wed 25 Nov, long runs 4, 4.5, 5. With Cycle's `clair_read` false the brief has no cycle line and no snapshot or tool result contains Cycle data.
+4. An `update` or `delete` on a `source: "google"` record from a `gesture` or `clair` change set is `422 from_google`.
+5. A sync with unchanged events writes no change set; one changed title writes exactly one `update`.
+6. `move_occurrence` on Leg day, occurrence 2026-11-24, to 5:00 pm: the series has that date in `skip`, a one-off record exists at 5:00 pm, `*dated` shows Leg day once that day. Undo restores both.
+7. With the reset seed, `get_gaps(app="calendar", collection="events", by="kind")` returns Barber: 3 visits, every 35 days, last Sat 17 Oct, due Sat 21 Nov, and nothing for Dentist (the Google event has no kind). 
+7a. `fixture: "planner"` at rung 4 gives one basted change set with `source.mode = "fixture"`, targets Workout, Running, To-dos, Groceries and Calendar, the eight rows of §2.3, and Groceries "12" → "13". Confirm, then Undo: all five apps equal the seed. Confirm, then Turn on: Workout's spec has one workflow, on. Run now with the rule off is `409`.
+8. If ladder step 3 is built: with the rule "When an exam is added to Classes, add a study to-do two days before" on, inserting an exam `due` row for Thu 3 Dec writes one to-do "Study for <title>" due Tue 1 Dec in the same change set; Undo removes both; the same insert with the rule off writes no to-do; a rule whose action targets its own trigger collection is rejected at validation.
+9. If D10 is built: the receipt draft, from the fresh seed → Budget "$412" → "$376"; Groceries 12 → 4; Calendar 3 → 4 today; Undo restores the seed.
 
-**Never cut** D1's `check.py`, D2's live receipt and Use sample, and D3's sign-in and two-device check. Below the cut line, cut from D6 up.
+**Reset checklist** (before each rehearsal and the pitch): `POST /dev/reset`; both devices reload (epoch bump); check Calendar shows the four "from Google" events and "synced just now"; run `fixture: "planner"` once and dismiss it, to prove Use sample resolves against the fresh seed; `/health` and one live turn to warm the functions; laptop on Calendar, next week.

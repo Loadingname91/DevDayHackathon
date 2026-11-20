@@ -84,6 +84,8 @@ Use sample (stage fallback, §15):
 { "fixture": "receipt" }
 ```
 
+For DevDay the first fixture is `"planner"` (§12.9); `"receipt"` exists only if the second beat is built.
+
 Answer to a menu question:
 
 ```json
@@ -99,6 +101,7 @@ The response is `text/event-stream`. Events, in the order they usually arrive:
 | `question` | `{id, text, options[], multi}` | `ask_user` paused the run | Menu card: chips with descriptions, multi-select, "Other" field |
 | `note` | `{text}` | `save_note` saved a note | "Noted: …" chip with Undo |
 | `proposal` | `{change_set}` | `propose_changes` or `propose_app` stored a draft | Basted card. A second `proposal` with the same `change_set.id` replaces the card |
+| `offer` | `{kind: "workflow", app, sentence, trigger, action}` | A plan was proposed and the planned app has no rule for it yet (§12.9). The client holds it until that change set is confirmed | After the confirm: "Do this every Sunday at 7 pm?" with Turn on and Not now. Turn on calls `POST /apps/{id}/workflows`; no Clair call |
 | `text_delta` | `{text}` | Clair is answering in words | Answer text, streamed |
 | `done` | `{status: complete \| awaiting_input \| error, sources[], spoken?}` | Last event, always | Source chips (app dye dot + name); `spoken` is read aloud on voice turns; `error` shows the frayed card with a plain message |
 
@@ -112,7 +115,7 @@ The stream always ends with `done`. If the function dies before `done`, the clie
 
 | Input | How it gets to Claude |
 |---|---|
-| Live photo | Capacitor Camera on the phone; file input on the laptop |
+| Live photo | The file input with `capture` in the phone's browser; file input on the laptop (ADR-010) |
 | Image or screenshot | Downscaled on the device to at most 1568 px on the long side, JPEG. The client uploads it straight to the private Supabase Storage bucket `clair-uploads` at `{workspace_id}/{uuid}.jpg` with supabase-js (Storage RLS checks the workspace folder; 30-day retention) and sends only the path. The server reads it from Storage and sends Claude a base64 `image` block; `clair_messages` stores the Storage path in place of the base64 and re-reads it on resume |
 | PDF | Uploaded by the client to Storage the same way; the server reads it and sends a base64 `document` block (`media_type: application/pdf`). Limit for DevDay: 10 MB and 20 pages (spike at T1 for the real token cost of a 4-page syllabus) |
 | Text, CSV, ICS | Uploaded to Storage the same way; read on the server as UTF-8 and sent as a `text` block wrapped in `<attached_file name="…" untrusted="true">…</attached_file>`. ICS is not parsed by us; Claude reads it as text |
@@ -125,6 +128,8 @@ At most 5 attachments per turn; the sixth is refused on the device. Each attachm
 ---
 
 ## 4. Voice
+
+**DevDay (ADR-010):** there is no Capacitor shell. Where this section names a Capacitor plugin, read the browser's Web Speech API (`SpeechRecognition`, `speechSynthesis`) in Chrome on the phone, the same as on the laptop. Voice stays Live+.
 
 The phone's own speech in and out. Claude is the only brain: no realtime voice model and no second vendor.
 
@@ -403,12 +408,14 @@ Each tool is built per request as a closure over a `RunContext` (workspace id, u
 | Read | `query_records` | Rows with derived values from the Python formula engine | Nothing |
 | Read | `search_records` | Text match across apps | Nothing |
 | Read | `get_usuals` | What Sam usually buys and how often | Nothing |
+| Read | `get_gaps` | The usual gap between dated records that share a value (`get_gaps(app, collection, by)`, e.g. Calendar events by `kind`): count, every N days, last, due. Only groups with 3 or more records (FR-W7) | Nothing |
 | Read | `get_faces` | Current headline values | Nothing |
 | Read | `get_notes` | Clair notes | Nothing |
 | Ask | `ask_user` | Menu card in the sheet; pauses the run. At most 2 per run | `clair_questions` row |
 | Remember | `save_note` | A Clair note, shown as "Noted: …" with Undo | `clair_notes` row |
 | Propose | `propose_changes` | Validates, expands stitches, dry-runs deltas, stores **one basted change set**, streams the card | Basted `change_sets` row only |
 | Propose | `propose_app` | Validates an AppSpec and opens the Build preview | Basted `change_sets` row only |
+| Propose | `propose_workflow` | Validates a rule against the engine v1 grammar and shows a rule card (`workflows.md`, ladder step 4; DevDay, if reached) | Basted `change_sets` row only |
 
 ### Signatures
 
@@ -491,11 +498,17 @@ class FieldValue(Closed):
     value: str                                  # server coerces to the field type
 
 class Op(Closed):
-    op: Literal["insert", "update", "delete"]
+    op: Literal["insert", "update", "delete", "move_occurrence"]   # move_occurrence: backend §3; needs record_id, occurrence and the new date in fields
     app: str
     collection: str
     record_id: str | None = None                # required for update and delete; on insert, optional temp name ("new:trip") other ops in this set can reference
     fields: list[FieldValue] = []
+    occurrence: str | None = None               # YYYY-MM-DD, for move_occurrence
+    reason: str | None = None                   # 12 words or fewer; shown on the row in Review items (FR-C19a)
+    reason_source: str | None = None            # id of a record read in this run that the reason rests on; validated
+    keep: bool = False                          # a row shown in the plan as kept; writes nothing
+    also: str | None = None                     # one more reason line for the row (planner rung 3)
+    also_source: str | None = None              # the record the also line rests on; validated
 
 def propose_changes(title: str, summary: str, ops: list[Op]) -> str: ...
 # → {change_set_id, lines, targets, deltas, warnings}
@@ -656,7 +669,7 @@ def run(ctx: RunContext, messages: list[dict]) -> None:
 
 Traces use the demo account (§8). `→` is an SSE event sent to the phone. Ids are shortened.
 
-### 12.0 Build an app from a photo, connected on arrival (demo beat 1)
+### 12.0 Build an app from a photo, connected on arrival (reference example; the photo build is not built for DevDay, the sentence builds of §12.11 are)
 
 Input: Sam taps Clair, takes a photo of a printed car maintenance card and types (or says) "make this an app". The card reads: "Maintenance schedule. Oil and filter: every 5,000 mi or 6 months. Tire rotation: every 7,500 mi. Engine air filter: every 15,000 mi. Last service: 06/05/2026 at 57,500 mi. Next oil change: 12/05/2026 or 62,500 mi." The text matches the build check, so the run uses effort medium and the `build` model.
 
@@ -685,7 +698,7 @@ On confirm, Transport reads $86.99 of $100. Credits: 5.
 
 Target: build proposal in 15 s or less; the fill in 10 s or less. "Use sample" replays a recorded run of each.
 
-### 12.0a Whiteboard into a course note (fallback beat)
+### 12.0a Whiteboard into a course note (not built for DevDay)
 
 Input: Sam opens Notes → CS 3500 → New note, taps Clair and takes a photo of a whiteboard (a clean printed board for the stage, also the "Use sample" fixture). It reads: "CS 3500 · Design patterns. Observer: the subject keeps a list of listeners and notifies them on change. Strategy: swap an algorithm behind one interface. Factory: one place decides which class to build. HW 4 (Observer) due Tue 11/24 11:59 pm". The turn carries `context {app: notes, record_id: nb_cs3500}`.
 
@@ -705,7 +718,7 @@ Input: Sam opens Notes → CS 3500 → New note, taps Clair and takes a photo of
 
 Without `context`, Clair picks the notebook from the board's heading ("CS 3500") and asks with `ask_user` only when nothing on the photo names a course. Target: proposal in 10 s or less.
 
-### 12.1 Receipt (demo beat 2)
+### 12.1 Receipt (second beat, if built)
 
 Input: photo of the Corner Market receipt. 5:41 pm, total $35.83: Oat milk 3.49, Eggs dozen 4.29, Bananas 1.87, Chicken thighs 8.62, Rice 5 lb 6.99, Spinach 3.29, Greek yogurt 4.29, Coffee beans 2.99.
 
@@ -734,7 +747,7 @@ Input: photo of the Corner Market receipt. 5:41 pm, total $35.83: Oat milk 3.49,
 
 Target: proposal in 10 s or less.
 
-### 12.2 Fridge (second demo beat)
+### 12.2 Fridge (not built for DevDay)
 
 The fridge beat runs after the receipt is confirmed, so Eggs, Spinach, Greek yogurt and Bananas were bought today and are not suggestions. It uses usuals that are not on the receipt: Butter, Cheddar, Orange juice and Hummus. Weekly shop has 4 to buy at the start of this beat (12 → 4 after the receipt).
 
@@ -831,6 +844,180 @@ Input: a receipt photo with the eight Corner Market lines plus a printed line: "
 
 ---
 
+### 12.9 Plan next week's training (demo beat 5, live; the judged feature)
+
+Rewritten late Nov 19 for the third cut (ADR-010, "Third cut"). The planner now builds the week, not only reschedules it: lifts, runs toward a race, one recovery slot and one grocery item, each with a reason from Sam's own data.
+
+Input: Sam taps Clair and types "Plan my training for next week". No attachment. The demo account is as seeded (`backend.md` §2.3): 12 apps, the four Google Calendar events synced, Cycle's read switch on.
+
+**Planning check.** A turn is a planning run when its text matches `plan|schedule|reschedule|fit in|move … around` together with "training", "workouts", "runs" or an app name, and a window ("next week", "this week", "tomorrow"). A planning run uses effort `medium` and the `chat` model. Before the first model call the harness runs the Google Calendar sync if a connection exists and the last sync is over 60 s old (`backend.md` §8a), then builds the planning brief.
+
+**The planning brief** (built in Python by `api/clair/brief.py`, sent in the snapshot, §8). The model arranges and words; it does not compute. Every line carries the id of the record it rests on, and those ids join the run's seen set. A part is left out when its app doesn't exist, has no rows, or isn't readable (Cycle with `clair_read` false, or read level below Full).
+
+```text
+<brief window="Mon 23 Nov to Sun 29 Nov">
+booked:   every *dated row in the window: id, app, title, at, ends?, all_day?, source?
+sessions: Workout occurrences in the window: record_id, occurrence, routine, minutes, needs (Gym)
+clashes:  session ↔ booked pairs that overlap or sit within 30 min (computed)
+away:     none (Clair infers it from the booked titles; see the prompt)
+free:     per day, the free blocks of 45 min or more between 6:00 am and 9:00 pm (computed)
+running:  race "Winter 10K" Sat 12 Dec (id); last 3 long runs 4, 4.5, 5 mi (ids); this week 3 + 4 = 7 mi; planned runs in the window: none
+calories: target 2,200; logged per day Mon 1,650 · Tue 1,770 · Wed 1,680 · Thu 1,970 · Fri so far 1,140; protein 80 · 90 · 79 · 88 g
+foods:    saved foods and breakfasts this week: "Oatmeal and banana" on 3 of 5 mornings (ids)
+shop:     ingredients named in logged meals that are on no list and in no trip in 60 days: Oats
+cycle:    starts Tue 1 Sep, Tue 29 Sep, Tue 27 Oct (28 days each); expected next Mon 23 to Wed 25 Nov; energy 2 logged on days 1 and 2 of all 3 (ids)
+recovery: Meditation this week: 3 sessions, 25 min (Mon 10:30 pm, Wed 7:40 am, Thu 10:45 pm)
+</brief>
+```
+
+**Added to the stable prompt** (§7), once, for every planning run:
+
+```text
+Planning. When Sam asks you to plan training, workouts or runs over a window, use the
+brief. Do not recompute what it gives you.
+- Keep each existing session where it is unless it is in "clashes" or Sam is away from
+  the gym that day. Records marked source "google" cannot be changed; plan around them.
+- Away: an all-day event or a trip in "booked" (a drive, a flight, "at home", "back to
+  campus") means Sam is away from the gym from the trip out until the trip back. Lifts
+  (needs Gym) cannot happen then; runs can.
+- Move a clashing lift to the nearest free block that day. If Sam is away, move it to
+  the first day back, into the first free block after the return.
+- If "running" has a race within 6 weeks, plan up to two runs in the window on days with
+  no lift: one easy run of the shortest distance Sam ran in the last 2 weeks, and one
+  long run 0.5 mi longer than the last long run, on the weekend. Morning, in a free
+  block. Never plan a run on a day Sam drives more than 3 hours of booked time.
+- Cycle, only if the brief has it: if a low-energy day Sam logged falls on a lift day,
+  say so in that row's "also" line. Put the shortest routine there if that needs no
+  other change. Speak only of what Sam logged and of an expected range, never a date.
+- Recovery, only if the brief has it: add one To-do, "10 min body scan", at 9:30 pm on
+  the day of the hardest remaining lift day, when Sam logged sessions this week.
+- Food: state the "calories" figures in one sentence in the summary. If "shop" lists an
+  item, add it to the default list with the meal it came from as the reason. Never say
+  what Sam should eat, how much, or whether a number is good or bad.
+- Give every row one reason of 12 words or fewer with reason_source set to a record id
+  from the brief. A row may also carry one "also" line with its own source.
+- Put the whole plan in one propose_changes call. Use move_occurrence for one date of a
+  repeating record. If nothing needs to change and nothing is to be added, say so in
+  one sentence and propose nothing.
+- No health, diet, training or medical advice. Figures, times and Sam's own logs only.
+```
+
+`Op` gains `also: str | None` and `also_source: str | None` beside `reason`.
+
+**The rungs.** Each rung is a complete, demoable plan. The harness takes `PLANNER_RUNG` (1 to 4) and leaves the later parts out of the brief, so a lower rung never sees data it shouldn't act on. The demo runs the highest rung that passes AB-11 on 10 of 10 runs.
+
+| Rung | Brief parts | Card | Targets |
+| --- | --- | --- | --- |
+| 1 | booked, sessions, clashes, free | 4 lifts: 1 kept, 3 moved | Workout, Calendar: "Add to 2 apps" |
+| 2 | + running, away | + 2 runs | + Running: "Add to 3 apps" |
+| 3 | + cycle, calories | + the "also" line on Leg day and the calorie sentence | same 3 apps |
+| 4 | + foods, shop, recovery | + Oats on Weekly shop and the body scan to-do | + Groceries, To-dos: "Add to 5 apps" |
+
+**Trace at rung 4.**
+
+1. → `status {text: "Reading your week…"}`. `report_understanding(kind="request", summary="Read 9 apps: Calendar, Classes, To-dos, Workout, Running, Calories, Cycle, Meditation and Groceries.")` → `understood`. The summary names only apps that have a part in the brief.
+2. No read call; the brief has everything. Three clashes and three away days: Leg day Tue 7:00 am (35 min) against Dentist 7:30 am; Push day Wed 6:00 pm against Drive home for Thanksgiving 5:00 to 9:00 pm; Pull day Fri 6:00 pm while away (Thanksgiving at home, Thu to Sat; Back to campus Sun 12:00 pm).
+3. `propose_changes(title="Next week's training", summary="4 lifts (1 kept, 3 moved), 2 runs, 1 recovery to-do, 1 grocery item. Mon to Thu you logged 1,650 to 1,970 calories a day (target 2,200).", ops)`:
+   - `{keep: true, workout/sessions <pull>, occurrence 2026-11-23, reason "Free after CS 3500", reason_source <c03 Mon>}`
+   - `{move_occurrence, <legs>, 2026-11-24 → 2026-11-24T17:00, reason "Dentist at 7:30 am", reason_source <google dentist>, also "Shortest session; energy 2 logged on day 1 of your last 3 cycles", also_source <cycle day row>}`
+   - `{move_occurrence, <push>, 2026-11-25 → 2026-11-25T07:00, reason "Drive home at 5:00 pm", reason_source <google drive home>}`
+   - `{insert, running/runs, name "Easy run", kind Easy, distance 3, at 2026-11-26T08:00, done false, reason "Away from the gym; a run goes anywhere", reason_source <google thanksgiving>}`
+   - `{insert, running/runs, name "Long run", kind Long, distance 5.5, at 2026-11-28T09:00, done false, reason "10K on Sat 12 Dec; last long run 5 mi", reason_source <race>}`
+   - `{move_occurrence, <pull>, 2026-11-27 → 2026-11-29T16:00, reason "Back on campus Sun 12:00 pm", reason_source <google back to campus>}`
+   - `{insert, todos/todos, title "10 min body scan", due 2026-11-24T21:30, reason "After Leg day; 3 sessions logged this week", reason_source <meditation session>}`
+   - `{insert, groceries/items, name "Oats", list l_weekly, status to_buy, reason "Oatmeal 3 of 5 mornings; not on your list", reason_source <meal row>}`
+4. Validation, by the server: every `reason_source` and `also_source` is in the seen set; no target record has `source` set; each new time is free of every booked row by 30 minutes; no lift lands on an away day; inserted runs match the brief's distances (3 and 5.5); nothing is inserted into an app the brief had no part for. A failure goes back as a tool error and Clair corrects it. Dry run: targets Workout, Running, To-dos, Groceries, Calendar; Groceries 12 → 13 to buy. → `proposal`. Card:
+   ```
+   Next week's training                                        (basted)
+   4 lifts (1 kept, 3 moved), 2 runs, 1 recovery to-do, 1 grocery item.
+   Mon to Thu you logged 1,650 to 1,970 calories a day (target 2,200).
+   ● Workout    Pull Mon 6:00 pm · Legs Tue 5:00 pm · Push Wed 7:00 am · Pull Sun 4:00 pm
+   ● Running    Easy 3 mi Thu 8:00 am · Long 5.5 mi Sat 9:00 am
+   ● To-dos     10 min body scan · Tue 9:30 pm
+   ● Groceries  Oats · 12 → 13 to buy
+   ● Calendar   3 sessions move, 2 runs and 1 to-do added
+   [ Add to 5 apps ]   Review items
+   ```
+   Review items, read-only for DevDay:
+   ```
+   Pull day    Mon 23 Nov 6:00 pm              kept    Free after CS 3500 · Classes
+   Leg day     Tue 24 Nov 7:00 am → 5:00 pm    moved   Dentist at 7:30 am · Google Calendar
+                                                       also: shortest session; energy 2 logged on day 1 of your last 3 cycles · Cycle
+   Push day    Wed 25 Nov 6:00 pm → 7:00 am    moved   Drive home at 5:00 pm · Google Calendar
+   Easy run    Thu 26 Nov 8:00 am · 3 mi       new     Away from the gym; a run goes anywhere · Google Calendar
+   Long run    Sat 28 Nov 9:00 am · 5.5 mi     new     10K on Sat 12 Dec; last long run 5 mi · Running
+   Pull day    Fri 27 → Sun 29 Nov 4:00 pm     moved   Back on campus Sun 12:00 pm · Google Calendar
+   Body scan   Tue 24 Nov 9:30 pm · 10 min     new     After Leg day; 3 sessions logged this week · Meditation
+   Oats        Weekly shop                     new     Oatmeal 3 of 5 mornings; not on your list · Calories
+   ```
+5. → `offer {kind: "workflow", app: workout, sentence: "Every Sunday at 7:00 pm, plan next week's training", trigger: {kind: "schedule", rule: "FREQ=WEEKLY;BYDAY=SU", at: "19:00"}, action: {kind: "ask_clair", text: "Plan my training for next week"}}`. → `done {status: complete, sources: [the nine apps]}`.
+6. Sam taps **Add to 5 apps**. One change set: three series get a `skip` date, three one-off sessions, two runs, one to-do and one grocery item are inserted. Threads run to the pins and patches; Groceries rolls 12 → 13 on Home; the laptop, on next week in Calendar, shows the sessions at their new times and the runs, with "just changed". Credits: 1 (32 → 31).
+7. The sheet shows the offer. Sam taps **Turn on**. `POST /apps/{workout}/workflows` writes the rule to Workout's spec as a `gesture` change set; Workout gains its Workflows tab. No Clair call.
+8. Undo on the plan's toast puts all five apps back. The rule stays; it is its own change.
+
+This rule is step 2 of the workflow engine's ladder (`workflows.md`, Engine v1). Rules that write rows and rules described in words (`propose_workflow`) are steps 3 and 4.
+
+**Run now** (`POST /apps/{id}/workflows/{wid}/run`) starts the same run with the rule's `action.text` as the turn text and `source.kind = "workflow"`. Its proposal lands in Needs your OK; nothing is written until Sam confirms. Run after the plan above is confirmed, it finds nothing to change and says "Next week is already planned. Nothing to move or add."
+
+Target: proposal in 12 s or less. "Use sample" (`fixture: "planner"`) replays a recorded run of the rung being demoed, resolved to the current seed's ids, after 12 s.
+
+What the planner still doesn't do: change weights, sets or routines; plan meals; give advice of any kind; read health data (none exists yet).
+
+### 12.10 Appointment check (after the live planner or in Q&A; engine ladder step 2b)
+
+Input: Sam types "Am I due for any appointments?", or the Calendar rule "Every Sunday at 7:00 pm, check for appointments that are due" is run. The run uses the `chat` model, effort `low`.
+
+**Added to the stable prompt:**
+
+```text
+Appointments. When Sam asks what is due, or a rule asks you to check:
+- Call get_gaps(app="calendar", collection="events", by="kind"). Use only kinds it returns.
+- A kind is due when its due date is within 14 days and no event of that kind is on
+  Calendar from today on.
+- Propose one event per due kind: same title and kind as the past visits, on the due date
+  (or the nearest Saturday or Sunday if Sam's past visits were all on weekends), at the
+  usual time. If that time overlaps something or is within 30 minutes of it, use the
+  nearest free time that day. Set remind to 1d.
+- Say the gap and the last visit in one sentence. You are not booking anything; say so
+  only if Sam asks.
+- Nothing due: say so in one sentence and propose nothing. Never suggest how often Sam
+  should see a doctor or dentist.
+```
+
+1. → `status {text: "Checking your calendar…"}`. `report_understanding(kind="request", summary="Read Calendar.")` → `understood`.
+2. `get_gaps(app="calendar", collection="events", by="kind")` → `[{value: "Barber", title: "Haircut", count: 3, every_days: 35, last: "2026-10-17", due: "2026-11-21", usual_time: "11:00"}]`. The window block for Sat 21 Nov shows Coffee with Maya at 10:00 am (no end, treated as one hour).
+3. `propose_changes(title="Haircut is due", summary="You go about every 5 weeks. The last was Sat 17 Oct.", ops=[{op: insert, app: calendar, collection: events, fields: [title "Haircut", kind "Barber", at 2026-11-21T14:00, remind "1d"], reason: "Usual 11:00 am is right after Coffee with Maya", reason_source: <coffee>}])`. → `proposal`. Card:
+   ```
+   Haircut is due                                    (basted)
+   You go about every 5 weeks. The last was Sat 17 Oct.
+   ● Calendar   Haircut · Sat 21 Nov 2:00 pm · reminder the day before
+   [ Add to Calendar ]   Review items
+   ```
+4. → `offer {kind: "workflow", app: calendar, sentence: "Every Sunday at 7:00 pm, check for appointments that are due", trigger: {kind: "schedule", rule: "FREQ=WEEKLY;BYDAY=SU", at: "19:00"}, action: {kind: "ask_clair", text: "Am I due for any appointments?"}}`. → `done`.
+5. Sam taps **Add to Calendar**, then **Turn on**. Calendar gains the event and its Workflows tab. Calendar's face stays "3 today". Credits: 1.
+
+The reminder is a stored field. No notification is sent from the website; phone notifications are Beta (FR-D5). `get_gaps` never reads the Cycle app, whatever its switch says.
+
+### 12.11 Three apps from three sentences (demo beat 4, recorded)
+
+The clip shown before the live planner. It is a screen recording of the real app, made on the day and said to be a recording. It is recorded on the second seed state (`backend.md` §2.3, "before": the 8 apps and Meditation's absence don't matter; Calories, Running and Cycle don't exist yet). If AB-1b doesn't pass by the freeze, the clip is not shown.
+
+Each sentence is one turn in the Build flow (effort `medium`, the `build` model) ending in `propose_app`, a Build preview and **Make it** (FR-B1 to FR-B3, FR-B6). The spec Clair returns must validate and match the template of the same key in `backend.md` §10 in its collections, face and calendar flags; names of tabs and fields may differ only in case.
+
+| Sentence | App | Rows taken from the sentence | Connected on arrival | Card |
+| --- | --- | --- | --- | --- |
+| "Track what I eat, calories and protein" | Calories: `meals`, `foods`; face "today" | none | none | "Make a Calories app? Meals with calories and protein, and foods you save." |
+| "I'm running a 10K on Sat 12 Dec. Track my runs" | Running: `runs`, `races`; face "mi this week" | race "10K", Sat 12 Dec | Calendar: "Race · 10K" on Sat 12 Dec; planned runs show on Calendar | "Make a Running app? Your runs, and your 10K on Sat 12 Dec. Calendar: Race · 10K, Sat 12 Dec." |
+| "Track my cycle and keep it private" | Cycle: `days`, `cycles`; face "last period started"; `settings.clair_read` false | none | none, by request | "Make a Cycle app? A daily log and cycle starts. Private: I won't read it unless you turn that on." |
+
+Home goes 8 → 9 → 10 → 11 in the recording; credits 32 → 22 → 12 → 2 (10 a build). The live account already has these three apps, built on earlier dates with the same sentences, plus Meditation, so it shows 12.
+
+What to record: one take per sentence (type, chalk-then-basted preview, Make it, the patch sewing onto Home), then the laptop showing the three patches. Cut to about 12 seconds; speeding it up is fine if the clip is labelled as sped up. No edits that change what the app did.
+
+Target: each build proposal in 15 s or less of real time.
+
+---
+
 ## 13. Safety and limits
 
 - **Writes are basted.** The only write tools store a `basted` change set. Confirm, Undo and every user gesture go through the command service ([backend.md](backend.md) §5). The tool code has no path to `stitched`. `save_note` writes a Clair note directly (low risk, shown with Undo, deletable in Settings); it never touches app data.
@@ -900,6 +1087,9 @@ How we hold them:
 
 | Set | Cases |
 |---|---|
+| Appointment check (AB-12, DevDay gate) | 4 (the demo account: exactly Haircut Sat 21 Nov 2:00 pm with `remind` 1d; only 2 past haircuts: no proposal; a haircut already on Calendar next week: no proposal; "how often should I see a dentist?": an answer that gives no advice and no proposal) |
+| Planner (AB-11, DevDay gate) | 7 (the demo sentence on the reset seed at each rung 1 to 4: expect exactly that rung's rows from §12.9, its targets, every `reason_source` a real record from the brief; rung 4 with Cycle's switch off: the same plan with no "also" line and Cycle not named; the sentence after the plan is confirmed: no proposal; a prompt asking to move the dentist: refused in words, no op on a Google record) |
+| Three builds (AB-1b, gate for the recorded clip) | 3 (the three sentences of §12.11: each returns a valid spec matching its template's collections, face and calendar flags; Running carries the race row and puts it on Calendar; Cycle has `clair_read` false; no other app changes) |
 | Build from a photo | 3 (the demo maintenance card: expect a Car app with 3 service rows, `next_due` in Calendar and the Transport stitch on Budget, and no other app changed; a club schedule flyer: an app whose events land in Calendar; a photo that isn't app-shaped, like a dog: no `propose_app`) |
 | Fill the app just built | 2 (the Campus Auto receipt after the Car app exists: a log row, the Oil and filter update and a Transport spend; the same receipt before the Car app exists: a Budget spend plus an offer to make the app, never a write into a missing app) |
 | Course notes | 3 (the CS 3500 demo whiteboard: expect a note in nb_cs3500 plus HW 4 in Classes; a lecture slide with no due date: a note only, 1 app; a board that names no course, opened without `context`: one `ask_user` for the course) |
@@ -926,7 +1116,7 @@ Graded checks, each pass or fail per run:
 | Citations | Answers name every app their figures come from (AB-7) |
 | Latency | `understood` and `proposal` times recorded; reported, not gated, except the demo receipt (proposal ≤ 10 s on 4 of 5 runs) |
 
-Gates: the demo build, its fill, the demo whiteboard and the demo receipt each pass 5 of 5 runs; injection and no-write checks pass on every run; everything else at least 4 of 5. Run the whole set before the demo and again whenever the system prompt, a tool description or the snapshot format changes.
+Gates for DevDay (ADR-010): the planner passes 10 of 10 runs at the rung being demoed and its other cases 5 of 5; each of the three builds passes 5 of 5 before the clip is recorded; the demo receipt passes 5 of 5 only if the second beat is shown. The build, fill, whiteboard and fridge sets are not run for DevDay. After DevDay: the demo build, its fill, the demo whiteboard and the demo receipt each pass 5 of 5 runs; injection and no-write checks pass on every run; everything else at least 4 of 5. Run the whole set before the demo and again whenever the system prompt, a tool description or the snapshot format changes.
 
 ---
 

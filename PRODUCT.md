@@ -6,11 +6,11 @@
 
 ## Platform
 
-adaptive (one React app: Android via Capacitor first, the same build as a website for laptops)
+adaptive (one React website for DevDay, on the phone's browser and on laptops; a native phone app after, see spec/adr/010)
 
 ## Stack
 
-React + Vite (TypeScript) wrapped with Capacitor for Android and served as a website; FastAPI (Python) on Vercel; Supabase (Postgres blocks table, anonymous auth, Realtime, Storage); Clair runs on the Anthropic Python SDK tool runner with Claude (vision, tools). See spec/backend.md and spec/clair-agent.md.
+React + Vite (TypeScript) served as a website (no Capacitor shell for DevDay); FastAPI (Python) on Vercel; Supabase (Postgres blocks table, anonymous auth, Realtime, Storage); Clair runs on the Anthropic Python SDK tool runner with Claude (vision, tools). See spec/backend.md and spec/clair-agent.md.
 
 ## Users
 

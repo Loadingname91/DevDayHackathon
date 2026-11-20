@@ -1,110 +1,172 @@
 # Demo day: Quilt at Lassonde DevDay
 
-The pitch is on Fri Nov 20, 2026. This guide covers the 90-second pitch in `docs/pitch.md` as it runs with the Clair button (`design/notes/fixspec.md` section D, `.impeccable/surfaces/app.md` "Decision Nov 19") on the current stack (`spec/backend.md`, `spec/clair-agent.md`, ADR-004 to 008). The demo clock is pinned at 5:45 pm.
+The pitch is on Fri Nov 20, 2026. This is the third version of this guide, written late on Nov 19 (`spec/adr/010-web-only-devday-planner-cut.md`, "Third cut"). The pitch is shaped like a Shark Tank pitch. The screen work is two parts: a short recording of Clair building three apps, then a live run of Clair planning next week's training from everything in the account. The demo clock is pinned at 5:45 pm on Fri 20 Nov.
 
-The live demo is still NO-GO until the app runs the receipt beat on the Android phone. Everything still open is listed in section 5.
+The app runs as a website on the phone and the laptop. Nothing is built yet, so the live demo is a no-go until the base runs on both. What is still open is in section 6.
 
-## 1. What the demo shows, beat by beat
+## 1. The pitch, beat by beat
 
-The pitch is 90 seconds in eight beats. Only beat 4 is screen work, and the rest are slides. Lines in *italics* are rewrites for the Clair button and the "apps" wording.
+Ninety seconds, eight beats. Beats 4 and 5 are the screen; the rest is you talking, with slides behind.
 
 | # | Time | Beat | What is said or shown |
 | --- | --- | --- | --- |
-| 1 | 0:00-0:10 | Hook | "Hands up if you pay for more than three apps to manage your money, workouts or to-dos. Keep it up if they don't talk to each other." |
-| 2 | 0:10-0:20 | Problem with our numbers | "We surveyed [N] U students this week. They pay for [X] apps, about $[Y] a month, and none of them share data." Use real numbers only; PRODUCT.md says none exist yet. |
-| 3 | 0:20-0:30 | What it is, who we are | *"Describe any app and Clair builds it: notes for each class, a workout log, a car tracker. Fill it from anywhere: type it, say it, snap it, drop a file. It's on your laptop before you sit down."* |
-| 4 | 0:30-0:55 | Magic moment | See 4a to 4j below. |
-| 5 | 0:55-1:05 | Why not Notion | *"Notion makes you build it. AI app builders build apps that sit alone. Quilt's apps arrive connected to your calendar, your budget and each other, and nothing changes without your OK."* |
-| 6 | 1:05-1:15 | Traction and model | "[N] students joined our waitlist in [D] days. Free to start, $6 a month, $4 for students." |
-| 7 | 1:15-1:25 | Bigger vision | "Students first. But parents, caregivers, athletes and freelancers all pay for apps that don't talk, or need one nobody built." |
-| 8 | 1:25-1:30 | Close | "Quilt: your life, stitched together." |
+| 1 | 0:00-0:10 | Hook | "Hi, we're [name] and [name], and this is Quilt. Hands up if you pay for more than three apps to run your money, your workouts and your to-dos. Keep it up if none of them talk to each other." |
+| 2 | 0:10-0:20 | The problem, as a story | "That's Sam, a student here. A budget app, a gym app, a calorie app, a calendar. Four subscriptions, and each one knows a quarter of Sam's week. We asked [N] U students: they pay for [X] apps, about $[Y] a month." Real numbers only. |
+| 3 | 0:20-0:28 | What it is | "Quilt is one app where you describe the app you need and Clair, our AI, builds it. Every app it builds is connected to the others." |
+| 4 | 0:28-0:40 | **Recorded:** three builds | Play the clip. "We recorded this today, in the real app. Three sentences: a calorie tracker, a running tracker for my 10K, a private cycle tracker. Three working apps." |
+| 5 | 0:40-1:10 | **Live:** the planner | Steps 5a to 5f below. |
+| 6 | 1:10-1:20 | Why us | "Notion makes you build it yourself. AI app builders make apps that sit alone. Quilt's apps know about each other, and nothing changes without your OK." |
+| 7 | 1:20-1:27 | Traction and price | "[N] students joined our waitlist in [D] days. Free to start, $6 a month, $4 for students." |
+| 8 | 1:27-1:30 | Close | "Quilt: your life, stitched together." |
 
-### Beat 4, build an app from a photo, then fill it (25 s, must work)
+Shark Tank pitches usually name an ask. DevDay isn't raising money, so the ask is beat 7's waitlist number, or drop it.
 
-The unique part is the build: one photo becomes a working app that's already connected to your other apps. **Plan (Nov 19):** record a clean run of Clair doing the build (steps 4b to 4d) and show it during the pitch. Say on stage that it's a recording ("here's a run we recorded this morning"), as `spec/prd.md`'s escalation rule asks, then do the 5-second fill live if the app is up. Capture follows in 5 seconds to show the new app fills like any other. If the build isn't solid at the go/no-go, run the whiteboard beat or the grocery receipt instead (`spec/clair-agent.md` §12.0a and §12.1).
+### Beat 4, the recorded builds (12 s)
 
-| Step | ~Time | Action on the phone | What the room sees |
+What it shows: Quilt is an app builder. A sentence becomes a working app, and the app arrives connected.
+
+| Sentence typed to Clair | What Clair builds | What to point at |
+| --- | --- | --- |
+| "Track what I eat, calories and protein" | Calories: meals, saved foods | The new patch on Home |
+| "I'm running a 10K on Sat 12 Dec. Track my runs" | Running: runs and races | The race is already on Calendar |
+| "Track my cycle and keep it private" | Cycle: a daily log | "Private: I won't read it unless you turn that on" |
+
+How to record it:
+
+- Record on the second demo workspace, the one in the 8-app "before" state, on the day, after the builds pass their test five times each.
+- One take per sentence: type it, the preview draws in, tap **Make it**, the patch sews onto Home. End on the laptop showing three new patches.
+- Cut it to about 12 seconds. Speeding it up is fine if the clip says "sped up". Don't cut anything that changes what the app did.
+- Put "Recorded today in the real app" on the clip, and say it.
+- If the builds aren't working by early afternoon, don't show a clip. Show the Flows prototype (https://claude.ai/artifact/HrLSUSPiXKCLphYfHVFxne) and call it a prototype.
+
+### Beat 5, Clair plans the week, live (30 s, must work)
+
+What it shows: the apps work together. One sentence makes Clair read nine apps and Sam's Google Calendar and come back with one plan, with a reason for every line.
+
+The setup is real data in the demo account, which has 12 apps. Sam lifts four times a week: Pull day Monday and Friday at 6:00 pm, Leg day Tuesday at 7:00 am, Push day Wednesday at 6:00 pm. Sam is training for a 10K on Sat 12 Dec. Next week is Thanksgiving week, and Sam's Google Calendar has a dentist appointment on Tuesday morning, the drive home on Wednesday evening, Thanksgiving at home until Saturday, and the trip back on Sunday. Google Calendar is connected before the pitch.
+
+| Step | ~Time | Action | What the room sees |
 | --- | --- | --- | --- |
-| 4a | 0:30 | Home | "Evening, Sam. $412 left this month." 8 apps. Say: *"I have a car. Quilt doesn't have a car app. Watch."* |
-| 4b | 0:32 | Tap **Clair → Photo**, shoot the printed maintenance card, type or say *"make this an app"* | Viewfinder, shutter, "Looking at your photo…", then the build in chalk |
-| 4c | 0:40 | Clair's card | "Make a Car app? 3 services. Calendar: Oil change Sat 5 Dec. Budget: service costs go to Transport." Say: *"It's already wired to my calendar and budget."* |
-| 4d | 0:43 | Tap **Make it** | The Car patch sews onto Home; point at the laptop, where it has appeared too |
-| 4e | 0:46 | Tap **Clair → Photo**, shoot the oil-change receipt | Card: Add to 3 apps: Car log, Budget $412 → $367, Calendar oil change moves to 20 May |
-| 4f | 0:51 | Tap **Add to 3 apps** | Thread pull to the pins; the status line rolls to $367 |
-| 4g | 0:53 | Undo on the toast | It goes back. Say: *"Any app you can describe, built and connected in seconds."* |
+| 5a | 0:40 | Phone on Home. Laptop on Calendar, next week | 12 apps. Say: "This is my real account. Next week is Thanksgiving, I've got a dentist appointment and a 10K in three weeks." |
+| 5b | 0:44 | Tap **Clair**, type "Plan my training for next week" | "Reading your week…", then "Read 9 apps: Calendar, Classes, To-dos, Workout, Running, Calories, Cycle, Meditation and Groceries." |
+| 5c | 0:50 | Clair's card | "Next week's training. 4 lifts (1 kept, 3 moved), 2 runs, 1 recovery to-do, 1 grocery item." Read out two reasons: "Leg day moves to 5 pm because of the dentist. The long run is five and a half miles because my last one was five." |
+| 5d | 0:58 | Tap **Add to 5 apps** | Threads run to the apps. Groceries goes 12 → 13 on Home. On the laptop, sessions jump to new times and two runs appear. Say: "Five apps, one tap. Nothing changed until I said OK." |
+| 5e | 1:04 | Clair offers "Do this every Sunday at 7 pm?" Tap **Turn on** | Workout's Workflows tab: "Every Sunday at 7:00 pm, plan next week's training", on. Say: "And now it does this every week." |
+| 5f | 1:10 | | Move to beat 6. Undo is for questions. |
 
-The must-work path ends with Undo on the toast. The Budget limit is $1,200 for November, so $412 before the receipt and $376 after.
+The plan Clair must produce, every time:
 
-If Clair hasn't proposed anything after 12 s, "Use sample" appears (a recorded build run, or the stored oil-change receipt). Any photo works live, so a judge's photo is fine too.
+| When | What | Change | Reason shown |
+| --- | --- | --- | --- |
+| Mon 23 Nov 6:00 pm | Pull day | kept | Free after CS 3500 (Classes) |
+| Tue 24 Nov 7:00 am → 5:00 pm | Leg day | moved | Dentist at 7:30 am (Google Calendar). Also: shortest session; energy 2 logged on day 1 of your last 3 cycles (Cycle) |
+| Wed 25 Nov 6:00 pm → 7:00 am | Push day | moved | Drive home at 5:00 pm (Google Calendar) |
+| Thu 26 Nov 8:00 am | Easy run, 3 mi | new | Away from the gym; a run goes anywhere |
+| Sat 28 Nov 9:00 am | Long run, 5.5 mi | new | 10K on Sat 12 Dec; last long run 5 mi (Running) |
+| Fri 27 Nov → Sun 29 Nov 4:00 pm | Pull day | moved | Back on campus Sun 12:00 pm (Google Calendar) |
+| Tue 24 Nov 9:30 pm | To-do: 10 min body scan | new | After Leg day; 3 sessions logged this week (Meditation) |
+| Weekly shop | Oats | new | Oatmeal 3 of 5 mornings; not on your list (Calories) |
 
-Voice is real. Speech goes in through on-device speech recognition, and Clair speaks a one-line reply only when Sam talked first. A hidden toggle keeps the scripted transcript as the stage fallback.
+The card also says: "Mon to Thu you logged 1,650 to 1,970 calories a day (target 2,200)." It states the numbers and stops there.
 
-### Second beat, the fridge
+**The planner is built in four steps, and you demo the highest one that works every time.** Run the sentence ten times against a fresh reset; all ten must match.
 
-The fridge comes after the receipt. Clair spots the missing usuals, asks with a menu, adds to Weekly shop and remembers the answer. Butter and Cheddar get added, Orange juice is marked not usual, and Weekly shop goes from 4 to 6.
+| Step | The card | Button |
+| --- | --- | --- |
+| 1 | The four lifts, kept or moved | Add to 2 apps |
+| 2 | Plus the two runs | Add to 3 apps |
+| 3 | Plus the Cycle line on Leg day and the calorie sentence | Add to 3 apps |
+| 4 | Plus the body scan to-do and Oats | Add to 5 apps |
+
+If you demo a lower step, change the words in 5b to 5d to match what is on screen. Credits go from 32 to 31.
+
+If Clair hasn't proposed anything after 12 s, "Use sample" appears and replays a recorded run, marked "sample". Say that it's a recording.
+
+### For questions, if built
+
+- **Appointments.** Type "Am I due for any appointments?" → "Haircut is due. You go about every 5 weeks. The last was Sat 17 Oct." → Haircut, Sat 21 Nov 2:00 pm, reminder the day before → **Add to Calendar** → rule "Every Sunday at 7:00 pm, check for appointments that are due".
+- **A rule in words.** Type "When I add an exam, add a study to-do two days before" → Clair sets up the rule → add an exam → the to-do appears.
+- **The grocery receipt.** Photo → "Add to 3 apps" → Budget $412 → $376 → Undo.
+
+### What to say if asked
+
+- **"Is the cycle data safe?"** A new Cycle app is private: Clair can't read it until you switch that on. In this demo account it's on. Nothing is encrypted yet; that comes before real users.
+- **"Is it giving health advice?"** No. It moves sessions around your calendar and repeats your own numbers back. It doesn't tell you what to eat or how hard to train.
+- **"Did it really build those apps?"** Yes, that clip is the real app, recorded today. The account in the live demo has the same three apps with weeks of data in them.
+- **"What's next?"** Meals from a photo, health data from the phone, reminders as phone notifications, a native app.
 
 ## 2. The devices
 
-- **Phone:** the Android app (Capacitor), as a debug APK sideloaded the night before. The first backup on the same phone is the website in Chrome, signed in to the demo account. The second backup is `design/prototypes/quilt-home.html`.
-- **Laptop:** the same React app as a website on Vercel, joined to the demo account with the 6-digit join code. If the live laptop fails, show `design/canvas/Laptop.dc.html` (see section 4).
+- **Phone:** the website in Chrome, opened from its Home screen icon so it runs full screen, signed in to the demo account. There is no APK.
+- **Laptop:** the same website, joined to the demo account with the 6-digit join code (email and password as the fallback), open on Calendar, next week. It also plays the clip.
+- **Google account:** one demo Google account, added as a test user on the Google Cloud project, whose main calendar holds exactly the four events below and nothing else between Fri 13 Nov and Tue 19 Jan.
 
-## 3. Before the pitch
+| Event | When |
+| --- | --- |
+| Dentist | Tue 24 Nov, 7:30 to 8:30 am |
+| Drive home for Thanksgiving | Wed 25 Nov, 5:00 to 9:00 pm |
+| Thanksgiving at home | Thu 26 to Sat 28 Nov, all day |
+| Back to campus | Sun 29 Nov, 12:00 to 1:00 pm |
 
-- Sideload the debug APK on the phone the night before.
-- Five minutes before, warm the Vercel functions: open Home and run one Clair turn on each device.
-- Check that Supabase Realtime is connected: confirm something on the phone and watch the laptop.
-- Reset the demo workspace (`POST /dev/reset`).
-- Run "Use sample" once for the receipt and dismiss it. This proves the fixture resolves against the fresh seed (`spec/backend.md` §13 reset checklist).
-- Make sure the 6 weeks of seeded trips are in place, so the fridge's usuals are real.
-- Have the phone hotspot ready, and open `design/prototypes/quilt-home.html` on it once so the fallback has loaded at least once.
+## 3. What's in the demo account
 
-## 4. Backup plan if live AI or Wi-Fi fails
+Twelve apps. The numbers on Home at 5:45 pm:
 
-The pitch doc plans a phone hotspot, a recorded backup video and one cached known-good receipt. In order of preference:
-
-1. **"Use sample" in the real app.** It appears after 12 s and replays the stored Corner Market parse (the 8 rows on the Receipt board) instead of calling Claude, with the same UI.
-2. **Scripted voice.** If speech recognition fails, use the hidden toggle for the scripted transcript.
-3. **The website in Chrome on the phone,** signed in to the demo account, if the APK fails.
-4. **Recorded backup video.** This doesn't exist yet (section 5).
-5. **Phone fallback: `design/prototypes/quilt-home.html`.** Clair → Photo → shutter → "Reading the receipt…" → card → Add to 3 apps → thread pull → $376 → Undo. It is fully scripted, uses no AI, and gave no console errors at 1400×1000. It still needs a clean start state (section 5). It loads Google Fonts, so offline it falls back to system fonts.
-6. **Click-through fallback: the canvas boards in `design/canvas/`** (published as "Mock App", https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P). Main → ClairSheet → (Photo) → Receipt → Add to 3 apps → See Budget › → Calendar (pin) → Laptop. All links are real `<a>`s. The local `.dc.html` files render offline from a local server with `support.js`, while the published artifact needs internet. There is no camera board, so you narrate the shot.
-7. **Laptop side.** Show `Laptop.dc.html` on the laptop. It agrees with the phone at 5:41 pm. Don't use the Flows laptop, which says 12:41 pm, unless that time gets fixed.
-8. **Last resort: still frames on a slide.** The render frames are a starting point: `design/stills/grid2.png` (Home proto: sheet, camera, reading, card, thread pull, after, ask) and `design/stills/grid.png` (canvas Main, ClairSheet, Receipt, Groceries, Budget, Calendar), where SP is `/tmp/claude-1000/-home-hitesh-workfiles-ProjectWork-DevDay/c2d1a6dd-b96f-4aa8-b1d5-562aa46f99e8/scratchpad`. They are scratch renders, not final slides.
-
-The Motion lab (`design/prototypes/explorations/workbench-motion.html`) is not usable as a fallback because of its old copy and numbers, and neither is the Flows calendar, which has no grocery trip.
-
-### Which design screen covers each beat
-
-Canvas = boards in `design/canvas/`. Home proto = `design/prototypes/quilt-home.html`. Flows proto = `design/prototypes/quilt-flows.html`.
-
-| Beat | Screen / state | Status | What exactly is missing |
+| App | Home shows | App | Home shows |
 | --- | --- | --- | --- |
-| 1, 2, 6, 7, 8 slides | None found | **Missing** | I found no deck. Beats 2 and 6 also need real survey and waitlist numbers. |
-| 3 What it is | Canvas `Main.dc.html` "Home: the evening check-in waits in the queue"; Home proto "5:45 pm · typical" | Ready | Only the spoken line needs the "apps / tell Clair" update |
-| 4a Home before | Canvas Main; Home proto evening | **Needs work** | In the Home proto's evening state, the Corner Market receipt card is **already waiting** before any photo is taken. Taking the photo just brings the same card to the top. It needs a start state with $412 and no receipt queued. |
-| 4b Clair sheet | Canvas `ClairSheet.dc.html` "Tap Clair: tell Clair anything"; Home proto tap Clair | Ready | Small difference: the canvas suggestion reads "Spent $12 on lunch", the proto reads "…, gym tomorrow 6 pm" |
-| 4c Camera | Home proto Photo → "Add a photo" viewfinder | Ready (proto) / **Missing** (canvas) | The canvas has no camera board; Photo jumps straight to Review receipt. The viewfinder is a drawn receipt, so it is fine for a fallback but not for a live shot. |
-| 4d Reading | Home proto "Reading the receipt…" (1.2 s, scripted) | Ready (proto) | No canvas still. The real app's loading state is unverified. |
-| 4e Review | Canvas `Receipt.dc.html` "Review receipt" (8 rows, untick, $35.83, three effects); Home proto receipt card | Ready (canvas) / **Needs work** (proto) | In the Home proto, "Review items" is only a toast ("Opens the items to review…"), so demo the card's "Add to 3 apps" there. |
-| 4f Add + thread pull | Home proto (verified: threads to 3 pins, $412 → $376 roll, notches, Undo toast); Receipt board "Add to 3 apps" | Ready | None |
-| 4g Budget drops | Canvas `Budget.dc.html`; Home proto status line | Ready | Home proto taps open a toast ("Opens Budget"), not a Budget screen, so use the canvas for this step |
-| 4h Groceries | Canvas `Groceries.dc.html` | **Needs work** | It contradicts itself and the other apps; see section 5, problem 1 |
-| 4i Calendar | Canvas `Calendar.dc.html` "Calendar: dates from every app" | Ready | The Flows proto calendar ("2 · Connected in Calendar") has no grocery trip and puts "Spinach use by" under Sun 22 Nov, so don't use that one for this beat |
-| 4j Laptop live | Canvas `Laptop.dc.html` (5:41 pm, $376, just changed); Flows proto "6 · Laptop" | **Needs work** | Both show only the after state, and no prototype pairs phone and laptop changing together. The Flows laptop says **12:41 pm**. Nothing proves real-time sync works. |
-| 5 Why not Notion (optional visual) | Flows proto "1 · Build an app" (Describe → Build → Preview → Arrange → Add → Landed); canvas Build/Preview/Arrange/Connect/Empty | Ready | The Landed screen still has a "Snap a bill or receipt" button, and its note says "offers snap, type, or import" |
+| Budget | $412 left | Workout | 3 this week |
+| Groceries | 12 to buy | Subscriptions | $38.46 a month |
+| Calendar | 3 today | Calories | 1,140 today |
+| To-dos | 2 today | Running | 7 mi this week |
+| Classes | 2 due this week | Meditation | 25 min this week |
+| Notes | 3 this week | Cycle | last period started Tue 27 Oct |
 
-## 5. Still open
+Calories, Running, Cycle and Meditation are simple logs. You can add a record by hand or by typing to Clair ("had a chicken burrito, about 700 calories"; "ran 3 miles in 29 minutes"). There are no photo meals, calorie estimates, pace, charts, timer or cycle predictions in the app yet.
 
-Checked against the files in `design/` on the evening of Nov 19. The Groceries numbers (12 to 4 to buy, $177.83 of $200), the 5:41 pm receipt time, "about $29 a day", the check-in, the "N more" label, the Flows wording and the pitch doc's wording all agree now, so they're no longer listed.
+## 4. Before the pitch
 
-### Must fix before the pitch
+- Tonight: create the Google Cloud project, turn on the Calendar API, set the consent screen to testing with the demo Google account as a test user, and make the four events.
+- Tomorrow, by early afternoon: record the three builds (beat 4) and cut the clip.
+- Connect Google Calendar in the demo account (Calendar → Add Google Calendar) well before the pitch. Don't do the Google sign-in on stage.
+- Reset the demo workspace (`POST /dev/reset`), then check Home shows 12 apps with the numbers above and Calendar shows the four "from Google" events.
+- Run the planner sentence ten times on fresh resets and decide which step you're demoing.
+- Run "Use sample" once and dismiss it.
+- Five minutes before, warm the server: open Home and run one Clair turn on each device, then reset again.
+- Check live sync: confirm something on the phone and watch the laptop.
+- Phone on the hotspot, not the venue Wi-Fi, unless the venue Wi-Fi has been tested.
+- Laptop: the clip queued, then Calendar on next week. Phone on Home.
 
-1. **Run the receipt beat end to end in the real app** on the Android phone and the laptop, on the hotspot, including "Use sample". Until it does, the live demo is a no-go. If it can't be made to work, decide early to demo the prototypes and say so, because DevDay judges only the feature built on the day.
-2. **Make the build beat work:** `propose_app` with `rows` and `stitches_into`, the Make it confirm, and the new patch appearing on the laptop. Print the maintenance card and the Campus Auto receipt, record a good run of each for "Use sample", and pass their test cases (`spec/clair-agent.md` §16). Seed the Notes app too: the whiteboard is the first fallback. Decide at the go/no-go which beat opens.
-3. **Record the backup video** of beat 4. None exists yet. The one in `~/workfiles/ProjectWork/demovideo` is about Lassonde DevLab, not Quilt.
-4. **Make the deck** for the slide beats (1, 2, 6, 7, 8), with real survey and waitlist numbers for beats 2 and 6.
+## 5. Backup plan
 
-### Nice to have
+In order of preference:
 
-1. The Receipt board's Calendar line says "Use the chicken and spinach by Tue 24 Nov". The pitch says the grocery trip lands on the calendar, so the card could name the trip instead. The Calendar board already shows both.
-2. Keep the motion catalogue (`design/prototypes/motion-catalogue.html`) and the explorations out of anything judges see. Their copy is older: 12:41 pm, "about $26 a day", "tabs", and Groceries going to 20 items.
+1. **"Use sample" in the real app.** It appears after 12 s and replays the recorded planner run with the same screens.
+2. **A lower planner step.** If the full plan isn't steady, demo the step that is.
+3. **Google is down or sign-in fails.** Reset with the seeded copies of the four events (`DEMO_GCAL_FIXTURE=1`). The screens look the same. Say the calendar events are seeded if asked.
+4. **No clip.** Show the Flows prototype for beat 4 and say it is a prototype.
+5. **The rule doesn't work.** Skip step 5e.
+6. **The recorded video** of beat 5, made after the feature freeze. It doesn't exist yet.
+7. **The base only.** Type "spent $12 on lunch" → card → Add → $412 → $400 on both devices → Undo.
+8. **Prototypes.** `design/prototypes/quilt-home.html` and the canvas boards (https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P) still show the grocery receipt flow and 8 apps. Use them only to show the look.
+
+There are no design boards for the planner card, the "from Google" rows, the offer card, the Workflows tab or the four new apps. They are built in code from the existing styles.
+
+## 6. Still open
+
+### Must do before the pitch
+
+1. **Build the base tonight** and run it on the phone's browser and the laptop: sign-in, 12 apps, Home, a typed sentence to a card, confirm, undo, live sync (`spec/backend.md` §13, T1 to T4). Go/no-go at 10:00 on Nov 20.
+2. **Reach the safe point first tomorrow:** planner step 1 and the Sunday rule, on seeded Google events. Then the builds and the clip, then planner steps 2 to 4, then Google sign-in, then the rest (`spec/backend.md` §13, D1 to D10).
+3. **Record the fallback run and the backup video** after the feature freeze, two hours before the pitch.
+4. **Make the deck** for the slide beats, with real survey and waitlist numbers.
+5. **Decide what to tell the organisers.** The DevDay application described the receipt as the feature built on the day.
+
+### Things to be honest about
+
+- This is more than two people are likely to finish in a day. The order above is built so that stopping anywhere still leaves a working demo.
+- The clip is a recording, and the account in the live demo is not the one in the clip.
+- The rule's Sunday run is not scheduled unless that job gets built; Run now is what works.
+- Quilt reads Google Calendar and doesn't write to it, so the plan doesn't appear in Google.
+- The connection works only for Google accounts we list as test users.
+- Nothing is encrypted yet, including cycle data and the stored Google token.
+- The planner works on next week in this account. It hasn't been tested on other people's data.

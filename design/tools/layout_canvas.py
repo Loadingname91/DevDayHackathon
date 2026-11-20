@@ -41,7 +41,7 @@ n['onboarding'] = {'x': -620, 'y': 9240, 'w': 480, 'size': 'm', 'fill': 'teal', 
     "Evening: check-in > Review > Remind me. Then Keep your quilt > Continue with Google > Add a device (code 482 913) > the laptop: type 482913 to join, anything else shows the error.\n\n"
     "Branches: Skip on What slips? goes to the skipped-picks Home (the old Day one board, updated: no name, first prompt). "
     "Not now on the camera ask shows the camera-off line. No connection on first open: Try again.")}
-n['screens']['text'] = ("Every screen is in Quilter's Workbench (Nov 19).\n\n"
+n['screens']['text'] = ("Every screen is in Soft Quilt, light mode on Mint air (restyled Nov 19). Dark mode and the ground picker are on the page \"Look: Soft Quilt\".\n\n"
     "Row 1 · Home and finding: Home, Your apps, Search, You, Reminder.\n"
     "Row 2 · Clair: tap the Clair button, hold it to talk, tell and ask, data vs general questions, a photo with a question, share a file in, a fridge photo that asks what's low, what Clair remembers.\n"
     "Row 3 · Demo path: Groceries, Review receipt, Budget, Calendar, Edit an item.\n"
