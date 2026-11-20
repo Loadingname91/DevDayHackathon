@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     demo_key: str | None = None  # X-Demo-Key for POST /dev/reset
     demo_workspace_id: str | None = None
     demo_record_workspace_id: str | None = None
+    demo_open: bool = False  # DEMO_OPEN=1: POST /demo/enter signs anyone in as the demo user (open-room demo)
+    demo_open_email: str = 'sam@quilt.demo'
     version: str = '0.1.0'
 
 

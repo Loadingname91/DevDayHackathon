@@ -23,7 +23,19 @@ export async function getToken(): Promise<string | null> {
 
 export async function hasSession(): Promise<boolean> {
   if (!authConfigured) return true; // mock mode, or live before the keys arrive
-  return (await getToken()) !== null;
+  if ((await getToken()) !== null) return true;
+  if (import.meta.env.VITE_DEMO_OPEN === '1') return enterDemo(); // open-room demo: no form (server side DEMO_OPEN=1)
+  return false;
+}
+
+async function enterDemo(): Promise<boolean> {
+  try {
+    const base = ((import.meta.env.VITE_API_BASE as string | undefined) ?? '').replace(/\/$/, '');
+    const r = await fetch(`${base}/api/demo/enter`, { method: 'POST' });
+    if (!r.ok) return false;
+    const { token_hash } = (await r.json()) as { token_hash: string };
+    return (await signInWithTokenHash(token_hash)) === null;
+  } catch { return false; }
 }
 
 export async function signIn(email: string, password: string): Promise<string | null> {

@@ -49,7 +49,7 @@ def health() -> Health:
     return Health(ok=ok, db=ok, version=settings().version)
 
 
-from .routes import apps, clair, connect, dev, links, me, read, write  # noqa: E402
+from .routes import apps, clair, connect, demo_open, dev, links, me, read, write  # noqa: E402
 
 api.include_router(me.router)
 api.include_router(read.router)
@@ -59,4 +59,5 @@ api.include_router(apps.router)
 api.include_router(clair.router)
 api.include_router(connect.router)
 api.include_router(dev.router)
+api.include_router(demo_open.router)
 app.include_router(api)
