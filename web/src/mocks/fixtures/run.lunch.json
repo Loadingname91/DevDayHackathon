@@ -7,6 +7,27 @@
   }
  },
  {
+  "delay": 250,
+  "event": "thinking_delta",
+  "data": {
+   "text": "A $12 lunch. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Budget has an Eating out category, and $412 is what is left this month. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "One spend, nothing else to touch."
+  }
+ },
+ {
   "delay": 900,
   "event": "understood",
   "data": {

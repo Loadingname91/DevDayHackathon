@@ -1,5 +1,6 @@
 import { useLayoutEffect, type KeyboardEvent } from 'react';
 import type { AppResponse, LeafBlock, Patch } from '../api/types';
+import { applyBlocks, useLayout } from '../lib/layout';
 import { loadApp, setPickable } from '../lib/store';
 import { useWide } from '../lib/useWide';
 import { Block, type Ctx } from './blocks';
@@ -8,10 +9,13 @@ import { Block, type Ctx } from './blocks';
  *  `tabbed` says the app's tablist (AppScreen) is on the page: the panel is then that tab's tabpanel. */
 export function AppView({ app, tab, apps, now, tabbed = false, filter }: { app: AppResponse; tab: string; apps: Patch[]; now: string; tabbed?: boolean; filter?: { field: string; id: string } | null }) {
   const wide = useWide();
+  const layout = useLayout(app.spec.key);
   const page = app.spec.tabs.find((t) => t.id === tab) ?? app.spec.tabs[0];
   const preview = app.seq === 0; // a build preview (no server sequence yet)
   // rows you can pick on a laptop: the detail pane is there only while the screen has some (App.tsx reads the count)
-  const rowBlocks = (page?.children ?? []).filter((b) => b.kind === 'list' || b.kind === 'checklist');
+  // Arrange (lib/layout.ts): this person's order and hidden sections; a build preview has none
+  const children = page ? (preview ? page.children : applyBlocks(page, layout)) : [];
+  const rowBlocks = children.filter((b) => b.kind === 'list' || b.kind === 'checklist');
   const pickable = preview ? 0 : rowBlocks.filter((b) => 'source' in b && b.source.startsWith(app.spec.key + '/')).length;
   useLayoutEffect(() => { setPickable(pickable); return () => setPickable(0); }, [pickable]);
   if (!page) return null;
@@ -19,9 +23,9 @@ export function AppView({ app, tab, apps, now, tabbed = false, filter }: { app: 
   const ctx: Ctx = { spec: app.spec, data: app.data, values, now, apps, preview, many: rowBlocks.length > 1, filter: filter ?? undefined, reload: () => void loadApp(app.spec.key) };
   // neighbouring metrics sit side by side
   const groups: LeafBlock[][] = [];
-  for (const b of page.children) {
+  for (const b of children) {
     const last = groups[groups.length - 1];
-    if (b.kind === 'metric' && last && last[0].kind === 'metric' && last.length < 2 && page.children.filter((x) => x.kind === 'metric').length > 1) last.push(b);
+    if (b.kind === 'metric' && last && last[0].kind === 'metric' && last.length < 2 && children.filter((x) => x.kind === 'metric').length > 1) last.push(b);
     else groups.push([b]);
   }
   const node = (g: LeafBlock[]) => g.length > 1

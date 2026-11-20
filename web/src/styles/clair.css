@@ -51,3 +51,66 @@
 .cs-from-l { font-size: 13px; color: var(--sec); }
 .cs-from .chip { justify-content: center; font-size: 14px; }
 .cs-err { font-size: 15px; font-weight: 500; line-height: 1.4; }
+
+/* ---------- the turns of the shared engine (lib/turns.ts, components/clair/TurnView.tsx): a turn is a group, not a box ---------- */
+.cs .turn { display: contents; }
+.cs .turn + .turn > .said { margin-top: 8px; } /* grown, the sheet shows every turn since it opened */
+.cs-line.past { font-size: 14px; min-height: 0; }
+
+/* ---------- start state: Continue (the chat in hand, or the server's latest within 24 h) and "Open chat ›" ---------- */
+.cs-resume .cs-row-txt .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-open { align-self: flex-start; margin-top: -8px; }
+
+/* ---------- big mode: the header's expand button grows the sheet (ClairSheet.tsx grows it with a 350 ms height and width run) ----------
+   Phone: top 8 px below the safe area, the bar still lit below. Laptop: a wide panel centred in the main column, 92 dvh tall (a plan card of five apps, with Clair's thinking line above it, fits without scrolling at 1280 × 800).
+   The marker is `.cs-big` inside the sheet, so Sheet.tsx stays as it is. Height, never top: the sheet stays anchored at its bottom edge. */
+.cs-expand { flex: none; width: var(--hit); height: var(--hit); margin-right: -8px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); }
+.cs-mute + .cs-expand { margin-left: -8px; }
+.cs-expand + .cs-close { margin-left: -8px; }
+@media (hover: hover) and (pointer: fine) { .cs-expand:hover { background: var(--hair); } }
+.sheet:has(.cs-big) { max-height: none; height: calc(100dvh - var(--bar-h) - 36px - var(--safe-b) - var(--safe-t)); }
+.sheet:has(.cs-big) .body { flex: 1 1 auto; min-height: 0; }
+/* ---------- laptop: the Clair sheet is a docked widget, not the phone's bottom sheet stretched over the page ----------
+   Bottom right of the main column (left of the 320 px detail pane when it is there), 480 wide, never taller than the window, so "Open chat"
+   and the field are always on screen; the page behind stays readable under a light scrim. Phone is untouched (it is below 1024 px). */
+@media (min-width: 1024px) {
+  .frame.shell .sheet:not(.cover) { left: auto; right: calc(320px + 24px); bottom: 24px; width: 480px; max-height: calc(100dvh - 48px - var(--safe-t)); }
+  .frame.shell.no-detail .sheet:not(.cover) { right: 24px; }
+  .frame.shell .scrim:not(.cover) { background: color-mix(in oklch, var(--ink) 9%, transparent); }
+}
+@media (min-width: 1024px) {
+  .frame.shell .sheet:has(.cs-big) { --cw: min(760px, calc(100vw - 240px - 320px - 32px)); width: var(--cw); right: auto; left: calc(240px + (100vw - 240px - 320px - var(--cw)) / 2); bottom: 4dvh; height: 92dvh; }
+  .frame.shell.no-detail .sheet:has(.cs-big) { --cw: min(760px, calc(100vw - 240px - 32px)); left: calc(240px + (100vw - 240px - var(--cw)) / 2); }
+}
+
+/* "Open in chat ›" beside the "Waiting for your OK" label: a small link, a 44 px target, no row of its own */
+.sec-link { position: relative; flex: none; font-size: 13px; font-weight: 600; color: var(--focus); }
+.sec-link::after { content: ''; position: absolute; inset: -13px -8px; }
+
+/* ---------- Clair's thinking (TurnView.tsx): open while it streams, a one-line fold after ---------- */
+.think { display: flex; flex-direction: column; gap: 0; }
+.think-h { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: var(--hit); margin: -6px 0; padding: 0 12px 0 4px; border-radius: 16px; font-size: 14px; font-weight: 600; color: var(--sec); text-align: left; }
+.think-h svg { transition: transform var(--t-state) var(--ease); }
+.think.open .think-h svg { transform: rotate(90deg); }
+@media (hover: hover) and (pointer: fine) { .think-h:hover { color: var(--ink); } }
+.think-dots { display: inline-flex; gap: 3px; }
+.think-dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .45; }
+.think.live .think-dots i { animation: pulse var(--m-pulse) var(--ease-char) infinite; }
+.think.live .think-dots i:nth-child(2) { animation-delay: .2s; }
+.think.live .think-dots i:nth-child(3) { animation-delay: .4s; }
+.think-body { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--t-state) var(--ease), opacity var(--t-state) var(--ease); }
+.think.open .think-body { grid-template-rows: 1fr; opacity: 1; }
+:root .think .think-in { min-height: 0; max-height: 9.5em; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; display: block; padding-block: 0; outline-color: transparent; transition: outline-color var(--t-state) var(--ease), padding var(--t-state) var(--ease); font-size: 14px; line-height: 1.5; color: var(--sec); white-space: pre-wrap; overflow-wrap: anywhere; }
+:root .think.open .think-in { padding-block: 12px; outline-color: color-mix(in oklch, var(--focus) 70%, transparent); }
+.think .think-in::-webkit-scrollbar { display: none; }
+/* the live edge: the newest words fade up from the bottom of the box */
+.think.live .think-in { mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 100%); }
+.cs-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+@media (prefers-reduced-motion: reduce) {
+  .think.live .think-dots i { animation: none; opacity: .8; }
+  .think-body, .think-h svg { transition: opacity var(--t-fb) var(--ease); }
+}
+
+/* the attachment slot of the field row (components/clair/Composer.tsx): Photo and File go here; empty, it takes no room and no gap */
+.clair-attach-slot { flex: none; display: flex; align-items: flex-end; gap: 8px; }
+.clair-attach-slot:empty { display: none; }

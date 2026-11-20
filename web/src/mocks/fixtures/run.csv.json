@@ -1,0 +1,274 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your file…"
+  }
+ },
+ {
+  "delay": 250,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Six rows, each with a date, a note and an amount. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "None of them are in Budget yet. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Sorting them into your categories."
+  }
+ },
+ {
+  "delay": 1300,
+  "event": "understood",
+  "data": {
+   "kind": "document",
+   "summary": "Bank file · 6 rows · $64.04",
+   "items": [
+    "Roxy's coffee",
+    "Taqueria 27",
+    "Smoothie shop",
+    "Campus Bookstore",
+    "Trax fare",
+    "Cinemark"
+   ]
+  }
+ },
+ {
+  "delay": 1300,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_csv",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "records",
+    "source": {
+     "kind": "file",
+     "label": "From your file",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Roxy's coffee",
+       "category": "c_eating_out",
+       "amount": 475,
+       "at": "2026-11-20T12:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Taqueria 27",
+       "category": "c_eating_out",
+       "amount": 1250,
+       "at": "2026-11-19T12:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Smoothie shop",
+       "category": "c_eating_out",
+       "amount": 680,
+       "at": "2026-11-18T12:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Campus Bookstore",
+       "category": "c_fun",
+       "amount": 2499,
+       "at": "2026-11-18T12:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Trax fare",
+       "category": "c_transport",
+       "amount": 250,
+       "at": "2026-11-18T12:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Cinemark",
+       "category": "c_fun",
+       "amount": 1250,
+       "at": "2026-11-17T12:00:00-07:00"
+      }
+     }
+    ],
+    "expanded": [
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Roxy's coffee",
+       "category": "c_eating_out",
+       "amount": 475,
+       "at": "2026-11-20T12:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Taqueria 27",
+       "category": "c_eating_out",
+       "amount": 1250,
+       "at": "2026-11-19T12:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Smoothie shop",
+       "category": "c_eating_out",
+       "amount": 680,
+       "at": "2026-11-18T12:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Campus Bookstore",
+       "category": "c_fun",
+       "amount": 2499,
+       "at": "2026-11-18T12:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Trax fare",
+       "category": "c_transport",
+       "amount": 250,
+       "at": "2026-11-18T12:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Cinemark",
+       "category": "c_fun",
+       "amount": 1250,
+       "at": "2026-11-17T12:00:00-07:00"
+      }
+     }
+    ],
+    "deltas": [
+     {
+      "app": "budget",
+      "before": "$412",
+      "after": "$348"
+     }
+    ],
+    "title": "Spending from your file",
+    "summary": "Found 6 rows, $64.04. Add to Budget?",
+    "lines": [
+     {
+      "apps": [
+       "budget"
+      ],
+      "what": "Roxy's coffee · Taqueria 27 · Smoothie shop · Campus Bookstore · Trax fare · Cinemark",
+      "val": "$64.04",
+      "sub": "$412 → $348 left"
+     }
+    ],
+    "targets": [
+     "budget"
+    ],
+    "actions": {
+     "primary": "Add to Budget",
+     "secondary": "Review items"
+    },
+    "review": [
+     {
+      "title": "Roxy's coffee",
+      "when": "$4.75 · Fri, Nov 20",
+      "change": "new",
+      "reason": "Eating out",
+      "source": "your file",
+      "app": "budget"
+     },
+     {
+      "title": "Taqueria 27",
+      "when": "$12.50 · Thu, Nov 19",
+      "change": "new",
+      "reason": "Eating out",
+      "source": "your file",
+      "app": "budget"
+     },
+     {
+      "title": "Smoothie shop",
+      "when": "$6.80 · Wed, Nov 18",
+      "change": "new",
+      "reason": "Eating out",
+      "source": "your file",
+      "app": "budget"
+     },
+     {
+      "title": "Campus Bookstore",
+      "when": "$24.99 · Wed, Nov 18",
+      "change": "new",
+      "reason": "Fun",
+      "source": "your file",
+      "app": "budget"
+     },
+     {
+      "title": "Trax fare",
+      "when": "$2.50 · Wed, Nov 18",
+      "change": "new",
+      "reason": "Transport",
+      "source": "your file",
+      "app": "budget"
+     },
+     {
+      "title": "Cinemark",
+      "when": "$12.50 · Tue, Nov 17",
+      "change": "new",
+      "reason": "Fun",
+      "source": "your file",
+      "app": "budget"
+     }
+    ],
+    "mock": true
+   }
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": []
+  }
+ }
+]

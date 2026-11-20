@@ -21,6 +21,8 @@ export type Field = {
   multiline?: boolean; // text: a textarea (Notes' body); `[[Title]]` in it links to that record
   unit?: string; // assumed: display hint for number fields ("mi", "min")
   unitFirst?: boolean; // assumed: "energy 2" rather than "2 energy"
+  timeOptional?: boolean; // datetime: the day is the value and a time is optional (a due date); the add sheet offers "Add a time" (Nov 20, date picker)
+  allDay?: boolean; // datetime: the sheet offers an "All day" switch; all day is stored as the day alone, "YYYY-MM-DD"
 };
 export type Collection = {
   key: string;
@@ -57,7 +59,14 @@ export type ViewBase = {
 export type TextBlock = { kind: 'text'; id: string; text: string };
 export type MetricBlock = { kind: 'metric'; id: string; label: string; value: Value; format: Format; compare?: Value };
 export type ProgressBlock = { kind: 'progress'; id: string; label: string; value: Value; target: Value; format: Format };
-export type ListBlock = { kind: 'list'; add?: boolean /* Nov 20: a trailing "Add a <row>" row; on by default when `source` is this app's collection, `false` opts out */ } & ViewBase;
+/** Trips (Nov 20): a list whose rows are done one by one (Groceries) can gather the done ones into a group row, and take a photo of a list or a receipt. */
+export type FinishAction = { into: CollectionRef; link: string; label?: string };
+export type SnapAction = { label?: string; intents: { id: string; label: string; hint?: string; ask: string }[] };
+export type ListBlock = { kind: 'list'; add?: boolean /* Nov 20: a trailing "Add a <row>" row; on by default when `source` is this app's collection, `false` opts out */;
+  /** "Finish trip": one command makes a row in `into` and sets the relation field `link` on the picked done rows (`POST /trips/finish`) */
+  finish?: FinishAction;
+  /** a camera button: the photo goes to Clair with `context.intent` set to the chosen intent id (`spec/clair-agent.md` §2) */
+  snap?: SnapAction } & ViewBase;
 export type TableBlock = { kind: 'table' } & ViewBase;
 export type CalendarBlock = { kind: 'calendar'; window?: 'today' | 'week' } & ViewBase; // window: assumed
 export type FormBlock = { kind: 'form'; id: string; collection: CollectionRef; fields: string[]; submit: string };
@@ -67,11 +76,15 @@ export type WorkflowsBlock = { kind: 'workflows'; id: string };
 // ---- instruments (Nov 20): blocks that do the app's job, so an app is more than a list and a form.
 // Numbers they show come from the server in `values[block.id]`; the client lays out and formats.
 /** A hero figure with its bar: "$412 left of $1,200", "11 days to go". */
-export type GaugeBlock = { kind: 'gauge'; id: string; label: string; value: Value; target: Value; format: Format; link?: { app: string; text: string } };
+/** A number the user can change from a block: it opens the limits sheet. `setting` is a key of `AppSpec.settings` (Budget's monthly `limit`, Calories' `target`). */
+export type EditSetting = { setting: string; label: string; format: 'money' | 'number' };
+/** Bars: the limits on the options of the select field `field` (`spend.category`): each option's `limit` can be set, cleared, or a new option added. */
+export type EditLimits = { field: string; label: string };
+export type GaugeBlock = { kind: 'gauge'; id: string; label: string; value: Value; target: Value; format: Format; link?: { app: string; text: string }; edit?: EditSetting };
 /** One bar per option of a select field: Budget's "Where it went". */
-export type BarsBlock = { kind: 'bars'; id: string; label: string; from: CollectionRef; by: string; value: Query };
+export type BarsBlock = { kind: 'bars'; id: string; label: string; from: CollectionRef; by: string; value: Query; edit?: EditLimits };
 /** A goal ring: Calories today against the target. */
-export type RingBlock = { kind: 'ring'; id: string; label: string; value: Value; target: Value; format: Format };
+export type RingBlock = { kind: 'ring'; id: string; label: string; value: Value; target: Value; format: Format; edit?: EditSetting };
 /** Days to a dated row: the race, the next exam, the next renewal. */
 export type CountdownBlock = { kind: 'countdown'; id: string; source: CollectionRef };
 /** Mon to Sun, one cell per day with that day's figure. History, not a streak. */
@@ -85,9 +98,13 @@ export type ChecklistBlock = {
   groups: { label: string; where: Filter[]; done?: boolean; collapsed?: boolean }[];
   add?: { placeholder: string; set?: Record<string, Scalar>; pinned?: boolean };
   swipe?: { right?: 'complete'; left?: 'delete' };
+  finish?: FinishAction;
+  snap?: SnapAction;
 };
 /** Dates from every app as a day timeline, a week (day strip and agenda) or a month grid. */
-export type DaysBlock = { kind: 'days'; id: string; source: CollectionRef; views: ('day' | 'week' | 'month')[]; view: 'day' | 'week' | 'month'; apps?: string[] };
+export type DaysBlock = { kind: 'days'; id: string; source: CollectionRef; views: ('day' | 'week' | 'month')[]; view: 'day' | 'week' | 'month'; apps?: string[];
+  /** Nov 20: the collection a "+" in the block adds to (one of this app's own, with a dateField); the day picked is the new row's date. Default: the app's first `calendar: true` collection. */
+  add?: CollectionRef };
 /** Next session and the guided log behind it: Workout's "Start pull day" → Log a set. */
 export type NextBlock = { kind: 'next'; id: string; source: CollectionRef; log: CollectionRef; fields: string[] };
 /** A timer that logs a row when it ends. countdown: Meditation. stopwatch: a run (asks `after` fields at the end). */
@@ -97,8 +114,10 @@ export type TimerBlock = {
 };
 /** A month of days to log into: Cycle. Tap a day to log or change it. */
 export type MonthBlock = { kind: 'month'; id: string; source: CollectionRef; dateField: string; mark: string; fields: string[] };
+/** Notes workspace (Nov 20): a tree of `source` rows (notebooks) and the `pages` rows in them (`link` is the pages' relation to the notebooks, `body` their long text). One block is the whole app screen. */
+export type NotebookBlock = { kind: 'notebook'; id: string; source: CollectionRef; pages: CollectionRef; link: string; body: string };
 export type LeafBlock = TextBlock | MetricBlock | ProgressBlock | ListBlock | TableBlock | CalendarBlock | FormBlock | ChartBlock | WorkflowsBlock
-  | GaugeBlock | BarsBlock | RingBlock | CountdownBlock | StripBlock | PicksBlock | ChecklistBlock | DaysBlock | NextBlock | TimerBlock | MonthBlock;
+  | GaugeBlock | BarsBlock | RingBlock | CountdownBlock | StripBlock | PicksBlock | ChecklistBlock | DaysBlock | NextBlock | TimerBlock | MonthBlock | NotebookBlock;
 export type PageBlock = { kind: 'page'; id: string; title: string; children: LeafBlock[] };
 
 export type Trigger =
@@ -164,7 +183,8 @@ export type Face = { text: string; label: string; value?: number };
 // assumed: the server sends each metric and progress block's computed value, since all formulas run in Python.
 export type BlockValue = {
   text?: string; sub?: string; target?: string; pct?: number; over?: string; over_pct?: number; title?: string; unit?: string; note?: string;
-  /** bars */ rows?: { label: string; text: string; pct?: number; over_pct?: number; note?: string }[];
+  /** gauge and ring with `edit`: what is used so far and the limit, in cents (money) or the plain count, so the limits sheet can say "$142 so far" */ spent?: number; limit?: number;
+  /** bars */ rows?: { label: string; text: string; pct?: number; over_pct?: number; note?: string; /** the option's id, for the limits sheet */ id?: string; spent?: number; limit?: number }[];
   /** strip */ days?: { dow: string; text?: string; on?: boolean; today?: boolean }[];
   /** next */ eyebrow?: string; meta?: string; action?: string; record_id?: string; occurrence?: string; rest?: number;
   steps?: { id: string; name: string; plan: string; sets: number; reps: number; weight: number; unit: string; best?: { reps: number; weight: number; text: string } }[];
@@ -213,10 +233,31 @@ export type Card =
 
 export type CommandResult = { change_set_id: string; server_seq: number; blocks: Rec[]; faces: Record<string, Face>; warnings: unknown[] };
 
+/**
+ * `DELETE /apps/{id}` without `confirm` answers `409 {error: 'dependents', dependents}` (spec/backend.md §11 row 21, FR-S8; api `dependents()`):
+ * what else reads the app. `app` is the other app's key; `what` is a short server phrase, one of `stitch from <app>/<coll>`,
+ * `stitch to <app>/<coll>`, `reads <app>/<coll>…`, `shows <App name>` or `<ref>.<field> links to <app>/<coll>`. An empty list is a clean removal.
+ */
+export type Dependent = { app: string; what: string };
+export type Dependents = { error: 'dependents'; dependents: Dependent[] };
+
+/**
+ * A removed app waiting in the trash (spec/backend.md §10 `GET /apps/removed`, §11 row 21): hidden from Home, its stitches paused, unread by Clair,
+ * and kept for 3 days. The server sends `purge_at`; the client only words the countdown against `me.server_now` and never decides when it is gone.
+ */
+export type RemovedApp = { key: string; name: string; dye: Dye; icon: string; removed_at: string; purge_at: string };
+
+/** Arrange (spec/ui-tech-plan.md §3 "Layout overlay"): one person's order and hidden tabs and blocks for one app, keyed by the spec's own ids. */
+export type AppLayout = {
+  tabs?: string[];
+  hiddenTabs?: string[];
+  blocks?: Record<string, { order?: string[]; hidden?: string[] }>;
+};
+
 export type Me = {
   user: { id: string; display_name: string; email?: string };
   is_anonymous: boolean;
-  workspace: { id: string; tz: string; epoch: number; settings: { pins: string[]; credits_monthly: number; notes_enabled: boolean } };
+  workspace: { id: string; tz: string; epoch: number; settings: { pins: string[]; credits_monthly: number; notes_enabled: boolean; layout?: Record<string, AppLayout> } };
   credits: { granted: number; spent: number; left: number; resets?: string };
   server_now: string;
 };
@@ -246,7 +287,7 @@ export type Answer = {
   other?: string;
 };
 export type TurnRequest =
-  | { thread_id?: string; run_id?: string; text?: string; transcript?: string; voice?: boolean; images?: string[]; files?: string[]; context?: { app: string; collection?: string; record_id?: string } }
+  | { thread_id?: string; run_id?: string; text?: string; transcript?: string; voice?: boolean; images?: string[]; files?: string[]; context?: { app: string; collection?: string; record_id?: string; intent?: string } }
   | { fixture: 'planner' | 'receipt'; run_id?: string }
   | { answer: Answer; thread_id?: string; run_id?: string };
 export type Offer = { kind: 'workflow'; app: string; sentence: string; trigger: Trigger; action: Action; prompt?: string };
@@ -269,6 +310,8 @@ export type Plan = {
 };
 export type ClairEvent =
   | { event: 'status'; data: { text: string } }
+  | { event: 'thinking_delta'; data: { text: string } } // a summarised piece of the model's thinking, streamed before the first `understood`
+  | { event: 'thinking_done'; data: Record<string, never> } // optional: thinking is over (otherwise the first other event ends it)
   | { event: 'understood'; data: { kind: string; summary: string; items?: string[] } }
   | { event: 'question'; data: Question }
   | { event: 'plan'; data: Plan }
@@ -277,3 +320,6 @@ export type ClairEvent =
   | { event: 'offer'; data: Offer }
   | { event: 'text_delta'; data: { text: string } }
   | { event: 'done'; data: { status: 'complete' | 'awaiting_input' | 'error'; sources: string[]; spoken?: string; message?: string } };
+/** `GET /clair/threads/latest` (api/models.py LatestThread): the thread active in the last 24 h, text only (no card bodies); 204 when there is none. */
+export type ThreadMessage = { role: 'user' | 'clair'; text: string; at: string; change_set_id?: string };
+export type LatestThread = { thread: { id: string; started_at: string; last_at: string }; messages: ThreadMessage[] };

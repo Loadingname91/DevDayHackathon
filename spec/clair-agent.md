@@ -71,10 +71,12 @@ New turn:
 { "thread_id": "optional", "run_id": "optional client-made UUID", "text": "optional",
   "transcript": "optional", "voice": false,
   "images": ["storage path"], "files": ["storage path"],
-  "context": {"app": "notes", "collection": "notebooks", "record_id": "nb_cs3500"} }
+  "context": {"app": "notes", "collection": "notebooks", "record_id": "nb_cs3500", "intent": "list"} }
 ```
 
 `context` is optional: the app and record Clair was opened from (Notes → CS 3500 → New note). The snapshot names it, and Clair files into it unless the input clearly belongs elsewhere.
+
+`context.intent` (Nov 20, optional): what Sam said a picture is, when it was sent from a button that asks first. Groceries → Snap a photo sends `list` (a fridge, a pantry or a handwritten list: propose the items as `to_buy` rows on the list, no trip, no spend) or `receipt` (the receipt flow of §12.1: one trip, the matched items bought, the Budget spend). The intent is Sam's answer, so Clair doesn't ask which it is; with no `intent` Clair decides from the photo as before.
 
 `images` and `files` are Storage paths only. The client has already uploaded each file straight to `clair-uploads` with supabase-js (backend.md §9); the request never carries a file body, so it stays small.
 
@@ -107,6 +109,8 @@ The response is `text/event-stream`. Events, in the order they usually arrive:
 | Event | Payload | Sent when | Client shows |
 |---|---|---|---|
 | `status` | `{text}` | At once on receipt of the request, when a tool starts, and again past 6 s ("Still reading the receipt…", FR-C10) | The status line under the spool. The only loading UI |
+| `thinking_delta` | `{text}` | The model is thinking (a summarised thinking block's text, in pieces); sent before `understood`, any number of times | The "Thinking" box above the answer, open and streaming in the Clair sheet and the Chat screen; it folds to "Thought for 4 s" when the next event arrives. Display only: never stored by the client, never sent back (the replayed thread keeps the signed blocks in `clair_messages` as §6 says) |
+| `thinking_done` | `{}` | Optional: thinking is over | Folds the box. Without it the first other event does |
 | `understood` | `{kind, summary, items?}` | `report_understanding` ran | "I see your fridge: 14 items" with the photo thumbnail |
 | `question` | One question: `{id, text, options: [{id, label, hint?}], multi, expires_at}`. A card of questions: `{id, questions: [{id, header, text, options: [{label, description?, input?: {placeholder, numeric?}}], multi, other?}], plan_after, expires_at}` (1 to 3 questions, 2 to 4 options each; `other: false` hides the Other row; `input` only on single-select questions) | `ask_user` paused the run | Menu card: chips with descriptions, multi-select, "Other" field. A card of questions: each question's header, text and option rows (radio or checkbox), Other, then **Continue** (every question answered) and "Skip, use your best guess". After `expires_at` (24 h) the card reads "Still want to build this?" |
 | `plan` | `{title, new_app?: {key, name, icon, dye}, lines: [{app?, text}], private?}` | `propose_app` was called with a plan; sent just before its `proposal` (§11) | Chalk card "Here's the plan": the new app's tile and name, one line per `lines[]` with the app's dye dot, a Private tag; **Build it** shows the Build preview that the `proposal` carries; **Change answers** goes back to the question card |

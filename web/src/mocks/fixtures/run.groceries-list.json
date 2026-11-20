@@ -1,0 +1,197 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Looking at your photo…"
+  }
+ },
+ {
+  "delay": 250,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Looking at what you asked. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Checking which of your apps it belongs in. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Drafting it so you can confirm."
+  }
+ },
+ {
+  "delay": 1300,
+  "event": "understood",
+  "data": {
+   "kind": "list",
+   "summary": "A handwritten list · 3 items",
+   "items": [
+    "Tortilla chips",
+    "Salsa verde",
+    "Lemons"
+   ]
+  }
+ },
+ {
+  "delay": 1000,
+  "event": "status",
+  "data": {
+   "text": "Drafting changes…"
+  }
+ },
+ {
+  "delay": 1300,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_groceries_list",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "records",
+    "source": {
+     "kind": "photo",
+     "label": "From your list photo",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [
+     {
+      "op": "insert",
+      "ref": "groceries/items",
+      "values": {
+       "name": "Tortilla chips",
+       "list": "l_weekly",
+       "status": "to_buy",
+       "qty": "1 bag",
+       "usual": "auto"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "groceries/items",
+      "values": {
+       "name": "Salsa verde",
+       "list": "l_weekly",
+       "status": "to_buy",
+       "usual": "auto"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "groceries/items",
+      "values": {
+       "name": "Lemons",
+       "list": "l_weekly",
+       "status": "to_buy",
+       "qty": "4",
+       "usual": "auto"
+      }
+     }
+    ],
+    "expanded": [
+     {
+      "op": "insert",
+      "ref": "groceries/items",
+      "values": {
+       "name": "Tortilla chips",
+       "list": "l_weekly",
+       "status": "to_buy",
+       "qty": "1 bag",
+       "usual": "auto"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "groceries/items",
+      "values": {
+       "name": "Salsa verde",
+       "list": "l_weekly",
+       "status": "to_buy",
+       "usual": "auto"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "groceries/items",
+      "values": {
+       "name": "Lemons",
+       "list": "l_weekly",
+       "status": "to_buy",
+       "qty": "4",
+       "usual": "auto"
+      }
+     }
+    ],
+    "deltas": [
+     {
+      "app": "groceries",
+      "before": "12",
+      "after": "15"
+     }
+    ],
+    "title": "Weekly shop",
+    "summary": "3 items from your list.",
+    "lines": [
+     {
+      "apps": [
+       "groceries"
+      ],
+      "what": "Tortilla chips · Salsa verde · Lemons",
+      "val": "",
+      "sub": "Weekly shop 12 → 15 to buy"
+     }
+    ],
+    "targets": [
+     "groceries"
+    ],
+    "actions": {
+     "primary": "Add to Groceries",
+     "secondary": "Review items"
+    },
+    "review": [
+     {
+      "title": "Tortilla chips",
+      "when": "1 bag",
+      "change": "new",
+      "reason": "Weekly shop",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Salsa verde",
+      "when": "",
+      "change": "new",
+      "reason": "Weekly shop",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Lemons",
+      "when": "4",
+      "change": "new",
+      "reason": "Weekly shop",
+      "source": "Groceries",
+      "app": "groceries"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": []
+  }
+ }
+]

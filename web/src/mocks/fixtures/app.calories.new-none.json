@@ -58,7 +58,7 @@
      {
       "key": "at",
       "label": "When",
-      "type": "datetime",
+      "type": "date",
       "required": true
      }
     ]
@@ -108,7 +108,12 @@
       "target": {
        "setting": "target"
       },
-      "format": "number"
+      "format": "number",
+      "edit": {
+       "setting": "target",
+       "label": "Daily calories",
+       "format": "number"
+      }
      },
      {
       "kind": "picks",

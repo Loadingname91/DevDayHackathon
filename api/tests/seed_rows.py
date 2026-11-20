@@ -134,7 +134,7 @@ NOTES = {
     "collections": [
         {"key": "notebooks", "titleField": "name", "fields": [f("name"), f("class", "relation")]},
         {"key": "notes", "titleField": "title", "dateField": "at",
-         "fields": [f("title"), f("body"), f("notebook", "relation"), f("at", "datetime")]}],
+         "fields": [f("title"), f("body", multiline=True), f("notebook", "relation", many=True), f("at", "datetime")]}],
     "face": {"value": {"agg": "count", "from": "notes/notes", "window": "week"}, "format": "count", "label": "this week"},
     "tabs": [],
 }
@@ -346,11 +346,15 @@ add(rec("notes/notebooks", "nb_econ", name="ECON 1010", **{"class": ["c01"]}))
 add(rec("notes/notebooks", "nb_math", name="MATH 1210", **{"class": ["c02"]}))
 add(rec("notes/notebooks", "nb_cs3500", name="CS 3500", **{"class": ["c03"]}))
 add(rec("notes/notebooks", "nb_personal", name="Personal"))
-for at, nb, title in [(nov(10), "nb_math", "Related rates examples"), (nov(15), "nb_personal", "Gift ideas for mom"),
-                      (nov(16, "15:50"), "nb_cs3500", "Unit testing with mocks"),
-                      (nov(18, "15:55"), "nb_cs3500", "Dependency injection"),
-                      (nov(19, "10:30"), "nb_econ", "Price elasticity")]:
-    add(rec("notes/notes", title=title, notebook=[nb], at=at))
+for at, nb, title in [(nov(10), ["nb_math"], "Related rates examples"), (nov(15), ["nb_personal"], "Gift ideas for mom"),
+                      (nov(16, "15:50"), ["nb_cs3500"], "Unit testing with mocks"),
+                      (nov(18, "15:55"), ["nb_cs3500"], "Dependency injection"),
+                      (nov(19, "10:30"), ["nb_econ"], "Price elasticity"),
+                      # the three added for links (Nov 20), all dated before Mon 16 Nov
+                      (nov(9, "11:20"), ["nb_math"], "Chain rule recap"),
+                      (nov(15, "10:30"), ["nb_math", "nb_econ"], "Finals study plan"),
+                      (nov(14, "18:30"), ["nb_personal"], "Chicken and rice")]:
+    add(rec("notes/notes", title=title, notebook=nb, at=at))
 
 # To-dos.
 add(rec("todos/todos", "t_library", title="Return library books", due=nov(20, "21:00"),

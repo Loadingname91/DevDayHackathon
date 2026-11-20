@@ -14,8 +14,13 @@ import './styles/blocks.css';
 import './styles/interaction.css';
 import './styles/theme-cloth.css';
 import './styles/links.css';
+import './styles/notes.css';
 import './styles/demo.css';
 import './styles/voice.css';
+import './styles/chat.css';
+import './styles/attach.css';
+import './styles/remove.css';
+import './styles/arrange.css';
 
 // Look: Cloth (theme-cloth.css) is on by default; `?look=default` goes back to the earlier flat look and remembers it.
 // `?scheme=dark|light` forces a colour scheme for comparing; the default follows the phone.

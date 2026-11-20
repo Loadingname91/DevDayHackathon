@@ -41,6 +41,9 @@ export async function request<T>(method: Method, path: string, body?: unknown): 
   return data as T;
 }
 
+/** question id → the thread it was asked on, so its answer goes back to the same thread */
+const threadOf = new Map<string, string>();
+
 /**
  * Sends a Clair turn and calls onEvent for each SSE event. Resolves when the stream
  * ends. If the stream closes before `done`, a `done {status: "error"}` is delivered,
@@ -48,7 +51,15 @@ export async function request<T>(method: Method, path: string, body?: unknown): 
  */
 export async function clairTurn(body: TurnRequest, onEvent: (e: ClairEvent) => void, signal?: AbortSignal, path = '/clair/turns'): Promise<void> {
   let sawDone = false;
-  const emit = (e: ClairEvent) => { if (e.event === 'done') sawDone = true; onEvent(e); };
+  let thread: string | null = null; // the server's thread for this turn (X-Thread-Id), known once the stream opens
+  const emit = (e: ClairEvent) => {
+    if (e.event === 'done') sawDone = true;
+    if (e.event === 'question' && thread) threadOf.set(e.data.id, thread);
+    onEvent(e);
+  };
+  // The live API needs `thread_id` on an answer (api/models.py AnswerTurn; the contract and the mock say optional): it is the thread of the
+  // turn that asked the question. Live finding: an answer without it is 422 and the Build screen shows "Try again" after the questions.
+  if ('answer' in body && !body.thread_id) { const t = threadOf.get(body.answer.question_id); if (t) body = { ...body, thread_id: t }; }
   try {
     if (isMocked(path)) {
       const { mockTurn } = await import('../mocks/handler');
@@ -61,6 +72,7 @@ export async function clairTurn(body: TurnRequest, onEvent: (e: ClairEvent) => v
         body: JSON.stringify(body),
       });
       if (!res.ok || !res.body) throw new ApiError(res.status, await res.json().catch(() => null));
+      thread = res.headers.get('X-Thread-Id');
       await readSSE(res.body, emit);
     }
   } catch (err) {

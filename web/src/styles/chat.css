@@ -1,0 +1,135 @@
+/* The Chat screen (screens/Chat.tsx) and its history (components/clair/ChatList.tsx, Drawer.tsx). Board "Clair" for the screen;
+   the history list is the owner's ask (Nov 20): a rail on a laptop, a drawer on a phone. Tokens only; the Cloth look adds its weave below. */
+
+.chat { position: relative; display: flex; height: 100dvh; overflow: hidden; }
+.chat.wide { display: grid; grid-template-columns: 280px minmax(0, 1fr); }
+.chat-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+/* the column reads at 760 at most; the scroll bar stays at the window's edge */
+.chat-head, .chat-log, .chat-foot { padding-inline: max(16px, calc((100% - 760px) / 2)); }
+
+/* ---------- header: back, mark, "Ask Clair" over "Answers from your apps first", credits; on a phone New chat and History ---------- */
+.chat-head { flex: none; display: flex; align-items: center; gap: 8px; padding-top: calc(12px + var(--safe-t)); padding-bottom: 8px; background: var(--ground);
+  background-image: linear-gradient(90deg, var(--line) 58%, transparent 0); background-size: 8px 1.5px; background-repeat: repeat-x; background-position: 0 100%; }
+.frame.mocked .chat-head { padding-top: calc(44px + var(--safe-t)); } /* the mock-data mark sits at the top */
+.chat-back { margin-left: -12px; }
+.chat-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.chat-t { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.chat-t h1 { font-size: 17px; font-weight: 700; letter-spacing: -.005em; line-height: 1.2; }
+.chat-credits { position: relative; flex: none; gap: 4px; }
+.chat-credits::after { content: ''; position: absolute; inset: -11px -4px; } /* the pill is small, the target is 44 */
+.chat-ico { color: var(--ink); }
+.chat-ico:last-child { margin-right: -8px; }
+.chat-titles .cs-sub { font-size: 13px; line-height: 1.3; }
+
+/* ---------- the conversation ---------- */
+.chat-log { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-top: 16px; padding-bottom: 16px; scrollbar-width: thin; }
+.chat-swap { display: flex; flex-direction: column; gap: 16px; animation: fade-in var(--t-fb) var(--ease); } /* switching chats is a 120 ms fade, nothing moves */
+.chat .turn { display: flex; flex-direction: column; gap: 12px; }
+.chat .said { overflow-wrap: anywhere; }
+.chat .cs-answer { align-self: stretch; }
+.chat-from { font-size: 13px; color: var(--sec); }
+.cs-stub { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1px var(--card-line); font-size: 15px; line-height: 1.35; }
+.cs-stub-i { flex: none; width: 24px; height: 24px; display: grid; place-items: center; color: var(--focus); }
+.cs-stub-s { color: var(--sec); }
+/* a card in the chat is as in the sheet (interaction.css): the action row never wraps, a change line is at most two lines */
+.chat .pcard { container-type: inline-size; }
+.chat .pcard .line .what { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.chat .pcard .line .more { color: var(--sec); font-weight: 500; white-space: nowrap; }
+.chat .pcard .btns .cta, .chat .pcard .btns .ghost { padding: 0 14px; white-space: nowrap; min-width: max-content; }
+@container (max-width: 279px) {
+  .chat .pcard .btns { flex-direction: column; align-items: stretch; }
+  .chat .pcard .btns > * { flex: none; width: 100%; }
+}
+.chat-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 16px 24px; text-align: center; }
+.chat-empty-t { font-size: 20px; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; }
+.chat-empty-s { max-width: 34ch; font-size: 15px; line-height: 1.4; color: var(--sec); }
+
+/* ---------- the foot: suggestions, then the field pinned at the bottom ---------- */
+.chat-foot { flex: none; display: flex; flex-direction: column; gap: 8px; padding-top: 8px; padding-bottom: calc(12px + var(--safe-b)); background: var(--ground); }
+.chat-foot .cs-note { padding: 0 4px; }
+.chat-chips { margin: 0 -16px; padding: 0 16px; }
+.chat.wide .chat-chips { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+.chat-chips .chip:disabled { color: var(--sec); }
+@media (max-height: 560px) { .chat-chips { display: none; } } /* a keyboard is up: the field keeps the room */
+.chat .field.cs-field { align-items: flex-end; }
+.chat .cs-field textarea { max-height: 136px; }
+.chat-closed { display: flex; flex-direction: column; gap: 8px; }
+.chat-closed p { font-size: 15px; color: var(--sec); }
+.chat-closed .btns { display: flex; gap: 8px; }
+.chat-closed .btns > * { flex: 1; }
+
+/* ---------- history: New chat, search, the groups ---------- */
+.chat-rail { min-height: 0; height: 100dvh; overflow: hidden; display: flex; flex-direction: column;
+  background-color: color-mix(in oklch, var(--ground) 92%, var(--card));
+  background-image: linear-gradient(0deg, var(--line) 58%, transparent 0); background-size: 1.5px 8px; background-repeat: repeat-y; background-position: 100% 0; } /* a running-stitch seam */
+.hx { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 24px 16px 16px; }
+.frame.mocked .hx { padding-top: 44px; }
+.hx-new { flex: none; display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 12px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--edge); color: var(--ink); font-size: 15px; font-weight: 600; text-align: left;
+  transition: transform var(--t-fb) var(--ease); }
+.hx-new:active { transform: scale(.97); }
+.hx-find { flex: none; display: flex; align-items: center; gap: 8px; min-height: var(--hit); padding: 0 12px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--edge); color: var(--sec); }
+.hx-find input { flex: 1; min-width: 0; min-height: var(--hit); border: 0; outline: 0; background: none; font-size: 15px; color: var(--ink); }
+.hx-find input::placeholder { color: var(--sec); }
+.hx-find:focus-within { box-shadow: inset 0 0 0 2px var(--focus); }
+.hx-scroll { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -8px; padding: 0 8px; scrollbar-width: none; }
+.hx-scroll::-webkit-scrollbar { display: none; }
+.hx-group + .hx-group { margin-top: 4px; }
+.hx-h { padding: 12px 8px 4px; font-size: 13px; font-weight: 600; color: var(--sec); }
+.hx ul { display: flex; flex-direction: column; gap: 2px; }
+.hx-row { position: relative; display: flex; flex-direction: column; border-radius: 16px; }
+.hx-line { display: flex; align-items: center; }
+.hx-open { position: relative; flex: 1; min-width: 0; min-height: var(--hit); display: flex; align-items: center; gap: 8px; padding: 0 4px 0 12px; border-radius: 16px; text-align: left; font-size: 15px; color: var(--ink);
+  transition: background-color var(--t-fb) var(--ease); }
+.hx-open:active { background: var(--hair); }
+.hx-dots { flex: none; display: inline-flex; gap: 3px; }
+.hx-dots .dyedot { width: 8px; height: 8px; }
+.hx-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hx-tag { flex: none; font-size: 13px; font-weight: 500; line-height: 1.5; color: var(--sec); } /* "sample": a chat seeded in a mock build */
+/* the chat you are in: heavier, with a tack stitch down its edge */
+.hx-open[aria-current='true'] { font-weight: 600; background: var(--hair); }
+.hx-open[aria-current='true']::before { content: ''; position: absolute; left: 3px; top: 10px; bottom: 10px; width: 1.5px;
+  background-image: linear-gradient(0deg, var(--ink) 36%, transparent 0); background-size: 1.5px 6px; background-repeat: repeat-y; }
+.hx-more { flex: none; width: var(--hit); height: var(--hit); border-radius: 50%; display: grid; place-items: center; color: var(--sec); opacity: 0; transition: opacity var(--t-fb) var(--ease), background-color var(--t-fb) var(--ease); }
+.hx-row:hover .hx-more, .hx-row:focus-within .hx-more, .hx-more[aria-expanded='true'] { opacity: 1; }
+@media (hover: none) { .hx-more { opacity: 1; } }
+@media (hover: hover) and (pointer: fine) { .hx-open:hover:not([aria-current='true']) { background: var(--hair); } .hx-more:hover { background: var(--hair); } }
+.hx-menu, .hx-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 8px 8px 12px; font-size: 14px; font-weight: 600; }
+.hx-confirm > span { flex: 1 0 100%; color: var(--ink); }
+.hx-btn { min-height: var(--hit); padding: 0 14px; border-radius: 99px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--edge); }
+.hx-btn:disabled { color: var(--sec); }
+.hx-btn.strong { background: var(--cta); color: var(--cta-ink); box-shadow: none; }
+.hx-rename { display: flex; gap: 8px; align-items: center; padding: 0 0 0 4px; }
+.hx-rename input { flex: 1; min-width: 0; min-height: var(--hit); padding: 0 12px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--edge); border: 0; outline: 0; font-size: 15px; color: var(--ink); }
+.hx-rename input:focus { box-shadow: inset 0 0 0 2px var(--focus); }
+.hx-empty { padding: 24px 8px; font-size: 14px; color: var(--sec); }
+.hx-none { padding: 16px 8px; font-size: 14px; color: var(--sec); }
+
+/* ---------- the phone's drawer: slides in from the left over the chat (above the receipt capsule, 70, below the mock-data mark, 80) ---------- */
+.dr-scrim { position: fixed; inset: 0; z-index: 74; background: var(--scrim); opacity: 0; touch-action: none; transition: opacity var(--t-layout-out) var(--ease); }
+.dr-scrim.on { opacity: 1; transition-duration: var(--t-state); }
+.dr { position: fixed; top: 0; bottom: 0; left: 0; z-index: 75; width: min(86vw, 340px); display: flex; flex-direction: column; touch-action: pan-y; outline: none;
+  background-color: var(--ground); box-shadow: 0 0 32px -12px color-mix(in oklch, var(--ink) 60%, transparent);
+  transform: translateX(-100%); opacity: 0; transition: transform var(--t-layout-out) var(--ease), opacity var(--t-layout-out) var(--ease); }
+.dr.on { transform: none; opacity: 1; transition-duration: var(--t-layout); }
+.dr.dragging { transition: none; }
+.dr .hx-scroll { touch-action: pan-y; } /* a scroller sets its own touch-action: without this the browser takes a sideways swipe on the list and the swipe to close never starts */
+.dr .hx { padding-top: calc(16px + var(--safe-t)); padding-bottom: calc(16px + var(--safe-b)); }
+.frame.mocked .dr .hx { padding-top: calc(44px + var(--safe-t)); }
+:root[data-look='cloth'] .dr { background-image: var(--weave); }
+:root[data-look='cloth'] .chat-rail { background-color: color-mix(in oklch, var(--ground) 92%, var(--card)); }
+
+/* the receipt capsule and the peeking tiles dock at the bar's top edge; here there is no bar, and the foot is the field, so they sit above it */
+.frame:has(.chat) { --dock: calc(132px + var(--safe-b)); }
+.shell:has(.chat) .toast, .shell:has(.chat) .peek { bottom: 136px; left: calc(240px + 280px + (100vw - 520px) / 2); } /* a laptop: the main column of the chat, past the history rail */
+
+/* ---------- the laptop sidebar's Chat entry ---------- */
+.side-chat { flex: none; display: flex; align-items: center; gap: 8px; min-height: var(--hit); padding: 0 12px; border-radius: 16px; font-size: 14px; font-weight: 600; color: var(--ink); transition: background-color var(--t-fb) var(--ease); }
+.side-chat[aria-current='page'] { background: var(--card); box-shadow: inset 0 0 0 1.5px var(--line); }
+.side-chat:active { background: var(--hair); }
+@media (hover: hover) and (pointer: fine) { .side-chat:hover:not([aria-current='page']) { background: var(--hair); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .dr, .dr.on { transform: none; transition: opacity var(--t-fb) var(--ease); }
+  .dr-scrim, .dr-scrim.on { transition-duration: var(--t-fb); }
+  .chat-swap { animation-duration: var(--t-fb); }
+}

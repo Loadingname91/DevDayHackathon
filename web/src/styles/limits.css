@@ -1,0 +1,21 @@
+/* Change a limit or a goal (components/LimitsSheet.tsx). Mint tokens; every target 44; no red. */
+.gauge.editable, .ring.editable { position: relative; }
+.gauge.editable .g-row { padding-right: 40px; }
+.edit-pencil { position: absolute; top: 4px; right: 4px; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; border: 0; background: transparent; color: var(--sec); }
+.edit-pencil:hover { background: var(--hair); color: var(--ink); }
+.edit-pencil:active { background: var(--hair); }
+.edit-pencil:focus-visible, .sec-edit:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* the section label's own link: "Limits", beside "Where it went" */
+.sec-edit { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin: -14px -8px; padding: 0 8px; border: 0; background: transparent; font-size: 13px; font-weight: 600; color: var(--focus); }
+
+.limits .lim-now { font-size: 13px; color: var(--sec); }
+.limits .lim-list { padding: 0; }
+.limits .lim-row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 16px; }
+.limits .lim-row.sep { background: linear-gradient(90deg, var(--line) 58%, transparent 0) 0 0 / 8px 1px repeat-x; }
+.limits .lim-name { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.limits .lim-name .t { font-size: 16px; font-weight: 500; }
+.limits .lim-name .s { font-size: 13px; color: var(--sec); font-variant-numeric: tabular-nums; }
+.limits .lim-in { width: 128px; flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+.limits .lim-add { display: flex; gap: 8px; }
+.limits .lim-add .fld:first-child { flex: 1; min-width: 0; }

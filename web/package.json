@@ -11,8 +11,12 @@
     "fixtures": "node scripts/make-fixtures.mjs"
   },
   "dependencies": {
+    "@internationalized/date": "3.12.4",
     "@supabase/supabase-js": "^2.119.2",
+    "dompurify": "3.4.18",
+    "marked": "18.2.1",
     "react": "^19.3.1",
+    "react-aria-components": "1.22.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.6"
   },

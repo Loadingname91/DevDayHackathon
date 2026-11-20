@@ -1,0 +1,23 @@
+/* Trips (Nov 20): the actions under a list (Finish trip, Snap a photo) and the sheets they open. Tokens only; rows follow the question-card option row (DESIGN.md §5). */
+.trip-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.trip-acts > button { flex: 1 1 160px; white-space: nowrap; }
+.trip-acts .n { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 99px; display: inline-grid; place-items: center; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
+  background: color-mix(in oklch, var(--cta-ink) 22%, transparent); color: inherit; }
+.trip-pick { display: flex; flex-direction: column; gap: 8px; }
+.trip-pick .sec { padding: 0; }
+.trip-opt { width: 100%; min-height: 56px; padding: 8px 12px; border-radius: 16px; display: flex; align-items: center; gap: 12px; text-align: left;
+  background: var(--card); box-shadow: inset 0 0 0 1.5px var(--line); color: var(--ink); }
+.trip-opt .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.trip-opt .t { font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+.trip-opt .s { font-size: 13px; color: var(--sec); }
+.trip-opt .box, .trip-opt .dot { flex: none; width: 22px; height: 22px; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--sec); color: transparent; }
+.trip-opt .box { border-radius: 7px; }
+.trip-opt .dot { border-radius: 50%; }
+.trip-opt[aria-checked='true'] { background: color-mix(in oklch, var(--focus) 12%, var(--card)); box-shadow: inset 0 0 0 1.5px var(--focus); }
+.trip-opt[aria-checked='true'] .t { color: var(--focus); }
+.trip-opt[aria-checked='true'] .box { background: var(--focus); box-shadow: none; color: var(--cta-ink); }
+.trip-opt[aria-checked='true'] .dot { box-shadow: inset 0 0 0 1.5px var(--focus); background: radial-gradient(circle, var(--focus) 0 5px, transparent 5.5px); }
+.trip-none, .trip-note { font-size: 14px; color: var(--sec); line-height: 1.4; }
+.trip-photo { display: flex; }
+.trip-photo .at-btns { width: 100%; }
+@media (prefers-reduced-motion: no-preference) { .trip-opt { transition: background-color var(--t-fb) var(--ease), box-shadow var(--t-fb) var(--ease); } }

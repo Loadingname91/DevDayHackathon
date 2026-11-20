@@ -2083,7 +2083,20 @@
       "ConnectStart": {
         "additionalProperties": false,
         "properties": {
+          "connected": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "True when the connection was made by this call (fixture mode): there is no consent page to visit",
+            "title": "Connected"
+          },
           "url": {
+            "description": "Google's consent URL; the client navigates the whole page there. In fixture mode (DEMO_GCAL_FIXTURE=1) a site path, \"/app/calendar?connected=google\"",
             "title": "Url",
             "type": "string"
           }
@@ -2775,6 +2788,30 @@
           "label": {
             "title": "Label",
             "type": "string"
+          },
+          "many": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "relation: a record may point at several targets (a note in several notebooks). Default one; the value is an array of record ids either way",
+            "title": "Many"
+          },
+          "multiline": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "text: a textarea; `[[Title]]` in it links to that record (backend.md section 5)",
+            "title": "Multiline"
           },
           "op": {
             "anyOf": [
@@ -3583,6 +3620,62 @@
           "messages"
         ],
         "title": "LatestThread",
+        "type": "object"
+      },
+      "LinkCreate": {
+        "additionalProperties": false,
+        "description": "`POST /records/{id}/links`: the target as `to: {ref, id}` (what the client sends) or as a bare `target_id`.",
+        "properties": {
+          "target_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LinkTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "LinkCreate",
+        "type": "object"
+      },
+      "LinkTarget": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "description": "\"<app key>/<collection key>\" (\"groceries/items\"), or \"*dated\" (backend.md §3)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The target's collection; checked against the record when sent",
+            "title": "Ref"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "LinkTarget",
         "type": "object"
       },
       "ListBlock": {
@@ -4512,6 +4605,49 @@
         "title": "NoteEvent",
         "type": "object"
       },
+      "NotebookBlock": {
+        "additionalProperties": false,
+        "description": "A notes workspace: a tree of `source` rows (notebooks) with the `pages` rows in them; `link` is the pages' (many) relation\nto `source` and `body` their multiline text (ui-tech-plan.md section 3 \"Notebook\").",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "notebook",
+            "title": "Kind",
+            "type": "string"
+          },
+          "link": {
+            "title": "Link",
+            "type": "string"
+          },
+          "pages": {
+            "description": "\"<app key>/<collection key>\" (\"groceries/items\"), or \"*dated\" (backend.md §3)",
+            "title": "Pages",
+            "type": "string"
+          },
+          "source": {
+            "description": "\"<app key>/<collection key>\" (\"groceries/items\"), or \"*dated\" (backend.md §3)",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "source",
+          "pages",
+          "link",
+          "body"
+        ],
+        "title": "NotebookBlock",
+        "type": "object"
+      },
       "OfferData": {
         "additionalProperties": false,
         "description": "Held by the client until the change set is confirmed; Turn on posts it to /apps/{app}/workflows.",
@@ -4771,6 +4907,7 @@
                   "metric": "#/components/schemas/MetricBlock",
                   "month": "#/components/schemas/MonthBlock",
                   "next": "#/components/schemas/NextBlock",
+                  "notebook": "#/components/schemas/NotebookBlock",
                   "picks": "#/components/schemas/PicksBlock",
                   "progress": "#/components/schemas/ProgressBlock",
                   "ring": "#/components/schemas/RingBlock",
@@ -4842,6 +4979,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/MonthBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/NotebookBlock"
                 }
               ]
             },
@@ -6010,28 +6150,54 @@
       },
       "SearchHit": {
         "additionalProperties": false,
+        "description": "A record that matched. `snippet` tells rows with the same title apart (amount and day for a spend, the time for an event,\nthe first line of a note); it may be empty.",
         "properties": {
           "app": {
             "title": "App",
             "type": "string"
           },
-          "field": {
-            "title": "Field",
+          "collection": {
+            "description": "The collection key (\"notes\" in \"notes/notes\")",
+            "title": "Collection",
             "type": "string"
           },
-          "record": {
-            "title": "Record",
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "ref": {
+            "description": "\"<app key>/<collection key>\" (\"groceries/items\"), or \"*dated\" (backend.md §3)",
+            "title": "Ref",
             "type": "string"
           },
           "snippet": {
             "title": "Snippet",
             "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the record last changed",
+            "title": "Updated"
           }
         },
         "required": [
           "app",
-          "record",
-          "field",
+          "ref",
+          "collection",
+          "id",
+          "title",
           "snippet"
         ],
         "title": "SearchHit",
@@ -6040,23 +6206,6 @@
       "SearchResponse": {
         "additionalProperties": false,
         "properties": {
-          "ask": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "A question to hand to Clair when nothing matched",
-            "title": "Ask"
-          },
-          "elsewhere": {
-            "description": "Hits in other apps when `app` narrowed the search",
-            "title": "Elsewhere",
-            "type": "integer"
-          },
           "hits": {
             "items": {
               "$ref": "#/components/schemas/SearchHit"
@@ -6066,8 +6215,7 @@
           }
         },
         "required": [
-          "hits",
-          "elsewhere"
+          "hits"
         ],
         "title": "SearchResponse",
         "type": "object"
@@ -9492,6 +9640,26 @@
               }
             },
             "description": "Validation failed"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "google_unavailable: Google refused or could not be reached"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "google_not_configured: no Google OAuth client on this server"
           }
         },
         "summary": "Connect Google Start",
@@ -9553,6 +9721,16 @@
               }
             },
             "description": "Validation failed"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "google_unavailable: Google refused or could not be reached"
           }
         },
         "summary": "Connect Google Sync",
@@ -10278,6 +10456,150 @@
         ]
       }
     },
+    "/api/records/{id}/links": {
+      "post": {
+        "description": "Link a record to any record in any app (a gesture change set with an Undo). A repeat is a no-op change set.",
+        "operationId": "record_link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No or bad token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found or not yours"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorBody"
+                }
+              }
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Record Link",
+        "tags": [
+          "records"
+        ]
+      }
+    },
+    "/api/records/{id}/links/{target_id}": {
+      "delete": {
+        "operationId": "record_unlink",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "target_id",
+            "required": true,
+            "schema": {
+              "title": "Target Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No or bad token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found or not yours"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorBody"
+                }
+              }
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Record Unlink",
+        "tags": [
+          "records"
+        ]
+      }
+    },
     "/api/records/{id}/move": {
       "post": {
         "operationId": "record_move",
@@ -10427,15 +10749,19 @@
         "operationId": "search",
         "parameters": [
           {
+            "description": "Matched case-insensitively against titles and text (trimmed, cut at 200 characters); empty lists recent records across apps (\"Suggested\")",
             "in": "query",
             "name": "q",
-            "required": true,
+            "required": false,
             "schema": {
+              "default": "",
+              "description": "Matched case-insensitively against titles and text (trimmed, cut at 200 characters); empty lists recent records across apps (\"Suggested\")",
               "title": "Q",
               "type": "string"
             }
           },
           {
+            "description": "Limit to one app key",
             "in": "query",
             "name": "app",
             "required": false,
@@ -10448,7 +10774,41 @@
                   "type": "null"
                 }
               ],
+              "description": "Limit to one app key",
               "title": "App"
+            }
+          },
+          {
+            "description": "Record ids to leave out (the record being edited); repeatable",
+            "in": "query",
+            "name": "exclude",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Record ids to leave out (the record being edited); repeatable",
+              "title": "Exclude"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           }
         ],

@@ -1,0 +1,42 @@
+/* The add sheet's date and time (components/DateTimeField.tsx). Mint tokens only; no red; every target 44. */
+.dt { display: flex; flex-direction: column; gap: 8px; }
+.dt .dt-day { gap: 4px; }
+.dt .dt-day .ico, .dt .dt-day svg { transition: transform var(--t-state) var(--ease); }
+.dt .dt-day[aria-expanded='true'] svg { transform: rotate(90deg); }
+
+/* the month, inside the sheet's own scroll (never a floating popover) */
+.dt-cal { padding: 8px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--edge); display: flex; flex-direction: column; gap: 4px; }
+.dt-cal header { display: flex; align-items: center; justify-content: space-between; }
+.dt-cal header h2 { font-size: 15px; font-weight: 700; letter-spacing: -.005em; margin: 0; }
+.dt-nav { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: transparent; border: 0; color: var(--ink); }
+.dt-nav[data-pressed] { background: var(--hair); }
+.dt-nav[data-disabled] { color: var(--sec); opacity: .5; }
+.dt-cal table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.dt-cal th { font-size: 13px; font-weight: 600; color: var(--sec); height: 28px; }
+.dt-cal td { padding: 1px; text-align: center; }
+.dt-cal td > div { height: 44px; min-width: 0; border-radius: 12px; display: grid; place-items: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); cursor: default; outline: none; position: relative; -webkit-user-select: none; user-select: none; }
+.dt-cal td > div[data-outside-month] { visibility: hidden; }
+.dt-cal td > div[data-hovered] { background: var(--hair); }
+.dt-cal td > div[data-pressed] { background: var(--hair); }
+.dt-cal td > div[data-now] { box-shadow: inset 0 0 0 1.5px var(--ink); }
+.dt-cal td > div[data-selected] { background: var(--ink); color: var(--cta-ink); box-shadow: none; }
+.dt-cal td > div[data-focus-visible] { box-shadow: inset 0 0 0 2px var(--focus); }
+.dt-cal td > div[data-selected][data-focus-visible] { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--focus); }
+.dt-cal td > div[data-disabled], .dt-cal td > div[data-unavailable] { color: var(--sec); opacity: .5; }
+
+/* the time: hour and minute as segments, AM | PM as two 44 targets (the segment's own am/pm is hidden: it is a spin button, hard on touch) */
+.dt-time { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dt-seg { display: inline-flex; align-items: center; min-height: 48px; padding: 0 16px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--edge); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
+.dt-seg:focus-within { box-shadow: inset 0 0 0 2px var(--focus); }
+.dt-seg [data-type='dayPeriod'] { display: none; }
+.dt-seg [data-type='literal'] { padding: 0 2px; }
+.dt-seg [data-type='hour'], .dt-seg [data-type='minute'] { min-width: 1.6ch; padding: 6px 4px; border-radius: 8px; text-align: center; outline: none; caret-color: transparent; }
+.dt-seg [data-focused] { background: var(--focus); color: var(--cta-ink); }
+.dt-seg [data-placeholder] { color: var(--sec); }
+.dt-ampm { display: inline-flex; gap: 8px; }
+.dt-ampm .chip { min-width: 56px; justify-content: center; }
+
+/* what was chosen, in the words the rows use */
+.dt-echo { font-size: 13px; font-weight: 600; color: var(--sec); font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) { .dt .dt-day svg { transition: none; } }

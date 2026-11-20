@@ -1,0 +1,86 @@
+{
+ "credits": -5,
+ "home": {
+  "changed": [
+   "calendar"
+  ]
+ },
+ "apps": {
+  "calendar": {
+   "add": {
+    "calendar/events": [
+     {
+      "id": "e_ics_1",
+      "position": "c027",
+      "version": 1,
+      "properties": {
+       "title": "Study group",
+       "at": "2026-11-24T19:00:00-07:00"
+      }
+     },
+     {
+      "id": "e_ics_2",
+      "position": "c028",
+      "version": 1,
+      "properties": {
+       "title": "Advising appointment",
+       "at": "2026-11-25T15:30:00-07:00"
+      }
+     },
+     {
+      "id": "e_ics_3",
+      "position": "c029",
+      "version": 1,
+      "properties": {
+       "title": "Thanksgiving dinner",
+       "at": "2026-11-26T17:00:00-07:00"
+      }
+     },
+     {
+      "id": "e_ics_4",
+      "position": "c030",
+      "version": 1,
+      "properties": {
+       "title": "Pizza night with Maya",
+       "at": "2026-11-28T19:00:00-07:00"
+      }
+     }
+    ],
+    "*dated": [
+     {
+      "at": "2026-11-24T19:00:00-07:00",
+      "title": "Study group",
+      "sub": "Calendar",
+      "app": "calendar",
+      "record_id": "e_ics_1",
+      "changed": true
+     },
+     {
+      "at": "2026-11-25T15:30:00-07:00",
+      "title": "Advising appointment",
+      "sub": "Calendar",
+      "app": "calendar",
+      "record_id": "e_ics_2",
+      "changed": true
+     },
+     {
+      "at": "2026-11-26T17:00:00-07:00",
+      "title": "Thanksgiving dinner",
+      "sub": "Calendar",
+      "app": "calendar",
+      "record_id": "e_ics_3",
+      "changed": true
+     },
+     {
+      "at": "2026-11-28T19:00:00-07:00",
+      "title": "Pizza night with Maya",
+      "sub": "Calendar",
+      "app": "calendar",
+      "record_id": "e_ics_4",
+      "changed": true
+     }
+    ]
+   }
+  }
+ }
+}

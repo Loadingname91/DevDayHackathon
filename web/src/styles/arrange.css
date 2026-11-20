@@ -1,0 +1,28 @@
+/* Arrange: the sheet that reorders and hides an app's tabs and sections (components/Arrange.tsx, lib/layout.ts). Soft Quilt tokens only. */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.arr { display: flex; flex-direction: column; gap: 16px; }
+.arr section { display: flex; flex-direction: column; gap: 8px; }
+.arr-tabs { margin: 0; padding: 0; }
+.arr-list.card.list { overflow: visible; padding: 4px 0; } /* the lifted row keeps its shadow */
+/* app.css makes `.list > li.row` a block with no padding; a sortable row is a flex row, so this outranks it */
+.list > li.row.arr-row { position: relative; display: flex; align-items: center; gap: 4px; min-height: 56px; padding: 0 8px 0 4px; background: var(--card); border-radius: 16px;
+  transition: transform var(--t-state) var(--ease), box-shadow var(--t-fb) var(--ease); }
+.arr-list.dragging .arr-row { -webkit-user-select: none; user-select: none; }
+/* the row you hold follows the finger 1:1: no transform transition while it is held; it glides home on release */
+.list > li.row.arr-row.lift { z-index: 2; transition: box-shadow var(--t-fb) var(--ease); box-shadow: inset 0 0 0 1.5px var(--focus), 0 10px 24px -12px var(--shade, rgb(0 0 0 / .35)); }
+.list > li.row.arr-row.lift.settle { transition: transform var(--t-fb) var(--ease), box-shadow var(--t-fb) var(--ease); }
+.arr-row.off .t { color: var(--sec); }
+.arr-row .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.arr-row .t { font-size: 16px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arr-row .s { font-size: 13px; color: var(--sec); }
+.arr-grip { flex: none; width: var(--hit); height: var(--hit); display: grid; place-items: center; border-radius: 12px; color: var(--sec); cursor: grab; touch-action: none; }
+.arr-row.lift .arr-grip { cursor: grabbing; color: var(--ink); }
+.arr-grip:focus-visible, .arr-eye:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+/* the show/hide switch: a 44 px square that reads on or off without colour (a tick, or a dash) */
+.arr-eye { flex: none; width: var(--hit); height: var(--hit); display: grid; place-items: center; border-radius: 12px; color: var(--ink); }
+.arr-eye[aria-checked='false'] { color: var(--sec); }
+.arr-eye:disabled { opacity: .4; }
+.arr-eye:active { transform: none; background-color: var(--hair); }
+.arr-actions { margin-top: 4px; }
+@media (hover: hover) and (pointer: fine) { .arr-grip:hover, .arr-eye:hover:not(:disabled) { background-color: var(--hair); } }
+@media (prefers-reduced-motion: reduce) { .list > li.row.arr-row, .list > li.row.arr-row.lift.settle { transition: none; } }

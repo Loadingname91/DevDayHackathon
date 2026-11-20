@@ -1,0 +1,387 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your PDF…"
+  }
+ },
+ {
+  "delay": 250,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Four pages: 6 due dates and 2 exams. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "ECON 1010 is already in Classes, so each date links to it. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Calendar reads them from Classes."
+  }
+ },
+ {
+  "delay": 1600,
+  "event": "understood",
+  "data": {
+   "kind": "syllabus",
+   "summary": "ECON 1010 syllabus, 4 pages: 6 due dates and 2 exams",
+   "items": [
+    "Problem set 7",
+    "Midterm 2",
+    "Problem set 8",
+    "Reading response",
+    "Problem set 9",
+    "Term paper",
+    "Review sheet",
+    "Final exam"
+   ]
+  }
+ },
+ {
+  "delay": 1500,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_syllabus",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "records",
+    "source": {
+     "kind": "file",
+     "label": "From Syllabus · ECON 1010.pdf",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Problem set 7",
+       "kind": "assignment",
+       "at": "2026-11-23T23:59:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Midterm 2",
+       "kind": "exam",
+       "at": "2026-12-01T09:10:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Problem set 8",
+       "kind": "assignment",
+       "at": "2026-12-04T23:59:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Reading response",
+       "kind": "assignment",
+       "at": "2026-12-07T09:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Problem set 9",
+       "kind": "assignment",
+       "at": "2026-12-09T23:59:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Term paper",
+       "kind": "assignment",
+       "at": "2026-12-11T17:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Review sheet",
+       "kind": "assignment",
+       "at": "2026-12-14T09:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Final exam",
+       "kind": "exam",
+       "at": "2026-12-16T08:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     }
+    ],
+    "expanded": [
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Problem set 7",
+       "kind": "assignment",
+       "at": "2026-11-23T23:59:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Midterm 2",
+       "kind": "exam",
+       "at": "2026-12-01T09:10:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Problem set 8",
+       "kind": "assignment",
+       "at": "2026-12-04T23:59:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Reading response",
+       "kind": "assignment",
+       "at": "2026-12-07T09:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Problem set 9",
+       "kind": "assignment",
+       "at": "2026-12-09T23:59:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Term paper",
+       "kind": "assignment",
+       "at": "2026-12-11T17:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Review sheet",
+       "kind": "assignment",
+       "at": "2026-12-14T09:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "classes/due",
+      "values": {
+       "title": "Final exam",
+       "kind": "exam",
+       "at": "2026-12-16T08:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     }
+    ],
+    "deltas": [
+     {
+      "app": "classes",
+      "before": "2",
+      "after": "3"
+     }
+    ],
+    "title": "ECON 1010",
+    "summary": "Found 6 due dates and 2 exams. Add to Classes and Calendar?",
+    "lines": [
+     {
+      "apps": [
+       "classes"
+      ],
+      "what": "Problem set 7 · Midterm 2 · Problem set 8 · Reading response · Problem set 9 · Term paper · Review sheet · Final exam",
+      "val": "",
+      "sub": "Problem set 7 · Due Mon 23 Nov, 11:59 pm"
+     },
+     {
+      "apps": [
+       "calendar"
+      ],
+      "what": "the 8 dates",
+      "val": ""
+     }
+    ],
+    "targets": [
+     "classes",
+     "calendar"
+    ],
+    "actions": {
+     "primary": "Add to 2 apps",
+     "secondary": "Review items"
+    },
+    "review": [
+     {
+      "title": "Problem set 7",
+      "when": "Due Mon 23 Nov, 11:59 pm",
+      "change": "new",
+      "reason": "ECON 1010",
+      "source": "Syllabus · ECON 1010.pdf",
+      "app": "classes"
+     },
+     {
+      "title": "Midterm 2",
+      "when": "Tue 1 Dec, 9:10 am · Kendall 104",
+      "change": "new",
+      "reason": "ECON 1010",
+      "source": "Syllabus · ECON 1010.pdf",
+      "app": "classes"
+     },
+     {
+      "title": "Problem set 8",
+      "when": "Due Fri 4 Dec, 11:59 pm",
+      "change": "new",
+      "reason": "ECON 1010",
+      "source": "Syllabus · ECON 1010.pdf",
+      "app": "classes"
+     },
+     {
+      "title": "Reading response",
+      "when": "Due Mon 7 Dec, 9:00 am",
+      "change": "new",
+      "reason": "ECON 1010",
+      "source": "Syllabus · ECON 1010.pdf",
+      "app": "classes"
+     },
+     {
+      "title": "Problem set 9",
+      "when": "Due Wed 9 Dec, 11:59 pm",
+      "change": "new",
+      "reason": "ECON 1010",
+      "source": "Syllabus · ECON 1010.pdf",
+      "app": "classes"
+     },
+     {
+      "title": "Term paper",
+      "when": "Due Fri 11 Dec, 5:00 pm",
+      "change": "new",
+      "reason": "ECON 1010",
+      "source": "Syllabus · ECON 1010.pdf",
+      "app": "classes"
+     },
+     {
+      "title": "Review sheet",
+      "when": "Due Mon 14 Dec, 9:00 am",
+      "change": "new",
+      "reason": "ECON 1010",
+      "source": "Syllabus · ECON 1010.pdf",
+      "app": "classes"
+     },
+     {
+      "title": "Final exam",
+      "when": "Wed 16 Dec, 8:00 am",
+      "change": "new",
+      "reason": "ECON 1010",
+      "source": "Syllabus · ECON 1010.pdf",
+      "app": "classes"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": []
+  }
+ }
+]

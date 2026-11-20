@@ -1,0 +1,89 @@
+/* Attachments for Clair (design/DESIGN.md §14): the Photo and File buttons, the tray above the field, the drop hint and the
+   understanding line. Prefix `at-`. Tokens only; text 13 px and up; no red; no gold (gold means "waiting for your OK").
+   The pieces are standalone: the Clair sheet and the chat each place them. */
+
+.at-host { position: relative; }
+
+/* ---------- Photo and File: two 44 px buttons beside the field (board ClairSheet's Photo and File chips, drawn as glyphs) ---------- */
+.at-btns { display: flex; align-items: flex-end; gap: 8px; flex: none; }
+.at-btn { flex: none; min-width: var(--hit); height: var(--hit); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--edge);
+  transition: background-color var(--t-fb) var(--ease), transform var(--t-fb) var(--ease); }
+.at-btn:active { background-color: var(--hair); }
+@media (hover: hover) and (pointer: fine) { .at-btn:hover:not(:disabled) { background-color: var(--hair); } }
+/* labelled: text beside the glyph, for a roomy row (board: 48 tall, 15 / 600) */
+.at-btns.lab .at-btn { height: 48px; padding: 0 14px; font-size: 15px; font-weight: 600; }
+.at-btns.lab { align-items: center; }
+/* the field, its tray and its chips: one unit, 8 px apart (the sheet's column would put 16 between them) */
+.cs-composer { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+/* ---------- the tray: a strip above the field that scrolls sideways ---------- */
+.at-tray { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* the remove button overhangs the tile's corner by 12 px, so the strip carries that room (an overflow scroller clips) */
+.at-strip { display: flex; align-items: flex-start; gap: 8px; padding: 12px 12px 2px 0; }
+.at-notice { font-size: 13px; line-height: 1.4; color: var(--sec); }
+.at-notice:empty { height: 0; overflow: hidden; }
+
+.at-tile { position: relative; flex: none; display: flex; align-items: center; height: 56px; animation: at-in var(--t-state) var(--ease) both; }
+.at-tile[data-leaving] { animation: at-out var(--t-state-out) var(--ease) forwards; pointer-events: none; }
+@keyframes at-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes at-out { to { opacity: 0; } }
+@keyframes at-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .at-tile { animation-name: at-fade; } }
+
+/* a photo: 56 px of the picture that will be sent */
+.at-thumb { position: relative; display: block; width: 56px; height: 56px; border-radius: 12px; overflow: hidden; background: var(--hair); box-shadow: inset 0 0 0 1px var(--card-line); }
+.at-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; -webkit-user-drag: none; }
+.at-thumb::before { content: ''; position: absolute; inset: 0; background: color-mix(in oklch, var(--card) 62%, transparent); opacity: 0; transition: opacity var(--t-fb) var(--ease); pointer-events: none; }
+.at-pic[data-state='preparing'] .at-thumb::before, .at-pic[data-state='uploading'] .at-thumb::before, .at-pic[data-state='ready'] .at-thumb::before { opacity: 1; }
+.at-thumb .at-ring { position: absolute; inset: 0; margin: auto; width: 28px; height: 28px; }
+
+/* a PDF, CSV, ICS or text file: a typed tile, the glyph then the name over its size */
+.at-doc, .at-err { gap: 10px; padding: 0 14px 0 10px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1px var(--card-line); }
+.at-doc { max-width: 208px; }
+.at-ico { flex: none; position: relative; width: 36px; height: 36px; border-radius: 12px; background: var(--hair); color: var(--ink); display: grid; place-items: center; }
+.at-meta { min-width: 0; display: flex; flex-direction: column; }
+.at-name { font-size: 14px; font-weight: 600; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.at-sub { font-size: 13px; line-height: 1.3; color: var(--sec); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* remove: a 20 px badge on the corner inside a 44 px button that overhangs the tile by 12 */
+.at-x { position: absolute; top: -12px; right: -12px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; z-index: 1; }
+.at-x > span { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--cta-ink); box-shadow: 0 0 0 2px var(--ground); }
+.at-x:focus-visible { outline-offset: -3px; } /* the strip clips what sticks out, so the ring sits inside the 44 px circle */
+.at-x:active { transform: none; }
+.at-x:active > span { transform: scale(.94); }
+
+/* a refused or failed one: the stitch alphabet's frayed edge (2 / 5, ink), the reason in words, then what to do */
+.at-err { height: auto; min-height: 56px; max-width: min(320px, 86vw); padding: 6px 4px 6px 10px; gap: 8px; box-shadow: none; }
+.at-edge { position: absolute; inset: 1px; width: calc(100% - 2px); height: calc(100% - 2px); overflow: visible; pointer-events: none; }
+.at-edge rect { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 2 5; }
+.at-err .at-meta { flex: 1; }
+.at-err .at-name { font-size: 13px; color: var(--sec); font-weight: 600; }
+.at-err .at-sub { color: var(--ink); font-weight: 500; white-space: normal; overflow: visible; }
+.at-act { flex: none; min-width: var(--hit); min-height: var(--hit); padding: 0 6px; border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--focus); }
+
+/* working: a ring, the only loading mark (a sentence says it on a typed tile; a photo says it to a screen reader) */
+.at-ring { width: 22px; height: 22px; }
+.at-ring circle { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 38 20; transform-box: fill-box; transform-origin: center; animation: at-spin 900ms linear infinite; }
+@keyframes at-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .at-ring circle { animation: none; } }
+
+/* ---------- drop hint: a chalk-dotted veil over the host while a file is dragged over it ---------- */
+.at-drop { position: absolute; inset: 0; z-index: 40; display: grid; place-items: center; border-radius: 22px; pointer-events: none;
+  background: color-mix(in oklch, var(--focus) 9%, var(--ground)); outline: 2px dotted color-mix(in oklch, var(--focus) 70%, transparent); outline-offset: -8px;
+  opacity: 0; visibility: hidden; transition: opacity var(--t-fb) var(--ease), visibility 0s linear var(--t-fb); }
+.at-drop[data-on] { opacity: .97; visibility: visible; transition-delay: 0s; }
+.at-drop span { font-size: 16px; font-weight: 600; color: var(--focus); }
+
+/* ---------- the understanding line (FR-C13): the thumbnail, then what Clair thinks it is ---------- */
+.at-line { display: flex; align-items: center; gap: 12px; min-height: 48px; font-size: 16px; font-weight: 500; line-height: 1.4; color: var(--ink); }
+.at-line-thumb { flex: none; width: 40px; height: 40px; border-radius: 12px; overflow: hidden; display: grid; place-items: center; background: var(--hair); color: var(--ink); box-shadow: inset 0 0 0 1px var(--card-line); }
+.at-line-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.at-line-txt { min-width: 0; overflow-wrap: anywhere; }
+
+/* ---------- what a turn was sent with: right-aligned above the words, like the bubble ---------- */
+.at-sent { align-self: flex-end; max-width: 85%; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.at-sent .at-tile { animation: none; }
+.at-sent .at-thumb .at-ico { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; }
+
+.chat-main { position: relative; } /* the drop hint covers the whole chat column */

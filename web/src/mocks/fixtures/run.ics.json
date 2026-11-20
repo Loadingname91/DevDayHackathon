@@ -1,0 +1,193 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your file…"
+  }
+ },
+ {
+  "delay": 250,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Four events, all after today. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "None of them are on Calendar yet. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Adding them as events."
+  }
+ },
+ {
+  "delay": 1200,
+  "event": "understood",
+  "data": {
+   "kind": "calendar",
+   "summary": "Calendar file · 4 events",
+   "items": [
+    "Study group",
+    "Advising appointment",
+    "Thanksgiving dinner",
+    "Pizza night with Maya"
+   ]
+  }
+ },
+ {
+  "delay": 1200,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_ics",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "records",
+    "source": {
+     "kind": "file",
+     "label": "From your file",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [
+     {
+      "op": "insert",
+      "ref": "calendar/events",
+      "values": {
+       "title": "Study group",
+       "at": "2026-11-24T19:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "calendar/events",
+      "values": {
+       "title": "Advising appointment",
+       "at": "2026-11-25T15:30:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "calendar/events",
+      "values": {
+       "title": "Thanksgiving dinner",
+       "at": "2026-11-26T17:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "calendar/events",
+      "values": {
+       "title": "Pizza night with Maya",
+       "at": "2026-11-28T19:00:00-07:00"
+      }
+     }
+    ],
+    "expanded": [
+     {
+      "op": "insert",
+      "ref": "calendar/events",
+      "values": {
+       "title": "Study group",
+       "at": "2026-11-24T19:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "calendar/events",
+      "values": {
+       "title": "Advising appointment",
+       "at": "2026-11-25T15:30:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "calendar/events",
+      "values": {
+       "title": "Thanksgiving dinner",
+       "at": "2026-11-26T17:00:00-07:00"
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "calendar/events",
+      "values": {
+       "title": "Pizza night with Maya",
+       "at": "2026-11-28T19:00:00-07:00"
+      }
+     }
+    ],
+    "deltas": [],
+    "title": "Events from your file",
+    "summary": "Found 4 events. Add to Calendar?",
+    "lines": [
+     {
+      "apps": [
+       "calendar"
+      ],
+      "what": "Study group · Advising appointment · Thanksgiving dinner · Pizza night with Maya",
+      "val": ""
+     }
+    ],
+    "targets": [
+     "calendar"
+    ],
+    "actions": {
+     "primary": "Add to Calendar",
+     "secondary": "Review items"
+    },
+    "review": [
+     {
+      "title": "Study group",
+      "when": "Tue 24 Nov, 7:00 pm",
+      "change": "new",
+      "reason": "from your file",
+      "source": "your file",
+      "app": "calendar"
+     },
+     {
+      "title": "Advising appointment",
+      "when": "Wed 25 Nov, 3:30 pm",
+      "change": "new",
+      "reason": "from your file",
+      "source": "your file",
+      "app": "calendar"
+     },
+     {
+      "title": "Thanksgiving dinner",
+      "when": "Thu 26 Nov, 5:00 pm",
+      "change": "new",
+      "reason": "from your file",
+      "source": "your file",
+      "app": "calendar"
+     },
+     {
+      "title": "Pizza night with Maya",
+      "when": "Sat 28 Nov, 7:00 pm",
+      "change": "new",
+      "reason": "from your file",
+      "source": "your file",
+      "app": "calendar"
+     }
+    ],
+    "mock": true
+   }
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": []
+  }
+ }
+]

@@ -1,0 +1,376 @@
+{
+ "credits": -5,
+ "home": {
+  "status": "**$376** left this month. Pull day at **6 pm**.",
+  "faces": {
+   "budget": {
+    "text": "$376"
+   },
+   "groceries": {
+    "text": "4"
+   },
+   "calendar": {
+    "text": "4"
+   }
+  },
+  "changed": [
+   "groceries",
+   "budget",
+   "calendar"
+  ]
+ },
+ "apps": {
+  "groceries": {
+   "add": {
+    "groceries/items": [
+     {
+      "id": "ib_rc_oat_milk",
+      "position": "c002",
+      "version": 1,
+      "properties": {
+       "name": "Oat milk",
+       "list": "l_weekly",
+       "status": "bought",
+       "price": 349,
+       "bought_on": "2026-11-20",
+       "trip": [
+        "tr_rc"
+       ],
+       "usual": "auto"
+      }
+     },
+     {
+      "id": "ib_rc_eggs",
+      "position": "c003",
+      "version": 1,
+      "properties": {
+       "name": "Eggs",
+       "list": "l_weekly",
+       "status": "bought",
+       "qty": "1 dozen",
+       "price": 429,
+       "bought_on": "2026-11-20",
+       "trip": [
+        "tr_rc"
+       ],
+       "usual": "auto"
+      }
+     },
+     {
+      "id": "ib_rc_bananas",
+      "position": "c004",
+      "version": 1,
+      "properties": {
+       "name": "Bananas",
+       "list": "l_weekly",
+       "status": "bought",
+       "price": 187,
+       "bought_on": "2026-11-20",
+       "trip": [
+        "tr_rc"
+       ],
+       "usual": "auto"
+      }
+     },
+     {
+      "id": "ib_rc_chicken_thighs",
+      "position": "c005",
+      "version": 1,
+      "properties": {
+       "name": "Chicken thighs",
+       "list": "l_weekly",
+       "status": "bought",
+       "price": 862,
+       "bought_on": "2026-11-20",
+       "trip": [
+        "tr_rc"
+       ],
+       "usual": "auto"
+      }
+     },
+     {
+      "id": "ib_rc_rice",
+      "position": "c006",
+      "version": 1,
+      "properties": {
+       "name": "Rice",
+       "list": "l_weekly",
+       "status": "bought",
+       "qty": "5 lb",
+       "price": 699,
+       "bought_on": "2026-11-20",
+       "trip": [
+        "tr_rc"
+       ],
+       "usual": "auto"
+      }
+     },
+     {
+      "id": "ib_rc_spinach",
+      "position": "c007",
+      "version": 1,
+      "properties": {
+       "name": "Spinach",
+       "list": "l_weekly",
+       "status": "bought",
+       "price": 329,
+       "bought_on": "2026-11-20",
+       "trip": [
+        "tr_rc"
+       ],
+       "usual": "auto"
+      }
+     },
+     {
+      "id": "ib_rc_greek_yogurt",
+      "position": "c008",
+      "version": 1,
+      "properties": {
+       "name": "Greek yogurt",
+       "list": "l_weekly",
+       "status": "bought",
+       "price": 429,
+       "bought_on": "2026-11-20",
+       "trip": [
+        "tr_rc"
+       ],
+       "usual": "auto"
+      }
+     },
+     {
+      "id": "ib_rc_coffee_beans",
+      "position": "c009",
+      "version": 1,
+      "properties": {
+       "name": "Coffee beans",
+       "list": "l_weekly",
+       "status": "bought",
+       "price": 299,
+       "bought_on": "2026-11-20",
+       "trip": [
+        "tr_rc"
+       ],
+       "usual": "auto"
+      }
+     }
+    ],
+    "groceries/trips": [
+     {
+      "id": "tr_rc",
+      "position": "c000",
+      "version": 1,
+      "properties": {
+       "store": "Corner Market",
+       "total": 3583,
+       "at": "2026-11-20T17:41:00-07:00"
+      }
+     }
+    ]
+   },
+   "remove": {
+    "groceries/items": [
+     "i_oat_milk",
+     "i_eggs",
+     "i_bananas",
+     "i_chicken_thighs",
+     "i_rice",
+     "i_spinach",
+     "i_greek_yogurt",
+     "i_coffee_beans"
+    ]
+   },
+   "values": {
+    "b_spend": {
+     "text": "$177.83",
+     "target": "$200",
+     "pct": 89
+    }
+   },
+   "face": {
+    "text": "4",
+    "label": "to buy"
+   },
+   "status": "**14** to buy across 3 lists. **$177.83** of $200 spent this month."
+  },
+  "budget": {
+   "add": {
+    "budget/spend": [
+     {
+      "id": "sp_rc",
+      "position": "c001",
+      "version": 1,
+      "properties": {
+       "note": "Corner Market",
+       "category": "c_groceries",
+       "amount": 3583,
+       "at": "2026-11-20T17:41:00-07:00",
+       "_via": {
+        "app": "groceries",
+        "record_id": "tr_rc"
+       }
+      }
+     }
+    ]
+   },
+   "values": {
+    "b_left": {
+     "text": "$376",
+     "target": "left of $1,200",
+     "pct": 69,
+     "sub": "Was $412 · 11 days to go",
+     "spent": 82383,
+     "limit": 120000
+    },
+    "b_where": {
+     "rows": [
+      {
+       "label": "Groceries",
+       "text": "$177.83 of $200",
+       "pct": 89,
+       "id": "c_groceries",
+       "spent": 17783,
+       "limit": 20000
+      },
+      {
+       "label": "Eating out",
+       "text": "$165.00 of $150",
+       "pct": 91,
+       "over_pct": 9,
+       "note": "$15 over.",
+       "id": "c_eating_out",
+       "spent": 16500,
+       "limit": 15000
+      },
+      {
+       "label": "Transport",
+       "text": "$42.00 of $100",
+       "pct": 42,
+       "id": "c_transport",
+       "spent": 4200,
+       "limit": 10000
+      },
+      {
+       "label": "Subscriptions",
+       "text": "$26.47 of $40",
+       "pct": 66,
+       "id": "c_subscriptions",
+       "spent": 2647,
+       "limit": 4000
+      },
+      {
+       "label": "Rent",
+       "text": "$380.00",
+       "note": "No limit",
+       "id": "c_rent",
+       "spent": 38000
+      },
+      {
+       "label": "Fun",
+       "text": "$32.53",
+       "note": "No limit",
+       "id": "c_fun",
+       "spent": 3253
+      }
+     ]
+    },
+    "b_subs": {
+     "rows": [
+      {
+       "label": "Spotify",
+       "text": "$11.99",
+       "note": "Renews Sun 22 Nov"
+      },
+      {
+       "label": "Hulu",
+       "text": "$9.99",
+       "note": "Renews Wed 2 Dec"
+      },
+      {
+       "label": "Adobe CC, student",
+       "text": "$13.49",
+       "note": "Renews Thu 3 Dec"
+      },
+      {
+       "label": "iCloud 50 GB",
+       "text": "$2.99",
+       "note": "Renews Wed 9 Dec"
+      }
+     ]
+    },
+    "b_spent": {
+     "text": "$823.83",
+     "target": "$1,200",
+     "pct": 69
+    },
+    "b_c_eating": {
+     "text": "$165.00",
+     "target": "$150",
+     "pct": 100,
+     "over": "$15 over"
+    },
+    "b_c_groceries": {
+     "text": "$177.83",
+     "target": "$200",
+     "pct": 89
+    },
+    "b_c_transport": {
+     "text": "$42.00",
+     "target": "$100",
+     "pct": 42
+    },
+    "b_c_subs": {
+     "text": "$26.47",
+     "target": "$40",
+     "pct": 66
+    },
+    "b_k_rent": {
+     "text": "$380.00",
+     "sub": "no limit"
+    },
+    "b_k_eating": {
+     "text": "$165.00",
+     "sub": "limit $150 · $15 over"
+    },
+    "b_k_groceries": {
+     "text": "$177.83",
+     "sub": "limit $200"
+    },
+    "b_k_transport": {
+     "text": "$42.00",
+     "sub": "limit $100"
+    },
+    "b_k_fun": {
+     "text": "$32.53",
+     "sub": "no limit"
+    },
+    "b_k_subs": {
+     "text": "$26.47",
+     "sub": "limit $40"
+    }
+   },
+   "face": {
+    "text": "$376",
+    "label": "left"
+   }
+  },
+  "calendar": {
+   "add": {
+    "*dated": [
+     {
+      "at": "2026-11-20T17:41:00-07:00",
+      "title": "Grocery trip · Corner Market",
+      "sub": "Groceries",
+      "app": "groceries",
+      "record_id": "tr_rc",
+      "changed": true
+     }
+    ]
+   },
+   "face": {
+    "text": "4",
+    "label": "today"
+   },
+   "status": "**4** today. Dates from every app, in one place."
+  }
+ }
+}

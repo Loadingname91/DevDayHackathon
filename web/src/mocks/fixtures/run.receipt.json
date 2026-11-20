@@ -1,0 +1,381 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Looking at your photo…"
+  }
+ },
+ {
+  "delay": 250,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Eight lines and a total of $35.83. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "All eight are open on Weekly shop, so they close against it. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "The spend goes to Budget and the trip to Calendar."
+  }
+ },
+ {
+  "delay": 1400,
+  "event": "understood",
+  "data": {
+   "kind": "receipt",
+   "summary": "Corner Market receipt · 8 items · $35.83",
+   "items": [
+    "Oat milk",
+    "Eggs",
+    "Bananas",
+    "Chicken thighs",
+    "Rice",
+    "Spinach",
+    "Greek yogurt",
+    "Coffee beans"
+   ]
+  }
+ },
+ {
+  "delay": 1100,
+  "event": "status",
+  "data": {
+   "text": "Drafting changes…"
+  }
+ },
+ {
+  "delay": 1500,
+  "event": "proposal",
+  "data": {
+   "change_set": {
+    "id": "cs_receipt",
+    "status": "basted",
+    "version": 1,
+    "flagged": false,
+    "mode": "live",
+    "kind": "records",
+    "source": {
+     "kind": "photo",
+     "label": "From your receipt photo · 5:41 pm",
+     "at": "2026-11-20T17:45:00-07:00"
+    },
+    "ops": [
+     {
+      "op": "insert",
+      "ref": "groceries/trips",
+      "values": {
+       "store": "Corner Market",
+       "total": 3583,
+       "at": "2026-11-20T17:41:00-07:00"
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_oat_milk",
+      "values": {
+       "status": "bought",
+       "price": 349
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_eggs",
+      "values": {
+       "status": "bought",
+       "price": 429
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_bananas",
+      "values": {
+       "status": "bought",
+       "price": 187
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_chicken_thighs",
+      "values": {
+       "status": "bought",
+       "price": 862
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_rice",
+      "values": {
+       "status": "bought",
+       "price": 699
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_spinach",
+      "values": {
+       "status": "bought",
+       "price": 329
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_greek_yogurt",
+      "values": {
+       "status": "bought",
+       "price": 429
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_coffee_beans",
+      "values": {
+       "status": "bought",
+       "price": 299
+      }
+     }
+    ],
+    "expanded": [
+     {
+      "op": "insert",
+      "ref": "groceries/trips",
+      "values": {
+       "store": "Corner Market",
+       "total": 3583,
+       "at": "2026-11-20T17:41:00-07:00"
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_oat_milk",
+      "values": {
+       "status": "bought",
+       "price": 349
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_eggs",
+      "values": {
+       "status": "bought",
+       "price": 429
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_bananas",
+      "values": {
+       "status": "bought",
+       "price": 187
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_chicken_thighs",
+      "values": {
+       "status": "bought",
+       "price": 862
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_rice",
+      "values": {
+       "status": "bought",
+       "price": 699
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_spinach",
+      "values": {
+       "status": "bought",
+       "price": 329
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_greek_yogurt",
+      "values": {
+       "status": "bought",
+       "price": 429
+      }
+     },
+     {
+      "op": "update",
+      "rowId": "i_coffee_beans",
+      "values": {
+       "status": "bought",
+       "price": 299
+      }
+     },
+     {
+      "op": "insert",
+      "ref": "budget/spend",
+      "values": {
+       "note": "Corner Market",
+       "category": "c_groceries",
+       "amount": 3583,
+       "at": "2026-11-20T17:41:00-07:00",
+       "_via": {
+        "app": "groceries",
+        "record_id": "tr_rc"
+       }
+      }
+     }
+    ],
+    "deltas": [
+     {
+      "app": "groceries",
+      "before": "12",
+      "after": "4"
+     },
+     {
+      "app": "budget",
+      "before": "$412",
+      "after": "$376"
+     },
+     {
+      "app": "calendar",
+      "before": "3",
+      "after": "4"
+     }
+    ],
+    "title": "Corner Market",
+    "summary": "8 items, $35.83.",
+    "lines": [
+     {
+      "apps": [
+       "groceries"
+      ],
+      "what": "8 bought",
+      "val": "",
+      "sub": "Weekly shop 12 → 4 to buy"
+     },
+     {
+      "apps": [
+       "budget"
+      ],
+      "what": "Groceries · $35.83",
+      "val": "",
+      "sub": "$412 → $376"
+     },
+     {
+      "apps": [
+       "calendar"
+      ],
+      "what": "Grocery trip · Corner Market 5:41 pm",
+      "val": ""
+     }
+    ],
+    "targets": [
+     "groceries",
+     "budget",
+     "calendar"
+    ],
+    "actions": {
+     "primary": "Add to 3 apps",
+     "secondary": "Review items"
+    },
+    "review": [
+     {
+      "title": "Corner Market",
+      "when": "Today, 5:41 pm · $35.83",
+      "change": "new",
+      "reason": "8 items",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Oat milk",
+      "when": "$3.49",
+      "change": "changed",
+      "reason": "Weekly shop · to buy → bought",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Eggs",
+      "when": "$4.29",
+      "change": "changed",
+      "reason": "Weekly shop · to buy → bought",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Bananas",
+      "when": "$1.87",
+      "change": "changed",
+      "reason": "Weekly shop · to buy → bought",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Chicken thighs",
+      "when": "$8.62",
+      "change": "changed",
+      "reason": "Weekly shop · to buy → bought",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Rice",
+      "when": "$6.99",
+      "change": "changed",
+      "reason": "Weekly shop · to buy → bought",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Spinach",
+      "when": "$3.29",
+      "change": "changed",
+      "reason": "Weekly shop · to buy → bought",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Greek yogurt",
+      "when": "$4.29",
+      "change": "changed",
+      "reason": "Weekly shop · to buy → bought",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Coffee beans",
+      "when": "$2.99",
+      "change": "changed",
+      "reason": "Weekly shop · to buy → bought",
+      "source": "Groceries",
+      "app": "groceries"
+     },
+     {
+      "title": "Groceries",
+      "when": "$35.83 · $412 → $376",
+      "change": "new",
+      "reason": "from the trip",
+      "source": "Groceries",
+      "app": "budget"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "delay": 80,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": []
+  }
+ }
+]

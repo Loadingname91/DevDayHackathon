@@ -60,7 +60,7 @@
      {
       "key": "at",
       "label": "When",
-      "type": "datetime",
+      "type": "date",
       "required": true
      }
     ]
@@ -110,7 +110,12 @@
       "target": {
        "setting": "target"
       },
-      "format": "number"
+      "format": "number",
+      "edit": {
+       "setting": "target",
+       "label": "Daily calories",
+       "format": "number"
+      }
      },
      {
       "kind": "picks",
@@ -418,7 +423,9 @@
    "text": "1,140",
    "target": "of 2,200",
    "pct": 52,
-   "sub": "70 g protein"
+   "sub": "70 g protein",
+   "spent": 1140,
+   "limit": 2200
   },
   "b_today": {
    "text": "1,140",

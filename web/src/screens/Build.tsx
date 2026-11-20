@@ -195,7 +195,7 @@ export function Build() {
 
   function listen(body: Parameters<typeof clairTurn>[0], on: 'sentence' | 'answer') {
     const run = ++runId.current;
-    let said = '', gotCard = false, gotQuestion = false;
+    let said = '', gotCard = false, gotQuestion = false, gotPlan = false;
     streaming.current = true;
     void clairTurn(body, (e: ClairEvent) => {
       if (run !== runId.current) return;
@@ -212,6 +212,7 @@ export function Build() {
           break;
         }
         case 'plan':
+          gotPlan = true;
           setPlan(e.data);
           if (stageRef.current === 'reading' || stageRef.current === 'thinking') {
             if (quick.current) { quick.current = false; push('preview'); enterPreview(); } // a pattern tile skips the plan card too
@@ -224,7 +225,9 @@ export function Build() {
           if (stageRef.current === 'preview') setCs(e.data.change_set); // Build it was tapped before it landed
           else if (!planRef.current && (stageRef.current === 'reading' || stageRef.current === 'thinking')) { quick.current = false; push('preview'); enterPreview(); } // no plan: straight to the preview
           break;
-        case 'text_delta': said += e.data.text; setAnswer(said); break;
+        // The live server can stream a stray sentence before a plan or proposal. It is kept, not shown, until the turn ends
+        // without a card, a question or a plan: only then is it Clair's answer in words (it must never hide Make it).
+        case 'text_delta': said += e.data.text; break;
         case 'done':
           void loadMe();
           if (e.data.status === 'error') {
@@ -232,7 +235,7 @@ export function Build() {
             if (on === 'answer' && expired(cardRef.current)) { void swap(() => setStage('expired')); break; }
             setError({ text: e.data.message ?? 'Clair could not build that. Nothing was saved.', on });
             if (stageRef.current === 'preview') setExpr('oops');
-          } else if (said && !gotCard && !gotQuestion) { setStatus(said); } // the chalk goes: nothing is being built
+          } else if (said && !gotCard && !gotQuestion && !gotPlan) { setAnswer(said); setStatus(said); } // the chalk goes: nothing is being built
           break;
       }
     });

@@ -8,6 +8,7 @@ import type { BarsBlock, CommandResult, CountdownBlock, GaugeBlock, NextBlock, P
 import { afterCommand, toast } from '../../lib/store';
 import { NoData } from '../EmptyState';
 import { Icon } from '../Icon';
+import { EditPencil, LimitsSheet } from '../LimitsSheet';
 import type { Ctx } from './index';
 
 /** `--len`: how many characters a figure has, so the stylesheet can size it to its card (styles/app.css). Layout only. */
@@ -19,9 +20,13 @@ export const fill = (pct: number, over?: number): CSSProperties => ({ '--p': `${
 /** "$412 left of $1,200", the bar, "11 days to go" (board Budget). */
 export function Gauge({ block, ctx }: { block: GaugeBlock; ctx: Ctx }) {
   const v = ctx.values[block.id];
+  const [editing, setEditing] = useState(false);
   if (!v || v.text === undefined) return <NoData label={block.label} failed={!!v} />;
+  const edit = !ctx.preview ? block.edit : undefined; // a build preview writes nothing
   return (
-    <section className="card gauge" data-dye={ctx.spec.dye} aria-label={block.label}>
+    <section className={`card gauge${edit ? ' editable' : ''}`} data-dye={ctx.spec.dye} aria-label={block.label}>
+      {edit && <EditPencil label={`Change ${edit.label.toLowerCase()}`} onClick={() => setEditing(true)} />}
+      {edit && <LimitsSheet app={ctx.spec.key} appName={ctx.spec.name} mode={{ kind: 'setting', edit, current: v.limit }} open={editing} onClose={() => setEditing(false)} />}
       <div className="g-row"><span className="g-big" style={fit(v.text)}>{v.text}</span>{v.target && <span className="g-of">{v.target}</span>}</div>
       {v.pct !== undefined && <span className="track" role="meter" aria-valuenow={v.pct} aria-valuemin={0} aria-valuemax={100} aria-label={block.label}><span className="fill" style={fill(v.pct)} /></span>}
       {v.sub && <span className="g-sub">{v.sub}</span>}
@@ -33,12 +38,17 @@ export function Gauge({ block, ctx }: { block: GaugeBlock; ctx: Ctx }) {
 /** One bar per category; the excess over a limit is an ink cross-hatch (board Budget, "Where it went"). */
 export function Bars({ block, ctx }: { block: BarsBlock; ctx: Ctx }) {
   const v = ctx.values[block.id];
+  const [editing, setEditing] = useState(false);
   if (!v?.rows) return <NoData label={block.label} failed={!!v} />;
   const rows = v.rows;
   if (!rows.length) return null; // nothing to draw: no label and no empty card
+  const edit = !ctx.preview && rows.some((r) => r.id) ? block.edit : undefined; // the limits sheet needs each row's option id
   return (
     <>
-      <div className="sec"><span>{block.label}</span></div>
+      <div className="sec"><span>{block.label}</span>
+        {edit && <button type="button" className="sec-edit" onClick={() => setEditing(true)}><Icon name="pencil" size={16} sw={1.8} />{edit.label}</button>}
+      </div>
+      {edit && <LimitsSheet app={ctx.spec.key} appName={ctx.spec.name} mode={{ kind: 'options', edit, rows }} open={editing} onClose={() => setEditing(false)} />}
       <section className="card bars" data-dye={ctx.spec.dye}>
         {rows.map((r, i) => (
           <div className={`bar-row ${i ? 'sep' : ''}`} key={r.label}>
@@ -60,10 +70,14 @@ export function Bars({ block, ctx }: { block: BarsBlock; ctx: Ctx }) {
 /** A goal ring: "1,140 of 2,200". Progress only, never a judgement. */
 export function Ring({ block, ctx }: { block: RingBlock; ctx: Ctx }) {
   const v = ctx.values[block.id];
+  const [editing, setEditing] = useState(false);
   if (!v || v.text === undefined) return <NoData label={block.label} failed={!!v} />;
+  const edit = !ctx.preview ? block.edit : undefined;
   const pct = Math.min(100, v.pct ?? 0), R = 52, C = 2 * Math.PI * R;
   return (
-    <section className="card ring" data-dye={ctx.spec.dye} aria-label={`${block.label}: ${v.text} ${v.target ?? ''}`}>
+    <section className={`card ring${edit ? ' editable' : ''}`} data-dye={ctx.spec.dye} aria-label={`${block.label}: ${v.text} ${v.target ?? ''}`}>
+      {edit && <EditPencil label={`Change ${edit.label.toLowerCase()}`} onClick={() => setEditing(true)} />}
+      {edit && <LimitsSheet app={ctx.spec.key} appName={ctx.spec.name} mode={{ kind: 'setting', edit, current: v.limit }} open={editing} onClose={() => setEditing(false)} />}
       <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
         <circle cx="66" cy="66" r={R} fill="none" stroke="var(--hair)" strokeWidth="12" />
         {pct > 0 && <circle className="ring-fill" cx="66" cy="66" r={R} fill="none" stroke="var(--deep)" strokeWidth="12" strokeLinecap="round"

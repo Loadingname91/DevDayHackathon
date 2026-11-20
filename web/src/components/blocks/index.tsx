@@ -16,7 +16,9 @@ import { useRowEnter } from '../../lib/enter';
 import { passesAll } from './filter';
 import { Bars, Countdown, fill, fit, Gauge, Next, Picks, Ring, Strip } from './instruments';
 import { MonthLog } from './MonthLog';
+import { Notebook } from './Notebook';
 import { Timer } from './Timer';
+import { ListActions } from './TripActions';
 import { Workflows } from './Workflows';
 
 export type Ctx = {
@@ -166,6 +168,7 @@ function List({ block, ctx }: { block: ListBlock; ctx: Ctx }) {
         {total > limit && <li><button className="more-rows" onClick={() => setAll(!full)}>{full ? 'Show fewer' : `Show all ${total}`}</button></li>}
         {canAdd && rows.length > 0 && <li className="add-row-li quick-wrap"><button className="add-row" onClick={() => setAdding(true)}><Icon name="plus" size={16} />Add {aNoun(singular(c))}</button></li>}
       </ul>
+      <ListActions block={block} ctx={ctx} />
       {canAdd && <AddSheet app={ctx.spec.key} appName={ctx.spec.name} collection={c} now={ctx.now} apps={ctx.apps} defaults={rel ? { [rel.field]: rel.id } : undefined}
         open={adding} onClose={() => setAdding(false)} onAdded={() => ctx.reload?.()} />}
       {canEdit && <AddSheet app={ctx.spec.key} appName={ctx.spec.name} collection={c} now={ctx.now} apps={ctx.apps} record={editing ?? undefined}
@@ -193,6 +196,7 @@ export function Block({ block, ctx }: { block: LeafBlock; ctx: Ctx }) {
     case 'next': return <Next block={block} ctx={ctx} />;
     case 'timer': return <Timer block={block} ctx={ctx} />;
     case 'month': return <MonthLog block={block} ctx={ctx} />;
+    case 'notebook': return <Notebook block={block} ctx={ctx} />;
     case 'workflows': return <Workflows spec={ctx.spec} />;
     default: return null; // table, form, chart: after the base cut line
   }

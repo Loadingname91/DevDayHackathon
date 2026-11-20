@@ -1,0 +1,13 @@
+{
+ "change_set_id": "cs_groceries_list",
+ "server_seq": 4171,
+ "blocks": [],
+ "faces": {
+  "groceries": {
+   "text": "12",
+   "value": 12,
+   "label": "to buy"
+  }
+ },
+ "warnings": []
+}

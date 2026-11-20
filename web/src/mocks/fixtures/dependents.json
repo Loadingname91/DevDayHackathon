@@ -1,0 +1,20 @@
+{
+ "groceries": [
+  {
+   "app": "budget",
+   "what": "stitch from groceries/trips"
+  }
+ ],
+ "classes": [
+  {
+   "app": "notes",
+   "what": "notes/notebooks.class links to classes/classes"
+  }
+ ],
+ "subscriptions": [
+  {
+   "app": "budget",
+   "what": "reads subscriptions/subscriptions"
+  }
+ ]
+}

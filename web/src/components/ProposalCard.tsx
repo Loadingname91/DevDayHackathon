@@ -122,8 +122,8 @@ export function ProposalCard({ cs, onStitched, onUndone, onDismissed, onBuild, d
     onStitched?.({ ...cs, status: 'stitched' });
     await peekSettled(); // the receipt capsule rises out of the bar as the raised tiles fold into it
     if (undone.current) return;
-    // a card still open in the Clair sheet says "Added to … Undo" itself: no second Undo, and none at the top of the screen
-    if (ref.current?.closest('.sheet') && sheetOpen()) return;
+    // a card still open in the Clair sheet or the Chat screen says "Added to … Undo" itself: no second Undo, and none at the top of the screen
+    if ((ref.current?.closest('.sheet') && sheetOpen()) || ref.current?.closest('.chat-log')) return; // in the Chat screen the card's own row is the Undo too
     const said = names.length > 2 ? `${names.length} apps` : listNames(names);
     toast(isRule ? `Rule on in ${said}` : `Added to ${said}`, { label: 'Undo', run: undo }, 8000, { dyes: cs.targets.map((t) => app(t)?.dye) });
   }

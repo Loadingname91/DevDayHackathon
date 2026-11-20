@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { errorText, request } from '../api/client';
 import type { Collection, CommandResult, Field, Patch, Rec } from '../api/types';
-import { addDays, dayKey, relIds, singular } from '../lib/format';
+import { dayKey, relIds, singular } from '../lib/format';
 import { afterCommand, toast } from '../lib/store';
 import { Disclosure } from './Disclosure';
 import { Icon } from './Icon';
 import { BodyField, LinkedSection, RelationPicker, SYSTEM_KEYS, useLive } from './Links';
 import { startValues } from './QuickAdd';
+import { RepeatField, ruleOf } from './RepeatField';
 import { Sheet } from './Sheet';
 
-const HIDDEN = new Set(['formula', 'repeat', 'bool']);
+// the date picker (react-aria) is its own chunk: it loads when the first sheet with a date opens, so Home does not carry it
+const DateTimeField = lazy(() => import('./DateTimeField').then((m) => ({ default: m.DateTimeField })));
+const HIDDEN = new Set(['formula', 'bool']); // a tick is the row's checkbox, a formula is the server's
 const SYSTEM = SYSTEM_KEYS;
 export { singular };
 const NONE: Rec = { id: '', position: '', version: 0, properties: {} };
@@ -46,7 +49,7 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
   const record = opened ? live : undefined;
   const fields = c.fields.filter((f) => !HIDDEN.has(f.type) && !SYSTEM.has(f.key) && (f.type !== 'relation' || !!f.target));
   const ordered = [...fields.filter((f) => f.key === c.titleField), ...fields.filter((f) => f.key !== c.titleField)];
-  const main = record ? ordered : ordered.filter((f, i) => f.required || i < 3 || f.key === c.dateField);
+  const main = record ? ordered : ordered.filter((f, i) => f.required || i < 3 || f.key === c.dateField || f.type === 'repeat');
   const extra = ordered.filter((f) => !main.includes(f));
   const fresh = () => {
     if (record) return toForm(c, record);
@@ -60,10 +63,15 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
   const freshRels = (): Record<string, string[]> => Object.fromEntries([...relKeys].map((k) => [k, record ? relIds(record.properties[k]) : defaults[k] ? [defaults[k]] : []]));
   const [vals, setVals] = useState<Record<string, string>>(fresh);
   const [rels, setRels] = useState<Record<string, string[]>>(freshRels);
+  // a repeat is sent only when it was touched (an edit that leaves it alone keeps the series' log and skips)
+  const repeatKeys = fields.filter((f) => f.type === 'repeat').map((f) => f.key);
+  const freshRepeat = (): Record<string, string> => Object.fromEntries(repeatKeys.map((k) => [k, record ? ruleOf(record.properties[k]) : '']));
+  const [rules, setRules] = useState<Record<string, string>>(freshRepeat);
+  const [touched, setTouched] = useState<Set<string>>(new Set());
   const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  useEffect(() => { if (open) { setVals(fresh()); setRels(freshRels()); setMore(false); setErr(null); } }, [open, record?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (open) { setVals(fresh()); setRels(freshRels()); setRules(freshRepeat()); setTouched(new Set()); setMore(false); setErr(null); } }, [open, record?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { // a new row asks for its title straight away (a fine pointer only: on a phone the keyboard would cover the form)
     if (!open || record || !matchMedia('(pointer: fine)').matches) return;
     const t = setTimeout(() => document.getElementById(`f_${c.titleField}`)?.focus({ preventScroll: true }), 60);
@@ -76,6 +84,10 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
     e.preventDefault(); setBusy(true); setErr(null);
     const out: Record<string, unknown> = Object.fromEntries(Object.entries(vals).filter(([k, v]) => v !== '' && !relKeys.has(k))); // as typed; the server parses (backend.md §3)
     for (const k of relKeys) { const ids = rels[k] ?? []; if (record || ids.length) out[k] = ids; } // an edit always says what it holds, so clearing the last one clears it
+    for (const k of repeatKeys) { // a new row with a rule sends it; an edit sends it only if changed ("Never" clears it)
+      if (!touched.has(k)) continue;
+      if (rules[k]) out[k] = rules[k]; else if (record && ruleOf(record.properties[k])) out[k] = null;
+    }
     try {
       const r = record
         ? await request<CommandResult>('PATCH', `/records/${record.id}`, { fields: out, base_version: record.version })
@@ -103,6 +115,9 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
     const id = `f_${f.key}`;
     if (f.type === 'relation') return <RelationPicker field={f} app={app} value={rels[f.key] ?? []} onChange={(ids) => setRels((x) => ({ ...x, [f.key]: ids }))} labelId={`${id}_l`} />;
     if (f.type === 'text' && f.multiline) return <BodyField id={id} value={v} onChange={(x) => set(f.key, x)} placeholder={f.label} app={app} recId={record?.id} />;
+    if (f.type === 'repeat') {
+      return <RepeatField id={id} labelId={`${id}_l`} rule={rules[f.key] ?? ''} onChange={(x) => { setRules((r) => ({ ...r, [f.key]: x })); setTouched((t) => new Set(t).add(f.key)); }} />;
+    }
     if (f.type === 'select') {
       return (
         <span className="chips" role="radiogroup" aria-labelledby={`${id}_l`}>
@@ -122,21 +137,9 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
       );
     }
     if (f.type === 'date' || f.type === 'datetime') {
-      const today = now ? dayKey(now) : '';
-      const quick: [string, string][] = [['Today', today], ['Tomorrow', today && addDays(today, 1)]];
-      if (f.type === 'datetime') {
-        // a time of day for the chips: today at the next whole hour (never already due), tomorrow at 9
-        const next = Math.min(23, (parseInt(now.slice(11, 13), 10) || 0) + 1);
-        quick[0][1] = today && `${today}T${String(next).padStart(2, '0')}:00`;
-        quick[1][1] = today && `${addDays(today, 1)}T09:00`;
-        if (!record) quick.unshift(['Now', now.slice(0, 16)]); // an existing time is never overwritten with "now" by a chip
-      }
-      return (
-        <span className="date-pick">
-          <span className="chips">{quick.map(([t, q]) => <button type="button" key={t} className="chip pick" aria-pressed={v === q} onClick={() => set(f.key, q)}>{t}</button>)}</span>
-          <input id={id} className="fld" type={f.type === 'date' ? 'date' : 'datetime-local'} value={v} onChange={(e) => set(f.key, e.target.value)} />
-        </span>
-      );
+      // a day and, when the field asks, a time; "now" is the server's, and the line under it says what was chosen (DateTimeField)
+      return <Suspense fallback={<span className="dt-wait" aria-hidden="true" />}><DateTimeField id={id} labelId={`${id}_l`} value={v} onChange={(x) => set(f.key, x)} now={now} kind={f.type}
+        timeOptional={f.timeOptional} allDay={f.allDay} showNow={!record && f.type === 'datetime' && !f.timeOptional && !f.allDay && f.key === c.dateField} /></Suspense>;
     }
     if (f.type === 'money') return <input id={id} className="fld" type="text" inputMode="decimal" placeholder={`${f.label}, $0.00`} value={v} onChange={(e) => set(f.key, e.target.value)} />;
     return <input id={id} className={`fld ${f.key === c.titleField ? 'title-in' : ''}`} type="text" value={v} required={f.required} placeholder={f.label}
@@ -144,7 +147,7 @@ export function AddSheet({ app, appName, collection: c, defaults = {}, now, open
   };
   const row = (f: Field) => (
     <div key={f.key} className="add-field">
-      {f.type === 'relation' ? <span id={`f_${f.key}_l`} className="lbl">{f.label}</span> : <label id={`f_${f.key}_l`} htmlFor={`f_${f.key}`}>{f.label}</label>}
+      {f.type === 'relation' || f.type === 'repeat' || f.type === 'date' || f.type === 'datetime' ? <span id={`f_${f.key}_l`} className="lbl">{f.label}</span> : <label id={`f_${f.key}_l`} htmlFor={`f_${f.key}`}>{f.label}</label>}
       {input(f)}
     </div>
   );

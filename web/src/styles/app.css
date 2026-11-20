@@ -403,6 +403,10 @@ button.row-btn:active { transform: none; background-color: var(--hair); } /* a p
 
 /* ---------- calendar (design/screens-css.md §10) ---------- */
 .days-block, .days-panel { display: flex; flex-direction: column; gap: 16px; }
+.days-top { display: flex; align-items: center; gap: 8px; }
+.days-top .seg { flex: 1; min-width: 0; }
+.days-top .add-dated { margin-left: auto; background: var(--cta); color: var(--cta-ink); box-shadow: var(--shadow); } /* the one filled action on the page: the same round + as the pinned add field */
+.days-top .add-dated:active { background: color-mix(in oklch, var(--cta) 85%, var(--ink)); }
 .d-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
 .d-nav strong { font-size: 16px; font-weight: 600; }
 .d-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
@@ -493,3 +497,10 @@ button.row-btn:active { transform: none; background-color: var(--hair); } /* a p
 .ident .pill { align-self: center; }
 .list > li.row.ag, .list > li.row.plain { display: flex; align-items: center; gap: 12px; padding: 8px 16px; min-height: 58px; }
 .stepper .sv { display: flex; align-items: center; justify-content: center; align-self: stretch; }
+
+/* the repeat field of the add sheet: frequency chips, then (weekly) one chip a day */
+.repeat-pick { display: flex; flex-direction: column; gap: 8px; }
+.repeat-pick .days-pick { flex-wrap: nowrap; gap: 4px; }
+.repeat-pick .days-pick .chip { flex: 1 1 0; min-width: 0; justify-content: center; padding: 0; border-radius: 12px; }
+/* the date picker's chunk is still arriving: hold its place (two rows of chips) */
+.dt-wait { display: block; height: 100px; }

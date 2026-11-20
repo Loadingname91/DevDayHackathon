@@ -5,7 +5,8 @@ import { Bold } from '../components/Bold';
 import { Icon } from '../components/Icon';
 import { ProposalCard } from '../components/ProposalCard';
 import { Roll } from '../components/Roll';
-import { Tag } from '../components/Tag';
+import { Notch, Tag } from '../components/Tag';
+import { useFresh } from '../lib/fresh';
 import { EASE, exitUp, flip, RM, T } from '../lib/motion';
 import { NextUp } from '../components/NextUp';
 import { loadHome, sewn, useStore } from '../lib/store';
@@ -87,6 +88,7 @@ function PatchTile({ p, place, big, tall, sewing }: { p: Patch; place: Place; bi
   const changed = !!(p.changed || p.isNew);
   const was = useRef(changed);
   const [glint, setGlint] = useState(false);
+  const live = useFresh(`patch:${p.key}`, p.changed && !p.isNew); // the chip/notch let go after FRESH_MS; opening the app clears `changed` sooner
   useLayoutEffect(() => {
     const became = changed && !was.current;
     was.current = changed;
@@ -107,13 +109,13 @@ function PatchTile({ p, place, big, tall, sewing }: { p: Patch; place: Place; bi
   return (
     <Link ref={ref} to={`/a/${p.key}`} className={`patch${big ? ' big' : ''}${tall ? ' tall' : ''}`} style={area(place)}
       data-dye={p.dye} data-thread-target={p.key} data-f={`p-${p.key}`} data-glint={glint ? '' : undefined}
-      aria-label={`${p.name}, ${p.face.text} ${p.face.label}${p.isNew ? ', new' : p.changed ? ', just changed' : ''}`}>
+      aria-label={`${p.name}, ${p.face.text} ${p.face.label}${p.isNew ? ', new' : live ? ', just changed' : ''}`}>
       <span className="name"><Icon name={p.icon} size={16} sw={1.8} /><span className="nm">{p.name}</span></span>
       {big
-        ? <Tag show={p.changed || !!p.isNew} text={p.isNew ? 'new' : 'just changed'} />
+        ? <Tag show={p.changed || !!p.isNew} text={p.isNew ? 'new' : 'just changed'} id={p.isNew ? undefined : `patch:${p.key}`} />
         : <>
             <Tag show={!!p.isNew} text="new" />
-            {p.changed && !p.isNew && <span className="notch2" aria-hidden="true" />}
+            <Notch show={p.changed && !p.isNew} id={`patch:${p.key}`} className="notch2" />
           </>}
       <span className="face"><span className="fig"><Roll text={p.face.text} className="num" /></span><span className="unit">{p.face.label}</span></span>
     </Link>

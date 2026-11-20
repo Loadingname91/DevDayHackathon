@@ -121,6 +121,8 @@ class FieldSpec(Model):
     a: str | float | None = None
     b: str | float | None = None
     output: Format | None = None
+    many: bool | None = Field(None, description='relation: a record may point at several targets (a note in several notebooks). Default one; the value is an array of record ids either way')
+    multiline: bool | None = Field(None, description='text: a textarea; `[[Title]]` in it links to that record (backend.md section 5)')
 
 
 class Collection(Model):
@@ -354,11 +356,23 @@ class MonthBlock(Model):
     fields: list[str]
 
 
+class NotebookBlock(Model):
+    """A notes workspace: a tree of `source` rows (notebooks) with the `pages` rows in them; `link` is the pages' (many) relation
+    to `source` and `body` their multiline text (ui-tech-plan.md section 3 "Notebook")."""
+
+    kind: Literal['notebook']
+    id: str
+    source: CollectionRef
+    pages: CollectionRef
+    link: str
+    body: str
+
+
 LeafBlock = Annotated[
     Union[
         TextBlock, MetricBlock, ProgressBlock, ListBlock, TableBlock, CalendarBlock, FormBlock, ChartBlock,
         WorkflowsBlock, GaugeBlock, BarsBlock, RingBlock, CountdownBlock, StripBlock, PicksBlock,
-        ChecklistBlock, DaysBlock, NextBlock, TimerBlock, MonthBlock,
+        ChecklistBlock, DaysBlock, NextBlock, TimerBlock, MonthBlock, NotebookBlock,
     ],
     Field(discriminator='kind'),
 ]
@@ -932,7 +946,10 @@ class Usage(Model):
 # ---------------------------------------------------------------------------
 
 class ConnectStart(Model):
-    url: str
+    url: str = Field(description='Google\'s consent URL; the client navigates the whole page there. In fixture mode '
+                                 '(DEMO_GCAL_FIXTURE=1) a site path, "/app/calendar?connected=google"')
+    connected: bool | None = Field(None, description='True when the connection was made by this call (fixture mode): '
+                                                     'there is no consent page to visit')
 
 
 class Connection(Model):
@@ -1279,17 +1296,44 @@ class Note(Model):
 # Search, join codes
 # ---------------------------------------------------------------------------
 
-class SearchHit(Model):
+class LinkRef(Model):
+    """One end of a link between two records, in any app (backend.md section 2). `title` is the other record's title field, filled
+    by the server; "(deleted)" for a deleted record. In `_backlinks`, `via` is the relation field that points here ("notebook")."""
+
     app: str
-    record: str
-    field: str
+    ref: CollectionRef
+    id: str
+    title: str
+    via: str | None = None
+
+
+class SearchHit(Model):
+    """A record that matched. `snippet` tells rows with the same title apart (amount and day for a spend, the time for an event,
+    the first line of a note); it may be empty."""
+
+    app: str
+    ref: CollectionRef
+    collection: str = Field(description='The collection key ("notes" in "notes/notes")')
+    id: str
+    title: str
     snippet: str
+    updated: AwareDatetime | None = Field(None, description='When the record last changed')
 
 
 class SearchResponse(Model):
     hits: list[SearchHit]
-    elsewhere: int = Field(description='Hits in other apps when `app` narrowed the search')
-    ask: str | None = Field(None, description='A question to hand to Clair when nothing matched')
+
+
+class LinkTarget(Model):
+    ref: CollectionRef | None = Field(None, description='The target\'s collection; checked against the record when sent')
+    id: str
+
+
+class LinkCreate(Model):
+    """`POST /records/{id}/links`: the target as `to: {ref, id}` (what the client sends) or as a bare `target_id`."""
+
+    to: LinkTarget | None = None
+    target_id: str | None = None
 
 
 class JoinCode(Model):

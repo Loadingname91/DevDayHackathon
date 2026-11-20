@@ -1,0 +1,26 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your PDF…"
+  }
+ },
+ {
+  "delay": 1000,
+  "event": "text_delta",
+  "data": {
+   "text": "That syllabus is already in **Classes**: 6 due dates and 2 exams for ECON 1010."
+  }
+ },
+ {
+  "delay": 60,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "classes"
+   ]
+  }
+ }
+]

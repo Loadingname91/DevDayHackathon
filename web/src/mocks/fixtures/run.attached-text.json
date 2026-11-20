@@ -1,0 +1,24 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your file…"
+  }
+ },
+ {
+  "delay": 1100,
+  "event": "text_delta",
+  "data": {
+   "text": "This is mock data, so only a photo, a PDF, a .csv or an .ics file gets a scripted answer."
+  }
+ },
+ {
+  "delay": 60,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": []
+  }
+ }
+]

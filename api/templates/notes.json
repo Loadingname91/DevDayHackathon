@@ -40,13 +40,15 @@
         {
           "key": "body",
           "label": "Note",
-          "type": "text"
+          "type": "text",
+          "multiline": true
         },
         {
           "key": "notebook",
           "label": "Notebook",
           "type": "relation",
-          "target": "notes/notebooks"
+          "target": "notes/notebooks",
+          "many": true
         },
         {
           "key": "at",
@@ -64,33 +66,16 @@
   "tabs": [
     {
       "kind": "page",
-      "id": "t_notebooks",
-      "title": "Notebooks",
+      "id": "t_notes",
+      "title": "Notes",
       "children": [
         {
-          "kind": "list",
-          "id": "b_notebooks",
-          "source": "notes/notebooks"
-        }
-      ]
-    },
-    {
-      "kind": "page",
-      "id": "t_all",
-      "title": "All notes",
-      "children": [
-        {
-          "kind": "list",
-          "id": "b_notes",
-          "source": "notes/notes",
-          "fields": [
-            "notebook",
-            "at"
-          ],
-          "sort": {
-            "field": "at",
-            "dir": "desc"
-          }
+          "kind": "notebook",
+          "id": "b_notebook",
+          "source": "notes/notebooks",
+          "pages": "notes/notes",
+          "link": "notebook",
+          "body": "body"
         }
       ]
     }

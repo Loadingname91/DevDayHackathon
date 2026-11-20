@@ -1,10 +1,11 @@
 // One module store read through useSyncExternalStore (spec/ui-tech-plan.md §1).
 // The server holds the truth: the store keeps the last answers, paints from the
 // IndexedDB cache first in live mode, then catches up.
-import { dyedApp, dyedHome } from './dye';
+import { dyedApp, dyedHome, normDye } from './dye';
+import { upgradeApp } from './upgrade';
 import { useSyncExternalStore } from 'react';
-import { isLive, request } from '../api/client';
-import type { AppResponse, ChangeSet, CommandResult, Face, Home, Me, Offer, SearchHit, SearchResponse, SyncResponse } from '../api/types';
+import { ApiError, errorText, isLive, request } from '../api/client';
+import type { AppResponse, ChangeSet, CommandResult, Dependent, Dependents, Face, Home, Me, Offer, RemovedApp, SearchHit, SearchResponse, SyncResponse } from '../api/types';
 import { authConfigured, supabase } from './auth';
 import { cacheGet, cachePut } from './cache';
 
@@ -26,6 +27,8 @@ type State = {
   buildDraft: { cs: ChangeSet; sentence: string } | null;
   /** apps whose patch should sew onto Home next time it paints */
   sewing: string[];
+  /** the trash: removed apps and when each is deleted for good (null until You asks) */
+  removed: RemovedApp[] | null;
   /** apps that changed but can't be seen: their tiles creep up above the bar */
   peek: Peek | null;
   /** laptop: the row shown in the detail pane (Laptop board) */
@@ -36,7 +39,7 @@ type State = {
 export type Detail = { app: string; ref: string; id: string; occurrence?: string };
 export type Peek = { id: number; reverse: boolean; items: { app: string; from: string; to: string }[] };
 
-let state: State = { me: null, home: null, apps: {}, toast: null, clairOpen: false, busy: false, offer: null, offline: false, error: null, buildDraft: null, sewing: [], peek: null, detail: null, pickable: 0 };
+let state: State = { me: null, home: null, apps: {}, toast: null, clairOpen: false, busy: false, offer: null, offline: false, error: null, buildDraft: null, sewing: [], removed: null, peek: null, detail: null, pickable: 0 };
 const subs = new Set<() => void>();
 const set = (p: Partial<State>) => { state = { ...state, ...p }; subs.forEach((f) => f()); };
 export const getState = () => state;
@@ -47,27 +50,36 @@ export function useStore<T>(pick: (s: State) => T): T {
 let lastSeq = 0;
 let pendingCatchUp = false;
 
-async function cached<T>(path: string, apply: (v: T) => void): Promise<T> {
-  if (isLive) { const hit = await cacheGet<T>(path); if (hit) apply(hit); }
+/** Per path: how many GETs have started. Only the newest one's answer is applied, so a slow answer that left before a write
+ *  and arrives after it can never put the old numbers back (live finding: a Home reload racing a confirm rolled $400 back to $412). */
+const started_ = new Map<string, number>();
+/**
+ * `paintCache`: show the IndexedDB answer first (a reopen paints at once, ADR-008). Only for the first load of a path: a refresh
+ * after a write or a sync already has newer data on screen, and painting the cached (older) answer would roll it back for as long
+ * as the live request takes, about a second on the demo API.
+ */
+async function cached<T>(path: string, apply: (v: T) => void, paintCache = true): Promise<T> {
+  const n = (started_.get(path) ?? 0) + 1;
+  started_.set(path, n);
+  if (isLive && paintCache) { const hit = await cacheGet<T>(path); if (hit && started_.get(path) === n) apply(hit); }
   const fresh = await request<T>('GET', path);
-  apply(fresh);
-  if (isLive) void cachePut(path, fresh);
+  if (started_.get(path) === n) { apply(fresh); if (isLive) void cachePut(path, fresh); }
   return fresh;
 }
 
 export async function loadMe() {
-  try { await cached<Me>('/me', (me) => set({ me })); } catch (e) { fail(e); }
+  try { await cached<Me>('/me', (me) => set({ me }), !state.me); } catch (e) { fail(e); }
 }
 export async function loadHome() {
   try {
-    const h = await cached<Home>('/home', (home) => set({ home: dyedHome(home) }));
+    const h = await cached<Home>('/home', (home) => set({ home: dyedHome(home) }), !state.home);
     lastSeq = Math.max(lastSeq, h.seq);
     set({ offline: false, error: null });
   } catch (e) { fail(e); }
 }
 export async function loadApp(key: string) {
   try {
-    const a = await cached<AppResponse>(`/apps/${key}`, (app) => set({ apps: { ...state.apps, [key]: dyedApp(app) } }));
+    const a = await cached<AppResponse>(`/apps/${key}`, (app) => set({ apps: { ...state.apps, [key]: upgradeApp(dyedApp(app)) } }), !state.apps[key]);
     lastSeq = Math.max(lastSeq, a.seq);
   } catch (e) { fail(e); }
 }
@@ -88,7 +100,9 @@ export function applyFaces(faces: Record<string, Face>) {
 /** A thread landed: show the card's delta on that app's face (and in the status line if it leads with it). */
 export function applyDelta(app: string, before?: string, after?: string, changed = true) {
   if (!state.home) return;
-  const status = before && after && state.home.status.startsWith(before) ? after + state.home.status.slice(before.length) : state.home.status;
+  // the server marks the leading figure bold ("**$412** left this month"): swap it inside the marks, or bare
+  const lead = (before && state.home.status.startsWith(`**${before}**`)) ? 2 : 0;
+  const status = before && after && state.home.status.startsWith(before, lead) ? state.home.status.slice(0, lead) + after + state.home.status.slice(lead + before.length) : state.home.status;
   set({ home: { ...state.home, status, apps: state.home.apps.map((p) => (p.key === app || p.id === app ? { ...p, face: after ? { ...p.face, text: after } : p.face, changed } : p)) } });
 }
 /** Undo: the tags fade and the numbers go back. */
@@ -110,6 +124,65 @@ export async function refresh() {
 /** Link a record to any record in any app. Idempotent on the server; undoable. The caller says it in a toast and calls `afterCommand`. */
 export const linkRecord = (id: string, to: { ref: string; id: string }) => request<CommandResult>('POST', `/records/${id}/links`, { to });
 export const unlinkRecord = (id: string, targetId: string) => request<CommandResult>('DELETE', `/records/${id}/links/${targetId}`);
+
+// ---- remove an app (spec/backend.md §11 row 21, FR-S8): a preview first, then one change set with an Undo like any other write
+/** What else reads the app, from `DELETE /apps/{id}` without `confirm` (a 409 with `dependents`). [] means nothing does. Never removes anything. */
+export async function previewRemoveApp(key: string): Promise<Dependent[]> {
+  try {
+    await request<CommandResult>('DELETE', `/apps/${encodeURIComponent(key)}`);
+    return []; // not expected: the server previews first. Treat a 2xx as "nothing depends on it"; the caller's confirm is then a no-op the server answers
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 409 && (e.body as Partial<Dependents> | null)?.error === 'dependents') return (e.body as Dependents).dependents ?? [];
+    throw e;
+  }
+}
+/**
+ * Remove an app: `DELETE /apps/{id}?confirm=true` tombstones its blocks in ONE change set (stitches from it are skipped, records already
+ * copied stay), and the capsule says so with Undo (`POST /change-sets/{id}/undo` brings every block back). The patch and its pin leave Home
+ * and the sidebar at once; `leave` is the caller's way out of the app's screen (close the sheet, go Home) and resolves when it is done,
+ * after which the app's own answer is dropped from the store and the IndexedDB cache (a reopen must not paint it) and Home and `me` reload.
+ */
+export async function removeApp(key: string, o: { name: string; dye?: string; leave?: () => Promise<void> | void }): Promise<CommandResult> {
+  const r = await request<CommandResult>('DELETE', `/apps/${encodeURIComponent(key)}?confirm=true`);
+  lastSeq = Math.max(lastSeq, r.server_seq);
+  set({
+    home: state.home && { ...state.home, apps: state.home.apps.filter((p) => p.key !== key) },
+    me: state.me && { ...state.me, workspace: { ...state.me.workspace, settings: { ...state.me.workspace.settings, pins: state.me.workspace.settings.pins.filter((k) => k !== key) } } },
+  });
+  toast(`Removed ${o.name}.`, {
+    label: 'Undo',
+    run: async () => { try { await afterCommand(await request<CommandResult>('POST', `/change-sets/${r.change_set_id}/undo`)); } catch (x) { toast(errorText(x), undefined, 4000); } },
+  }, 8000, { dyes: [o.dye] });
+  void (async () => {
+    try { await o.leave?.(); } catch { /* the screen stays; the store still catches up */ }
+    const { [key]: _gone, ...apps } = state.apps; // eslint-disable-line @typescript-eslint/no-unused-vars
+    set({ apps, removed: null }); // the trash has one more: You asks again when it opens
+    void cachePut(`/apps/${key}`, null); // a null answer paints nothing (cacheGet treats it as a miss)
+    await refresh();
+  })();
+  return r;
+}
+
+// ---- the trash (spec/backend.md §10 `/apps/removed`, §11 row 21): a removed app is kept 3 days, then the server deletes it for good
+/** `GET /apps/removed`, newest first. The server owns `purge_at`; a failed read leaves the last list (or null) and says nothing. */
+export async function loadRemoved(): Promise<void> {
+  try { set({ removed: (await request<RemovedApp[]>('GET', '/apps/removed')).map((a) => ({ ...a, dye: normDye(a.dye) })) }); } catch (e) { fail(e); }
+}
+/** Restore: the app's blocks, rules, stitches and pin come back; its patch sews onto Home and reads "just changed". Not an Undo-able write: Remove is the way back out. */
+export async function restoreApp(key: string, name: string, dye?: string): Promise<void> {
+  const r = await request<CommandResult>('POST', `/apps/${encodeURIComponent(key)}/restore`);
+  lastSeq = Math.max(lastSeq, r.server_seq);
+  set({ removed: state.removed?.filter((a) => a.key !== key) ?? null, sewing: [...state.sewing, key] });
+  toast(`Restored ${name}.`, undefined, 5000, { dyes: [dye] });
+  await refresh();
+}
+/** Delete now: gone for good, no Undo (the confirm step said so). */
+export async function purgeApp(key: string, name: string, dye?: string): Promise<void> {
+  const r = await request<CommandResult>('DELETE', `/apps/${encodeURIComponent(key)}/purge`);
+  lastSeq = Math.max(lastSeq, r.server_seq);
+  set({ removed: state.removed?.filter((a) => a.key !== key) ?? null });
+  toast(`Deleted ${name} for good.`, undefined, 5000, { dyes: [dye] });
+}
 const searched = new Map<string, Promise<SearchHit[]>>();
 /** The link picker and the `[[` suggestions: titles across all apps (or one), never `exclude` (the record itself). One answer per question until the next write. */
 export function searchRecords(q: string, o: { app?: string; exclude?: string } = {}): Promise<SearchHit[]> {
@@ -212,7 +285,7 @@ export async function startSync() {
 
 /** Demo menu: forget everything loaded and load again. */
 export async function resetStore() {
-  set({ me: null, home: null, apps: {}, toast: null, clairOpen: false, busy: false, offer: null, error: null, buildDraft: null, sewing: [], peek: null });
+  set({ me: null, home: null, apps: {}, toast: null, clairOpen: false, busy: false, offer: null, error: null, buildDraft: null, sewing: [], removed: null, peek: null });
   lastSeq = 0;
   await Promise.all([loadMe(), loadHome()]);
 }

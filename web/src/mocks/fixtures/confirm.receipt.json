@@ -1,0 +1,23 @@
+{
+ "change_set_id": "cs_receipt",
+ "server_seq": 4150,
+ "blocks": [],
+ "faces": {
+  "groceries": {
+   "text": "4",
+   "value": 4,
+   "label": "to buy"
+  },
+  "budget": {
+   "text": "$376",
+   "label": "left",
+   "value": 37617
+  },
+  "calendar": {
+   "text": "4",
+   "value": 4,
+   "label": "today"
+  }
+ },
+ "warnings": []
+}

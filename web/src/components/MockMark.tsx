@@ -7,7 +7,7 @@ import { Sheet } from './Sheet';
 
 const root = typeof document !== 'undefined' ? document.documentElement : null;
 const hostTheme = root?.dataset.theme; // the page host may set its own light or dark; "Auto" goes back to it
-const FAULTS: [string, string][] = [['', 'None'], ['fail-confirm', 'Confirm fails'], ['no-card', 'No card (Use sample)'], ['slow', 'Slow run'], ['google-off', 'Google not connected']];
+const FAULTS: [string, string][] = [['', 'None'], ['fail-confirm', 'Confirm fails'], ['no-card', 'No card (Use sample)'], ['slow', 'Slow run'], ['empty', 'Understood, no card'], ['google-off', 'Google not connected']];
 
 /**
  * Any screen showing mock data carries a visible mark (spec/split.md §3). On mocks the

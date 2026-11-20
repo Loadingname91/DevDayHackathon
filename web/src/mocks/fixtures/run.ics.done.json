@@ -1,0 +1,26 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Reading your file…"
+  }
+ },
+ {
+  "delay": 1100,
+  "event": "text_delta",
+  "data": {
+   "text": "Those 4 events are already in **Calendar**."
+  }
+ },
+ {
+  "delay": 60,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "calendar"
+   ]
+  }
+ }
+]

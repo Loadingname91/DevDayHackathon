@@ -1,0 +1,13 @@
+{
+ "change_set_id": "cs_syllabus",
+ "server_seq": 4160,
+ "blocks": [],
+ "faces": {
+  "classes": {
+   "text": "3",
+   "value": 3,
+   "label": "due this week"
+  }
+ },
+ "warnings": []
+}

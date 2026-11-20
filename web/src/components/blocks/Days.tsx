@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { DatedRow, DaysBlock } from '../../api/types';
-import { addDays, day, dayKey, dayNum, dowShort, monthName, time, wall, weekStart } from '../../lib/format';
+import { addDays, day, dayKey, dayNum, dowShort, monthName, singular, time, wall, weekStart } from '../../lib/format';
 import { EASE, RM, T } from '../../lib/motion';
+import { AddSheet } from '../AddSheet';
 import { Icon } from '../Icon';
 import { Tag } from '../Tag';
 import type { Ctx } from './index';
@@ -40,6 +41,16 @@ export function Days({ block, ctx }: { block: DaysBlock; ctx: Ctx }) {
     fresh.current = false;
     if (!RM()) panel.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T.stateOut, easing: EASE });
   });
+  // "+" adds a dated row of this app's own (Calendar's events, Classes' due dates) on the day picked
+  const [adding, setAdding] = useState(false);
+  const addTo = ctx.spec.collections.find((c) => `${ctx.spec.key}/${c.key}` === block.add)
+    ?? ctx.spec.collections.find((c) => c.calendar && c.dateField);
+  const addField = addTo?.fields.find((f) => f.key === addTo.dateField);
+  const canAdd = !ctx.preview && !!addTo && !!addField;
+  const startAt = (): Record<string, string> => {
+    const k = sel || today;
+    return addTo && addField && k ? { [addField.key]: addField.type === 'date' ? k : `${k}T${k === today && ctx.now ? `${String(Math.min(23, (parseInt(ctx.now.slice(11, 13), 10) || 0) + 1)).padStart(2, '0')}:00` : '09:00'}` } : {};
+  };
   const dayList = useRef<HTMLElement>(null);
   const pickDay = (k: string) => { // the month's day list sits below the 6-row grid: bring it up
     setSel(k);
@@ -52,7 +63,7 @@ export function Days({ block, ctx }: { block: DaysBlock; ctx: Ctx }) {
   const agendaRow = (r: DatedRow, i: number, k: string) => (
     <li key={r.record_id + (r.occurrence ?? '') + k} className={`row ag ${r.source === 'google' ? 'google' : ''} ${i ? 'sep' : ''}`} data-dye={dye(r)}>
       <span className="main">
-        <span className="t">{r.title}<Tag show={!!r.changed} text="just changed" /></span>
+        <span className="t">{r.title}<Tag show={!!r.changed} text="just changed" id={`row:${r.record_id}${r.occurrence ?? ''}`} /></span>
         <span className="from"><i />From {appName(r)}{r.ends && !r.all_day ? ` · until ${time(r.ends)}` : ''}</span>
       </span>
       <span className="ag-at">{r.all_day ? 'All day' : time(r.at).replace(':00 ', ' ')}</span>
@@ -189,12 +200,19 @@ export function Days({ block, ctx }: { block: DaysBlock; ctx: Ctx }) {
 
   return (
     <div className="days-block" data-dye={ctx.spec.dye}>
-      {block.views.length > 1 && (
-        <div className="seg" role="group" aria-label="Calendar view">
-          {block.views.map((v) => <button key={v} aria-pressed={view === v} onClick={() => swap(() => setView(v))}>{v === 'day' ? 'Day' : v === 'week' ? 'Week' : 'Month'}</button>)}
+      {(block.views.length > 1 || canAdd) && (
+        <div className="days-top">
+          {block.views.length > 1 && (
+            <div className="seg" role="group" aria-label="Calendar view">
+              {block.views.map((v) => <button key={v} aria-pressed={view === v} onClick={() => swap(() => setView(v))}>{v === 'day' ? 'Day' : v === 'week' ? 'Week' : 'Month'}</button>)}
+            </div>
+          )}
+          {canAdd && <button className="round add-dated" aria-label={`Add ${(addTo.label ?? singular(addTo)).toLowerCase()} on ${day(sel || today)}`} onClick={() => setAdding(true)}><Icon name="plus" /></button>}
         </div>
       )}
       <div ref={panel} className="days-panel">{view === 'day' ? dayView() : view === 'month' ? month() : week()}</div>
+      {canAdd && <AddSheet app={ctx.spec.key} appName={ctx.spec.name} collection={addTo} now={ctx.now} apps={ctx.apps} defaults={startAt()}
+        open={adding} onClose={() => setAdding(false)} onAdded={() => ctx.reload?.()} />}
     </div>
   );
 }

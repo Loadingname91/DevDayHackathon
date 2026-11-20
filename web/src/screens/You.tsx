@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError, isLive, request } from '../api/client';
 import { Icon } from '../components/Icon';
+import { RemovedApps } from '../components/RemovedApps';
 import { signOut } from '../lib/auth';
 import { cacheClear } from '../lib/cache';
 import { useStore } from '../lib/store';
@@ -37,6 +38,7 @@ export function You() {
           : <button className="outline" style={{ alignSelf: 'flex-start', marginTop: 6 }} onClick={join}>Open on another device</button>}
         {msg && <span className="sub" role="alert">{msg}</span>}
       </div>
+      <RemovedApps />
       {isLive && <button className="outline" style={{ alignSelf: 'flex-start' }} onClick={async () => { await cacheClear(); await signOut(); location.href = '/'; }}>Sign out</button>}
     </div>
   );

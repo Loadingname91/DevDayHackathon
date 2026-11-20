@@ -1,0 +1,27 @@
+[
+ {
+  "delay": 0,
+  "event": "status",
+  "data": {
+   "text": "Looking at your photo…"
+  }
+ },
+ {
+  "delay": 1000,
+  "event": "text_delta",
+  "data": {
+   "text": "That receipt is already added: Corner Market, **$35.83**, Fri 20 Nov."
+  }
+ },
+ {
+  "delay": 60,
+  "event": "done",
+  "data": {
+   "status": "complete",
+   "sources": [
+    "groceries",
+    "budget"
+   ]
+  }
+ }
+]

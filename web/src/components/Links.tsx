@@ -12,8 +12,8 @@ import { Icon } from './Icon';
 import { Sheet } from './Sheet';
 
 // ---------------------------------------------------------------- shapes and helpers
-/** Keys a person never sees as fields (a stitch's bookkeeping): never relation chips or pickers either. */
-export const SYSTEM_KEYS = new Set(['source', 'ext_id', 'bought_on', 'trip', 'usual']);
+/** Keys a person never sees as fields (a stitch's bookkeeping): never relation chips or pickers either. (`trip` left this list on Nov 20: an item's trip is shown and can be set.) */
+export const SYSTEM_KEYS = new Set(['source', 'ext_id', 'bought_on', 'usual']);
 export const GONE = '(deleted)';
 export const isGone = (l: { title: string }) => l.title === GONE;
 const links = (v: unknown): LinkRef[] => (Array.isArray(v) ? v.filter((x): x is LinkRef => !!x && typeof x === 'object' && 'id' in x) : []);
@@ -414,7 +414,7 @@ function Option({ h, id, active, onPick, onHover }: { h: SearchHit; id: string; 
  * on a keyboard, a tap on touch; the choice goes in as `[[Title]]`; Escape closes it. The text stays as typed: the server turns each
  * `[[Title]]` into a link when it saves.
  */
-export function BodyField({ id, value, onChange, placeholder, app, recId }: { id: string; value: string; onChange: (v: string) => void; placeholder?: string; app: string; recId?: string }) {
+export function BodyField({ id, value, onChange, placeholder, app, recId, max = 360, className = '', autoFocus }: { id: string; value: string; onChange: (v: string) => void; placeholder?: string; app: string; recId?: string; max?: number; className?: string; autoFocus?: boolean }) {
   const ta = useRef<HTMLTextAreaElement>(null);
   const [trig, setTrig] = useState<{ start: number; end: number; q: string } | null>(null);
   const [hits, setHits] = useState<SearchHit[]>([]);
@@ -422,7 +422,12 @@ export function BodyField({ id, value, onChange, placeholder, app, recId }: { id
   const [active, setActive] = useState(0);
   const list = useId();
   const open = !!trig;
-  useLayoutEffect(() => { const el = ta.current; if (!el) return; el.style.height = 'auto'; el.style.height = `${Math.min(el.scrollHeight, 360)}px`; }, [value]);
+  useLayoutEffect(() => { // `max` caps the growth (a sheet's field); a page writes without a cap, so the page scroll is kept while the height resets
+    const el = ta.current; if (!el) return;
+    const y = window.scrollY;
+    el.style.height = 'auto'; el.style.height = `${Math.min(el.scrollHeight, max)}px`;
+    if (window.scrollY !== y) window.scrollTo(window.scrollX, y);
+  }, [value, max]);
   const detect = (el: HTMLTextAreaElement) => {
     const caret = el.selectionStart ?? 0;
     const m = /\[\[([^[\]\n]{0,60})$/.exec(el.value.slice(0, caret));
@@ -439,7 +444,7 @@ export function BodyField({ id, value, onChange, placeholder, app, recId }: { id
     return () => { live = false; clearTimeout(t); };
   }, [q, recId, app]);
   const box = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (open && hits.length) box.current?.scrollIntoView({ block: 'nearest' }); }, [open, hits.length]);
+  useEffect(() => { if (open && hits.length && max <= 360) box.current?.scrollIntoView({ block: 'nearest' }); }, [open, hits.length, max]); // a page's list is pinned to the screen's bottom (notes.css), so it needs no scrolling to
   const pick = (h: SearchHit) => {
     if (!trig) return;
     const next = value.slice(0, trig.start) + `[[${h.title}]]` + value.slice(trig.end).replace(/^\]\]/, '');
@@ -456,8 +461,8 @@ export function BodyField({ id, value, onChange, placeholder, app, recId }: { id
     else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pick(hits[active]); }
   };
   return (
-    <div className="lc-body">
-      <textarea ref={ta} id={id} className="fld fld-multi" rows={4} value={value} placeholder={placeholder}
+    <div className={`lc-body${className ? ` ${className}` : ''}`}>
+      <textarea ref={ta} id={id} className={`fld fld-multi${className ? ` ${className}-ta` : ''}`} rows={4} autoFocus={autoFocus} value={value} placeholder={placeholder}
         aria-autocomplete="list" aria-haspopup="listbox" aria-controls={open && hits.length ? list : undefined} aria-activedescendant={open && hits.length ? `${list}-${active}` : undefined}
         onChange={(e) => { onChange(e.target.value); detect(e.target); }} onKeyDown={key}
         onKeyUp={(e) => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) detect(e.currentTarget); }}

@@ -7,6 +7,27 @@
   }
  },
  {
+  "delay": 250,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Looking for visits that repeat. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "The haircuts are 35 days apart and the last was Sat 17 Oct. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "That puts the next one on Sat 21 Nov; 11 am clashes with coffee, so a later slot."
+  }
+ },
+ {
   "delay": 900,
   "event": "understood",
   "data": {

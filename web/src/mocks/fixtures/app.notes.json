@@ -63,36 +63,16 @@
   "tabs": [
    {
     "kind": "page",
-    "id": "t_notebooks",
-    "title": "Notebooks",
+    "id": "t_notes",
+    "title": "Notes",
     "children": [
      {
-      "kind": "list",
-      "id": "b_notebooks",
+      "kind": "notebook",
+      "id": "b_notebook",
       "source": "notes/notebooks",
-      "fields": [
-       "class"
-      ]
-     }
-    ]
-   },
-   {
-    "kind": "page",
-    "id": "t_all",
-    "title": "All notes",
-    "children": [
-     {
-      "kind": "list",
-      "id": "b_notes",
-      "source": "notes/notes",
-      "fields": [
-       "notebook",
-       "at"
-      ],
-      "sort": {
-       "field": "at",
-       "dir": "desc"
-      }
+      "pages": "notes/notes",
+      "link": "notebook",
+      "body": "body"
      }
     ]
    }

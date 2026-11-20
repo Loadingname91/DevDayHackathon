@@ -79,7 +79,8 @@
      {
       "key": "at",
       "label": "Due",
-      "type": "datetime"
+      "type": "datetime",
+      "timeOptional": true
      },
      {
       "key": "class",
@@ -111,7 +112,8 @@
       "view": "week",
       "apps": [
        "classes"
-      ]
+      ],
+      "add": "classes/due"
      }
     ]
    },
@@ -188,6 +190,27 @@
         "value": "exam"
        }
       ]
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_classes",
+    "title": "Classes",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_classes",
+      "source": "classes/classes",
+      "fields": [
+       "title",
+       "meets",
+       "room"
+      ],
+      "sort": {
+       "field": "name",
+       "dir": "asc"
+      }
      }
     ]
    }

@@ -22,7 +22,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-OpKind = Literal['insert', 'update', 'delete', 'restore', 'complete', 'skip', 'move', 'move_occurrence', 'keep']
+OpKind = Literal['insert', 'update', 'delete', 'restore', 'complete', 'skip', 'move', 'move_occurrence', 'keep', 'link', 'unlink']
 MAX_OPS = 100
 TEMP_PREFIX = 'new:'
 GOOGLE = 'google'
@@ -56,6 +56,7 @@ class Op(BaseModel):
     collection: str | None = None
     collection_id: UUID | None = None
     record_id: str | None = None                 # a UUID, or on insert a temp name "new:trip"
+    target_id: str | None = None                 # link, unlink: the record linked to (a UUID); `record_id` is the source
     fields: dict[str, Any] = Field(default_factory=dict)
     # dates of a repeat
     occurrence: date | None = None
@@ -92,6 +93,16 @@ class Op(BaseModel):
             self.op = 'keep'
         if self.op == 'keep':
             return self
+        if self.op in ('link', 'unlink'):
+            if not self.record_id or not _is_uuid(self.record_id):
+                raise ValueError(f'{self.op} needs record_id (a UUID)')
+            if not self.target_id or not _is_uuid(self.target_id):
+                raise ValueError(f'{self.op} needs target_id (a UUID)')
+            if self.fields:
+                raise ValueError(f'{self.op} takes no fields')
+            return self
+        if self.target_id is not None:
+            raise ValueError('target_id is for link and unlink')
         for k in self.fields:
             if k.startswith('_'):
                 raise ValueError(f'field {k!r}: keys starting with "_" are reserved')
@@ -430,7 +441,10 @@ def coerce_value(field: dict[str, Any], v: Any, tz: str, *, date_value: Any = No
     if t == 'select':
         return parse_select(v, field)
     if t == 'relation':
-        return parse_relation(v)
+        ids = list(dict.fromkeys(parse_relation(v)))
+        if len(ids) > 1 and not field.get('many'):
+            raise CoerceError('this relation takes one record')
+        return ids or None          # [] clears the relation
     if t == 'repeat':
         return parse_repeat(v, tz, date_value)
     return v  # file and anything newer: stored as sent

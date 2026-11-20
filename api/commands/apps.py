@@ -46,8 +46,8 @@ FIELD_RE = re.compile(r'^[a-z][a-zA-Z0-9_]{0,47}$')
 MIN_FIELDS = 3
 MAX_ROWS = 100
 PAGE_ONLY = ('collections', 'id', 'version')
-REF_KEYS = ('source', 'collection', 'from', 'log')
-NAME_KEYS = ('group', 'switch', 'due', 'x', 'by', 'minutesField', 'kindField', 'dateField', 'mark')
+REF_KEYS = ('source', 'collection', 'from', 'log', 'pages')
+NAME_KEYS = ('group', 'switch', 'due', 'x', 'by', 'minutesField', 'kindField', 'dateField', 'mark', 'link', 'body')
 LIST_KEYS = ('fields', 'after', 'moodFields')
 AGG_NEEDS_FIELD = {'sum', 'avg', 'min', 'max'}
 
@@ -219,6 +219,10 @@ class _Checker:
                     self.issues.add(f'{fw}: field key {f["key"]!r} must start with a letter (and not be "id")',
                                     field=fw)
                 t = f.get('type')
+                if f.get('many') and t != 'relation':
+                    self.issues.add(f'{fw}: many is for a relation field', field=fw)
+                if f.get('multiline') and t != 'text':
+                    self.issues.add(f'{fw}: multiline is for a text field', field=fw)
                 if t == 'select':
                     ids = [o['id'] for o in f.get('options') or []]
                     if not ids:

@@ -3,8 +3,10 @@
 // evaluates a formula, expands a stitch or works out a date. Confirmed change sets
 // lay their recorded effect (rows, faces, values) over the base fixtures.
 import { ApiError } from '../api/client';
-import type { Answer, AppResponse, ChangeSet, ClairEvent, Collection, DatedRow, Home, LinkRef, Me, Patch, Rec, SearchHit, TurnRequest, Workflow } from '../api/types';
-import { BASES, SCENARIOS, params, pickFixture, pickRuleRun, type MockState, type ScriptedEvent } from './scenarios';
+import type { Answer, AppResponse, ChangeSet, ClairEvent, Collection, DatedRow, Dependent, Home, LinkRef, Me, Patch, Rec, SearchHit, TurnRequest, Workflow } from '../api/types';
+import { addDays } from '../lib/format';
+import { applyLimits, patchLimits, resetLimits, undoLimits, type LimitsBody } from './limits';
+import { BASES, SCENARIOS, params, pickAttachments, pickFixture, pickRuleRun, type MockState, type ScriptedEvent } from './scenarios';
 
 const files = import.meta.glob('./fixtures/*.json', { import: 'default' }) as Record<string, () => Promise<unknown>>;
 async function fixture<T>(name: string): Promise<T> {
@@ -31,6 +33,8 @@ const S: MockState & {
   seq: number;
   google: 'on' | 'off';
   added: Record<string, Rec[]>;
+  /** trips finished this session (POST /trips/finish): the group row, the rows it took and the spend its stitch wrote, so Undo can put it all back */
+  finished: Record<string, { ref: string; link: string; items: string[]; spend?: string }>;
   done: Record<string, true>;
   edits: Record<string, Record<string, unknown>>;
   deleted: Set<string>;
@@ -45,6 +49,7 @@ const S: MockState & {
   base, rung, applied: [], rulesOn: {}, sets: new Map(), rules: {}, credits: 0, seq: 4100,
   google: fault === 'google-off' || fault === 'google-deny' ? 'off' : 'on',
   added: {},
+  finished: {},
   done: {},
   edits: {},
   deleted: new Set(),
@@ -54,13 +59,28 @@ const S: MockState & {
   n: 0,
 };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Remove app (backend.md §11 row 21): the apps removed this session (their blocks are "tombstoned": gone from /home, /apps, /apps/{key} and the pins until Undo). */
+const gone = new Map<string, import('../api/types').RemovedApp>();
+/** Apps restored from the trash this session: Home shows their patch as just changed (the server's own `changed` after a restore). */
+const restored = new Set<string>();
+/** Apps deleted for good from the trash (Delete now): never come back this session, and are not in the trash. */
+const purged = new Set<string>();
+const out = (k: string) => gone.has(k) || purged.has(k); // hidden from Home, /apps, /apps/{key} and the pins
+/** The one thread the mock has saved, as `GET /clair/threads/latest` answers it (api/models.py LatestThread): this session's text turns,
+ *  text only. 204 until a turn has run; a reload starts over, like the rest of the mock. */
+let thread: import('../api/types').LatestThread | null = null;
 
 /** The demo menu: start over in another state without reloading the page. */
 export function resetMock(o: { base: MockState['base']; rung: MockState['rung']; fault: string }) {
   fault = o.fault;
   asked.clear();
+  thread = null;
+  gone.clear();
+  restored.clear();
+  purged.clear();
+  resetLimits();
   Object.assign(S, {
-    base: o.base, rung: o.rung, applied: [], rulesOn: {}, sets: new Map(), rules: {}, credits: 0, seq: 4100, added: {}, done: {}, edits: {}, deleted: new Set(),
+    base: o.base, rung: o.rung, applied: [], rulesOn: {}, sets: new Map(), rules: {}, credits: 0, seq: 4100, added: {}, finished: {}, done: {}, edits: {}, deleted: new Set(),
     linkOv: new Map(), linkPrev: new Map(), tomb: {}, n: 0,
     google: o.fault === 'google-off' || o.fault === 'google-deny' ? 'off' : 'on',
   });
@@ -85,6 +105,9 @@ async function getHome(): Promise<Home> {
       changed: p.changed || !!h.changed?.includes(p.key),
     }));
   }
+  home.apps = home.apps.map((p) => (restored.has(p.key) ? { ...p, changed: true } : p));
+  home.apps = home.apps.filter((p) => !out(p.key)); // removed this session
+  home.nextUp = home.nextUp.filter((r) => !out(r.app)); // its rows are gone with it
   // basted cards from rule runs wait in Needs your OK
   home.needsOk = [...S.sets.values()].filter((x) => x.cs.status === 'basted' && x.cs.source.kind === 'workflow').map((x) => ({ kind: 'change_set' as const, change_set: x.cs }));
   home.seq = S.seq;
@@ -113,6 +136,7 @@ async function baseApp(key: string, effs: Effect[]): Promise<AppResponse> {
     app.data[ref] = (rows as Rec[]).filter((r) => !('id' in r) || !S.deleted.has(r.id))
       .map((r) => ('properties' in r && S.edits[r.id] ? { ...r, version: r.version + 1, properties: { ...r.properties, ...S.edits[r.id] } } : r));
   }
+  applyLimits(key, app); // a limit or goal changed by hand (limits.ts)
   // ticked rows: a grocery item is bought (and stamped bought_on, so it shows under "Bought in the last week"), anything else is done (a repeating to-do would move to its next date on the server)
   for (const rows of Object.values(app.data)) for (const r of rows as Rec[]) {
     if (!('properties' in r) || !S.done[r.id]) continue;
@@ -247,8 +271,12 @@ async function getMe(): Promise<Me> {
   const me = await fixture<Me>('me');
   const spent = S.credits;
   me.credits = { ...me.credits, left: me.credits.left - spent, spent: me.credits.spent + spent };
+  me.workspace.settings.pins = me.workspace.settings.pins.filter((k) => !out(k));
+  if (layoutOv) me.workspace.settings.layout = structuredClone(layoutOv); // Arrange: what PATCH /settings last sent
   return me;
 }
+/** `PATCH /settings {layout}`: the person's Arrange overlay, kept for this session (spec/backend.md §10). */
+let layoutOv: Record<string, import('../api/types').AppLayout> | undefined;
 
 const ok = (id: string) => ({ change_set_id: id, server_seq: ++S.seq, blocks: [], faces: {}, warnings: [] });
 
@@ -262,6 +290,7 @@ export async function mockRequest<T>(method: string, fullPath: string, body?: un
     if (path === '/me') return (await getMe()) as T;
     if (path === '/home') return (await getHome()) as T;
     if (path === '/apps') return (await getHome()).apps as T;
+    if (path === '/clair/threads/latest') return (thread ? structuredClone(thread) : undefined) as T; // 204 when there is none
     if (path === '/change-sets') return [...S.sets.values()].map((s) => s.cs).filter((c) => c.status === 'basted') as T;
     if (path === '/connect') {
       if (S.google === 'off') return [] as T;
@@ -270,27 +299,49 @@ export async function mockRequest<T>(method: string, fullPath: string, body?: un
       return c as T;
     }
     if (path === '/sync') return { seq: S.seq, epoch: 1, server_now: '2026-11-20T17:45:00-07:00', blocks: [], change_sets: [], faces: {}, touched_apps: [] } as T;
+    if (path === '/apps/removed') return [...gone.values()].sort((a, b) => b.removed_at.localeCompare(a.removed_at)) as T; // newest first
     const app = path.match(/^\/apps\/([a-z_]+)$/);
+    if (app && out(app[1])) throw new ApiError(404, { error: 'not_found', what: 'app' });
     if (app) return (await getApp(app[1])) as T;
     if (path === '/search') return (await search(new URLSearchParams(fullPath.split('?')[1] ?? ''))) as T;
   }
 
   if (method === 'POST') {
     if (/^\/apps\/[a-z_]+\/opened$/.test(path)) return undefined as T;
+    // ---- restore a removed app from the trash: its blocks, rules, stitches and pin come back in one change set
+    const rest = path.match(/^\/apps\/([a-z_]+)\/restore$/);
+    if (rest) {
+      if (!gone.has(rest[1])) throw new ApiError(404, { error: 'not_found', what: 'removed app' });
+      gone.delete(rest[1]); restored.add(rest[1]);
+      return ok(`cs_restoreapp_${rest[1]}`) as T;
+    }
 
     // ---- change sets
     const act = path.match(/^\/change-sets\/([^/]+)\/(confirm|undo|dismiss)$/);
     if (act) {
       const [, id, verb] = act;
       if (id.startsWith('cs_del_') && verb === 'undo') { S.deleted.delete(id.slice(7)); return ok(id) as T; }
+      if (id.startsWith('cs_removeapp_') && verb === 'undo') { gone.delete(id.slice(13)); return ok(id) as T; }
+      if (id.startsWith('cs_restoreapp_') && verb === 'undo') { return ok(id) as T; } // not offered: Restore has no Undo toast // the app and its pin come back
       if (id.startsWith('cs_noop_') && verb === 'undo') return ok(id) as T; // a link that was already there: nothing to undo
       if ((id.startsWith('cs_link_') || id.startsWith('cs_unlink_')) && verb === 'undo') {
         const p = S.linkPrev.get(id);
         if (p) { if (p.prev === undefined) S.linkOv.delete(p.key); else S.linkOv.set(p.key, p.prev); S.linkPrev.delete(id); }
         return ok(id) as T;
       }
+      if (id.startsWith('cs_lim_') && verb === 'undo') { undoLimits(id); return ok(id) as T; }
       if (id.startsWith('cs_edit_') && verb === 'undo') { delete S.edits[id.slice(8)]; return ok(id) as T; }
       if (id.startsWith('cs_done_') && verb === 'undo') { delete S.done[id.slice(8)]; return ok(id) as T; }
+      if (id.startsWith('cs_trip_') && verb === 'undo') {
+        const tid = id.slice(8), t = S.finished[tid];
+        if (t) {
+          S.added[t.ref] = (S.added[t.ref] ?? []).filter((r) => r.id !== tid);
+          for (const it of t.items) { const e = { ...(S.edits[it] ?? {}) }; delete e[t.link]; S.edits[it] = e; }
+          if (t.spend) S.added['budget/spend'] = (S.added['budget/spend'] ?? []).filter((r) => r.id !== t.spend);
+          delete S.finished[tid];
+        }
+        return ok(id) as T;
+      }
       if (id.startsWith('cs_add_') && verb === 'undo') {
         const rid = id.slice(7);
         for (const k of Object.keys(S.added)) S.added[k] = S.added[k].filter((r) => r.id !== rid);
@@ -364,6 +415,29 @@ export async function mockRequest<T>(method: string, fullPath: string, body?: un
       return { ...ok(csId), blocks: [block(after, after.byId.get(from.id)!), block(after, after.byId.get(target.id)!)] } as T;
     }
 
+    // ---- trips (spec/backend.md §10 `POST /trips/finish`): one change set makes the group row, sets its relation on the picked done rows, and the stitch writes the spend
+    if (path === '/trips/finish') {
+      const ref = String(b.collection_id), link = String(b.link), appKey = ref.split('/')[0];
+      const ids = ((b.record_ids ?? []) as string[]).map(String);
+      const app = await fixture<AppResponse>(`app.${appKey}`);
+      const fields = app.spec.collections.find((c) => `${appKey}/${c.key}` === ref)?.fields ?? [];
+      const props = parseFields(fields, (b.fields ?? {}) as Record<string, unknown>);
+      if (typeof props.total !== 'number' || !(props.total > 0)) throw new ApiError(422, { error: 'validation', issues: [{ field: 'total', message: 'Enter the total.' }] });
+      const tid = `tr_f${++S.n}`;
+      const at = '2026-11-20T17:45:00-07:00';
+      const row: Rec = { id: tid, position: 'z', version: 1, properties: { ...props, at } };
+      S.added[ref] = [...(S.added[ref] ?? []), row];
+      for (const it of ids) S.edits[it] = { ...(S.edits[it] ?? {}), [link]: [tid], bought_on: '2026-11-20' };
+      let spend: string | undefined;
+      if (appKey === 'groceries') { // the Budget stitch groceries/trips → budget/spend (recorded rule, spec/backend.md §2.2)
+        spend = `sp_${tid}`;
+        S.added['budget/spend'] = [...(S.added['budget/spend'] ?? []), { id: spend, position: 'z', version: 1,
+          properties: { note: props.store, category: 'c_groceries', amount: props.total, at, _via: { app: 'groceries', record_id: tid } } }];
+      }
+      S.finished[tid] = { ref, link, items: ids, spend };
+      return { ...ok(`cs_trip_${tid}`), blocks: [row] } as T;
+    }
+
     // ---- gestures: the mock stores nothing it would have to compute from, so it only accepts them
     if (path === '/records') {
       // (typed values are parsed by parseFields below)
@@ -383,6 +457,29 @@ export async function mockRequest<T>(method: string, fullPath: string, body?: un
   }
 
   if (method === 'PATCH' || method === 'DELETE') {
+    // ---- remove an app: without `confirm` the 409 preview (api `dependents()`), with it one change set; Undo is `cs_removeapp_<key>`
+    const rmApp = method === 'DELETE' ? path.match(/^\/apps\/([a-z_]+)$/) : null;
+    if (rmApp) {
+      const key = rmApp[1];
+      if (out(key) || !(await getHome()).apps.some((p) => p.key === key)) throw new ApiError(404, { error: 'not_found', what: 'app' });
+      if (!/[?&]confirm=(true|1)\b/.test(fullPath)) {
+        // recorded from the server's answer for this seed; a dependent that was removed itself no longer depends on it
+        const deps = (await fixture<Record<string, Dependent[]>>('dependents'))[key] ?? [];
+        throw new ApiError(409, { error: 'dependents', dependents: deps.filter((d) => !out(d.app)) });
+      }
+      const p = (await getHome()).apps.find((x) => x.key === key)!;
+      const at = (await fixture<Me>('me')).server_now; // the mock's clock; purge_at is 3 days on, as the server's sweep will send it
+      gone.set(key, { key, name: p.name, dye: p.dye, icon: p.icon, removed_at: at, purge_at: `${addDays(at.slice(0, 10), 3)}${at.slice(10)}` });
+      restored.delete(key);
+      return ok(`cs_removeapp_${key}`) as T;
+    }
+    // ---- delete now: the app leaves the trash for good (the server's 3-day sweep does the same on its own)
+    const purge = method === 'DELETE' ? path.match(/^\/apps\/([a-z_]+)\/purge$/) : null;
+    if (purge) {
+      if (!gone.has(purge[1])) throw new ApiError(404, { error: 'not_found', what: 'removed app' });
+      gone.delete(purge[1]); restored.delete(purge[1]); purged.add(purge[1]);
+      return ok(`cs_purgeapp_${purge[1]}`) as T;
+    }
     // ---- links: unlink (op `unlink`)
     const unl = method === 'DELETE' ? path.match(/^\/records\/([^/]+)\/links\/([^/]+)$/) : null;
     if (unl) {
@@ -419,6 +516,12 @@ export async function mockRequest<T>(method: string, fullPath: string, body?: un
     }
   }
   if (method === 'PATCH') {
+    if (path === '/settings') {
+      if (b.layout && typeof b.layout === 'object') layoutOv = b.layout as typeof layoutOv;
+      return { workspace: (await getMe()).workspace } as T;
+    }
+    const lim = path.match(/^\/apps\/([a-z_]+)\/settings$/); // a limit or a goal changed by hand (limits.ts)
+    if (lim) return ok(patchLimits(lim[1], b as LimitsBody)) as T;
     const wf = path.match(/^\/apps\/([a-z_]+)\/workflows\/([^/]+)$/);
     if (wf) {
       S.rules[wf[1]] = (S.rules[wf[1]] ?? []).map((w) => (w.id === wf[2] ? { ...w, on: !!b.on } : w));
@@ -459,6 +562,8 @@ export async function mockTurn(path: string, body: TurnRequest, emit: (e: ClairE
     pick = pickRuleRun(w.action.kind === 'ask_clair' ? w.action.text : '', S);
   } else if ('fixture' in body) {
     pick = pickFixture(body.fixture, S);
+  } else if ((body.images?.length ?? 0) + (body.files?.length ?? 0) > 0) {
+    pick = pickAttachments([...(body.images ?? []), ...(body.files ?? [])], S, 'context' in body ? body.context?.intent : undefined); // attachments decide the run; the typed words ride along
   } else {
     const text = body.text ?? body.transcript ?? ''; // a spoken turn carries the on-device transcript (clair-agent.md §2, §4)
     const hit = Object.values(SCENARIOS).find((s) => s.match(text));
@@ -466,6 +571,9 @@ export async function mockTurn(path: string, body: TurnRequest, emit: (e: ClairE
   }
   if (!pick) pick = { run: 'run.unknown' };
   const script = await fixture<ScriptedEvent[]>(pick.run);
+  // a typed or spoken turn is saved on the mock thread (its answer or its card), so "Continue" and the chat list have something to read back
+  const said = 'text' in body || 'transcript' in body ? (body.text ?? body.transcript ?? '') : '';
+  let reply = '', csId: string | undefined;
   // credits are spent when the run answers: a card costs what its effect records, a plain answer costs 1
   if (!pick.effect && pick.run !== 'run.unknown') S.credits += 1;
   for (const { delay, ...e } of script) {
@@ -484,13 +592,23 @@ export async function mockTurn(path: string, body: TurnRequest, emit: (e: ClairE
     if (e.event === 'proposal') {
       if (fault === 'no-card' && !('fixture' in body)) { await sleep(60000); return; }
       if (fault === 'drop' && !('fixture' in body)) return; // the stream closes before `done`
+      if (fault === 'empty' && !('fixture' in body)) continue; // understood, then nothing: no card, no text (the live gap the client words)
       const cs = e.data.change_set;
       S.sets.set(cs.id, { effect: pick.effect, cs: structuredClone(cs) }); // a changed answer replaces the basted card in place (same id)
       // a build that asked first costs 10 once, however often the answers change (§11)
       if (pick.effect && !pending?.charged) S.credits += Math.abs((await fixture<Effect>(`effect.${pick.effect}`)).credits ?? 1);
       if (pending) { pending.charged = true; pending.csId = cs.id; }
     }
+    if (e.event === 'text_delta') reply += e.data.text;
+    if (e.event === 'proposal') csId = e.data.change_set.id;
     emit(e as ClairEvent);
+  }
+  if (said && !signal?.aborted) {
+    const at = new Date().toISOString();
+    const own = 'thread_id' in body && body.thread_id && thread?.thread.id === body.thread_id ? thread : null;
+    thread = own ?? { thread: { id: `th_mock_${++S.n}`, started_at: at, last_at: at }, messages: [] };
+    thread.thread.last_at = at;
+    thread.messages.push({ role: 'user', text: said, at }, { role: 'clair', text: reply, at, ...(csId ? { change_set_id: csId } : {}) });
   }
 }
 
@@ -503,6 +621,7 @@ function parseFields(fields: { key: string; type: string }[] | null, input: Reco
     if (typeof v !== 'string') { out[k] = v; continue; }
     if (t === 'money' || (!t && /^\$\d/.test(v))) out[k] = Math.round(parseFloat(v.replace(/[$,]/g, '')) * 100);
     else if (t === 'number') out[k] = parseFloat(v);
+    else if (t === 'repeat') out[k] = { rule: v, start: '', log: [], skip: [] }; // the server builds this from a plain rule (backend.md §3)
     else out[k] = v;
   }
   return out;

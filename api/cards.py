@@ -643,6 +643,8 @@ def app_preview(ld: Loaded, op: dict, app_id: str | None = None) -> tuple[dict, 
         for r in rows:
             if r.get('id') in examples:
                 r['example'] = True
+                for k in ('_links', '_backlinks'):      # a sample row has neither (backend.md section 2)
+                    r['properties'].pop(k, None)
     return detail, ld_saved
 
 

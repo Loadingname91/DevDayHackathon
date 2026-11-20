@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { errorText, request } from '../../api/client';
 import type { ChecklistBlock, CommandResult, Field, Rec } from '../../api/types';
-import { day, dayKey, fieldText, isDone, relDue, time, title } from '../../lib/format';
+import { aNoun, day, dayKey, fieldText, isDone, relDue, singular, time, title } from '../../lib/format';
 import { useRowEnter } from '../../lib/enter';
 import { EASE, RM, sleep, T } from '../../lib/motion';
 import { afterCommand, setDetail, toast, useStore } from '../../lib/store';
@@ -11,6 +11,7 @@ import { EmptyState } from '../EmptyState';
 import { Icon } from '../Icon';
 import { backlinksOf, hasRel, linksOf, relFields, RowRel } from '../Links';
 import { QuickAdd } from '../QuickAdd';
+import { ListActions } from './TripActions';
 import { resetRow, SwipeRow } from '../SwipeRow';
 import { passesAll } from './filter';
 import type { Ctx } from './index';
@@ -128,6 +129,9 @@ export function Checklist({ block, ctx }: { block: ChecklistBlock; ctx: Ctx }) {
   const firstOpen = groups.find((x) => !x.g.done)?.i;
   const add = block.add && !ctx.preview ? block.add : undefined;
   const addInline = add && !add.pinned;
+  // a new row should land in the list it was added from: the open section's `field eq "text"` tests (Classes' Due: kind assignment)
+  const openDefaults: Record<string, string> = Object.fromEntries((block.groups.find((g) => !g.done)?.where ?? [])
+    .filter((w) => w.op === 'eq' && typeof w.value === 'string').map((w) => [w.field, w.value as string]));
   const anyRows = groups.some((x) => x.rows.length);
 
   return (
@@ -164,9 +168,14 @@ export function Checklist({ block, ctx }: { block: ChecklistBlock; ctx: Ctx }) {
           </section>
         );
       })}
+      {/* a checklist with no add field of its own (Classes' Due) still ends in "Add a …", as a list does */}
+      {!block.add && !ctx.preview && anyRows && block.source.startsWith(appKey + '/') && (
+        <ul className="card list"><li className="add-row-li quick-wrap"><button className="add-row" onClick={() => setAdding(true)}><Icon name="plus" size={16} />Add {aNoun(singular(c))}</button></li></ul>
+      )}
+      <ListActions block={block} ctx={ctx} />
       {add?.pinned && <AddDock block={block} ctx={ctx} placeholder={fill(add.placeholder, 0)} onMore={() => setAdding(true)} />}
       <AddSheet app={appKey} appName={ctx.spec.name} collection={c} now={ctx.now} apps={ctx.apps}
-        defaults={{ ...(sw && picked ? { [sw.key]: picked } : {}), ...(rel ? { [rel.field]: rel.id } : {}), ...Object.fromEntries(Object.entries(block.add?.set ?? {}).map(([k, v]) => [k, String(v)])) }}
+        defaults={{ ...openDefaults, ...(sw && picked ? { [sw.key]: picked } : {}), ...(rel ? { [rel.field]: rel.id } : {}), ...Object.fromEntries(Object.entries(block.add?.set ?? {}).map(([k, v]) => [k, String(v)])) }}
         open={adding} onClose={() => setAdding(false)} onAdded={() => ctx.reload?.()} />
       <AddSheet app={appKey} appName={ctx.spec.name} collection={c} now={ctx.now} apps={ctx.apps} record={editing ?? undefined}
         open={!!editing} onClose={() => setEditing(null)} onAdded={() => ctx.reload?.()} />

@@ -1,0 +1,13 @@
+{
+ "change_set_id": "cs_csv",
+ "server_seq": 4170,
+ "blocks": [],
+ "faces": {
+  "budget": {
+   "text": "$348",
+   "label": "left",
+   "value": 34796
+  }
+ },
+ "warnings": []
+}

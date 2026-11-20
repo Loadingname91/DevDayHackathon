@@ -23,7 +23,8 @@
      {
       "key": "due",
       "label": "Due",
-      "type": "datetime"
+      "type": "datetime",
+      "timeOptional": true
      },
      {
       "key": "place",

@@ -8,6 +8,7 @@ Modules:
 - dated    : the virtual `*dated` source and Home's Next up.
 - formula  : the formula engine (faces, metric/progress values, row formulas).
 - fmt      : how numbers, money and dates are worded for the client.
+- links    : `[[Title]]`, stored links, `_links` and `_backlinks`, search ranking and snippets (backend.md §2, §5, §10).
 
 Shapes used everywhere:
 - Record:   {"id", "collection": "<app>/<collection>", "properties": {...}, "position"}

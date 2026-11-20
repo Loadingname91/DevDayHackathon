@@ -21,7 +21,7 @@ from ..commands import CommandError, confirm, dismiss, load_model, run_gesture, 
 from ..commands.service import _now
 from ..contract import AUTH, E401, E404, E409, E409S, E422, R
 from .. import models as m
-from ..workspace import compute_faces, load
+from ..workspace import compute_faces, load, wire_blocks
 
 router = APIRouter()
 
@@ -59,14 +59,19 @@ def _warning(w: dict) -> dict | None:
     return None
 
 
-def command_result(r: dict, change_set_id: str | None = None) -> dict:
-    """The service's result trimmed to the contract's CommandResult."""
+def command_result(r: dict, change_set_id: str | None = None, ws: UUID | None = None) -> dict:
+    """The service's result trimmed to the contract's CommandResult. With `ws`, a record block that carries links has its
+    `_links` as `LinkRef`s, as `GET /apps/{id}` sends them (one query, only when there is a link to word)."""
     faces = {k: {kk: _num(vv) for kk, vv in f.items() if kk in ('text', 'label', 'value')}
              for k, f in (r.get('faces') or {}).items()}
+    blocks = [{k: b.get(k) for k in BLOCK_KEYS} for b in r.get('blocks') or []]
+    if ws is not None and any(b['block_type'] == 'record' and (b['properties'] or {}).get('_links') for b in blocks):
+        with db.connect() as conn:
+            blocks = wire_blocks(conn, ws, blocks)
     return {
         'change_set_id': change_set_id or r['change_set_id'],
         'server_seq': r['server_seq'],
-        'blocks': [{k: b.get(k) for k in BLOCK_KEYS} for b in r.get('blocks') or []],
+        'blocks': blocks,
         'faces': faces,
         'warnings': [x for x in (_warning(w) for w in r.get('warnings') or []) if x],
     }
@@ -75,7 +80,7 @@ def command_result(r: dict, change_set_id: str | None = None) -> dict:
 def _gesture(mem: Member, ops: list[dict]) -> dict:
     with _errors(), db.transaction(mem.workspace_id) as conn:
         r = run_gesture(conn, mem.workspace_id, mem.user.id, ops, compute_faces=compute_faces)
-    return command_result(r)
+    return command_result(r, ws=mem.workspace_id)
 
 
 # ---------------------------------------------------------------- records (gestures)
@@ -115,7 +120,7 @@ def record_create(body: m.RecordCreate, mem: Member = Depends(current_member)) -
             if v:
                 op[k] = str(_uuid(v))
         r = run_gesture(conn, mem.workspace_id, mem.user.id, [op], compute_faces=compute_faces)
-    return command_result(r)
+    return command_result(r, ws=mem.workspace_id)
 
 
 @router.patch('/records/{id}', response_model=m.CommandResult, operation_id='record_update', tags=['records'],
@@ -206,7 +211,7 @@ def change_set_confirm(id: str, mem: Member = Depends(current_member)) -> Any:
     ws, cs_id = mem.workspace_id, _uuid(id, 'change_set')
     with _errors(), db.transaction(ws) as conn:
         r = confirm(conn, ws, cs_id, compute_faces=compute_faces)
-    return command_result(r)
+    return command_result(r, ws=ws)
 
 
 @router.post('/change-sets/{id}/undo', response_model=m.CommandResult, operation_id='change_set_undo',
@@ -216,7 +221,7 @@ def change_set_undo(id: str, mem: Member = Depends(current_member)) -> Any:
     with _errors(), db.transaction(ws) as conn:
         r = undo(conn, ws, cs_id, user_id=mem.user.id, compute_faces=compute_faces)
     # The id the client acts on next: the undone set (a Clair card is basted again under it).
-    return command_result(r, change_set_id=str(cs_id))
+    return command_result(r, change_set_id=str(cs_id), ws=ws)
 
 
 @router.post('/change-sets/{id}/dismiss', status_code=204, response_class=Response, response_model=None,

@@ -68,7 +68,7 @@
      {
       "key": "at",
       "label": "When",
-      "type": "datetime",
+      "type": "date",
       "required": true
      }
     ]
@@ -100,7 +100,12 @@
       "target": {
        "setting": "limit"
       },
-      "format": "money"
+      "format": "money",
+      "edit": {
+       "setting": "limit",
+       "label": "Monthly budget",
+       "format": "money"
+      }
      },
      {
       "kind": "bars",
@@ -113,6 +118,10 @@
        "from": "budget/spend",
        "field": "amount",
        "window": "month"
+      },
+      "edit": {
+       "field": "category",
+       "label": "Limits"
       }
      },
      {
@@ -593,41 +602,59 @@
    "text": "$400",
    "target": "left of $1,200",
    "pct": 67,
-   "sub": "Was $412 · 11 days to go"
+   "sub": "Was $412 · 11 days to go",
+   "spent": 80000,
+   "limit": 120000
   },
   "b_where": {
    "rows": [
     {
      "label": "Groceries",
      "text": "$142.00 of $200",
-     "pct": 71
+     "pct": 71,
+     "id": "c_groceries",
+     "spent": 14200,
+     "limit": 20000
     },
     {
      "label": "Eating out",
      "text": "$177.00 of $150",
      "pct": 85,
      "over_pct": 15,
-     "note": "$27 over."
+     "note": "$27 over.",
+     "id": "c_eating_out",
+     "spent": 17700,
+     "limit": 15000
     },
     {
      "label": "Transport",
      "text": "$42.00 of $100",
-     "pct": 42
+     "pct": 42,
+     "id": "c_transport",
+     "spent": 4200,
+     "limit": 10000
     },
     {
      "label": "Subscriptions",
      "text": "$26.47 of $40",
-     "pct": 66
+     "pct": 66,
+     "id": "c_subscriptions",
+     "spent": 2647,
+     "limit": 4000
     },
     {
      "label": "Rent",
      "text": "$380.00",
-     "note": "No limit"
+     "note": "No limit",
+     "id": "c_rent",
+     "spent": 38000
     },
     {
      "label": "Fun",
      "text": "$32.53",
-     "note": "No limit"
+     "note": "No limit",
+     "id": "c_fun",
+     "spent": 3253
     }
    ]
   },

@@ -11,9 +11,10 @@ import { Toast } from './components/Toast';
 import { hasSession } from './lib/auth';
 import { useWide } from './lib/useWide';
 import { watchScrollEdges } from './lib/scrollEdge';
-import { loadHome, loadMe, startSync } from './lib/store';
+import { loadHome, loadMe, startSync, useStore } from './lib/store';
 import { AppScreen } from './screens/AppScreen';
 import { Build } from './screens/Build';
+import { Chat } from './screens/Chat';
 import { Session } from './screens/Session';
 import { Home } from './screens/Home';
 import { Join, SignIn } from './screens/SignIn';
@@ -24,6 +25,9 @@ export function App() {
   const nav = useNavigate();
   const wide = useWide();
   const { pathname } = useLocation();
+  // an app whose screen is a notebook workspace takes the detail pane's room: the page and its preview are the detail
+  const appKey = /^\/(?:a|app)\/([^/]+)/.exec(pathname)?.[1];
+  const workspace = useStore((s) => !!appKey && !!s.apps[appKey]?.spec.tabs.some((t) => t.children.some((b) => b.kind === 'notebook')));
   useEffect(() => { void hasSession().then(setSignedIn); }, []);
   useEffect(() => watchScrollEdges(), []); // tabs, chip rows and the sidebar fade where they scroll (styles/blocks.css)
   useEffect(() => {
@@ -47,9 +51,9 @@ export function App() {
   // until you pick one. The pane belongs to the route, never to loaded data, so the column can't jump when rows arrive.
   // A focused task (Build, Log a set, You) has none.
   const inApp = /^\/(a|app)\/[^/]+\/?$/.test(pathname);
-  const pane = wide && (pathname === '/' || inApp);
+  const pane = wide && (pathname === '/' || inApp) && !(inApp && workspace);
   return (
-    <div className={`frame ${anyMock ? 'mocked' : ''}${wide ? ` shell${pane ? '' : ' no-detail'}` : ''}`}>
+    <div className={`frame ${anyMock ? 'mocked' : ''}${wide ? ` shell${pane ? '' : ' no-detail'}${inApp && workspace ? ' ws' : ''}` : ''}`}>
       <MockMark />
       {wide && <Sidebar />}
       <main className="main">
@@ -60,6 +64,7 @@ export function App() {
           <Route path="/app/:key" element={<AppScreen />} />{/* where the Google callback lands (backend.md §10) */}
           <Route path="/you" element={<You />} />
           <Route path="/build" element={<Build />} />
+          <Route path="/chat" element={<Chat />} />{/* behind "Open chat ›": no detail pane (`pane` is only Home and an app), no bar */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

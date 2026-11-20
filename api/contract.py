@@ -90,7 +90,9 @@ def usage_get() -> Any:
 # ---- Google connection ----------------------------------------------------
 
 @router.post('/connect/google/start', response_model=m.ConnectStart, operation_id='connect_google_start',
-             tags=['connect'], responses=R(E401))
+             tags=['connect'], responses=R(E401, {
+                 502: {'model': m.ErrorBody, 'description': 'google_unavailable: Google refused or could not be reached'},
+                 503: {'model': m.ErrorBody, 'description': 'google_not_configured: no Google OAuth client on this server'}}))
 def connect_google_start() -> Any:
     todo()
 
@@ -109,7 +111,8 @@ def connect_list() -> Any:
 
 
 @router.post('/connect/google/sync', response_model=m.ConnectSyncResult, operation_id='connect_google_sync',
-             tags=['connect'], responses=R(E401, E404, E409))
+             tags=['connect'], responses=R(E401, E404, E409, {
+                 502: {'model': m.ErrorBody, 'description': 'google_unavailable: Google refused or could not be reached'}}))
 def connect_google_sync() -> Any:
     todo()
 
@@ -246,6 +249,19 @@ def record_delete(id: str) -> Any:
     todo()
 
 
+@router.post('/records/{id}/links', response_model=m.CommandResult, operation_id='record_link', tags=['records'],
+             responses=R(E401, E404))
+def record_link(id: str, body: m.LinkCreate) -> Any:
+    """Link a record to any record in any app (a gesture change set with an Undo). A repeat is a no-op change set."""
+    todo()
+
+
+@router.delete('/records/{id}/links/{target_id}', response_model=m.CommandResult, operation_id='record_unlink',
+               tags=['records'], responses=R(E401, E404))
+def record_unlink(id: str, target_id: str) -> Any:
+    todo()
+
+
 # ---- change sets ----------------------------------------------------------
 
 @router.get('/change-sets', response_model=list[m.ChangeSet], operation_id='change_sets_list', tags=['change-sets'],
@@ -327,7 +343,10 @@ def clair_note_delete(id: str) -> Any:
 # ---- search, sync, join codes ---------------------------------------------
 
 @router.get('/search', response_model=m.SearchResponse, operation_id='search', tags=['search'], responses=R(E401))
-def search(q: str = Query(...), app: str | None = Query(None)) -> Any:
+def search(q: str = Query('', description='Matched case-insensitively against titles and text (trimmed, cut at 200 characters); empty lists recent records across apps ("Suggested")'),
+           app: str | None = Query(None, description='Limit to one app key'),
+           exclude: list[str] | None = Query(None, description='Record ids to leave out (the record being edited); repeatable'),
+           limit: int = Query(20, ge=1, le=50)) -> Any:
     todo()
 
 

@@ -7,6 +7,27 @@
   }
  },
  {
+  "delay": 250,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Reading the 9 apps you have. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Three sessions clash with Google Calendar events. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Moving them to open slots, and keeping Monday as it is."
+  }
+ },
+ {
   "delay": 1400,
   "event": "understood",
   "data": {

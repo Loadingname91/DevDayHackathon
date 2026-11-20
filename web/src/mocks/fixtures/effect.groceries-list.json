@@ -1,0 +1,61 @@
+{
+ "credits": -5,
+ "home": {
+  "faces": {
+   "groceries": {
+    "text": "15"
+   }
+  },
+  "changed": [
+   "groceries"
+  ]
+ },
+ "apps": {
+  "groceries": {
+   "add": {
+    "groceries/items": [
+     {
+      "id": "i_gl_tortilla_chips",
+      "position": "c010",
+      "version": 1,
+      "properties": {
+       "name": "Tortilla chips",
+       "list": "l_weekly",
+       "status": "to_buy",
+       "qty": "1 bag",
+       "usual": "auto"
+      }
+     },
+     {
+      "id": "i_gl_salsa_verde",
+      "position": "c011",
+      "version": 1,
+      "properties": {
+       "name": "Salsa verde",
+       "list": "l_weekly",
+       "status": "to_buy",
+       "usual": "auto"
+      }
+     },
+     {
+      "id": "i_gl_lemons",
+      "position": "c012",
+      "version": 1,
+      "properties": {
+       "name": "Lemons",
+       "list": "l_weekly",
+       "status": "to_buy",
+       "qty": "4",
+       "usual": "auto"
+      }
+     }
+    ]
+   },
+   "face": {
+    "text": "15",
+    "label": "to buy"
+   },
+   "status": "**25** to buy across 3 lists. **$142.00** of $200 spent this month."
+  }
+ }
+}

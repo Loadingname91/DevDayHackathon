@@ -15,6 +15,8 @@ Event encoding (what `/sync` and undo read from `events`):
 - insert or restore: `field_path` null, `old` null, `new` = properties. Undo: delete.
 - delete: `field_path` null, `old` = properties, `new` null. Undo: restore.
 - a field: `field_path` = field key, `old` / `new` = values (SQL null when absent). Undo: write `old` back.
+- links (`link`, `unlink`, and `[[Title]]` in a text field): `field_path` = '_links', `old` / `new` the record's stored
+  link lists, so Undo is the plain inverse of a field (api/commands/links.py).
 - the `position` column: `field_path` = '@position' (never a field key, which can't start with '@').
 - a change set's status: `block_id` null, `field_path` 'status', `old` / `new` the statuses.
 """
@@ -33,11 +35,13 @@ import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
+from . import links as link_ops
 from . import position as pos
 from .ops import (
     CoerceError, CommandError, Op, TEMP_PREFIX, coerce_value, dump_ops, invalid, is_from_google, localize,
     parse_ops, parse_select,
 )
+from ..logic import links as L
 
 POSITION_PATH = '@position'
 STITCH_HOPS = 3
@@ -145,7 +149,7 @@ def load_model(conn: psycopg.Connection, ws: UUID) -> Model:
     if not w:
         raise CommandError(404, {'error': 'not_found', 'what': 'workspace'})
     m = Model(ws=ws, tz=w['tz'])
-    rows = _q(conn, "select id, parent_id, block_type, properties from blocks where workspace_id = %s "
+    rows = _q(conn, "select id, parent_id, block_type, position, properties from blocks where workspace_id = %s "
                     "and block_type in ('page', 'collection') and deleted_at is null", (ws,)).fetchall()
     for r in rows:
         if r['block_type'] == 'page':
@@ -176,7 +180,7 @@ class Cmd:
     def out(self, model: Model) -> dict[str, Any]:
         d = {'op': self.kind, 'app': model.app_key(self.collection_id),
              'collection': model.colls[self.collection_id]['properties'].get('key'),
-             'record_id': str(self.record_id), 'fields': self.fields}
+             'record_id': str(self.record_id), 'fields': {k: v for k, v in self.fields.items() if k != '_links'}}
         if self.hop:
             d['via'] = self.fields.get('_via')
         return d
@@ -242,6 +246,9 @@ def _raise(issues: _Issues, context: str) -> None:
         return
     if any(x['code'] == 'from_google' for x in issues):
         raise invalid([x for x in issues if x['code'] == 'from_google'], error='from_google')
+    for code in ('self_link', 'private_target'):      # a link the service refuses says why in `error`
+        if any(x['code'] == code for x in issues) and not any(x['code'] == 'not_found' for x in issues):
+            raise invalid([x for x in issues if x['code'] == code], error=code)
     if context == 'gesture' and any(x['code'] == 'not_found' for x in issues):
         raise CommandError(404, {'error': 'not_found', 'issues': issues})
     if context == 'confirm':
@@ -300,6 +307,8 @@ def resolve(conn: psycopg.Connection, ws: UUID, model: Model, ops: list[Op], ori
     for o in ops:
         if o.op != 'insert' and o.record_id:
             ids.add(UUID(o.record_id))
+        if o.target_id:
+            ids.add(UUID(o.target_id))
         for n in (o.before_id, o.after_id):
             if n:
                 ids.add(n)
@@ -381,6 +390,26 @@ def resolve(conn: psycopg.Connection, ws: UUID, model: Model, ops: list[Op], ori
                             o.add_at or _view_add_at(model, cid), i))
             continue
 
+        if o.op in ('link', 'unlink'):
+            src = rows.get(UUID(o.record_id))
+            if src is not None and src['deleted_at'] is not None:     # a deleted record is a missing one to a link
+                issues.add(i, f'no record {o.record_id}', code='not_found', field='record_id')
+                continue
+            r = record(i, o)
+            if r is None:
+                continue
+            old = L.stored_links(r['properties'])
+            if o.op == 'link':
+                if link_ops.check_target(model, rows, r, o.target_id, i, issues) is None:
+                    continue
+                new = L.add_manual(old, o.target_id)
+            else:
+                new = L.remove_link(old, o.target_id)
+            # nothing to change (already linked, or not linked): a change set with no events, which Undo does nothing for
+            cmds.append(Cmd('update', r['id'], r['collection_id'], {'_links': new or None} if new != old else {},
+                            op_index=i))
+            continue
+
         r = record(i, o)
         if r is None:
             continue
@@ -415,6 +444,8 @@ def resolve(conn: psycopg.Connection, ws: UUID, model: Model, ops: list[Op], ori
             cmds.extend(_move_occurrence(model, cid, r, o, today, issues, i))
 
     _resolve_relations(conn, ws, model, cmds, temp, issues)
+    if not issues:
+        link_ops.apply_text_links(conn, ws, model, cmds, rows)
     _raise(issues, context)
     return cmds
 

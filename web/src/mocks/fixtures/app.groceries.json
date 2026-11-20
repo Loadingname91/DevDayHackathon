@@ -121,7 +121,8 @@
       "key": "at",
       "label": "When",
       "type": "datetime",
-      "required": true
+      "required": true,
+      "timeOptional": true
      }
     ]
    }
@@ -140,6 +141,28 @@
       "fields": [
        "qty"
       ],
+      "finish": {
+       "into": "groceries/trips",
+       "link": "trip",
+       "label": "Finish trip"
+      },
+      "snap": {
+       "label": "Snap a photo",
+       "intents": [
+        {
+         "id": "list",
+         "label": "Add to my list",
+         "hint": "A fridge, a pantry or a handwritten list",
+         "ask": "Add what is on this photo to my grocery list."
+        },
+        {
+         "id": "receipt",
+         "label": "A receipt",
+         "hint": "Starts a new trip and ticks what you bought",
+         "ask": "This is a grocery receipt. Add it as a new trip."
+        }
+       ]
+      },
       "groups": [
        {
         "label": "{option} · {n} to buy",

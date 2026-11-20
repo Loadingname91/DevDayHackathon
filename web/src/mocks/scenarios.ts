@@ -56,9 +56,30 @@ export const SCENARIOS: Record<string, Scenario> = {
   },
 };
 
-/** "Use sample" ({fixture: "planner"}): the recorded run at the rung being demoed, marked sample. */
+/** "Use sample" ({fixture: "planner" | "receipt"}): the recorded run (the planner at the rung being demoed), marked sample. */
 export const pickFixture = (name: string, s: MockState) =>
-  name === 'planner' ? { run: `run.planner.${r(s)}.sample`, effect: `planner.${r(s)}` } : null;
+  name === 'planner' ? { run: `run.planner.${r(s)}.sample`, effect: `planner.${r(s)}` }
+  : name === 'receipt' ? (s.applied.includes('receipt') ? { run: 'run.receipt.done' } : { run: 'run.receipt.sample', effect: 'receipt' })
+  : null;
+
+/**
+ * A turn with attachments (clair-agent.md §3). The mock never reads a file: the first kind found picks the recorded run, and the
+ * Storage path's extension says the kind (`upload` in lib/attachments.ts keeps `.jpg`, `.pdf`, `.csv`, `.ics`). A photo is the
+ * Corner Market receipt, a PDF the ECON 1010 syllabus; a .csv and an .ics are mock-only demos of FR-C6. Each can be added once;
+ * after Undo it can be added again.
+ */
+/** `intent`: what Sam said the picture is when it came from a list's camera button (`context.intent`): "list" is a handwritten list, anything else falls to the photo's own kind. */
+export function pickAttachments(paths: string[], s: MockState, intent?: string): { run: string; effect?: string } {
+  const ext = (p: string) => p.split('.').pop()?.toLowerCase() ?? '';
+  const once = (name: string) => (s.applied.includes(name) ? { run: `run.${name}.done` } : { run: `run.${name}`, effect: name });
+  const kinds = new Set(paths.map(ext));
+  if (intent === 'list' && (kinds.has('jpg') || kinds.has('jpeg') || kinds.has('png'))) return once('groceries-list');
+  if (kinds.has('jpg') || kinds.has('jpeg') || kinds.has('png')) return once('receipt');
+  if (kinds.has('pdf')) return once('syllabus');
+  if (kinds.has('csv')) return once('csv');
+  if (kinds.has('ics')) return once('ics');
+  return { run: 'run.attached-text' };
+}
 
 /** Run now on a rule: the same run with source "workflow"; its card goes to Needs your OK. */
 export function pickRuleRun(text: string, s: MockState) {
@@ -80,7 +101,7 @@ export const BASES = {
 /**
  * URL switches, kept for the tab's session:
  *   ?scenario=seed|before   ?rung=1|4
- *   ?mock=slow|fail-confirm|no-card|drop|google-off|google-deny|google-stale
+ *   ?mock=slow|fail-confirm|no-card|empty|drop|google-off|google-deny|google-stale
  */
 export function params() {
   const q = new URLSearchParams(location.search);

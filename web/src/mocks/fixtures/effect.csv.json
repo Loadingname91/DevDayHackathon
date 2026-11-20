@@ -1,0 +1,228 @@
+{
+ "credits": -5,
+ "home": {
+  "status": "**$348** left this month. Pull day at **6 pm**.",
+  "faces": {
+   "budget": {
+    "text": "$348"
+   }
+  },
+  "changed": [
+   "budget"
+  ]
+ },
+ "apps": {
+  "budget": {
+   "add": {
+    "budget/spend": [
+     {
+      "id": "sp_csv_1",
+      "position": "c021",
+      "version": 1,
+      "properties": {
+       "note": "Roxy's coffee",
+       "category": "c_eating_out",
+       "amount": 475,
+       "at": "2026-11-20T12:00:00-07:00"
+      }
+     },
+     {
+      "id": "sp_csv_2",
+      "position": "c022",
+      "version": 1,
+      "properties": {
+       "note": "Taqueria 27",
+       "category": "c_eating_out",
+       "amount": 1250,
+       "at": "2026-11-19T12:00:00-07:00"
+      }
+     },
+     {
+      "id": "sp_csv_3",
+      "position": "c023",
+      "version": 1,
+      "properties": {
+       "note": "Smoothie shop",
+       "category": "c_eating_out",
+       "amount": 680,
+       "at": "2026-11-18T12:00:00-07:00"
+      }
+     },
+     {
+      "id": "sp_csv_4",
+      "position": "c024",
+      "version": 1,
+      "properties": {
+       "note": "Campus Bookstore",
+       "category": "c_fun",
+       "amount": 2499,
+       "at": "2026-11-18T12:00:00-07:00"
+      }
+     },
+     {
+      "id": "sp_csv_5",
+      "position": "c025",
+      "version": 1,
+      "properties": {
+       "note": "Trax fare",
+       "category": "c_transport",
+       "amount": 250,
+       "at": "2026-11-18T12:00:00-07:00"
+      }
+     },
+     {
+      "id": "sp_csv_6",
+      "position": "c026",
+      "version": 1,
+      "properties": {
+       "note": "Cinemark",
+       "category": "c_fun",
+       "amount": 1250,
+       "at": "2026-11-17T12:00:00-07:00"
+      }
+     }
+    ]
+   },
+   "values": {
+    "b_left": {
+     "text": "$348",
+     "target": "left of $1,200",
+     "pct": 71,
+     "sub": "Was $412 · 11 days to go",
+     "spent": 85204,
+     "limit": 120000
+    },
+    "b_where": {
+     "rows": [
+      {
+       "label": "Groceries",
+       "text": "$142.00 of $200",
+       "pct": 71,
+       "id": "c_groceries",
+       "spent": 14200,
+       "limit": 20000
+      },
+      {
+       "label": "Eating out",
+       "text": "$189.05 of $150",
+       "pct": 79,
+       "over_pct": 21,
+       "note": "$39 over.",
+       "id": "c_eating_out",
+       "spent": 18905,
+       "limit": 15000
+      },
+      {
+       "label": "Transport",
+       "text": "$44.50 of $100",
+       "pct": 45,
+       "id": "c_transport",
+       "spent": 4450,
+       "limit": 10000
+      },
+      {
+       "label": "Subscriptions",
+       "text": "$26.47 of $40",
+       "pct": 66,
+       "id": "c_subscriptions",
+       "spent": 2647,
+       "limit": 4000
+      },
+      {
+       "label": "Rent",
+       "text": "$380.00",
+       "note": "No limit",
+       "id": "c_rent",
+       "spent": 38000
+      },
+      {
+       "label": "Fun",
+       "text": "$70.02",
+       "note": "No limit",
+       "id": "c_fun",
+       "spent": 7002
+      }
+     ]
+    },
+    "b_subs": {
+     "rows": [
+      {
+       "label": "Spotify",
+       "text": "$11.99",
+       "note": "Renews Sun 22 Nov"
+      },
+      {
+       "label": "Hulu",
+       "text": "$9.99",
+       "note": "Renews Wed 2 Dec"
+      },
+      {
+       "label": "Adobe CC, student",
+       "text": "$13.49",
+       "note": "Renews Thu 3 Dec"
+      },
+      {
+       "label": "iCloud 50 GB",
+       "text": "$2.99",
+       "note": "Renews Wed 9 Dec"
+      }
+     ]
+    },
+    "b_spent": {
+     "text": "$852.04",
+     "target": "$1,200",
+     "pct": 71
+    },
+    "b_c_eating": {
+     "text": "$189.05",
+     "target": "$150",
+     "pct": 100,
+     "over": "$39 over"
+    },
+    "b_c_groceries": {
+     "text": "$142.00",
+     "target": "$200",
+     "pct": 71
+    },
+    "b_c_transport": {
+     "text": "$44.50",
+     "target": "$100",
+     "pct": 45
+    },
+    "b_c_subs": {
+     "text": "$26.47",
+     "target": "$40",
+     "pct": 66
+    },
+    "b_k_rent": {
+     "text": "$380.00",
+     "sub": "no limit"
+    },
+    "b_k_eating": {
+     "text": "$189.05",
+     "sub": "limit $150 · $39 over"
+    },
+    "b_k_groceries": {
+     "text": "$142.00",
+     "sub": "limit $200"
+    },
+    "b_k_transport": {
+     "text": "$44.50",
+     "sub": "limit $100"
+    },
+    "b_k_fun": {
+     "text": "$70.02",
+     "sub": "no limit"
+    },
+    "b_k_subs": {
+     "text": "$26.47",
+     "sub": "limit $40"
+    }
+   },
+   "face": {
+    "text": "$348",
+    "label": "left"
+   }
+  }
+ }
+}

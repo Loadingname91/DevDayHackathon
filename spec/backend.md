@@ -102,7 +102,7 @@ create table workspaces (
   tz          text not null default 'America/Denver',      -- IANA zone; all windows use it
   read_level  text not null default 'full'
               check (read_level in ('full', 'field_names', 'none')),
-  settings    jsonb not null default '{}'::jsonb,          -- {pins: [page ids], credits_monthly (default 50), notes_enabled (default true)}
+  settings    jsonb not null default '{}'::jsonb,          -- {pins: [page ids], credits_monthly (default 50), notes_enabled (default true), layout (Arrange overlay, optional)}
   epoch       int not null default 1,                      -- bumped by reseed; clients wipe their cache
   created_at  timestamptz not null default now()
 );
@@ -804,6 +804,8 @@ The whiteboard example (not built for DevDay) would add the fourth this week, fr
 | `date` | `YYYY-MM-DD` | A calendar day, no time, no zone | `bought_on` `2026-11-20`; a due date printed without a time |
 | `datetime` | ISO 8601 with offset | An instant, plus the offset it was written in | Receipt at `2026-11-20T17:41:00-07:00` |
 
+**Optional time and all-day (Nov 20).** A `datetime` field may declare `timeOptional` (a due date: the day is the value) or `allDay` (an event). The client then sends the day alone, `"2026-11-24"`, when there is no time; the API stores a date-only value in a `datetime` field as it is and reads it as untimed (all day, for a field with `allDay`; `*dated` sets `all_day: true`). Plain `date` fields (Budget `spend.at`, Calories `meals.at`) never carry a time.
+
 The API parses what Clair or the client sends: `"35.83"` becomes 3583 cents; `"2026-11-20T17:41"` with no offset is read as wall time in the workspace zone and stored with the offset that zone had then.
 
 **One zone per workspace.** `workspaces.tz` is an IANA name (`America/Denver` for Sam). Every window is computed in that zone on the server with `zoneinfo`:
@@ -1130,7 +1132,7 @@ All paths are under `/api` on the Railway server; the site on Vercel calls them 
 | `GET /health` | | `{ok, db, version}` (also used to warm functions) | |
 | `POST /me/bootstrap` | `{tz?}` | `{user, is_anonymous, workspace, credits}`; creates the workspace on first call | new |
 | `GET /me` | | `{user, is_anonymous, workspace, credits, server_now}` | new |
-| `PATCH /settings` | `{tz?, read_level?, pins?}` | `{workspace}` | new |
+| `PATCH /settings` | `{tz?, read_level?, pins?, layout?}` (`layout`: Arrange overlay, `{<app key>: {tabs?, hiddenTabs?, blocks?: {<tab id>: {order?, hidden?}}}}`, whole object replaced; stored in `workspace_members.settings.layout`; no change set, no Undo; the app spec is never edited) | `{workspace}` | new |
 | `POST /connect/google/start` | | `{url}` (Google's consent URL; the client navigates to it) | new (section 8a) |
 | `GET /connect/google/callback` | `?code&state` (from Google; no bearer token) | `302` to the site, `{WEB_ORIGIN}/app/calendar?connected=google`, or `?connected=failed` | new |
 | `GET /connect` | | `[{provider, account_email, last_synced_at, needs_reconnect}]` | new |
@@ -1147,7 +1149,11 @@ All paths are under `/api` on the Railway server; the site on Vercel calls them 
 | `PATCH /me` | `{display_name?}` | `{user, workspace}` | new |
 | `POST /apps` | `{spec}` | command result, `201` | `POST /api/apps` |
 | `PATCH /apps/{id}` | `{spec, base_version}` (Arrange, stitch toggles, field edits) | command result | `PATCH /api/apps/:id` |
-| `DELETE /apps/{id}` | `?confirm=true` | without `confirm`: `409 {dependents}` preview; with it: command result | new |
+| `PATCH /apps/{id}/settings` | `{settings?: {<key>: number}, options?: [{field, id?, label?, limit: number \| null}], base_version}` (Nov 20: change a limit or a goal by hand: Budget's monthly `limit`, a category's `limit`, a new category, Calories' `target`). `settings` merges into the app's `settings`; an `options` entry with an `id` sets that option's `limit` (`null` clears it), one with a `label` and no `id` adds an option. One change set, so one Undo. Money is cents. Every block that reads the setting or the option (`{setting}`, `{limit: {field, option}}`, section 6) is recomputed | command result | new |
+| `DELETE /apps/{id}` | `?confirm=true` | without `confirm`: `409 {dependents}` preview; with it: command result (the app goes to the trash, kept 3 days: see the next three rows) | new |
+| `GET /apps/removed` | | `[{key, name, dye, icon, removed_at, purge_at}]`, newest first (Nov 20: the trash behind You → Recently removed; `purge_at` = `removed_at` + 3 days, the client only words the countdown) | new |
+| `POST /apps/{id}/restore` | | command result (clears the tombstones of that `DELETE`: the app's blocks, rules, stitches and pin come back as they were; `404` if it is not in the trash or was already purged) | new |
+| `DELETE /apps/{id}/purge` | | command result (Delete now: removes a trashed app and its records for good, no Undo; `404` if it is not in the trash) | new |
 | `POST /collections/{id}/options` | `{field, label}` (New list) | command result | new (FR-A4b) |
 | `PATCH /collections/{id}/options/{option_id}` | `{field, label}` (rename) | command result | new |
 | `DELETE /collections/{id}/options/{option_id}` | `{field, items: "move:<option_id>" \| "delete"}` | command result, or `409 {count}` if items remain and `items` is missing | new |
@@ -1155,6 +1161,7 @@ All paths are under `/api` on the Railway server; the site on Vercel calls them 
 | `PATCH /records/{id}` | `{fields, base_version}`. Base build since Nov 20: the edit sheet, a logged day in Cycle's month log | command result | `PATCH /api/rows/:id` |
 | `POST /records/{id}/move` | `{before_id?, after_id?, list?}` | command result | new |
 | `POST /records/{id}/complete` | `{occurrence?, minutes?}`. Base build since Nov 20: checklists (tap the circle, swipe right) and Workout's guided session (Finish sends `occurrence` and `minutes`) | command result | was `PATCH {done}` |
+| `POST /trips/finish` | `{collection_id, link, record_ids, fields}`. Base build since Nov 20 (Groceries → Finish trip). One change set: insert one row in `collection_id` (`groceries/trips`, `fields` `{store, total}`; `at` is now), set the relation field `link` (`trip`) to it on every row of `record_ids`, and stamp `bought_on` today on those rows. The `groceries/trips → budget/spend` stitch then writes the spend as for any trip. `422` when a row is not done, already has a trip, or `total` is missing or not above 0; an empty `record_ids` is allowed (a trip logged by hand). Undo removes the trip, clears `trip` and `bought_on` on the rows and removes the spend | command result (`blocks`: the new trip) | new |
 | `POST /records/{id}/skip` | `{occurrence}` | command result | new |
 | `DELETE /records/{id}` | Base build since Nov 20: swipe left, Delete in the edit sheet | command result (Undo via the change set) | `DELETE /api/rows/:id` |
 | `GET /change-sets` | `?status=basted` | `ChangeSet[]` with fresh `lines`, `targets`, `deltas`, `actions` | `GET /api/proposals` |
@@ -1212,13 +1219,15 @@ On DevDay `/home` returns only `change_set` cards; the other kinds are in the ty
 
 **Tabs of the starter apps** (owner decision, Nov 20; supersedes the Nov 19 list, which gave each app lists and a form). Each app opens on what it is for, using the instrument blocks (`ui-tech-plan.md` §3, "Instruments"; `design/DESIGN.md` §10). A Workflows tab is added to any app that has rules. The exact specs are `instrumented()` in `web/scripts/make-fixtures.mjs`; each `web/src/mocks/fixtures/app.*.json` is a worked response.
 
-- **Single pages** (no tab bar): **Budget**: Overview (gauge "Left this month", bars "Where it went", Recent, the last 5 spends). **Groceries**: List (a checklist with a chip per list, "Weekly shop · 12 to buy" and "Bought in the last week"; spent on groceries this month against $200; the last 3 trips). **Calendar**: one `days` block, Day, Week and Month, opening on Week. **To-dos**: one checklist (Overdue, Today · Fri 20 Nov, Coming up, Someday, Done folded; the add field pinned above the bar). **Subscriptions**: gauge "A month", then Renewals with "in 2 days" tags.
+- **Single pages** (no tab bar): **Budget**: Overview (gauge "Left this month", bars "Where it went", Recent, the last 5 spends). **Groceries**: List (a checklist with a chip per list, "Weekly shop · 12 to buy" and "Bought in the last week"; spent on groceries this month against $200; the last 3 trips), and under the checklist two actions (Nov 20): **Finish trip** (`POST /trips/finish`: the rows ticked since the last trip, a store and a total make one trip, and the Budget stitch follows) and **Snap a photo** (the `snap` block option: a picture of a list or a receipt goes to Clair with `context.intent` `list` or `receipt`). The `trip` relation on an item is shown as a chip and can be set by hand; it is no longer a hidden stitch key. The checklist declares them as `finish: {into: "groceries/trips", link: "trip", label}` and `snap: {label, intents: [{id, label, hint, ask}]}`. **Calendar** (Nov 20: two tabs, see below): one `days` block, Day, Week and Month, opening on Week, with a "+" that adds an event on the day picked. **To-dos**: one checklist (Overdue, Today · Fri 20 Nov, Coming up, Someday, Done folded; the add field pinned above the bar). **Subscriptions**: gauge "A month", then Renewals with "in 2 days" tags.
 - **Workout** keeps 5 tabs, Today leading: Today (the `next` card "Start pull day", Lifted this week, Done since September, Sessions this week 3 of 4, the week strip), Log, History, Progress, Routines. With the planner's rule on, Workflows makes 6.
 - **Running**: This week (countdown to the race, the week strip, "Start a run", runs this week), Log, Races.
 - **Meditation**: Sit (the timer, the week strip), Sessions. The collection uses `mood_before` and `mood_after`, as in the template table above.
 - **Calories**: Today (the ring, "Again" picks from Foods, today's meals), Log, Foods; Trends (chart) after DevDay.
 - **Cycle**: Month (the month log), Cycles.
-- **Classes**: This week (a `days` week of Classes' own `*dated` rows), Due (a checklist), Exams.
+- **Classes**: This week (a `days` week of Classes' own `*dated` rows, with a "+" that adds a due item, `add: "classes/due"`), Due (a checklist ending in "Add an assignment"; a new row takes `kind: assignment` from the section's filter), Exams, **Classes** (Nov 20: a `list` of `classes/classes`, so a class can be added, edited, given a repeat and deleted; each row shows title, meets and room).
+- **Calendar's second tab, Events** (Nov 20): a `list` of `calendar/events` (the app's own events, newest first; rows with `source: "google"` are read-only), so an event can be edited or deleted from a list as well as added from the "+".
+- **Repeat on the add and edit sheet** (Nov 20): a `repeat` field is edited as Never, Daily, Weekly (with day chips) or Monthly. The client sends a plain rule string (`FREQ=WEEKLY;BYDAY=MO,WE`, §3), `null` to clear it, and sends nothing when the field was not touched, so an edit keeps the series' `log` and `skip`.
 - **Notes**: Notebooks (each row shows its class; a notebook's notes are its `_backlinks` with `via: "notebook"`), All notes (each row shows its notebooks). Two tabs, as before. `notes.body` is multiline and `notes.notebook` takes several. The response also carries `classes/classes`, because the notebooks' Class field points into another app and the client names a relation from the rows it was sent.
 
 **What the server computes for instruments** (Nov 20). Every figure on an instrument is formula-engine work (section 6) at `now()` in the workspace zone, sent in `values[block.id]` on `GET /apps/{id}` (and on a build card's `preview`); nothing is stored. The shape is `BlockValue` in `web/src/api/types.ts`; which fields each kind reads is in `ui-tech-plan.md` §3. The server words and rounds the strings as it does faces: cents on rows and bars ("$142.00"), whole dollars on heroes and limits ("$412", "$200"), `pct` a whole number. The middle column is the fixture's value at `DEMO_NOW` (`web/src/mocks/fixtures/app.<key>.json`), and each is checked against the seed in §2.3; use them as the worked example.
@@ -1299,7 +1308,7 @@ This table is the **post-demo backlog**, except the rows marked **(demo)**: thos
 | 18 | Clock skew on a device | Phone clock 10 min fast | Server time only for windows and ordering; `server_now` in responses for relative labels | everywhere; `GET /me`, `/sync` |
 | 19 | Deleting a list that still has items | Records left pointing at a missing option | `409 {count}` unless `items` says `move:<option>` or `delete`; the default list can't be deleted while it's the only one | `DELETE /collections/{id}/options/{option_id}` |
 | 20 | Renaming a list | Records must follow | Options are `{id, label}`; only the label changes, one event on the collection | `PATCH /collections/{id}/options/{option_id}` |
-| 21 | Deleting an app that is stitched to others | Budget reads `groceries/trips` | Without `confirm`: `409 {dependents}` preview (FR-S8). With it: the app's blocks are tombstoned in one change set; stitches from it are skipped by `expand` and marked "paused" in Arrange; records already copied stay, labelled "from Groceries (deleted)". Undo restores all | `DELETE /apps/{id}`, `expand` |
+| 21 | Deleting an app that is stitched to others | Budget reads `groceries/trips` | Without `confirm`: `409 {dependents}` preview (FR-S8). With it: the app's blocks are tombstoned in one change set; stitches from it are skipped by `expand` and marked "paused" in Arrange; records already copied stay, labelled "from Groceries (deleted)". Undo restores all. Nov 20: the removed app then waits in the trash for 3 days (`GET /apps/removed`), where `POST /apps/{id}/restore` brings it back and `DELETE /apps/{id}/purge` deletes it now; the daily sweep (§12) purges any app 3 days after `removed_at`, with its records and stitches paused until then | `DELETE /apps/{id}`, `expand` |
 | 22 | Stitch loop | `trips → spend` and `spend → trips` | Rejected at validation (`422`): cycle check over all stitch edges in the workspace. Chains are capped at 3 hops | `validate` |
 | 23 | Spec change removes a field that holds data | Values would vanish | Values stay in `properties`, hidden. `422` if a face, formula or stitch still uses the field; otherwise a warning with the count. Adding a field with the same key shows them again | `PATCH /apps/{id}` |
 | 24 | Position keys get long | Many inserts at the same spot | Rebalance the parent when a key passes 24 characters, as a `system` change set | `position.py`, `commands.py` |

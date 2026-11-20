@@ -333,9 +333,11 @@ def todos():
     ]}
 
 
-# ---------------------------------------------------------------- Notes
+# ---------------------------------------------------------------- Notes (§2.3 "Notes", Nov 20 links)
 
 def notes():
+    """Eight notes in four notebooks; n_finals sits in two. Only Mon 16 to Thu 19 Nov notes count toward the face (3 this
+    week). A `[[Title]]` in a body is also a stored link (`source text`); the links made by hand are `SEED_LINKS` below."""
     return {
         'notebooks': [
             ('nb_econ', {'name': 'ECON 1010', 'class': [Ref('classes/classes', 'c01')]}),
@@ -344,18 +346,72 @@ def notes():
             ('nb_personal', {'name': 'Personal'}),
         ],
         'notes': [
-            ('n_related_rates', {'title': 'Related rates examples', 'notebook': [Ref('notes/notebooks', 'nb_math')],
-                                 'at': dt('2026-11-10 12:40')}),
-            ('n_gift_ideas', {'title': 'Gift ideas for mom', 'notebook': [Ref('notes/notebooks', 'nb_personal')],
-                              'at': dt('2026-11-15 20:15')}),
-            ('n_unit_testing', {'title': 'Unit testing with mocks', 'notebook': [Ref('notes/notebooks', 'nb_cs3500')],
-                                'at': dt('2026-11-16 15:50')}),
-            ('n_di', {'title': 'Dependency injection', 'notebook': [Ref('notes/notebooks', 'nb_cs3500')],
-                      'at': dt('2026-11-18 15:55')}),
-            ('n_elasticity', {'title': 'Price elasticity', 'notebook': [Ref('notes/notebooks', 'nb_econ')],
-                              'at': dt('2026-11-19 10:30')}),
+            ('n_related_rates', {
+                'title': 'Related rates examples', 'notebook': [Ref('notes/notebooks', 'nb_math')],
+                'at': dt('2026-11-10 12:40'),
+                'body': 'A ladder sliding down a wall, a balloon filling at 5 cm³ a second. Write the relationship, '
+                        'differentiate with respect to time, then plug in. It leans on the [[Chain rule recap]] every time.'}),
+            ('n_gift_ideas', {
+                'title': 'Gift ideas for mom', 'notebook': [Ref('notes/notebooks', 'nb_personal')],
+                'at': dt('2026-11-15 20:15'),
+                'body': 'A scarf (found one at the thrift shop). A tea sampler. A framed photo from the lake trip.'}),
+            ('n_unit_testing', {
+                'title': 'Unit testing with mocks', 'notebook': [Ref('notes/notebooks', 'nb_cs3500')],
+                'at': dt('2026-11-16 15:50'),
+                'body': 'Mock the network call and assert it ran once with the right arguments. Keep one real test '
+                        'per service so the mocks do not drift.'}),
+            ('n_di', {
+                'title': 'Dependency injection', 'notebook': [Ref('notes/notebooks', 'nb_cs3500')],
+                'at': dt('2026-11-18 15:55'),
+                'body': 'Hand a class its dependencies instead of letting it build them. That is what makes the mocks '
+                        'in [[Unit testing with mocks]] possible. Constructor injection first.'}),
+            ('n_elasticity', {
+                'title': 'Price elasticity', 'notebook': [Ref('notes/notebooks', 'nb_econ')],
+                'at': dt('2026-11-19 10:30'),
+                'body': 'Elasticity is the percent change in quantity over the percent change in price. Above 1 the '
+                        'good is elastic. Coffee and textbooks are the class examples.'}),
+            ('n_chain_rule', {
+                'title': 'Chain rule recap', 'notebook': [Ref('notes/notebooks', 'nb_math')],
+                'at': dt('2026-11-09 11:20'),
+                'body': "d/dx f(g(x)) = f'(g(x)) · g'(x). Work from the outside in: differentiate the outer function, "
+                        "keep the inside, then multiply by the derivative of the inside. "
+                        "Example: d/dx sin(3x²) = cos(3x²) · 6x."}),
+            ('n_finals', {
+                'title': 'Finals study plan',
+                'notebook': [Ref('notes/notebooks', 'nb_math'), Ref('notes/notebooks', 'nb_econ')],
+                'at': dt('2026-11-15 10:30'),
+                'body': 'Math: redo [[Related rates examples]], then Homework 11.\n'
+                        'Econ: reread chapter 5 and the elasticity examples.'}),
+            ('n_chicken_rice', {
+                'title': 'Chicken and rice', 'notebook': [Ref('notes/notebooks', 'nb_personal')],
+                'at': dt('2026-11-14 18:30'),
+                'body': 'Thighs, rice, spinach, garlic. Bake the thighs at 425 for 25 minutes, rice in the cooker. '
+                        'Serves two with leftovers.'}),
         ],
     }
+
+
+# Links stored on the seeded rows (`_links`, in the order made), §2.3 "Links in the seed": (source, [(target, how)]) with
+# `how` = 'manual' (made with Link to…) or 'text:<field>' (a `[[Title]]` in that field, which the server would store the
+# same way on a save; tests/test_links.py checks they agree).
+SEED_LINKS = [
+    (('notes/notes', 'n_related_rates'), [(('notes/notes', 'n_chain_rule'), 'text:body')]),
+    (('notes/notes', 'n_finals'), [(('classes/due', 'd02'), 'manual'), (('notes/notes', 'n_related_rates'), 'text:body')]),
+    (('notes/notes', 'n_gift_ideas'), [(('budget/spend', 'sp_24'), 'manual')]),
+    (('notes/notes', 'n_di'), [(('notes/notes', 'n_unit_testing'), 'text:body')]),
+    (('todos/todos', 't_library'), [(('classes/classes', 'c01'), 'manual')]),
+    (('todos/todos', 't_call_home'), [(('notes/notes', 'n_gift_ideas'), 'manual')]),
+    (('groceries/items', 'i_chicken_thighs'), [(('notes/notes', 'n_chicken_rice'), 'manual')]),
+]
+
+
+def _attach_links(recs: dict) -> None:
+    for (coll, key), targets in SEED_LINKS:
+        app, _, ckey = coll.partition('/')
+        props = next(p for k, p in recs[app][ckey] if k == key)
+        props['_links'] = [{'id': Ref(*t), 'source': 'text' if how.startswith('text') else 'manual',
+                            **({'field_key': how.partition(':')[2]} if how.startswith('text') else {})}
+                           for t, how in targets]
 
 
 # ---------------------------------------------------------------- Workout (§2.3 "Workout")
@@ -527,8 +583,10 @@ def meditation():
 
 def records(gcal_fixture: bool = False) -> dict[str, dict[str, list[tuple[str, dict]]]]:
     """{app key: {collection key: [(human key, properties)]}} for all 12 apps."""
-    return {
+    out = {
         'notes': notes(), 'budget': budget(), 'subscriptions': subscriptions(), 'groceries': groceries(),
         'calendar': calendar(gcal_fixture), 'classes': classes(), 'todos': todos(), 'workout': workout(),
         'calories': calories(), 'running': running(), 'cycle': cycle(), 'meditation': meditation(),
     }
+    _attach_links(out)
+    return out

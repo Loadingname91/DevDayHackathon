@@ -24,12 +24,14 @@
       "key": "at",
       "label": "When",
       "type": "datetime",
-      "required": true
+      "required": true,
+      "allDay": true
      },
      {
       "key": "ends",
       "label": "Ends",
-      "type": "datetime"
+      "type": "datetime",
+      "timeOptional": true
      },
      {
       "key": "kind",
@@ -77,7 +79,28 @@
        "week",
        "month"
       ],
-      "view": "week"
+      "view": "week",
+      "add": "calendar/events"
+     }
+    ]
+   },
+   {
+    "kind": "page",
+    "id": "t_events",
+    "title": "Events",
+    "children": [
+     {
+      "kind": "list",
+      "id": "b_events",
+      "source": "calendar/events",
+      "fields": [
+       "at",
+       "kind"
+      ],
+      "sort": {
+       "field": "at",
+       "dir": "desc"
+      }
      }
     ]
    }

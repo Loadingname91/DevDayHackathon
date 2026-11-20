@@ -1,0 +1,46 @@
+/* ---------- Remove app (components/RemoveApp.tsx, design/DESIGN.md §16) ----------
+   The last row of the app menu, under a running stitch, and the confirm step that replaces the menu inside the same sheet.
+   Ink, never red. The menu fades out (140), the step arrives (220: up 8 px and in); reduced motion: 120 ms fades, no travel. */
+.rm-menu { display: flex; flex-direction: column; gap: 16px; }
+.rm-menu.rm-out { opacity: 0; transition: opacity var(--t-state-out) var(--ease); }
+.rm-seam { height: 1.5px; margin: 0 4px; background-image: repeating-linear-gradient(90deg, var(--thread) 0 6px, transparent 6px 9px); }
+.rm-open { display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--hit); padding: 0 12px; margin-top: -8px; border-radius: 16px; font-size: 16px; font-weight: 600; color: var(--ink); text-align: left;
+  transition: background-color var(--t-fb) var(--ease); }
+.rm-open:active { transform: none; background-color: var(--hair); } /* a pressed row darkens; it never scales */
+@media (hover: hover) and (pointer: fine) { .rm-open:hover { background-color: var(--hair); } }
+
+.rm-step { display: flex; flex-direction: column; gap: 16px; animation: rm-in var(--t-state) var(--ease) backwards; }
+@keyframes rm-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes rm-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .rm-step { animation-name: rm-fade; } }
+.rm-body { display: flex; flex-direction: column; gap: 12px; }
+.rm-lede { font-size: 16px; font-weight: 500; line-height: 1.4; }
+.rm-deps { display: flex; flex-direction: column; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.rm-deps li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; line-height: 1.4; }
+.rm-deps li > :first-child { flex: none; display: grid; place-items: center; height: 21px; }
+.rm-deps li > :last-child { min-width: 0; overflow-wrap: anywhere; }
+.rm-deps .rm-more { color: var(--sec); font-size: 13px; padding-left: 22px; }
+.rm-note { font-size: 13px; line-height: 1.4; color: var(--sec); }
+.rm-err { color: var(--ink); font-weight: 600; } /* said in ink, never red; a failed write is a frayed edge elsewhere, here the words carry it */
+.rm-retry { min-height: var(--hit); padding: 0 8px; margin: -12px 0; font: inherit; font-weight: 600; color: var(--focus); text-decoration: underline; text-underline-offset: 3px; }
+.rm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.rm-kept { display: flex; align-items: center; gap: 8px; }
+.rm-kept svg { flex: none; }
+
+/* ---------- Recently removed (components/RemovedApps.tsx, design/DESIGN.md §17): the trash, in You ---------- */
+.trash { display: flex; flex-direction: column; gap: 8px; }
+.trash-empty { display: flex; align-items: center; gap: 12px; padding: 16px; min-height: 56px; }
+.trash-empty .sub { font-size: 13px; line-height: 1.4; color: var(--sec); }
+.trash-ico { flex: none; width: 28px; height: 28px; border-radius: 9px; background: var(--fill); display: grid; place-items: center; color: var(--ink); }
+.trash-row { gap: 12px; }
+.trash-row .tile-ico { background: var(--fill); color: var(--deep, var(--ink)); }
+.trash-btns { flex: none; display: flex; align-items: center; gap: 4px; }
+.trash-btn { min-height: var(--hit); padding: 0 16px; font-size: 15px; }
+.trash-del { flex: none; width: var(--hit); height: var(--hit); border-radius: 50%; display: grid; place-items: center; color: var(--ink);
+  transition: background-color var(--t-fb) var(--ease); }
+.trash-del:active { background-color: var(--hair); }
+@media (hover: hover) and (pointer: fine) { .trash-del:hover { background-color: var(--hair); } }
+.trash-row .main { min-width: 0; }
+.trash-row .t { overflow-wrap: anywhere; }
+@media (max-width: 380px) { .trash-row { flex-wrap: wrap; } .trash-btns { margin-left: 40px; } }

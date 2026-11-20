@@ -23,6 +23,7 @@ from .. import db
 from .. import workspace as W
 from ..auth import Member, current_member
 from ..logic import fmt
+from ..logic import links as link_logic
 from ..logic.clock import parse_value, to_local, week_start
 from ..logic.dated import dated_rows, next_up
 from ..models import (
@@ -167,13 +168,31 @@ def _spec(app: dict) -> AppSpec:
     return AppSpec.model_validate(spec)
 
 
+def _riding_refs(ld: W.Loaded, app: dict) -> list[str]:
+    """Collections of other apps this app's relation fields point into (Notes' class notebooks -> classes/classes): their rows ride
+    along, since the client names a relation from the rows it was sent. A private app's rows never ride along."""
+    own = {f"{app['key']}/{c['key']}" for c in app.get('collections', [])}
+    out: list[str] = []
+    for c in app.get('collections', []):
+        for f in c.get('fields') or []:
+            ref = f.get('target') if f.get('type') == 'relation' else None
+            other = ld.app(ref.split('/', 1)[0]) if isinstance(ref, str) and '/' in ref else None
+            if ref and ref not in own and ref not in out and other is not None and not link_logic.is_private(other) \
+                    and any(x['key'] == ref.split('/', 1)[1] for x in other.get('collections', [])):
+                out.append(ref)
+    return out
+
+
 def app_detail(ld: W.Loaded, app: dict) -> AppDetail:
     data: dict[str, list] = {}
-    by_ref: dict[str, list] = {f"{app['key']}/{c['key']}": [] for c in app.get('collections', [])}
+    refs = [f"{app['key']}/{c['key']}" for c in app.get('collections', [])] + _riding_refs(ld, app)
+    by_ref: dict[str, list] = {ref: [] for ref in refs}
+    index = link_logic.LinkIndex(ld.apps, ld.records, ld.tomb)        # `_links` and `_backlinks`, one pass for every row
     for r in ld.records:
         lst = by_ref.get(r['collection'])
         if lst is not None:
-            lst.append(Record(id=r['id'], position=r['position'], version=r['version'], properties=r['properties']))
+            lst.append(Record(id=r['id'], position=r['position'], version=r['version'],
+                              properties=link_logic.wire_record(index, r['id'], r['properties'])))
     data.update(by_ref)
     dated = _dated_for(ld, app)
     if dated is not None:
@@ -379,6 +398,7 @@ def sync(since: int = Query(0, ge=0), m: Member = Depends(current_member)) -> Sy
             (ws, ids)).fetchall()} if ids else {}
         ld = W.load(conn, ws)
         change_sets = [_change_set(conn, ld, r) for r in cs_rows]
+        rows = W.wire_blocks(conn, ws, rows)      # a block that carries links sends them as LinkRefs
     touched: list[str] = []
     for r in rows:
         k = keymap.get(r['id'], {})

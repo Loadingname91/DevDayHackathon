@@ -7,6 +7,27 @@
   }
  },
  {
+  "delay": 250,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Looking at what you asked. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Checking which of your apps it belongs in. "
+  }
+ },
+ {
+  "delay": 420,
+  "event": "thinking_delta",
+  "data": {
+   "text": "Drafting it so you can confirm."
+  }
+ },
+ {
   "delay": 900,
   "event": "understood",
   "data": {

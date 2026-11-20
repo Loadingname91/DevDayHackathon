@@ -46,7 +46,8 @@
       "key": "at",
       "label": "When",
       "type": "datetime",
-      "required": true
+      "required": true,
+      "timeOptional": true
      },
      {
       "key": "mood_before",

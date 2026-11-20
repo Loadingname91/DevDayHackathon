@@ -11,6 +11,7 @@ from typing import Any
 from uuid import UUID
 
 from .logic import formula, instruments
+from .logic import links as link_logic
 from .logic.clock import now as clock_now
 from .settings import settings
 
@@ -27,6 +28,7 @@ class Loaded:
     page_ids: dict[str, str] = field(default_factory=dict)       # app key -> page id
     collection_ids: dict[str, str] = field(default_factory=dict)  # "app/coll" -> collection block id
     seq: int = 0
+    tomb: dict[str, dict] = field(default_factory=dict)          # link targets no longer live: id -> {app, ref}
 
     _ctx: Any = None
 
@@ -66,10 +68,38 @@ def load(conn, workspace_id) -> Loaded:
                 'position': r['position'], 'version': r['version']}
                for r in rows if r['block_type'] == 'record' and r['collection_id'] in ref_of_coll]
     tz = w['tz']
+    # a hand-made or `[[Title]]` link to a record that is gone still shows, as "(deleted)" (backend.md edge case 55)
+    gone = link_logic.dangling_targets(records)
+    tomb = {i: {'app': t['app'], 'ref': t['ref']} for i, t in lookup_records(conn, workspace_id, gone).items()} if gone else {}
     return Loaded(workspace_id=workspace_id, tz=tz, epoch=w['epoch'], settings=w['settings'] or {},
                   now=clock_now(tz, settings().demo_now), apps=apps, records=records,
                   page_ids={a['key']: a['id'] for a in apps},
-                  collection_ids={ref: str(cid) for cid, ref in ref_of_coll.items()}, seq=seq)
+                  collection_ids={ref: str(cid) for cid, ref in ref_of_coll.items()}, seq=seq, tomb=tomb)
+
+
+def lookup_records(conn, workspace_id, ids) -> dict[str, dict]:
+    """`{id: {app, ref, title, deleted}}` for these records of the workspace, live or not (one query; ids of other workspaces
+    and of blocks that are not records are simply absent). `title` is the record's own title text ("" if it has none)."""
+    uuids = []
+    for i in ids:
+        try:
+            uuids.append(UUID(str(i)))
+        except ValueError:
+            continue
+    if not uuids:
+        return {}
+    rows = conn.execute(
+        'select b.id, b.properties, b.deleted_at, c.properties as cprops, c.deleted_at as cdel, p.properties as pprops, '
+        'p.deleted_at as pdel from blocks b join blocks c on c.id = b.collection_id '
+        'join blocks p on p.id = c.parent_id where b.workspace_id = %s and b.block_type = %s and b.id = any(%s)',
+        (workspace_id, 'record', uuids)).fetchall()
+    out = {}
+    for r in rows:
+        key = r['pprops'].get('key')
+        out[str(r['id'])] = {
+            'app': key, 'ref': f"{key}/{r['cprops'].get('key')}", 'title': link_logic.title_text(r['cprops'], r['properties']),
+            'deleted': bool(r['deleted_at'] or r['cdel'] or r['pdel']), 'private': link_logic.is_private(r['pprops'])}
+    return out
 
 
 def faces(ld: Loaded, app_keys: list[str] | None = None) -> dict[str, dict]:
@@ -100,3 +130,29 @@ def compute_faces(conn, workspace_id, app_ids) -> dict:
         if a is not None:
             wanted.append(a['key'])
     return faces(ld, wanted)
+
+
+def wire_blocks(conn, workspace_id, blocks: list[dict]) -> list[dict]:
+    """Blocks of a command result or of `/sync` with their stored `_links` turned into `LinkRef`s (api/logic/links.py), one
+    query for all of them. Blocks with no `_links` pass through; `_backlinks` come only with `GET /apps/{id}`."""
+    ids: set[str] = set()
+    for b in blocks:
+        if b.get('block_type') == 'record' and (b.get('properties') or {}).get('_links'):
+            ids |= {e['id'] for e in link_logic.stored_links(b['properties'])}
+    if not ids:
+        return blocks
+    info = lookup_records(conn, workspace_id, ids)
+    out = []
+    for b in blocks:
+        props = b.get('properties') or {}
+        if b.get('block_type') != 'record' or not props.get('_links'):
+            out.append(b)
+            continue
+        refs = []
+        for e in link_logic.ordered_links(link_logic.stored_links(props)):
+            t = info.get(e['id'])
+            if t:
+                refs.append({'app': t['app'], 'ref': t['ref'], 'id': e['id'],
+                             'title': link_logic.DELETED if t['deleted'] else (t['title'] or link_logic.UNTITLED)})
+        out.append({**b, 'properties': {**props, '_links': refs}})
+    return out

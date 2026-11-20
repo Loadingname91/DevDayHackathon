@@ -113,7 +113,7 @@ const budgetSpec = {
   collections: [{
     key: 'spend', name: 'Spending', label: 'Spend', titleField: 'note', dateField: 'at', amountField: 'amount',
     fields: [f('note', 'Note', 'text', { required: true }), f('amount', 'Amount', 'money', { required: true }),
-      f('category', 'Category', 'select', { options: CATS }), f('at', 'When', 'datetime', { required: true })],
+      f('category', 'Category', 'select', { options: CATS }), f('at', 'When', 'date', { required: true })],
   }],
   tabs: [
     page('t_overview', 'Overview', [
@@ -141,14 +141,15 @@ const budgetSpec = {
 };
 // block values as the server would send them (totals from the category table in §2.3)
 const budgetValues = (lunch) => ({
-  b_left: { text: lunch ? '$400' : '$412', target: 'left of $1,200', pct: lunch ? 67 : 66, sub: lunch ? 'Was $412 · 11 days to go' : '11 days to go' },
+  // spent / limit / id are what the limits sheet reads (cents; `id` is the category option); the server sends them with the words
+  b_left: { text: lunch ? '$400' : '$412', target: 'left of $1,200', pct: lunch ? 67 : 66, sub: lunch ? 'Was $412 · 11 days to go' : '11 days to go', spent: lunch ? 80000 : 78800, limit: 120000 },
   b_where: { rows: [
-    { label: 'Groceries', text: '$142.00 of $200', pct: 71 },
-    lunch ? { label: 'Eating out', text: '$177.00 of $150', pct: 85, over_pct: 15, note: '$27 over.' } : { label: 'Eating out', text: '$165.00 of $150', pct: 91, over_pct: 9, note: '$15 over.' },
-    { label: 'Transport', text: '$42.00 of $100', pct: 42 },
-    { label: 'Subscriptions', text: '$26.47 of $40', pct: 66 },
-    { label: 'Rent', text: '$380.00', note: 'No limit' },
-    { label: 'Fun', text: '$32.53', note: 'No limit' }] },
+    { label: 'Groceries', text: '$142.00 of $200', pct: 71, id: 'c_groceries', spent: 14200, limit: 20000 },
+    lunch ? { label: 'Eating out', text: '$177.00 of $150', pct: 85, over_pct: 15, note: '$27 over.', id: 'c_eating_out', spent: 17700, limit: 15000 } : { label: 'Eating out', text: '$165.00 of $150', pct: 91, over_pct: 9, note: '$15 over.', id: 'c_eating_out', spent: 16500, limit: 15000 },
+    { label: 'Transport', text: '$42.00 of $100', pct: 42, id: 'c_transport', spent: 4200, limit: 10000 },
+    { label: 'Subscriptions', text: '$26.47 of $40', pct: 66, id: 'c_subscriptions', spent: 2647, limit: 4000 },
+    { label: 'Rent', text: '$380.00', note: 'No limit', id: 'c_rent', spent: 38000 },
+    { label: 'Fun', text: '$32.53', note: 'No limit', id: 'c_fun', spent: 3253 }] },
   b_subs: { rows: [
     { label: 'Spotify', text: '$11.99', note: 'Renews Sun 22 Nov' },
     { label: 'Hulu', text: '$9.99', note: 'Renews Wed 2 Dec' },
@@ -192,6 +193,12 @@ const boughtRows = TRIPS.flatMap(([day, , , items]) => items.map(([name, price])
 const WEEKLY = open('l_weekly', ['Oat milk', ['Eggs', '1 dozen'], 'Bananas', 'Chicken thighs', ['Rice', '5 lb'], 'Spinach', 'Greek yogurt', 'Coffee beans', 'Coffee filters', 'Tortillas', 'Olive oil', 'Dish soap']);
 const TACO = open('l_taco', ['Ground beef', 'Avocados', 'Limes', 'Salsa', 'Shredded cheese']);
 const COSTCO = open('l_costco', ['Paper towels', 'Laundry pods', 'Frozen berries', 'Almonds', 'Toilet paper']);
+// Trips (Nov 20): "Finish trip" groups the items ticked since the last trip into one trips row (POST /trips/finish); the photo goes to Clair
+// with context.intent (spec/clair-agent.md §2). Both sit under the list, declared on the block.
+const GROC_FINISH = { into: 'groceries/trips', link: 'trip', label: 'Finish trip' };
+const GROC_SNAP = { label: 'Snap a photo', intents: [
+  { id: 'list', label: 'Add to my list', hint: 'A fridge, a pantry or a handwritten list', ask: 'Add what is on this photo to my grocery list.' },
+  { id: 'receipt', label: 'A receipt', hint: 'Starts a new trip and ticks what you bought', ask: 'This is a grocery receipt. Add it as a new trip.' }] };
 const groceriesSpec = {
   ...meta('groceries'),
   collections: [
@@ -202,11 +209,12 @@ const groceriesSpec = {
         f('trip', 'Trip', 'relation', { target: 'groceries/trips' }),
         f('usual', 'Usual', 'select', { options: [{ id: 'auto', label: 'Auto' }, { id: 'yes', label: 'Yes' }, { id: 'no', label: 'No' }] })] },
     { key: 'trips', name: 'Trips', titleField: 'store', dateField: 'at', amountField: 'total', calendar: true, label: 'Grocery trip',
-      fields: [f('store', 'Store', 'text', { required: true }), f('total', 'Total', 'money', { required: true }), f('at', 'When', 'datetime', { required: true })] },
+      fields: [f('store', 'Store', 'text', { required: true }), f('total', 'Total', 'money', { required: true }), f('at', 'When', 'datetime', { required: true, timeOptional: true })] },
   ],
   tabs: [
     page('t_list', 'List', [
       { kind: 'list', id: 'b_items', source: 'groceries/items', switch: 'list', addAt: 'end', fields: ['qty'],
+        finish: GROC_FINISH, snap: GROC_SNAP,
         where: [{ field: 'status', op: 'eq', value: 'to_buy' }], swipe: { right: 'complete', left: 'delete' } }]),
     page('t_trips', 'Trips', [
       { kind: 'progress', id: 'b_spend', label: 'Grocery spend', value: { agg: 'sum', from: 'groceries/trips', field: 'total', window: 'month' }, target: 20000, format: 'money' },
@@ -269,7 +277,7 @@ const eventRows = [
 const calendarSpec = {
   ...meta('calendar'),
   collections: [{ key: 'events', name: 'Events', titleField: 'title', dateField: 'at', calendar: true,
-    fields: [f('title', 'Title', 'text', { required: true }), f('at', 'When', 'datetime', { required: true }), f('ends', 'Ends', 'datetime'),
+    fields: [f('title', 'Title', 'text', { required: true }), f('at', 'When', 'datetime', { required: true, allDay: true }), f('ends', 'Ends', 'datetime', { timeOptional: true }),
       f('kind', 'Kind', 'select', { options: opts('Doctor', 'Dentist', 'Barber', 'Other') }), f('source', 'Source', 'text')] }],
   tabs: [
     page('t_today', 'Today', [{ kind: 'calendar', id: 'b_today', source: '*dated', window: 'today' }]),
@@ -293,7 +301,7 @@ const todoRows = [
 const todosSpec = {
   ...meta('todos'),
   collections: [{ key: 'todos', name: 'To-dos', titleField: 'title', dateField: 'due', calendar: true,
-    fields: [f('title', 'To-do', 'text', { required: true }), f('due', 'Due', 'datetime'), f('place', 'Place', 'text'), f('done', 'Done', 'bool'), f('repeat', 'Repeat', 'repeat')] }],
+    fields: [f('title', 'To-do', 'text', { required: true }), f('due', 'Due', 'datetime', { timeOptional: true }), f('place', 'Place', 'text'), f('done', 'Done', 'bool'), f('repeat', 'Repeat', 'repeat')] }],
   tabs: [
     page('t_today', 'Today', [{ kind: 'list', id: 'b_today', source: 'todos/todos', fields: ['due', 'place'], sort: { field: 'due', dir: 'asc' },
       where: [{ field: 'done', op: 'eq', value: false }, { field: 'due', op: 'within', value: 'today' }], swipe: { right: 'complete', left: 'delete' } }]),
@@ -326,7 +334,7 @@ const classesSpec = {
       fields: [f('name', 'Class', 'text', { required: true }), f('title', 'Title', 'text'), f('room', 'Room', 'text'), f('meets', 'Meets', 'text'), f('time', 'Next', 'datetime'), f('repeat', 'Repeat', 'repeat')] },
     { key: 'due', name: 'Due', label: 'Due date', titleField: 'title', dateField: 'at', calendar: true,
       fields: [f('title', 'Title', 'text', { required: true }), f('kind', 'Kind', 'select', { options: [{ id: 'assignment', label: 'Assignment' }, { id: 'exam', label: 'Exam' }] }),
-        f('at', 'Due', 'datetime'), f('class', 'Class', 'relation', { target: 'classes/classes' }), f('done', 'Done', 'bool')] },
+        f('at', 'Due', 'datetime', { timeOptional: true }), f('class', 'Class', 'relation', { target: 'classes/classes' }), f('done', 'Done', 'bool')] },
   ],
   tabs: [
     page('t_schedule', 'Schedule', [{ kind: 'list', id: 'b_classes', source: 'classes/classes', fields: ['title', 'meets', 'room'] }]),
@@ -373,8 +381,8 @@ const notesSpec = {
         f('notebook', 'Notebook', 'relation', { target: 'notes/notebooks', many: true }), f('at', 'Written', 'datetime', { required: true })] },
   ],
   tabs: [
-    page('t_notebooks', 'Notebooks', [{ kind: 'list', id: 'b_notebooks', source: 'notes/notebooks', fields: ['class'] }]),
-    page('t_all', 'All notes', [{ kind: 'list', id: 'b_notes', source: 'notes/notes', fields: ['notebook', 'at'], sort: { field: 'at', dir: 'desc' } }]),
+    // one workspace instead of two flat lists (Nov 20): a tree of notebooks and pages, a page you write in with a markdown preview
+    page('t_notes', 'Notes', [{ kind: 'notebook', id: 'b_notebook', source: 'notes/notebooks', pages: 'notes/notes', link: 'notebook', body: 'body' }]),
   ],
   face: { value: { agg: 'count', from: 'notes/notes', window: 'week' }, format: 'count', label: 'this week' },
 };
@@ -477,7 +485,7 @@ const caloriesSpec = {
   settings: { target: 2200 },
   collections: [
     { key: 'meals', name: 'Meals', titleField: 'name', dateField: 'at',
-      fields: [...calFields, f('meal', 'Meal time', 'select', { options: opts('Breakfast', 'Lunch', 'Dinner', 'Snack') }), f('at', 'When', 'datetime', { required: true })] },
+      fields: [...calFields, f('meal', 'Meal time', 'select', { options: opts('Breakfast', 'Lunch', 'Dinner', 'Snack') }), f('at', 'When', 'date', { required: true })] },
     { key: 'foods', name: 'Foods', titleField: 'name', fields: calFields },
   ],
   tabs: [
@@ -504,9 +512,9 @@ const runningSpec = {
   collections: [
     { key: 'runs', name: 'Runs', titleField: 'name', dateField: 'at', calendar: true, label: 'Run',
       fields: [f('name', 'Run', 'text', { required: true }), f('kind', 'Kind', 'select', { options: opts('Easy', 'Long', 'Tempo', 'Intervals', 'Race') }),
-        f('distance', 'Distance', 'number', { unit: 'mi' }), f('minutes', 'Time', 'number', { unit: 'min' }), f('at', 'When', 'datetime', { required: true }), f('done', 'Done', 'bool')] },
+        f('distance', 'Distance', 'number', { unit: 'mi' }), f('minutes', 'Time', 'number', { unit: 'min' }), f('at', 'When', 'datetime', { required: true, timeOptional: true }), f('done', 'Done', 'bool')] },
     { key: 'races', name: 'Races', titleField: 'name', dateField: 'at', calendar: true, label: 'Race',
-      fields: [f('name', 'Race', 'text', { required: true }), f('at', 'When', 'datetime'), f('distance', 'Distance', 'text')] },
+      fields: [f('name', 'Race', 'text', { required: true }), f('at', 'When', 'datetime', { timeOptional: true }), f('distance', 'Distance', 'text')] },
   ],
   tabs: [
     page('t_week', 'This week', [
@@ -550,7 +558,7 @@ const medRows = [
 const meditationSpec = {
   ...meta('meditation'),
   collections: [{ key: 'sessions', name: 'Sessions', titleField: 'kind', dateField: 'at',
-    fields: [f('kind', 'Kind', 'select', { options: opts('Breathing', 'Body scan', 'Sleep', 'Walking') }), f('minutes', 'Minutes', 'number', { unit: 'min' }), f('at', 'When', 'datetime', { required: true }), f('mood', 'Mood', 'text')] }],
+    fields: [f('kind', 'Kind', 'select', { options: opts('Breathing', 'Body scan', 'Sleep', 'Walking') }), f('minutes', 'Minutes', 'number', { unit: 'min' }), f('at', 'When', 'datetime', { required: true, timeOptional: true }), f('mood', 'Mood', 'text')] }],
   tabs: [
     page('t_sessions', 'Sessions', [{ kind: 'list', id: 'b_sessions', source: 'meditation/sessions', fields: ['at', 'minutes', 'mood'], sort: { field: 'at', dir: 'desc' } }]),
     page('t_week', 'This week', [
@@ -818,6 +826,210 @@ say('rule-unsupported', 'Reading your rule…', "Rules can't send email yet. The
 say('already-built', 'Reading…', 'You already have that app. Open it from Your apps.');
 say('unknown', 'Reading…', 'This is mock data, so only the scripted sentences answer. Try "Spent $12 on lunch" or "Plan my training for next week".');
 
+// ------------------------------------------------------------------ attachments (Nov 20, clair-agent.md §3, §12.1, §12.5, FR-C3, FR-C6, FR-C13)
+// A turn that carries `images` or `files` is answered by the recorded run for the first kind it finds (mocks/scenarios.ts,
+// pickAttachments): a photo is the Corner Market receipt (§12.1), a PDF is the ECON 1010 syllabus (§12.5), a .csv is a
+// bank file and an .ics is a calendar file. The last two are MOCK ONLY demos of FR-C6 (marked "mock": true on the card); the
+// server has no recorded run for them yet. Every `understood` summary is the line the sheet shows beside the thumbnail.
+//
+// Budget after a file: the seed's category totals, in cents, are the only arithmetic here. budgetValuesFor() is checked against
+// the seed's own literals above (budgetValues) so a wrong rule cannot ship.
+// rows made by a file get their own positions ('c000'…), so adding this block moves no other fixture's rows
+let posC = 0;
+const recC = (id, properties) => ({ id, position: 'c' + String(posC++).padStart(3, '0'), version: 1, properties });
+const SEED_SUMS = { groceries: 14200, eating: 16500, transport: 4200, subs: 2647, rent: 38000, fun: 3253 };
+const usd = (c) => '$' + (c / 100).toFixed(2);
+const whole = (c) => '$' + Math.round(c / 100).toLocaleString('en-US');
+function budgetValuesFor(s, was) {
+  const spent = Object.values(s).reduce((a, b) => a + b, 0), left = 120000 - spent, pct = (a, b) => Math.round((100 * a) / b);
+  const limited = (label, c, lim, id) => (c > lim
+    ? { label, text: `${usd(c)} of ${whole(lim)}`, pct: pct(lim, c), over_pct: 100 - pct(lim, c), note: `${whole(c - lim)} over.`, id, spent: c, limit: lim }
+    : { label, text: `${usd(c)} of ${whole(lim)}`, pct: pct(c, lim), id, spent: c, limit: lim });
+  const bar = (c, lim) => (c > lim ? { text: usd(c), target: whole(lim), pct: 100, over: `${whole(c - lim)} over` } : { text: usd(c), target: whole(lim), pct: pct(c, lim) });
+  const k = (c, lim) => ({ text: usd(c), sub: c > lim ? `limit ${whole(lim)} · ${whole(c - lim)} over` : `limit ${whole(lim)}` });
+  return {
+    b_left: { text: whole(left), target: 'left of $1,200', pct: pct(spent, 120000), sub: was ? `Was ${was} · 11 days to go` : '11 days to go', spent, limit: 120000 },
+    b_where: { rows: [limited('Groceries', s.groceries, 20000, 'c_groceries'), limited('Eating out', s.eating, 15000, 'c_eating_out'), limited('Transport', s.transport, 10000, 'c_transport'), limited('Subscriptions', s.subs, 4000, 'c_subscriptions'),
+      { label: 'Rent', text: usd(s.rent), note: 'No limit', id: 'c_rent', spent: s.rent }, { label: 'Fun', text: usd(s.fun), note: 'No limit', id: 'c_fun', spent: s.fun }] },
+    b_subs: budgetValues(false).b_subs,
+    b_spent: { text: usd(spent), target: '$1,200', pct: pct(spent, 120000) },
+    b_c_eating: bar(s.eating, 15000), b_c_groceries: bar(s.groceries, 20000), b_c_transport: bar(s.transport, 10000), b_c_subs: bar(s.subs, 4000),
+    b_k_rent: { text: usd(s.rent), sub: 'no limit' }, b_k_eating: k(s.eating, 15000), b_k_groceries: k(s.groceries, 20000),
+    b_k_transport: k(s.transport, 10000), b_k_fun: { text: usd(s.fun), sub: 'no limit' }, b_k_subs: k(s.subs, 4000),
+  };
+}
+for (const [s, lunch] of [[SEED_SUMS, false], [{ ...SEED_SUMS, eating: 17700 }, true]]) {
+  const mine = JSON.stringify(budgetValuesFor(s, lunch ? '$412' : undefined)), seed = JSON.stringify(budgetValues(lunch));
+  if (mine !== seed) throw new Error(`budgetValuesFor disagrees with the seed (${lunch ? 'lunch' : 'seed'}):\n${mine}\n${seed}`);
+}
+const budgetFace = (text) => ({ text, label: 'left' });
+
+// ---- the receipt photo (§12.1): Corner Market 5:41 pm, $35.83, 8 items. Budget $412 → $376, Groceries 12 → 4 to buy, Calendar 3 → 4 today.
+const RC = [['Oat milk', 349], ['Eggs', 429, '1 dozen'], ['Bananas', 187], ['Chicken thighs', 862], ['Rice', 699, '5 lb'], ['Spinach', 329], ['Greek yogurt', 429], ['Coffee beans', 299]];
+const rcSlug = (n) => n.toLowerCase().replace(/[^a-z]+/g, '_');
+const RC_AT = dt('2026-11-20', '17:41');
+const RC_TRIP = recC('tr_rc', { store: 'Corner Market', total: 3583, at: RC_AT });
+const RC_SPEND = recC('sp_rc', { note: 'Corner Market', category: 'c_groceries', amount: 3583, at: RC_AT, _via: { app: 'groceries', record_id: 'tr_rc' } });
+const RC_BOUGHT = RC.map(([name, price, qty]) => recC('ib_rc_' + rcSlug(name), { name, list: 'l_weekly', status: 'bought', ...(qty ? { qty } : {}), price, bought_on: '2026-11-20', trip: ['tr_rc'], usual: 'auto' }));
+const RC_OPS = [
+  { op: 'insert', ref: 'groceries/trips', values: RC_TRIP.properties },
+  ...RC.map(([name, price]) => ({ op: 'update', rowId: 'i_' + rcSlug(name), values: { status: 'bought', price } })),
+];
+const RC_CARD = (id, source) => cs(id, {
+  source, title: 'Corner Market', summary: '8 items, $35.83.', ops: RC_OPS,
+  expanded: [...RC_OPS, { op: 'insert', ref: 'budget/spend', values: RC_SPEND.properties }],
+  lines: [{ apps: ['groceries'], what: '8 bought', val: '', sub: 'Weekly shop 12 → 4 to buy' },
+    { apps: ['budget'], what: 'Groceries · $35.83', val: '', sub: '$412 → $376' },
+    { apps: ['calendar'], what: 'Grocery trip · Corner Market 5:41 pm', val: '' }],
+  targets: ['groceries', 'budget', 'calendar'],
+  deltas: [{ app: 'groceries', before: '12', after: '4' }, { app: 'budget', before: '$412', after: '$376' }, { app: 'calendar', before: '3', after: '4' }],
+  actions: { primary: 'Add to 3 apps', secondary: 'Review items' },
+  review: [{ title: 'Corner Market', when: 'Today, 5:41 pm · $35.83', change: 'new', reason: '8 items', source: 'Groceries', app: 'groceries' },
+    ...RC.map(([name, price]) => ({ title: name, when: usd(price), change: 'changed', reason: 'Weekly shop · to buy → bought', source: 'Groceries', app: 'groceries' })),
+    { title: 'Groceries', when: '$35.83 · $412 → $376', change: 'new', reason: 'from the trip', source: 'Groceries', app: 'budget' }],
+});
+const RC_RUN = [
+  ev(0, 'status', { text: 'Looking at your photo…' }),
+  ev(1400, 'understood', { kind: 'receipt', summary: 'Corner Market receipt · 8 items · $35.83', items: RC.map((r) => r[0]) }),
+  ev(1100, 'status', { text: 'Drafting changes…' }),
+  ev(1500, 'proposal', { change_set: RC_CARD('cs_receipt', { kind: 'photo', label: 'From your receipt photo · 5:41 pm', at: SERVER_NOW }) }),
+  ev(80, 'done', { status: 'complete', sources: [] }),
+];
+write('run.receipt', RC_RUN);
+write('run.receipt.sample', sample(RC_RUN).map((e) => (e.event === 'status' || e.event === 'understood' ? { ...e, delay: Math.min(e.delay, 300) } : e)));
+write('run.receipt.done', [ev(0, 'status', { text: 'Looking at your photo…' }), ev(1000, 'text_delta', { text: 'That receipt is already added: Corner Market, **$35.83**, Fri 20 Nov.' }), ev(60, 'done', { status: 'complete', sources: ['groceries', 'budget'] })]);
+write('confirm.receipt', result('cs_receipt', 4150, { groceries: { text: '4', value: 4, label: 'to buy' }, budget: { ...budgetFace('$376'), value: 37617 }, calendar: { text: '4', value: 4, label: 'today' } }));
+write('undo.receipt', result('cs_receipt', 4151, { groceries: { text: '12', value: 12, label: 'to buy' }, budget: { ...budgetFace('$412'), value: 41200 }, calendar: { text: '3', value: 3, label: 'today' } }));
+write('effect.receipt', {
+  credits: -5,
+  home: { status: '**$376** left this month. Pull day at **6 pm**.', faces: { budget: { text: '$376' }, groceries: { text: '4' }, calendar: { text: '4' } }, changed: ['groceries', 'budget', 'calendar'] },
+  apps: {
+    groceries: { add: { 'groceries/items': RC_BOUGHT, 'groceries/trips': [RC_TRIP] }, remove: { 'groceries/items': RC.map(([n]) => 'i_' + rcSlug(n)) },
+      values: { b_spend: { text: '$177.83', target: '$200', pct: 89 } }, face: { text: '4', label: 'to buy' }, status: '**14** to buy across 3 lists. **$177.83** of $200 spent this month.' },
+    budget: { add: { 'budget/spend': [RC_SPEND] }, values: budgetValuesFor({ ...SEED_SUMS, groceries: 17783 }, '$412'), face: budgetFace('$376') },
+    calendar: { add: { '*dated': [D_CH('2026-11-20', '17:41', 'Grocery trip · Corner Market', 'groceries', 'Groceries', 'tr_rc')] }, face: { text: '4', label: 'today' }, status: '**4** today. Dates from every app, in one place.' },
+  },
+});
+
+// ---- a photo of a list, from Groceries → Snap a photo → "Add to my list" (clair-agent.md §2 `context.intent: "list"`): 3 items on Weekly shop, Groceries 12 → 15.
+const GL = [['Tortilla chips', '1 bag'], ['Salsa verde'], ['Lemons', '4']];
+const GL_ROWS = GL.map(([name, qty]) => recC('i_gl_' + rcSlug(name), { name, list: 'l_weekly', status: 'to_buy', ...(qty ? { qty } : {}), usual: 'auto' }));
+const GL_OPS = GL_ROWS.map((r) => ({ op: 'insert', ref: 'groceries/items', values: r.properties }));
+const GL_CARD = (id, source) => cs(id, {
+  source, title: 'Weekly shop', summary: '3 items from your list.', ops: GL_OPS, expanded: GL_OPS,
+  lines: [{ apps: ['groceries'], what: GL.map((r) => r[0]).join(' · '), val: '', sub: 'Weekly shop 12 → 15 to buy' }],
+  targets: ['groceries'], deltas: [{ app: 'groceries', before: '12', after: '15' }],
+  actions: { primary: 'Add to Groceries', secondary: 'Review items' },
+  review: GL.map(([name, qty]) => ({ title: name, when: qty ?? '', change: 'new', reason: 'Weekly shop', source: 'Groceries', app: 'groceries' })),
+});
+const GL_RUN = [
+  ev(0, 'status', { text: 'Looking at your photo…' }),
+  ev(1300, 'understood', { kind: 'list', summary: 'A handwritten list · 3 items', items: GL.map((r) => r[0]) }),
+  ev(1000, 'status', { text: 'Drafting changes…' }),
+  ev(1300, 'proposal', { change_set: GL_CARD('cs_groceries_list', { kind: 'photo', label: 'From your list photo', at: SERVER_NOW }) }),
+  ev(80, 'done', { status: 'complete', sources: [] }),
+];
+write('run.groceries-list', GL_RUN);
+write('run.groceries-list.done', [ev(0, 'status', { text: 'Looking at your photo…' }), ev(1000, 'text_delta', { text: 'Those 3 items are already on **Weekly shop**: Tortilla chips, Salsa verde and Lemons.' }), ev(60, 'done', { status: 'complete', sources: ['groceries'] })]);
+write('confirm.groceries-list', result('cs_groceries_list', 4170, { groceries: { text: '15', value: 15, label: 'to buy' } }));
+write('undo.groceries-list', result('cs_groceries_list', 4171, { groceries: { text: '12', value: 12, label: 'to buy' } }));
+write('effect.groceries-list', {
+  credits: -5,
+  home: { faces: { groceries: { text: '15' } }, changed: ['groceries'] },
+  apps: { groceries: { add: { 'groceries/items': GL_ROWS }, face: { text: '15', label: 'to buy' }, status: '**25** to buy across 3 lists. **$142.00** of $200 spent this month.' } },
+});
+
+// ---- the syllabus PDF (§12.5): 6 due dates and 2 exams → Classes 2 → 3 due this week (Problem set 7, Mon 23 Nov), Calendar +8
+const SYL = [
+  ['Problem set 7', 'assignment', '2026-11-23', '23:59', 'Due Mon 23 Nov, 11:59 pm'], ['Midterm 2', 'exam', '2026-12-01', '09:10', 'Tue 1 Dec, 9:10 am · Kendall 104'],
+  ['Problem set 8', 'assignment', '2026-12-04', '23:59', 'Due Fri 4 Dec, 11:59 pm'], ['Reading response', 'assignment', '2026-12-07', '09:00', 'Due Mon 7 Dec, 9:00 am'],
+  ['Problem set 9', 'assignment', '2026-12-09', '23:59', 'Due Wed 9 Dec, 11:59 pm'], ['Term paper', 'assignment', '2026-12-11', '17:00', 'Due Fri 11 Dec, 5:00 pm'],
+  ['Review sheet', 'assignment', '2026-12-14', '09:00', 'Due Mon 14 Dec, 9:00 am'], ['Final exam', 'exam', '2026-12-16', '08:00', 'Wed 16 Dec, 8:00 am'],
+];
+const sylId = (t) => 'd_syl_' + rcSlug(t);
+const SYL_ROWS = SYL.map(([title, kind, d, t]) => recC(sylId(title), { title, kind, at: dt(d, t), class: ['c01'], done: false }));
+const SYL_OPS = SYL_ROWS.map((r) => ({ op: 'insert', ref: 'classes/due', values: r.properties }));
+const SYL_DATED = (sub) => SYL.map(([title, , d, t], i) => D_CH(d, t, title, 'classes', sub, SYL_ROWS[i].id));
+write('run.syllabus', [
+  ev(0, 'status', { text: 'Reading your PDF…' }),
+  ev(1600, 'understood', { kind: 'syllabus', summary: 'ECON 1010 syllabus, 4 pages: 6 due dates and 2 exams', items: SYL.map((r) => r[0]) }),
+  ev(1500, 'proposal', { change_set: cs('cs_syllabus', {
+    source: { kind: 'file', label: 'From Syllabus · ECON 1010.pdf', at: SERVER_NOW },
+    title: 'ECON 1010', summary: 'Found 6 due dates and 2 exams. Add to Classes and Calendar?', ops: SYL_OPS, expanded: SYL_OPS,
+    lines: [{ apps: ['classes'], what: SYL.map((r) => r[0]).join(' · '), val: '', sub: 'Problem set 7 · Due Mon 23 Nov, 11:59 pm' }, { apps: ['calendar'], what: 'the 8 dates', val: '' }],
+    targets: ['classes', 'calendar'], deltas: [{ app: 'classes', before: '2', after: '3' }],
+    actions: { primary: 'Add to 2 apps', secondary: 'Review items' },
+    review: SYL.map(([title, , , , when]) => ({ title, when, change: 'new', reason: 'ECON 1010', source: 'Syllabus · ECON 1010.pdf', app: 'classes' })) }) }),
+  ev(80, 'done', { status: 'complete', sources: [] }),
+]);
+write('run.syllabus.done', [ev(0, 'status', { text: 'Reading your PDF…' }), ev(1000, 'text_delta', { text: 'That syllabus is already in **Classes**: 6 due dates and 2 exams for ECON 1010.' }), ev(60, 'done', { status: 'complete', sources: ['classes'] })]);
+write('confirm.syllabus', result('cs_syllabus', 4160, { classes: { text: '3', value: 3, label: 'due this week' } }));
+write('undo.syllabus', result('cs_syllabus', 4161, { classes: { text: '2', value: 2, label: 'due this week' } }));
+write('effect.syllabus', {
+  credits: -5,
+  home: { faces: { classes: { text: '3' } }, changed: ['classes', 'calendar'] },
+  apps: {
+    classes: { add: { 'classes/due': SYL_ROWS, '*dated': SYL_DATED('Classes') }, face: { text: '3', label: 'due this week' }, status: '**3** due this week. Next: Start CS 3500 project, **Mon 23 Nov**.' },
+    calendar: { add: { '*dated': SYL_DATED('Classes') } },
+  },
+});
+
+// ---- a bank file (.csv): MOCK ONLY, FR-C6's basted list preview ("3 rows + N more"). Six new spend rows → Budget $412 → $348.
+const CSV = [
+  ["Roxy's coffee", 'c_eating_out', 475, '2026-11-20'], ['Taqueria 27', 'c_eating_out', 1250, '2026-11-19'], ['Smoothie shop', 'c_eating_out', 680, '2026-11-18'],
+  ['Campus Bookstore', 'c_fun', 2499, '2026-11-18'], ['Trax fare', 'c_transport', 250, '2026-11-18'], ['Cinemark', 'c_fun', 1250, '2026-11-17'],
+];
+const CSV_SUMS = { ...SEED_SUMS, eating: SEED_SUMS.eating + 475 + 1250 + 680, fun: SEED_SUMS.fun + 2499 + 1250, transport: SEED_SUMS.transport + 250 };
+const CSV_ROWS = CSV.map(([note, category, amount, d], i) => recC('sp_csv_' + (i + 1), { note, category, amount, at: dt(d, '12:00') }));
+const CSV_OPS = CSV_ROWS.map((r) => ({ op: 'insert', ref: 'budget/spend', values: r.properties }));
+const DAY = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+write('run.csv', [
+  ev(0, 'status', { text: 'Reading your file…' }),
+  ev(1300, 'understood', { kind: 'document', summary: 'Bank file · 6 rows · $64.04', items: CSV.map((r) => r[0]) }),
+  ev(1300, 'proposal', { change_set: { ...cs('cs_csv', {
+    source: { kind: 'file', label: 'From your file', at: SERVER_NOW },
+    title: 'Spending from your file', summary: 'Found 6 rows, $64.04. Add to Budget?', ops: CSV_OPS, expanded: CSV_OPS,
+    lines: [{ apps: ['budget'], what: CSV.map((r) => r[0]).join(' · '), val: '$64.04', sub: '$412 → $348 left' }],
+    targets: ['budget'], deltas: [{ app: 'budget', before: '$412', after: '$348' }],
+    actions: { primary: 'Add to Budget', secondary: 'Review items' },
+    review: CSV.map(([title, c, amount, d]) => ({ title, when: `${usd(amount)} · ${DAY(d)}`, change: 'new', reason: CATS.find((x) => x.id === c).label, source: 'your file', app: 'budget' })) }), mock: true } }),
+  ev(80, 'done', { status: 'complete', sources: [] }),
+]);
+write('confirm.csv', result('cs_csv', 4170, { budget: { ...budgetFace('$348'), value: 34796 } }));
+write('undo.csv', result('cs_csv', 4171, { budget: { ...budgetFace('$412'), value: 41200 } }));
+write('effect.csv', {
+  credits: -5,
+  home: { status: '**$348** left this month. Pull day at **6 pm**.', faces: { budget: { text: '$348' } }, changed: ['budget'] },
+  apps: { budget: { add: { 'budget/spend': CSV_ROWS }, values: budgetValuesFor(CSV_SUMS, '$412'), face: budgetFace('$348') } },
+});
+
+// ---- a calendar file (.ics): MOCK ONLY. Four events → Calendar (all after today, so today's count stays 3).
+const ICS = [['Study group', '2026-11-24', '19:00', 'Tue 24 Nov, 7:00 pm'], ['Advising appointment', '2026-11-25', '15:30', 'Wed 25 Nov, 3:30 pm'],
+  ['Thanksgiving dinner', '2026-11-26', '17:00', 'Thu 26 Nov, 5:00 pm'], ['Pizza night with Maya', '2026-11-28', '19:00', 'Sat 28 Nov, 7:00 pm']];
+const ICS_ROWS = ICS.map(([title, d, t], i) => recC('e_ics_' + (i + 1), { title, at: dt(d, t) }));
+const ICS_OPS = ICS_ROWS.map((r) => ({ op: 'insert', ref: 'calendar/events', values: r.properties }));
+write('run.ics', [
+  ev(0, 'status', { text: 'Reading your file…' }),
+  ev(1200, 'understood', { kind: 'calendar', summary: 'Calendar file · 4 events', items: ICS.map((r) => r[0]) }),
+  ev(1200, 'proposal', { change_set: { ...cs('cs_ics', {
+    source: { kind: 'file', label: 'From your file', at: SERVER_NOW },
+    title: 'Events from your file', summary: 'Found 4 events. Add to Calendar?', ops: ICS_OPS, expanded: ICS_OPS,
+    lines: [{ apps: ['calendar'], what: ICS.map((r) => r[0]).join(' · '), val: '' }],
+    targets: ['calendar'], deltas: [], actions: { primary: 'Add to Calendar', secondary: 'Review items' },
+    review: ICS.map(([title, , , when]) => ({ title, when, change: 'new', reason: 'from your file', source: 'your file', app: 'calendar' })) }), mock: true } }),
+  ev(80, 'done', { status: 'complete', sources: [] }),
+]);
+write('confirm.ics', result('cs_ics', 4180));
+write('undo.ics', result('cs_ics', 4181));
+write('effect.ics', {
+  credits: -5,
+  home: { changed: ['calendar'] },
+  apps: { calendar: { add: { 'calendar/events': ICS_ROWS, '*dated': ICS.map(([title, d, t], i) => D_CH(d, t, title, 'calendar', 'Calendar', ICS_ROWS[i].id)) } } },
+});
+say('csv.done', 'Reading your file…', 'Those 6 rows are already in **Budget**.', ['budget']);
+say('ics.done', 'Reading your file…', 'Those 4 events are already in **Calendar**.', ['calendar']);
+say('attached-text', 'Reading your file…', 'This is mock data, so only a photo, a PDF, a .csv or an .ics file gets a scripted answer.');
+
 // ------------------------------------------------------------------ the three builds (clair-agent.md §12.11), on the "before" state
 // Each build is one run in two requests (§11): the sentence ends in a card of questions
 // (run.build-<key>, done awaiting_input); the answer streams the plan, then the build
@@ -949,14 +1161,15 @@ function instrumented(key, spec, values, variant) {
   switch (key) {
     case 'budget': return {
       spec: { ...spec, tabs: [P('t_overview', 'Overview', [
-        { kind: 'gauge', id: 'b_left', label: 'Left this month', value: spec.face.value, target: { setting: 'limit' }, format: 'money' },
-        { kind: 'bars', id: 'b_where', label: 'Where it went', from: 'budget/spend', by: 'category', value: { agg: 'sum', from: 'budget/spend', field: 'amount', window: 'month' } },
+        { kind: 'gauge', id: 'b_left', label: 'Left this month', value: spec.face.value, target: { setting: 'limit' }, format: 'money', edit: { setting: 'limit', label: 'Monthly budget', format: 'money' } },
+        { kind: 'bars', id: 'b_where', label: 'Where it went', from: 'budget/spend', by: 'category', value: { agg: 'sum', from: 'budget/spend', field: 'amount', window: 'month' }, edit: { field: 'category', label: 'Limits' } },
         { kind: 'bars', id: 'b_subs', label: 'Subscriptions · $38.46 a month', from: 'subscriptions/subscriptions', by: 'name', value: { agg: 'sum', from: 'subscriptions/subscriptions', field: 'amount' } },
         { kind: 'list', id: 'b_recent', label: 'Recent', source: 'budget/spend', fields: ['category', 'at'], sort: { field: 'at', dir: 'desc' }, limit: 5 }])] },
       values };
     case 'groceries': return {
       spec: { ...spec, tabs: [P('t_list', 'List', [
         { kind: 'checklist', id: 'b_items', source: 'groceries/items', switch: 'list', fields: ['qty'],
+          finish: GROC_FINISH, snap: GROC_SNAP,
           groups: [{ label: '{option} · {n} to buy', where: [E('status', 'eq', 'to_buy')] },
             { label: 'Bought in the last week · {n}', where: [E('status', 'eq', 'bought'), E('bought_on', 'within', '-7d')], done: true }],
           add: { placeholder: 'Add to {option}', set: { status: 'to_buy' } }, swipe: { right: 'complete', left: 'delete' } },
@@ -965,7 +1178,10 @@ function instrumented(key, spec, values, variant) {
       values: { b_spend: { text: '$142.00', target: '$200', pct: 71 }, ...values },
       status: seed ? '**22** to buy across 3 lists. **$142.00** of $200 spent this month.' : undefined };
     case 'calendar': return {
-      spec: { ...spec, tabs: [P('t_days', 'Calendar', [{ kind: 'days', id: 'b_days', source: '*dated', views: ['day', 'week', 'month'], view: 'week' }])] },
+      spec: { ...spec, tabs: [
+        P('t_days', 'Calendar', [{ kind: 'days', id: 'b_days', source: '*dated', views: ['day', 'week', 'month'], view: 'week', add: 'calendar/events' }]),
+        // the events Calendar owns, to add, edit and delete (Google's stay read-only); everything else on Calendar is another app's row
+        P('t_events', 'Events', [{ kind: 'list', id: 'b_events', source: 'calendar/events', fields: ['at', 'kind'], sort: { field: 'at', dir: 'desc' } }])] },
       values, status: seed ? '**3** today. Dates from every app, in one place.' : undefined };
     case 'todos': return {
       spec: { ...spec, tabs: [P('t_todos', 'To-dos', [
@@ -1024,11 +1240,11 @@ function instrumented(key, spec, values, variant) {
     case 'calories': return {
       spec: { ...spec, tabs: [
         P('t_today', 'Today', [
-          { kind: 'ring', id: 'b_ring', label: 'Today', value: spec.face.value, target: { setting: 'target' }, format: 'number' },
+          { kind: 'ring', id: 'b_ring', label: 'Today', value: spec.face.value, target: { setting: 'target' }, format: 'number', edit: { setting: 'target', label: 'Daily calories', format: 'number' } },
           { kind: 'picks', id: 'b_picks', label: 'Again', from: 'calories/foods', log: 'calories/meals', fields: ['name', 'calories', 'protein'] },
           { kind: 'list', id: 'b_meals_today', label: 'Today', source: 'calories/meals', fields: ['meal', 'calories', 'protein'], sort: { field: 'at', dir: 'asc' }, where: [E('at', 'within', 'today')] }]),
         ...spec.tabs.filter((t) => t.id !== 't_today')] },
-      values: seed ? { b_ring: { text: '1,140', target: 'of 2,200', pct: 52, sub: '70 g protein' }, ...values } : values,
+      values: seed ? { b_ring: { text: '1,140', target: 'of 2,200', pct: 52, sub: '70 g protein', spent: 1140, limit: 2200 }, ...values } : values,
       status: seed ? '**1,140** of 2,200 today across **3** meals.' : undefined };
     case 'cycle': return {
       spec: { ...spec, tabs: [
@@ -1037,11 +1253,13 @@ function instrumented(key, spec, values, variant) {
       values, status: seed ? 'Last period started **Tue 27 Oct**.' : undefined };
     case 'classes': return {
       spec: { ...spec, tabs: [
-        P('t_week', 'This week', [{ kind: 'days', id: 'b_week', source: '*dated', views: ['week'], view: 'week', apps: ['classes'] }]),
+        P('t_week', 'This week', [{ kind: 'days', id: 'b_week', source: '*dated', views: ['week'], view: 'week', apps: ['classes'], add: 'classes/due' }]),
         P('t_due', 'Due', [{ kind: 'checklist', id: 'b_due', source: 'classes/due', fields: ['class', 'at'], due: 'at',
           groups: [{ label: 'Coming up', where: [E('done', 'eq', false), E('kind', 'eq', 'assignment')] }, { label: 'Done · {n}', where: [E('done', 'eq', true)], done: true, collapsed: true }],
           swipe: { right: 'complete' } }]),
-        ...spec.tabs.filter((t) => t.id === 't_exams')] },
+        ...spec.tabs.filter((t) => t.id === 't_exams'),
+        // the classes themselves: add one, change its room or meeting days, delete it
+        P('t_classes', 'Classes', [{ kind: 'list', id: 'b_classes', source: 'classes/classes', fields: ['title', 'meets', 'room'], sort: { field: 'name', dir: 'asc' } }])] },
       data: { '*dated': DATED.filter((r) => r.app === 'classes') },
       values, status: seed ? '**2** due this week. Next: Start CS 3500 project, **Mon 23 Nov**.' : undefined };
     case 'subscriptions': return {
@@ -1092,5 +1310,32 @@ const LINKS = [
   }
 }
 
+// Remove app (spec/backend.md §11 row 21, FR-S8): `DELETE /apps/{key}` without `confirm` answers 409 `{error: 'dependents', dependents}`. These are
+// the server's answers for this seed (api `dependents()` over the seeded specs): `app` is the other app's key, `what` the server's phrase. An app that
+// is not a key here has none. The live server's answer wins if it differs.
+write('dependents', {
+  groceries: [{ app: 'budget', what: 'stitch from groceries/trips' }],
+  classes: [{ app: 'notes', what: 'notes/notebooks.class links to classes/classes' }],
+  subscriptions: [{ app: 'budget', what: 'reads subscriptions/subscriptions' }],
+});
+
+// Clair's thinking, as the server streams it (`thinking_delta`, clair-agent.md §2): a few short pieces after the first status line, in every
+// typed run that understands something. Samples and re-runs skip it (they replay fast); the words are the same for the same kind of run.
+const THINK = {
+  default: ['Looking at what you asked. ', 'Checking which of your apps it belongs in. ', 'Drafting it so you can confirm.'],
+  'run.lunch': ['A $12 lunch. ', 'Budget has an Eating out category, and $412 is what is left this month. ', 'One spend, nothing else to touch.'],
+  // runs with an attachment (attach/): what Clair says it sees in the photo or the file
+  'run.receipt': ['Eight lines and a total of $35.83. ', 'All eight are open on Weekly shop, so they close against it. ', 'The spend goes to Budget and the trip to Calendar.'],
+  'run.syllabus': ['Four pages: 6 due dates and 2 exams. ', 'ECON 1010 is already in Classes, so each date links to it. ', 'Calendar reads them from Classes.'],
+  'run.csv': ['Six rows, each with a date, a note and an amount. ', 'None of them are in Budget yet. ', 'Sorting them into your categories.'],
+  'run.ics': ['Four events, all after today. ', 'None of them are on Calendar yet. ', 'Adding them as events.'],
+  'run.appointments': ['Looking for visits that repeat. ', 'The haircuts are 35 days apart and the last was Sat 17 Oct. ', 'That puts the next one on Sat 21 Nov; 11 am clashes with coffee, so a later slot.'],
+};
+for (const [name, data] of OUTBOX) {
+  if (!name.startsWith('run.') || /\.(done|sample|answer|none)$/.test(name) || !Array.isArray(data) || !data.some((e) => e.event === 'understood')) continue;
+  const lines = THINK[name] ?? (name.startsWith('run.planner') ? ['Reading the 9 apps you have. ', 'Three sessions clash with Google Calendar events. ', 'Moving them to open slots, and keeping Monday as it is.'] : THINK.default);
+  const at = data.findIndex((e) => e.event === 'understood');
+  OUTBOX.set(name, [...data.slice(0, at), ...lines.map((text, i) => ({ delay: i ? 420 : 250, event: 'thinking_delta', data: { text } })), ...data.slice(at)]);
+}
 for (const [name, data] of OUTBOX) writeFileSync(join(OUT, name + '.json'), JSON.stringify(data, null, 1) + '\n');
 console.log('fixtures written to', OUT);

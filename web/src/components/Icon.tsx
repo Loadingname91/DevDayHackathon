@@ -22,6 +22,7 @@ const P: Record<string, string> = {
   app: 'M5 5h6v6H5zM13 5h6v6h-6zM5 13h6v6H5zM13 13h6v6h-6z',
   plus: 'M12 5v14M5 12h14',
   trash: 'M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13',
+  pencil: 'M5 19l1-4L16 5l3 3L9 18zM14 7l3 3',
   search: 'M11 5a6 6 0 1 0 0 12a6 6 0 1 0 0-12M20 20l-4.5-4.5',
   user: 'M12 5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7M5 20c1.2-3.6 4-5 7-5s5.8 1.4 7 5',
   receipt: 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h4',

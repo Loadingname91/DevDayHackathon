@@ -1,0 +1,275 @@
+{
+ "credits": -5,
+ "home": {
+  "faces": {
+   "classes": {
+    "text": "3"
+   }
+  },
+  "changed": [
+   "classes",
+   "calendar"
+  ]
+ },
+ "apps": {
+  "classes": {
+   "add": {
+    "classes/due": [
+     {
+      "id": "d_syl_problem_set_",
+      "position": "c013",
+      "version": 1,
+      "properties": {
+       "title": "Problem set 7",
+       "kind": "assignment",
+       "at": "2026-11-23T23:59:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "id": "d_syl_midterm_",
+      "position": "c014",
+      "version": 1,
+      "properties": {
+       "title": "Midterm 2",
+       "kind": "exam",
+       "at": "2026-12-01T09:10:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "id": "d_syl_problem_set_",
+      "position": "c015",
+      "version": 1,
+      "properties": {
+       "title": "Problem set 8",
+       "kind": "assignment",
+       "at": "2026-12-04T23:59:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "id": "d_syl_reading_response",
+      "position": "c016",
+      "version": 1,
+      "properties": {
+       "title": "Reading response",
+       "kind": "assignment",
+       "at": "2026-12-07T09:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "id": "d_syl_problem_set_",
+      "position": "c017",
+      "version": 1,
+      "properties": {
+       "title": "Problem set 9",
+       "kind": "assignment",
+       "at": "2026-12-09T23:59:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "id": "d_syl_term_paper",
+      "position": "c018",
+      "version": 1,
+      "properties": {
+       "title": "Term paper",
+       "kind": "assignment",
+       "at": "2026-12-11T17:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "id": "d_syl_review_sheet",
+      "position": "c019",
+      "version": 1,
+      "properties": {
+       "title": "Review sheet",
+       "kind": "assignment",
+       "at": "2026-12-14T09:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     },
+     {
+      "id": "d_syl_final_exam",
+      "position": "c020",
+      "version": 1,
+      "properties": {
+       "title": "Final exam",
+       "kind": "exam",
+       "at": "2026-12-16T08:00:00-07:00",
+       "class": [
+        "c01"
+       ],
+       "done": false
+      }
+     }
+    ],
+    "*dated": [
+     {
+      "at": "2026-11-23T23:59:00-07:00",
+      "title": "Problem set 7",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_problem_set_",
+      "changed": true
+     },
+     {
+      "at": "2026-12-01T09:10:00-07:00",
+      "title": "Midterm 2",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_midterm_",
+      "changed": true
+     },
+     {
+      "at": "2026-12-04T23:59:00-07:00",
+      "title": "Problem set 8",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_problem_set_",
+      "changed": true
+     },
+     {
+      "at": "2026-12-07T09:00:00-07:00",
+      "title": "Reading response",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_reading_response",
+      "changed": true
+     },
+     {
+      "at": "2026-12-09T23:59:00-07:00",
+      "title": "Problem set 9",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_problem_set_",
+      "changed": true
+     },
+     {
+      "at": "2026-12-11T17:00:00-07:00",
+      "title": "Term paper",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_term_paper",
+      "changed": true
+     },
+     {
+      "at": "2026-12-14T09:00:00-07:00",
+      "title": "Review sheet",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_review_sheet",
+      "changed": true
+     },
+     {
+      "at": "2026-12-16T08:00:00-07:00",
+      "title": "Final exam",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_final_exam",
+      "changed": true
+     }
+    ]
+   },
+   "face": {
+    "text": "3",
+    "label": "due this week"
+   },
+   "status": "**3** due this week. Next: Start CS 3500 project, **Mon 23 Nov**."
+  },
+  "calendar": {
+   "add": {
+    "*dated": [
+     {
+      "at": "2026-11-23T23:59:00-07:00",
+      "title": "Problem set 7",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_problem_set_",
+      "changed": true
+     },
+     {
+      "at": "2026-12-01T09:10:00-07:00",
+      "title": "Midterm 2",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_midterm_",
+      "changed": true
+     },
+     {
+      "at": "2026-12-04T23:59:00-07:00",
+      "title": "Problem set 8",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_problem_set_",
+      "changed": true
+     },
+     {
+      "at": "2026-12-07T09:00:00-07:00",
+      "title": "Reading response",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_reading_response",
+      "changed": true
+     },
+     {
+      "at": "2026-12-09T23:59:00-07:00",
+      "title": "Problem set 9",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_problem_set_",
+      "changed": true
+     },
+     {
+      "at": "2026-12-11T17:00:00-07:00",
+      "title": "Term paper",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_term_paper",
+      "changed": true
+     },
+     {
+      "at": "2026-12-14T09:00:00-07:00",
+      "title": "Review sheet",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_review_sheet",
+      "changed": true
+     },
+     {
+      "at": "2026-12-16T08:00:00-07:00",
+      "title": "Final exam",
+      "sub": "Classes",
+      "app": "classes",
+      "record_id": "d_syl_final_exam",
+      "changed": true
+     }
+    ]
+   }
+  }
+ }
+}

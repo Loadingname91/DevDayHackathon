@@ -82,6 +82,8 @@ type Field = {
   key: string; label: string;
   type: 'text'|'number'|'money'|'date'|'datetime'|'bool'|'select';
   options?: string[]; required?: boolean;
+  timeOptional?: boolean;   // datetime: the day is the value, a time is optional (a due date); the sheet offers "Add a time" (Nov 20)
+  allDay?: boolean;         // datetime: the sheet offers an "All day" switch; all day is stored as the day alone, "YYYY-MM-DD" (Nov 20)
 };
 type Collection = {                                    // data, not UI
   id: string; name: string; fields: Field[];
@@ -143,14 +145,18 @@ type LeafBlock =
   | { kind: 'checklist'; id: string; source: CollectionRef; fields?: string[]; switch?: string; due?: string;
                          groups: { label: string; where: Filter[]; done?: boolean; collapsed?: boolean }[];  // label tokens {today} {n} {option}
                          add?: { placeholder: string; set?: Record<string, Scalar>; pinned?: boolean };
-                         swipe?: { right?: 'complete'; left?: 'delete' } }
+                         swipe?: { right?: 'complete'; left?: 'delete' };
+                         finish?: { into: CollectionRef; link: string; label?: string };            // Nov 20: "Finish trip" under the list (POST /trips/finish)
+                         snap?: { label?: string; intents: { id: string; label: string; hint?: string; ask: string }[] } }  // Nov 20: a camera button; the photo goes to Clair with context.intent
   | { kind: 'days';      id: string; source: CollectionRef | '*dated'; views: ('day'|'week'|'month')[];
-                         view: 'day'|'week'|'month'; apps?: string[] }                              // apps: keep only these apps' rows
+                         view: 'day'|'week'|'month'; apps?: string[];                             // apps: keep only these apps' rows
+                         add?: CollectionRef }                                                       // Nov 20: the "+" adds a row here, dated the day picked; default: the app's first calendar collection
   | { kind: 'next';      id: string; source: CollectionRef; log: CollectionRef; fields: string[] }
   | { kind: 'timer';     id: string; label: string; mode: 'countdown'|'stopwatch'; log: CollectionRef;
                          minutesField: string; kindField?: string; presets?: number[];
                          moodFields?: [string, string]; after?: string[]; set?: Record<string, Scalar> }
-  | { kind: 'month';     id: string; source: CollectionRef; dateField: string; mark: string; fields: string[] };
+  | { kind: 'month';     id: string; source: CollectionRef; dateField: string; mark: string; fields: string[] }
+  | { kind: 'notebook';  id: string; source: CollectionRef; pages: CollectionRef; link: string; body: string };  // Nov 20: a workspace, see "Notebook" below
 
 // ---- data ----
 type Row = { id: string; ref: CollectionRef; values: Record<string, Scalar>;
@@ -187,9 +193,9 @@ The owner asked on Fri 20 Nov for each app to open on what it is for, not on a l
 
 | Kind | What it shows | What the client reads | What it writes |
 | --- | --- | --- | --- |
-| `gauge` | A hero figure and its bar: Budget "$412 left of $1,200 · 11 days to go"; Subscriptions "$38.46 a month" | `values`: `text`, `target`, `pct` (the bar; no `pct`, no bar), `sub`, `link?` | nothing |
-| `bars` | One bar per option of the select field `by`, summed by `value`: Budget's "Where it went". Past a limit the excess is hatched | `values.rows[]`: `{label, text, pct?, over_pct?, note?}`; with `over_pct` the fill is `100 − over_pct` and the hatch `over_pct` | nothing |
-| `ring` | A goal ring: Calories "1,140 of 2,200 · 70 g protein". Progress only, never a judgement | `values`: `text`, `target`, `pct`, `sub` | nothing |
+| `gauge` | A hero figure and its bar: Budget "$412 left of $1,200 · 11 days to go"; Subscriptions "$38.46 a month" | `values`: `text`, `target`, `pct` (the bar; no `pct`, no bar), `sub`, `link?`; with `edit`, `spent` and `limit` in cents | nothing; with `edit: {setting, label, format}` a pencil opens the limits sheet: `PATCH /apps/{id}/settings` (Nov 20) |
+| `bars` | One bar per option of the select field `by`, summed by `value`: Budget's "Where it went". Past a limit the excess is hatched | `values.rows[]`: `{label, text, pct?, over_pct?, note?, id?, spent?, limit?}` (`id` is the option's id and `spent`, `limit` are cents, for the limits sheet; with `edit: {field, label}` the section label carries a "Limits" link that sets or clears each option's limit and adds an option, `PATCH /apps/{id}/settings`); with `over_pct` the fill is `100 − over_pct` and the hatch `over_pct` | nothing |
+| `ring` | A goal ring: Calories "1,140 of 2,200 · 70 g protein". Progress only, never a judgement | `values`: `text`, `target`, `pct`, `sub`; with `edit`, `spent` and `limit` (a count) | nothing; with `edit: {setting, label, format}` a pencil sets the goal (`PATCH /apps/{id}/settings`) |
 | `countdown` | Days to the next dated row of `source`: "Winter 10K · 22 days to go · Sat 12 Dec · 9:00 am" | `values`: `title`, `text`, `unit`, `sub`, `note?`; no entry, no card | nothing |
 | `strip` | This week, Mon to Sun, one cell per day with that day's figure; a day with something logged takes the app's colour. History, not a streak | `values.days[7]`: `{dow, text?, on?, today?}` | nothing |
 | `picks` | "Again": the rows of `from` as chips; a tap logs a copy into `log` (Calories' foods into meals) | rows in `data[from]` | `POST /records {collection_id: log, fields}` with the block's `fields` copied and no time; the server stamps it |
@@ -198,6 +204,7 @@ The owner asked on Fri 20 Nov for each app to open on what it is for, not on a l
 | `next` | The next session and the guided log behind it: "Next up · today 6 pm · Pull day · Start pull day" → Log a set (exercise N of M, steppers filled from the plan, a rest timer, "New best") | `values`: `eyebrow`, `meta`, `title`, `action`, `record_id`, `occurrence`, `rest` (seconds), `steps[]`: `{id, name, plan, sets, reps, weight, unit, best?: {reps, weight, text}}` | each set: `POST /records {collection_id: log, fields: {exercise: [step id], session: [record_id], reps, weight}}`, no time; Finish: `POST /records/{record_id}/complete {occurrence, minutes}` |
 | `timer` | `countdown` (Meditation: kind chips, `presets` in minutes, mood 1 to 5 before and after, a chime) or `stopwatch` (Running: asks the kind and the `after` fields at the end) | nothing | one `POST /records {collection_id: log, fields}` on Save: `set`, `minutesField`, `kindField`, the mood fields or the `after` fields (a run also sends `name`, "Easy run"), no time |
 | `month` | A month of days to log into (Cycle): logged days filled by the `mark` field, cycle starts ringed, tap a day up to today to log or change it. No prediction | rows in `data[source]`, and the starts from `data["<app>/cycles"]` | a new day: `POST /records`; a logged day: `PATCH /records/{id} {fields, base_version}` |
+| `notebook` | A notes workspace, one block for the whole screen: a tree of `source` rows (notebooks) with the `pages` rows in them, search, "+" to add a page or a notebook; a page opens as a big editable title and a writing area with a live markdown preview (laptop: Write, Split or Preview; phone: a notebook sheet over the page list, a page opens full screen with Write or Preview). Notes uses it as its one tab. A page can sit in several notebooks (`link`, a `many` relation to `source`); its text is `body` (multiline); a page in no notebook shows under "Unfiled" | rows in `data[source]` and `data[pages]`; `_links` and `_backlinks` on a page (the Linked sections and `[[Title]]` chips, as in "Links") | `POST /records` (a page or a notebook; a new page is titled "Untitled", dated now, in the notebook you are in), `PATCH /records/{id}` (title and body autosave after a 0.9 s pause, one write at a time, each with the latest `base_version`; the notebooks of a page), `DELETE /records/{id}` with Undo. **No new route and no new field.** The client renders `body` as GitHub-flavoured markdown (headings, lists, task lists, tables, code, quotes), sanitised, with `[[Title]]` as a chip when it resolves in `_links` or to a page of the same app, and stores it as typed. A starter or built app opts in by using this block |
 
 **Response.** `GET /apps/{id}` is `{spec, data, faces, values, status?, seq, server_now}`. `values` has an entry for every metric, progress and instrument block that shows a figure; a block with no entry shows a quiet card "No data yet" under its label (Nov 20; was "–"), and an entry that is there without its `text` keeps the dash and "Could not be worked out."; `bars` with `rows: []`, and `countdown`, `strip` and `next` with no entry, show nothing. What the server puts in each entry, with the seed's worked values: `backend.md` §10, "What the server computes for instruments".
 
@@ -208,6 +215,10 @@ The owner asked on Fri 20 Nov for each app to open on what it is for, not on a l
 **Writes.** All are gestures (`backend.md` §5: applied at once, Undo toast). Picks, the timer and each guided set send no time and expect the server to stamp the collection's `dateField` with now; which writes get the stamp is open (`split.md` §7, Nov 20). Record gestures are in the base build since Nov 20 (`backend.md` §13).
 
 **Schema note.** `checklist.add.set` and `timer.set` are open records. If `propose_app` is to emit these kinds, its schema needs them as key/value lists (the closed-object rule above).
+
+### Layout overlay (Nov 20)
+
+Arrange (app `···` menu) lets a person put an app's tabs, and the blocks of each tab, in their own order and hide the ones they never use. It is an overlay, not an edit: the `AppSpec` is not changed, nobody else's app moves, and it works for every app, Clair's builds included. Shape (`AppLayout` in `web/src/api/types.ts`): `{tabs?: string[]; hiddenTabs?: string[]; blocks?: {[pageId]: {order?: string[]; hidden?: string[]}}}`, keyed by the spec's own `PageBlock.id` and block `id`. The client applies it after it reads the spec (`web/src/lib/layout.ts`: `applyTabs`, `applyBlocks`): ids the overlay names come first, ids it does not know (a tab Clair added later) follow in spec order, ids the spec no longer has are ignored. The last tab, and the last block of a tab, cannot be hidden; a tab a link or a filter asks for (`?tab=`) shows even if hidden. A build preview has no overlay. Stored on the device (`localStorage` `quilt-layout:<app key>`) and in `me.workspace.settings.layout` through `PATCH /settings {layout}` (`spec/backend.md` §10), which wins on another device that has nothing saved. Clair's apps must keep tab and block ids unique and stable across edits.
 
 ### Links (Nov 20)
 

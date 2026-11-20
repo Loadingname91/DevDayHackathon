@@ -192,8 +192,10 @@ def test_classes_two_due_this_week():
 
 def test_notes_three_this_week():
     n = rows('notes', 'notes')
-    assert len(n) == 5 and sum(1 for x in n if in_week(x['at'])) == 3
+    assert len(n) == 8 and sum(1 for x in n if in_week(x['at'])) == 3
     assert len(rows('notes', 'notebooks')) == 4
+    assert [x['title'] for x in n if len(x['notebook']) == 2] == ['Finals study plan']   # a note in two notebooks
+    assert all(x['body'] for x in n)
 
 
 def test_workout():
