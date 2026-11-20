@@ -12,7 +12,7 @@ status: draft
 **Job Title:** Check in on my life in one glance
 **Date:** Nov 19, 2026
 **Author:** Quilt founding team (drafted with Claude)
-**Research Basis:** Founders' pitch doc, persona PU-001 (`docs/research/persona-sam-student.md`, Proto confidence), launcher research (`https://claude.ai/artifact/WtBMJUDese1MWWMTjFu8Dd`). No interviews yet; every insight below is a hypothesis to test in Thursday's survey.
+**Research Basis:** Founders' pitch doc, persona PU-001 (the Sam persona, Proto confidence; removed from the repo on Nov 19, in git at `ee70002`), launcher research (`https://claude.ai/artifact/WtBMJUDese1MWWMTjFu8Dd`). No interviews yet; every insight below is a hypothesis to test in Thursday's survey.
 
 ---
 

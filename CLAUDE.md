@@ -10,8 +10,9 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
   - `clair-agent.md`: agent loop, tool registry, SSE events, snapshot, pause/resume, evals
   - `ui-tech-plan.md`: client stack, contracts, files, motion
   - `adr/`: decision records. ADRs live here, not in `docs/adr/`.
-- `docs/`: written for people (start here, the product in plain words `docs/product.md`, pitch, onboarding journey, demo-day guide, research, Claude Code setup). Prose there gets a `humanizer:humanizer` pass after edits.
-- `design/`: canvas boards (generated), prototypes, design book, Playwright tests, `notes/fixspec.md` (cited as "fixspec").
+- `docs/`: written for people (start here, the product in plain words `docs/product.md`, pitch, demo-day guide, Home research, Claude Code setup). Prose there gets a `humanizer:humanizer` pass after edits.
+- `design/`: the Home, Flows and motion prototypes (the client ports CSS and motion from them), `notes/fixspec.md` (cited as "fixspec"), the Soft Quilt tokens and the canvas generators in `tools/`. See `design/README.md`.
+- Removed on Nov 19 to clear the decks for the build (all in git at commit `ee70002`; restore with `git checkout ee70002 -- <path>`): `founder/` (business review), `design/canvas/` (generated boards), `design/book/`, `design/tests/`, `design/stills/`, `design/prototypes/explorations/`, the rejected look generators, `docs/onboarding.md`, `docs/research/persona-sam-student.md`, `docs/research/tabos-app-audit.md`. Older spec sections still cite some of these paths; the decisions they fed are recorded in `spec/prd.md` and `docs/start-here.md`.
 - `GLOSSARY.md` (terms; say "app", never "tab"), `PRODUCT.md` and `.impeccable/` (design context for the impeccable skill): keep at the root.
 
 ## Fixed decisions
@@ -42,7 +43,7 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
 
 ## Design canvas
 
-- Regenerate: `python3 design/tools/gen_all.py design/canvas && python3 design/tools/layout_canvas.py design/canvas`. `layout_canvas.py` resets note positions; the live canvas index has been re-saved from the page since, so read the live `canvas.json` first.
+- The live canvas is the single place to look at the design; its Screens page links to every other Quilt artifact. The local boards were removed (above). Regenerate if needed: `python3 design/tools/gen_all.py design/canvas && python3 design/tools/layout_canvas.py design/canvas` (`layout_canvas.py` resets note positions).
 - Live canvas: https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P (the artifact serves files at `project/<file>`; publish by mapping each `project/<file>` to `design/canvas/<file>` in `files`). Home and Flows prototypes: see `design/README.md`.
 - Never commit or publish `support.js` / `dc-runtime.js` (git-ignored; fetch from the artifact when needed).
 
@@ -51,12 +52,12 @@ Quilt is a phone-first app: apps built from 9 blocks, linked by stitches, filled
 - Positioning: app builder first, apps connected on arrival and working together, data from anywhere. Never lead with photo capture.
 - No application code exists in this repo yet. Build order: `spec/backend.md` §13 (T1 to T4 tonight, D1 to D10 on the day, clip recorded by early afternoon). Go/no-go 10:00 Nov 20; freeze 2 hours before the pitch.
 - Demo: a recorded clip of three builds, then the live training planner as the first rule of the workflow engine, with Google Calendar connected before the pitch. Script: `docs/demo-day.md`. The owner asked for all of it (builder, broad planner, Google, full engine ladder); the cut order in `spec/backend.md` §13 keeps a safe point.
-- Seed: `spec/backend.md` §2.2 + §2.3 is complete and wins over boards. Rule and fixes: `spec/prd-data-provenance.md` (audit rows in `spec/data-audit/`). The demo account starts with no rules.
+- Seed: `spec/backend.md` §2.2 + §2.3 is complete and wins over boards. Rule and fixes: `spec/prd-data-provenance.md` (audit rows in `spec/data-audit/`, which describe the removed boards). The demo account starts with no rules.
 - Owner decisions made Nov 19 (recorded in `spec/prd.md` Future Considerations and `docs/start-here.md`): model split after DevDay (Haiku 5.5 capture and chat, Sonnet 5.5 builds; Opus 5.5 at DevDay), Student Plus $4, free import and export, Calories as a starter app, appointments as a kind on Calendar events, pattern runs on Plus with a cap, health data on Plus (Android first, after the native app), Cycle app only with its own read switch, starter-app tab names (`spec/backend.md` §10).
-- Business: `founder/` (founder skill pack; verdict Not yet).
+- Business: the founder review was removed from the repo (commit `ee70002` has it; verdict was Not yet). Its decisions that stand: Student Plus $4, free import and export, the model split after DevDay.
 - Not built for DevDay, don't build unless asked: the Car photo build, whiteboard, fridge, onboarding, builds from sentences other than the three recorded ones, the engine beyond v1 (dates, notifications, sending, connectors, Internship hunt showcase), anything deeper in Calories, Running, Meditation or Cycle (photo meals, pace, charts, timer, a prediction shown in the app), the planner changing weights or planning meals, health data; restyling the Screens boards to the new look.
 - Look, decided Nov 19: Soft Quilt (pastel stitched patches on a soft gradient ground, Figtree, no red), light = Mint air, dark = Denim dusk. Canvas page "Look: Soft Quilt", tokens in `design/tools/gen_soft.py`, contract at the end of `.impeccable/surfaces/app.md`. Rejected options stay on "Look: cross-stitch" and "Look: Gen Z options".
-- Stale: `docs/research/persona-sam-student.md`, `docs/onboarding.md` and the DevDay application answer in `docs/pitch.md` (receipt-first); the boards and prototypes (receipt flow, no planner boards); older sections of `docs/pitch.md` (Android stack plan).
+- Stale: the DevDay application answer in `docs/pitch.md` (receipt-first) and its older sections (Android stack plan); the prototypes and the live canvas (receipt flow, 8 apps, no planner boards).
 - Open: what to tell the DevDay organisers (the application named the receipt as the event-day feature); the native framework after DevDay; whether Calories sets a daily target.
 
 ## Working rules

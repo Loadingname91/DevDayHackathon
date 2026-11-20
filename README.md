@@ -6,11 +6,10 @@ Quilt is a personal app builder for a student's money, groceries, classes, worko
 
 | Folder | For | What's in it |
 | --- | --- | --- |
-| `docs/` | People | The pitch, the onboarding journey, the demo-day guide, research on the first user, and how to set up Claude Code on a new machine |
+| `docs/` | People | Where to start, the product in plain words, the pitch, the demo-day guide, the Home research, and how to set up Claude Code on a new machine |
 | `spec/` | Building it (written for coding agents) | Requirements and stories, the backend design, Clair's agent loop, the UI build plan, and the decision records in `spec/adr/` |
-| `design/` | Design | The design canvas boards and their generator, the clickable prototypes, the design book and the board tests |
+| `design/` | Design | The Home, Flows and motion prototypes the app copies its look and motion from, the design notes, and the generators. The boards themselves live on the design canvas (link below) |
 | `docs/start-here.md` | Picking up | Read this first: where things stand, what to do before the pitch, decisions waiting on you, and what's parked |
-| `founder/` | The business | The founder-pack review: board, competitors, simulated buyer panel, pricing, unit economics and the plan (start with `founder/summary.md`); the first run is in `founder/run-1-photo-wedge/` |
 | `setup/` | New machines | A copy of the Claude Code settings and hook (see `docs/setup-claude-code.md`) |
 
 Start with `docs/start-here.md`. Then `docs/product.md` for the product in plain words, `docs/pitch.md` for the pitch, or `docs/demo-day.md` for the demo.
@@ -23,10 +22,13 @@ React + Vite, served as a website on the phone and the laptop for DevDay (a nati
 
 ## Live design links
 
-- Design canvas: https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P
+- **Design canvas, the one place to start; it links to all the others:** https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P
+- Product overview: https://claude.ai/artifact/6TXLXKTmxbqjt3kv8bbgRP
 - Home prototype: https://claude.ai/artifact/Wr2p4rLD6Zgow3uxmSykRV
 - Flows prototype: https://claude.ai/artifact/HrLSUSPiXKCLphYfHVFxne
 - Motion catalogue: https://claude.ai/artifact/VPM8mrtefTzb7n6e5GwLAC
 - Design book: https://claude.ai/artifact/N37FhQVVYTNoeDf4rJFyjq
 
 These links are private to the owner until shared from each page's Share menu.
+
+On Nov 19 the business review (`founder/`), the generated canvas boards, the design book, the board tests, early explorations and three stale docs were removed to clear the decks for the build. They are in git at commit `ee70002`.

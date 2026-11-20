@@ -61,7 +61,7 @@ The script is `docs/demo-day.md`. The build order is `spec/backend.md` §13.
 | The native app after DevDay | Capacitor (keeps this code), React Native (rewrites the screens) or fully native | `spec/adr/010-web-only-devday-planner-cut.md` |
 | Does Calories set a daily target | The big calorie apps work one out at setup. Suggested: offer it, with a clear "Just log" option | `docs/product.md` |
 | Dark mode for DevDay | The look is picked (Soft Quilt, Mint air light, Denim dusk dark). Decide whether the build ships dark mode or just light | `spec/adr/009-soft-quilt-look-pickable-grounds.md` |
-| The first job new users see | All three board reviewers chose a class job: notes and syllabi filed into the right course | `founder/board.md` |
+| The first job new users see | The business review's three reviewers chose a class job: notes and syllabi filed into the right course | The review was removed from the repo; see the note at the end |
 | Pitch timing | The pitch doc says to say what Quilt is within 30 seconds; the YC advice it quotes says 20 | `docs/pitch.md` |
 | Smaller calls | A guest can't add a second device until they add an email. How long guest accounts, guest credits and photos are kept | `spec/prd.md` open questions |
 
@@ -72,16 +72,13 @@ The script is `docs/demo-day.md`. The build order is `spec/backend.md` §13.
 - Building an app from a photo, or from any sentence other than the three in the clip. The Car build from a photo is specified (`spec/clair-agent.md` §12.0) and not built.
 - Fixing old numbers on the boards. The boards now wear the Soft Quilt look, but some still show old numbers; the fixes are listed in `spec/prd-data-provenance.md` (epic E5). The design-system board still describes the old look and needs a Soft Quilt version.
 - Data fields the boards assumed. Category limits, reminders, Workout sets, your name and recently opened apps are epics E3 and E4 of `spec/prd-data-provenance.md`.
-- Which apps to build next. `docs/research/tabos-app-audit.md` maps tabOS's 39 tabs onto about 9 Quilt templates.
 
 ## Docs that are behind
 
 These still lean on the receipt, the Car build or the old look. They're fine to read but shouldn't be copied from until they're updated:
 
-- `docs/research/persona-sam-student.md` and `docs/onboarding.md` treat receipt capture as Sam's main reason to use Quilt.
-- In `docs/pitch.md`, the application answer "What will you build during DevDay?" still describes the receipt. If the application is already submitted, leave it. If it isn't, say the build.
 - `.impeccable/surfaces/app.md` describes the old Quilter's Workbench look.
-- `docs/pitch.md` still has the old stack plan and competitor answers that mention the Android app; beat 4 and the plans table are updated.
+- In `docs/pitch.md`, the application answer "What will you build during DevDay?" still describes the receipt. If the application is already submitted, leave it. The pitch script, the MVP section and the plans table are up to date.
 - The design boards and prototypes show the receipt flow. There are no boards for the planner card, "from Google" rows or the Workflows tab.
 - Older sections of the specs still say "APK" or "Capacitor" in places; read them as the website on the phone.
 
@@ -89,10 +86,13 @@ These still lean on the receipt, the Car build or the old look. They're fine to 
 
 | Folder | What's in it |
 | --- | --- |
-| `docs/` | Written for people: this page, the product in plain words, the pitch, the demo-day script, onboarding, research, and setting up Claude Code on a new machine |
+| `docs/` | Written for people: this page, the product in plain words, the pitch, the demo-day script, the Home research, and setting up Claude Code on a new machine |
 | `spec/` | Written for building: requirements, the backend and seed, Clair's agent, the UI plan, the data provenance PRD and its audit, parked workflows, and decision records in `spec/adr/` |
-| `founder/` | The business review from the founder pack: board, competitors, the simulated buyer panel, pricing, unit economics and the plan. `founder/summary.md` is half a page. The first run, on the photo framing, is in `founder/run-1-photo-wedge/` |
-| `design/` | Canvas boards and their generators, prototypes, the design book and board tests |
+| `design/` | The Home, Flows and motion prototypes, the design notes and the generators. The boards are on the design canvas: https://claude.ai/artifact/TuTh7izChf3Dk74gvBvi7P, which links to every other Quilt page |
 | `setup/` | Claude Code settings to copy onto a new machine (`docs/setup-claude-code.md`) |
 
 `README.md` is the repo map, and `CLAUDE.md` is the map Claude Code reads first.
+
+## Removed on Nov 19
+
+To clear the decks before building, these were taken out of the repo: the business review (`founder/`), the generated canvas boards, the design book, the board tests, the early design explorations, the onboarding journey, the Sam persona and the tabOS app audit. Nothing is lost: they are in git at commit `ee70002`, and `git checkout ee70002 -- founder` (or any other path) brings one back. Some older sections of the specs still mention those paths.

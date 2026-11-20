@@ -142,7 +142,7 @@ What the market shows: free tiers convert on structural limits (number of projec
 - No surprise bills: alerts go out at 80% and 100%, then Clair pauses until next month or a top-up. Apps, logging, sync and widgets never stop.
 - Marketplace: creators keep 80% of what their apps earn, and Quilt takes 20%.
 - Price anchor: Plus at $6 costs less than Rocket Money Premium+ ($15) and Todoist Pro ($5) together, before counting gym or habit apps.
-- Student Plus: $4 a month, or $15 a semester, with a school email (Nov 19, from the founder pack: `founder/pricing.md`).
+- Student Plus: $4 a month, or $15 a semester, with a school email (decided Nov 19, from the business review).
 - Import from Notion, Apple Notes, Google Docs, Obsidian and Goodnotes, and full export to Markdown and CSV, are free on every plan. Switching cost was the main reason simulated buyers passed.
 - In the pitch, say only "Free to start, $6 a month, $4 for students." The marketplace and teams are the expansion line.
 
@@ -150,26 +150,26 @@ All Quilt prices are a starting proposal to test with the survey and waitlist. N
 
 ## The MVP: what we build for DevDay
 
-The MVP takes a thin slice of every pillar except Share, so the demo shows the whole idea working end to end: capture, connect, confirm, and live on two devices. Two people build it. This section was updated Nov 19 to match the build docs: `spec/backend.md`, `spec/clair-agent.md`, `docs/onboarding.md` and `spec/ui-tech-plan.md`.
+The MVP takes a thin slice of every pillar except Share, so the demo shows the whole idea working end to end: build, connect, plan, confirm, and live on two devices. Two people build it. This section was rewritten late on Nov 19 to match the build docs: `spec/backend.md`, `spec/clair-agent.md`, `spec/workflows.md` and `spec/ui-tech-plan.md`.
 
-| Pillar | Built before Friday | Built live on Nov 20 (judged) | Faked or cut |
+| Pillar | Built the night before | Built on Nov 20 (judged) | Faked or cut |
 | --- | --- | --- | --- |
-| Build | App specs drawn from 9 blocks: page, text, metric, progress, collection, list/table/calendar view, form, chart; five starter apps from templates | Clair proposes a new app from a sentence (stretch) | Styling controls, editing blocks by hand |
-| Capture | Quick-add, reorder and lists (Weekly shop, Taco night, Costco run) in every app | **Clair reads any photo or file:** says what it sees, asks a menu question when unsure, and shows one card to OK. Receipt first, then a fridge photo checked against your usual groceries | Bank feeds, Siri |
-| Connect | Calendar shows dates from every app; Budget reads grocery spend | One OK updates Groceries, Budget and Calendar together, with Undo | Questions across apps, nudges, automations |
-| Everywhere | Android app (React + Capacitor) on the phone, the same build as a website on the laptop, data on the server, live sync between them | | Offline edits, iOS, encryption, export |
+| Build | App specs drawn from the blocks; 12 seeded apps | Clair builds three apps from three sentences (shown as a recording made that day) | Building from a photo, styling controls, editing blocks by hand |
+| Capture | A typed sentence to Clair becomes one card to OK | The grocery receipt photo, only if time allows | Voice, files, bank feeds |
+| Connect | Calendar shows dates from every app; one OK, one Undo | **The planner:** Clair reads nine apps and Google Calendar and proposes next week's training in one card. **The workflow engine:** rules Clair sets up, starting with "do this every Sunday" | Questions across apps, phone notifications |
+| Everywhere | A website on the phone's browser and the laptop, data on the server, live sync between them | Google Calendar, read-only | Native app, offline edits, encryption, export |
 | Share and earn | | | Marketplace, collaboration, teams (roadmap slide only) |
 
-Demo apps, pre-seeded with realistic data: Budget, Groceries, Calendar, Classes, Workout, To-dos and Subscriptions. The scripted demo uses Budget, Groceries and Calendar.
+Demo apps, pre-seeded with realistic data: Budget, Groceries, Calendar, Classes, Workout, To-dos, Subscriptions, Notes, Calories, Running, Cycle and Meditation.
 
-**Stack:** React + Vite website, on the phone's browser and the laptop for DevDay (no Android app yet; decided late Nov 19); a Python (FastAPI) API on Vercel that alone holds the Claude key; Supabase for Postgres, guest sign-in and live updates; Claude (`claude-opus-5-5`, vision and tools) for Clair through the Anthropic Python SDK tool runner. All formulas run in Python on the server. DevDay has no stack rules.
+**Stack:** React + Vite website, on the phone's browser and the laptop for DevDay (no Android app yet; decided late Nov 19); a Python (FastAPI) API on Vercel that alone holds the Claude key; Supabase for Postgres, sign-in and live updates; Claude (`claude-opus-5-5`, tools) for Clair through the Anthropic Python SDK tool runner. All formulas run in Python on the server. DevDay has no stack rules.
 
 **Split for two people**
 
-- **Person A, API and Clair:** database schema and seed, change sets with confirm and undo, Python formulas, the Clair agent loop and its tools, join codes.
-- **Person B, app and demo:** the app in the design book's look (warm ground, Hanken Grotesk and DM Mono, app dyes, no red), Home, the Clair sheet, the thread pull, live refresh across devices, the Android build, pitch slides.
+- **Person A, API and Clair:** database schema and seed, change sets with confirm and undo, Python formulas, the Clair agent loop and its tools, the planner, the workflow engine, Google Calendar, join codes.
+- **Person B, app and demo:** the app in the Soft Quilt look, Home, the Clair sheet, the proposal card and thread pull, the Build flow, the Workflows tab, live refresh across devices, the recorded clip, pitch slides.
 
-**Plan.** Before Nov 20: schema, seed, API skeleton, the app shell and the Android build. Nov 20: confirm and undo, the Clair loop (receipt, then fridge), the Clair sheet, two-device sync, onboarding, three rehearsals. Hour by hour: `spec/backend.md` §13.
+**Plan.** Night of Nov 19: schema, seed, the app shell, all 12 apps drawing, a typed sentence to a card, confirm, undo, two-device sync. Nov 20, in order: the planner's first step and the Sunday rule; app building and the recorded clip; the rest of the planner; Google Calendar; the rest of the workflow engine. Step by step, with what gets cut first: `spec/backend.md` §13.
 
 ## Technical quirks and risks
 
@@ -186,7 +186,7 @@ The biggest technical risk is the AI misbehaving. Quilt's design handles it: Cla
 | Changing an app breaks linked apps | The budget reads the grocery app's fields | Fixed demo schemas | Link checks on every change and versioned block types with migrations |
 | Generic blocks hit a ceiling | Some needs don't fit 9 blocks | Pick demos that fit | Grow the block library deliberately; every first-party template must be buildable from blocks alone |
 | Encryption limits search | Encrypted data is hard to filter and compute on | Not in MVP | Per-account keys plus a minimal search index; never claim end-to-end encryption |
-| Widgets, Siri, Live Activities need native apps | A web app can't reach the lock screen | Android app built with Capacitor around the same React code | Capacitor plugins for widgets and shortcuts; iOS from the same code |
+| Widgets, Siri, Live Activities need native apps | A web app can't reach the lock screen | For DevDay, a website added to the phone's Home screen | A native app after DevDay (framework undecided) for widgets, notifications and health data |
 | Bank data brings compliance work | Security audits, Plaid costs | Not in MVP | Pro tier only, after a security review |
 | Stage demo fails | Wi-Fi, AI outage | Phone hotspot, functions warmed before the pitch, "Use sample" marked as a sample, recorded backup video |  |
 
@@ -291,7 +291,7 @@ These cover the questions hackathon applications usually ask. The real form's qu
 
 **Business model.** Free for a few apps, then a low monthly plan for unlimited apps and photo fills, priced below the stack of single-purpose apps it replaces. Next, a marketplace where anyone can publish apps for free or for sale (we take a cut), then team workspaces billed per seat.
 
-**Tech stack.** React + Vite, wrapped with Capacitor as an Android app (the same build is the website); Python FastAPI API; Supabase (Postgres, sign-in, live updates); Claude Opus through the Anthropic Python SDK tool runner for Clair.
+**Tech stack.** React + Vite website on the phone and the laptop (a native app comes after); Python FastAPI API; Supabase (Postgres, sign-in, live updates); Claude Opus through the Anthropic Python SDK tool runner for Clair.
 
 **Prior work.** Architecture and backend design, and a clickable design canvas of every screen, already exist; the apps and data model will be built before the event, and Clair during it.
 
@@ -328,7 +328,7 @@ The best play is to arrive with Quilt's core already working (describe a need, C
 - **Pitch counts as much as code.** Judging includes a fast business pitch, so the application and the demo need a one-line market, a user and a way to make money alongside the tech.
 - **Deadline.** The posted deadline was Nov 10. Email the organizers about a late application; the site has a Request Information form.
 - **Team size.** We are a team of 2 (the limit is 4). The team lead must be an enrolled University of Utah student (or recent U of U grad); teammates can be from anywhere.
-- **Stack.** DevDay has no stack rules, and AI coding tools are encouraged (Lovable is a sponsor). Our stack: React + Capacitor (Android), a Python API, Supabase and Claude (see the MVP section). Set up accounts and any student verification now, since the organizers warn it can take days.
+- **Stack.** DevDay has no stack rules, and AI coding tools are encouraged (Lovable is a sponsor). Our stack: a React website, a Python API, Supabase and Claude (see the MVP section). Set up accounts and any student verification now, since the organizers warn it can take days.
 
 ## Open items for you
 
@@ -338,5 +338,5 @@ Nothing gets submitted until you approve the final answers.
 - [ ] Ask the organizers whether late applications are accepted (deadline was Nov 10)
 - [ ] Open the application form in your browser and paste its questions here or in the thread
 - [ ] Send team names, schools, emails and roles (up to 4 people)
-- [x] Stack confirmed Nov 19: React + Capacitor, Python API, Supabase, Claude (`spec/backend.md`)
+- [x] Stack confirmed Nov 19: React website (no Android app for DevDay), Python API, Supabase, Claude (`spec/backend.md`)
 - [ ] Set up AI tool accounts and student verification this week
