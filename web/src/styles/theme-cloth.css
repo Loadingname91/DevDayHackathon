@@ -12,21 +12,23 @@
    Light and dark are each composed (dark is night cloth: elevation steps, richer dyes), not inverted. */
 
 :root[data-look='cloth'] {
-  --nh: 172; --ah: 180;
+  --nh: 85; --ah: 190;
 
   /* ground, ink and surfaces: mint muslin by day, night cloth by night */
-  --ground: light-dark(oklch(.962 .02 172), oklch(.205 .036 215));
-  --ink: light-dark(oklch(.235 .04 195), oklch(.955 .012 195));
-  --sec: light-dark(oklch(.45 .04 195), oklch(.79 .03 205));
-  --card: light-dark(oklch(.994 .005 172), oklch(.262 .034 215));
-  --card-line: light-dark(oklch(.9 .018 172), oklch(.355 .034 215));
-  --raise: light-dark(oklch(.998 .003 172), oklch(.305 .034 215));
+  --ground: light-dark(#F7F5F0, oklch(.205 .036 215));
+  --ink: light-dark(#183B39, oklch(.955 .012 195));
+  --sec: light-dark(#60736F, oklch(.79 .03 205));
+  --card: light-dark(#FFFEFC, oklch(.262 .034 215));
+  --card-line: light-dark(#D9DDD6, oklch(.355 .034 215));
+  --raise: light-dark(#FFFEFC, oklch(.305 .034 215));
   --hair: color-mix(in oklch, var(--ink) 11%, transparent);
   --line: color-mix(in oklch, var(--ink) 36%, transparent);
   --bar: color-mix(in oklch, var(--card) 94%, transparent);
   --scrim: light-dark(oklch(.24 .04 195 / .3), oklch(0 0 0 / .55));
-  --focus: light-dark(oklch(.45 .13 var(--ah)), oklch(.84 .1 var(--ah)));
-  --cta-ink: light-dark(oklch(.985 .004 172), oklch(.2 .03 215));
+  --focus: light-dark(#155B55, oklch(.84 .1 var(--ah)));
+  --cta: light-dark(#155B55, oklch(.84 .1 var(--ah)));
+  --stitch-core: #849792;
+  --cta-ink: light-dark(#FFFEFC, oklch(.2 .03 215));
 
   /* thread: gold, the colour of Clair's spool. State, never decoration. */
   --gold: light-dark(oklch(.85 .14 88), oklch(.83 .13 88));
@@ -42,7 +44,7 @@
   /* woven ground: a 4px thread grid at 2.2% */
   --weave: repeating-linear-gradient(0deg, color-mix(in oklch, var(--ink) 2.2%, transparent) 0 1px, transparent 1px 4px),
            repeating-linear-gradient(90deg, color-mix(in oklch, var(--ink) 2.2%, transparent) 0 1px, transparent 1px 4px);
-  --ground-image: var(--weave);
+  --ground-image: none;
 
   accent-color: var(--focus);
   scrollbar-color: color-mix(in oklch, var(--ink) 28%, transparent) transparent;
@@ -55,7 +57,7 @@
 :root[data-look='cloth'] [data-dye] {
   /* a little deeper than the default pastel by day so a patch reads as cloth, not a tint (fill vs ground 1.08 → ~1.3) */
   --fill: light-dark(oklch(calc(var(--l) - .035) calc(var(--c) * 1.12) var(--h)), oklch(calc(var(--dl) + .025) calc(var(--c) * 1.4) var(--h)));
-  --stitch: color-mix(in oklch, var(--deep) 66%, transparent);
+  --stitch: color-mix(in oklch, var(--deep) 48%, transparent);
   --tack: color-mix(in oklch, var(--deep) 46%, transparent);
   --pill-ink: light-dark(#fff, oklch(.2 .03 215));
   /* page cloth keeps the ground's lightness (elevation stays right), only hue and chroma follow the dye;
@@ -84,7 +86,7 @@
   background-image: radial-gradient(130% 95% at 28% 0%, light-dark(oklch(1 0 0 / .4), oklch(1 0 0 / .09)), transparent 62%);
   box-shadow: inset 0 1.5px 0 var(--hi), inset 0 -12px 16px -14px var(--stitch), 0 14px 20px -16px var(--shade);
 }
-:root[data-look='cloth'] .patch::before { border: 1.5px dashed var(--stitch); }
+:root[data-look='cloth'] .patch::before { border: 1px dashed var(--stitch); }
 :root[data-look='cloth'] .patch:not([data-glint]):is(:has(.pill.now), :has(.notch2))::before { border-color: var(--gold-line); }
 /* "just changed": the gold seam draws itself once, as the number rolls (Home.tsx sets data-glint for ~1 s; the seam is gold under it
    from then on). Thread curve, 600, left to right; the stitch under it keeps its own colour until the glint is done. */
@@ -108,9 +110,32 @@
 :root[data-look='cloth'] .sheet { background-color: var(--ground); background-image: var(--weave); box-shadow: inset 0 1px 0 var(--hi), 0 22px 44px -20px var(--shade); }
 :root[data-look='cloth'] .cta { box-shadow: inset 0 1px 0 oklch(1 0 0 / .16), 0 10px 16px -12px var(--shade); }
 :root[data-look='cloth'] .detail { background-color: var(--card); }
-:root[data-look='cloth'] .side { background-color: color-mix(in oklch, var(--ground) 92%, var(--card)); }
+:root[data-look='cloth'] .side { background-color: light-dark(#EEF2EC, color-mix(in oklch, var(--ground) 92%, var(--card))); }
 
 /* ---------- the receipt capsule (motion.css): gold thread is state, so the thread that unthreads is gold ---------- */
 :root[data-look='cloth'] .toast { box-shadow: inset 0 1px 0 var(--hi), inset 0 0 0 1px var(--card-line), var(--bar-shadow); }
 :root[data-look='cloth'] .toast .edge rect:not(.m) { stroke: var(--gold-line); }
 :root[data-look='cloth'] .toast.frayed .edge rect:not(.m) { stroke: var(--ink); }
+
+/* ---------- Palette from the design spec (Nov 20). Light values are the exact hexes; dark keeps the night cloth.
+   Patch background is a gentle tint, its border defines the card, the accent colours icons and small highlights.
+   Nine dye names map onto five palettes (the API stores the dye name). ---------- */
+:root[data-look='cloth'] [data-dye] {
+  --fill: light-dark(var(--p-bg, #F7F5F0), oklch(calc(var(--dl) + .025) calc(var(--c) * 1.4) var(--h)));
+  --deep: light-dark(var(--p-ac, #183B39), oklch(.86 .08 var(--h)));
+  --stitch: light-dark(color-mix(in srgb, var(--stitch-core) 70%, transparent), color-mix(in oklch, oklch(.86 .08 var(--h)) 48%, transparent));
+  --tack: light-dark(color-mix(in srgb, var(--stitch-core) 55%, transparent), color-mix(in oklch, oklch(.86 .08 var(--h)) 40%, transparent));
+  --cloth: light-dark(color-mix(in srgb, var(--p-bg, #F7F5F0) 55%, #F7F5F0), oklch(.232 calc(var(--c) * .46) var(--h)));
+  --card: light-dark(#FFFEFC, oklch(.272 calc(var(--c) * .42) var(--h)));
+  --card-line: light-dark(var(--p-bd, #D9DDD6), oklch(.36 calc(var(--c) * .4) var(--h)));
+}
+:root[data-look='cloth'] :is([data-dye='chambray'], [data-dye='sea glass']) { --p-bg: #E8F0F3; --p-bd: #C7D8DE; --p-ac: #557F8B; }
+:root[data-look='cloth'] :is([data-dye='sage'], [data-dye='pear'])          { --p-bg: #EDF1E9; --p-bd: #D0D9CA; --p-ac: #71866D; }
+:root[data-look='cloth'] :is([data-dye='butter'], [data-dye='apricot'])     { --p-bg: #FBF1DF; --p-bd: #E9D7B4; --p-ac: #A77F3D; }
+:root[data-look='cloth'] [data-dye='blush']                                 { --p-bg: #F6E9E4; --p-bd: #E5C9BE; --p-ac: #A96855; }
+:root[data-look='cloth'] [data-dye='lavender']                              { --p-bg: #F0ECF3; --p-bd: #DCD3E2; --p-ac: #837691; }
+/* the patch edge: the palette's border colour defines the card, the stitch sits inside it */
+:root[data-look='cloth'] .patch[data-dye] { box-shadow: inset 0 0 0 1px light-dark(var(--p-bd), transparent), 0 14px 20px -16px var(--shade); background-image: none; }
+:root[data-look='cloth'] .ident .tile { color: var(--deep); }
+/* sidebar and dock tiles sit on a tinted ground, so they take the card surface and the palette border to stay visible */
+:root[data-look='cloth'] :is(.side-app, .bar .cell) .tile { background: light-dark(var(--card), var(--fill)); box-shadow: inset 0 0 0 1px light-dark(var(--p-bd), transparent); }
