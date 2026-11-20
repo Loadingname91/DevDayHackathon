@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { request, errorText } from '../api/client';
+import { LookSwitch } from '../components/LookSwitch';
 import { signIn, signInWithTokenHash } from '../lib/auth';
 
 /** "I have a quilt · Sign in": the demo account's email and password (backend.md §13, T2). */
@@ -23,6 +24,7 @@ export function SignIn({ onDone }: { onDone: () => void }) {
       {err && <p role="alert" style={{ fontWeight: 600 }}>{err}</p>}
       <button className="cta" disabled={busy}>Sign in</button>
       <Link to="/join" className="ghost" style={{ textAlign: 'center', display: 'grid', placeItems: 'center' }}>Use a code from your phone</Link>
+      <LookSwitch />
     </form>
   );
 }
@@ -52,6 +54,7 @@ export function Join({ onDone }: { onDone: () => void }) {
       {err && <p role="alert" style={{ fontWeight: 600 }}>{err}</p>}
       <button className="cta" disabled={busy}>Open</button>
       <Link to="/signin" className="ghost" style={{ textAlign: 'center', display: 'grid', placeItems: 'center' }}>Sign in with email</Link>
+      <LookSwitch />
     </form>
   );
 }

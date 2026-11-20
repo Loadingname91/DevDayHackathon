@@ -7,6 +7,8 @@ import { Sheet } from './Sheet';
 
 const root = typeof document !== 'undefined' ? document.documentElement : null;
 const hostTheme = root?.dataset.theme; // the page host may set its own light or dark; "Auto" goes back to it
+type Look = 'workbench' | 'cloth' | 'default';
+const LOOK_NAMES: Record<Look, string> = { workbench: 'Workbench', cloth: 'Cloth', default: 'Mint' };
 const FAULTS: [string, string][] = [['', 'None'], ['fail-confirm', 'Confirm fails'], ['no-card', 'No card (Use sample)'], ['slow', 'Slow run'], ['empty', 'Understood, no card'], ['google-off', 'Google not connected']];
 
 /**
@@ -21,14 +23,14 @@ export function MockMark() {
   const [base, setBase] = useState<'seed' | 'before'>('seed');
   const [rung, setRung] = useState<1 | 4>(4);
   const [fault, setFault] = useState('');
-  const [look, setLookS] = useState<'default' | 'cloth'>(root?.dataset.look === 'cloth' ? 'cloth' : 'default');
+  const [look, setLookS] = useState<Look>((root?.dataset.look as Look | undefined) ?? 'default');
   const [scheme, setSchemeS] = useState<'auto' | 'light' | 'dark'>(root?.dataset.theme && root.dataset.theme !== hostTheme ? (root.dataset.theme as 'light' | 'dark') : 'auto');
   if (!anyMock) return null;
   // Look (the Cloth theme layer) and Colours apply at once; they are a viewing choice, not part of the mock data
-  const pickLook = (v: 'default' | 'cloth') => {
+  const pickLook = (v: Look) => {
     setLookS(v);
     if (!root) return;
-    if (v === 'cloth') root.dataset.look = 'cloth'; else delete root.dataset.look;
+    if (v === 'default') delete root.dataset.look; else root.dataset.look = v;
     try { localStorage.setItem('quilt-look', v); } catch { /* fine without it */ }
   };
   const pickScheme = (v: 'auto' | 'light' | 'dark') => {
@@ -54,10 +56,10 @@ export function MockMark() {
   return (
     <>
       <button className="mock-mark" onClick={() => setOpen(true)} aria-label="Mock data. Open the demo menu">mock data · demo</button>
-      <button className="look-pill" onClick={() => setOpen(true)} aria-label={`Look: ${look === 'cloth' ? 'Cloth' : 'Current'}. Open the demo menu to change the look`}>{look === 'cloth' ? 'Cloth' : 'Current'} look</button>
+      <button className="look-pill" onClick={() => setOpen(true)} aria-label={`Look: ${LOOK_NAMES[look]}. Open the demo menu to change the look`}>{LOOK_NAMES[look]} look</button>
       <Sheet open={open} onClose={() => setOpen(false)} label="Demo menu">
         <div className="clair-head"><h2>Demo menu</h2><button className="ghost" onClick={() => setOpen(false)}>Close</button></div>
-        {seg(look, pickLook, [['default', 'Current'], ['cloth', 'Cloth']], 'Look')}
+        {seg(look, pickLook, [['workbench', 'Workbench'], ['cloth', 'Cloth'], ['default', 'Mint']], 'Look')}
         {seg(scheme, pickScheme, [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']], 'Colours')}
         <p className="muted small">Look and Colours change at once. Below, Start over resets the mock data; nothing here is on the live API.</p>
         {seg(motion, setM, [['stitch', 'Stitch + peek'], ['threads', 'Threads']], 'Confirm motion')}

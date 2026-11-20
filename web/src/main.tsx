@@ -13,6 +13,7 @@ import './styles/laptop.css';
 import './styles/blocks.css';
 import './styles/interaction.css';
 import './styles/theme-cloth.css';
+import './styles/theme-workbench.css';
 import './styles/links.css';
 import './styles/notes.css';
 import './styles/demo.css';
@@ -22,13 +23,12 @@ import './styles/attach.css';
 import './styles/remove.css';
 import './styles/arrange.css';
 
-// Look: Cloth (theme-cloth.css) is on by default; `?look=default` goes back to the earlier flat look and remembers it.
+// Look: Quilter's Workbench (theme-workbench.css) is the default (owner, Nov 20); `?look=cloth` or `?look=default` switch and are remembered.
 // `?scheme=dark|light` forces a colour scheme for comparing; the default follows the phone.
 try {
   const q = new URLSearchParams(location.search);
   if (q.has('look')) localStorage.setItem('quilt-look', q.get('look') ?? 'default');
-  // Cloth is the default look (owner's pick, Nov 20); `?look=default` goes back to the earlier flat look
-  const look = localStorage.getItem('quilt-look') ?? (import.meta.env.VITE_LOOK as string | undefined) ?? 'cloth';
+  const look = localStorage.getItem('quilt-look') ?? (import.meta.env.VITE_LOOK as string | undefined) ?? 'workbench';
   if (look !== 'default') document.documentElement.dataset.look = look;
   const scheme = q.get('scheme');
   if (scheme === 'dark' || scheme === 'light') document.documentElement.dataset.theme = scheme;

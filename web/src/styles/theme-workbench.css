@@ -1,0 +1,79 @@
+/* Look: Quilter's Workbench (the Nov 19 design book, https://claude.ai/artifact/N37FhQVVYTNoeDf4rJFyjq).
+   Muslin ground, warm ink, denim accent, gold thread for state; Bricolage Grotesque for display, Hanken Grotesk for UI,
+   DM Mono for numbers. Flat surfaces with stitched rules, no woven texture. Default look; `?look=cloth` or `?look=default` switch. */
+
+:root[data-look='workbench'] {
+  --font: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-display: 'Bricolage Grotesque', 'Hanken Grotesk', system-ui, sans-serif;
+  --f-data: 'DM Mono', ui-monospace, Menlo, monospace;
+  --nh: 85; --ah: 262;
+
+  --ground: light-dark(#F4EEE1, #1B1914);
+  --ink: light-dark(#2A2119, #F1EADB);
+  --sec: light-dark(#665847, #BFB29C);
+  --card: light-dark(#FFFDF8, #24211B);
+  --card-line: light-dark(#DCCFB6, #3A352B);
+  --raise: var(--card);
+  --solid: var(--card);
+  --wash: light-dark(#EEE6D6, #2C2820);
+  --stitch-core: light-dark(#BFAE90, #5E5545);
+  --line: var(--stitch-core);
+  --hair: light-dark(#DCCFB6, #3A352B);
+  --edge: light-dark(#8C7C62, #8A7D68);
+  --thread: light-dark(#BFAE90, #5E5545);
+  --bar: color-mix(in srgb, var(--card) 94%, transparent);
+  --scrim: light-dark(rgb(42 33 25 / .32), rgb(0 0 0 / .55));
+  --shadow: light-dark(0 14px 28px -22px rgb(42 33 25 / .55), 0 14px 28px -18px rgb(0 0 0 / .6));
+  --bar-shadow: light-dark(0 16px 32px -16px rgb(42 33 25 / .5), 0 16px 32px -14px rgb(0 0 0 / .6));
+
+  /* denim is the accent: focus, links, Clair's bubble, the main button */
+  --focus: light-dark(#3557A6, #93ABEA);
+  --cta: light-dark(#2A2119, #93ABEA);
+  --cta-ink: light-dark(#FFFFFF, #141210);
+  --said: light-dark(#E6ECF7, #262C3A);
+  --said-ink: var(--ink);
+
+  /* thread: gold, state only */
+  --gold: #E3A72F;
+  --gold-ink: #1F180D;
+  --gold-line: light-dark(#B98414, #E3A72F);
+
+  --ground-image: none;
+  accent-color: var(--focus);
+  caret-color: var(--focus);
+}
+:root[data-look='workbench'] ::selection { background: var(--focus); color: light-dark(#fff, #141210); }
+:root[data-look='workbench'] body { font-family: var(--font); }
+
+/* display type: Bricolage 800 for headings and the one big number per app; DM Mono for every other number */
+:root[data-look='workbench'] :is(h1, h2, h3, .h1, .h2, .big, .face-n, .num-big) { font-family: var(--f-display); font-weight: 800; letter-spacing: -.02em; }
+:root[data-look='workbench'] :is(.mono, .num, .amt, .time, .count, .date) { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+
+/* dyes: the book's eight cloths (plus linen). --fill is the patch, --deep the icon, stitch and progress ink. */
+:root[data-look='workbench'] [data-dye] {
+  --fill: light-dark(var(--p-bg, #F3ECDD), color-mix(in srgb, var(--p-bg, #F3ECDD) 22%, #24211B));
+  --deep: light-dark(var(--p-ac, #2A2119), color-mix(in srgb, var(--p-bg, #F3ECDD) 80%, #fff));
+  --cloth: var(--ground);
+  --card: light-dark(#FFFDF8, #24211B);
+  --card-line: light-dark(#DCCFB6, #3A352B);
+  --stitch: color-mix(in srgb, var(--deep) 42%, transparent);
+  --tack: color-mix(in srgb, var(--deep) 36%, transparent);
+  --pill-ink: light-dark(#fff, #141210);
+}
+:root[data-look='workbench'] [data-dye='butter']    { --p-bg: #FBEBC4; --p-ac: #8A5F0B; }
+:root[data-look='workbench'] [data-dye='sage']      { --p-bg: #DDEBD2; --p-ac: #3F6B33; }
+:root[data-look='workbench'] [data-dye='sea glass'] { --p-bg: #D3ECE7; --p-ac: #1F6B5E; }
+:root[data-look='workbench'] [data-dye='apricot']   { --p-bg: #F8DCC2; --p-ac: #9A5420; }
+:root[data-look='workbench'] [data-dye='chambray']  { --p-bg: #DCE4F3; --p-ac: #22396F; }
+:root[data-look='workbench'] [data-dye='lavender']  { --p-bg: #EADCF0; --p-ac: #6B3F7A; }
+:root[data-look='workbench'] [data-dye='pear']      { --p-bg: #E7EBC2; --p-ac: #5A6418; }
+:root[data-look='workbench'] [data-dye='blush']     { --p-bg: #F3DCE0; --p-ac: #8A3F55; }
+:root[data-look='workbench'] [data-dye='linen']     { --p-bg: #F3ECDD; --p-ac: #665847; }
+
+/* patches: flat cloth with a stitched seam; gold hairline when something is new */
+:root[data-look='workbench'] .patch { background-image: none; box-shadow: none; }
+:root[data-look='workbench'] .patch:is(:has(.pill.now), :has(.notch2)) { box-shadow: inset 0 0 0 1.5px var(--gold-line); }
+:root[data-look='workbench'] .pill.now { background: var(--gold); color: var(--gold-ink); }
+:root[data-look='workbench'] :is(.bar .notch, .patch .notch2) { background: var(--gold); }
+:root[data-look='workbench'] .st.basted > .edge rect { stroke: var(--gold-line); }
+:root[data-look='workbench'] .toast { background: #2A2119; color: #FBF6EC; }
